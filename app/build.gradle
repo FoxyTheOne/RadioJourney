@@ -4,12 +4,6 @@ plugins {
     // Hilt
     id 'kotlin-kapt'
     id 'dagger.hilt.android.plugin'
-    // Navigation pass data
-    id 'androidx.navigation.safeargs'
-    // Google maps
-    id 'com.google.android.libraries.mapsplatform.secrets-gradle-plugin'
-    // Parcelable implementation generator
-    id 'kotlin-parcelize'
 }
 
 android {
@@ -25,12 +19,6 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         multiDexEnabled true
-
-        javaCompileOptions {
-            annotationProcessorOptions {
-                arguments += ["room.schemaLocation": "$projectDir/schemas".toString()]
-            }
-        }
     }
 
     buildTypes {
@@ -53,6 +41,7 @@ android {
     buildFeatures {
         viewBinding = true
     }
+
 }
 
 dependencies {
@@ -66,7 +55,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
     // Hilt
-    implementation "com.google.dagger:hilt-android:2.40.5"
+    implementation "com.google.dagger:hilt-android:2.38.1"
     kapt "com.google.dagger:hilt-android-compiler:2.38.1"
 
     // ViewModel
@@ -100,14 +89,8 @@ dependencies {
     // Navigation
     implementation 'androidx.navigation:navigation-fragment-ktx:2.4.1'
     implementation 'androidx.navigation:navigation-ui-ktx:2.4.1'
-
-    // Location
-    implementation 'com.google.android.gms:play-services-location:19.0.1'
-    // Google maps
-    implementation 'com.google.android.gms:play-services-maps:18.0.0'
 }
 
 kapt {
-    // Дополнит. настройка, чтобы hilt показывал корректные сообщения об ошибке во время компиляции
-    correctErrorTypes = true
+    correctErrorTypes = true // Дополнит. настройка, чтобы hilt показывал корректные сообщения об ошибке во время компиляции
 }

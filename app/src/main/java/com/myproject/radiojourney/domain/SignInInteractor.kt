@@ -1,31 +1,30 @@
-package com.myproject.radiojourney.data.repository
+package com.myproject.radiojourney.domain
 
 import androidx.lifecycle.MutableLiveData
-import com.myproject.radiojourney.data.dataSource.local.ILocalAuthDataSource
 import com.myproject.radiojourney.domain.iAuthRepository.IAuthRepository
 import javax.inject.Inject
 
 /**
- * Работает с Local и Remote data source
+ * Interactor работает с Repository
  */
-class AuthRepository @Inject constructor(
-    private val localAuthDataSource: ILocalAuthDataSource
-) : IAuthRepository {
+class SignInInteractor @Inject constructor(
+    private val authRepository: IAuthRepository
+) : ISignInInteractor {
 
     override fun getEmailIfCheckBoxSelected(): MutableLiveData<String> =
-        localAuthDataSource.getEmailIfCheckBoxSelected()
+        authRepository.getEmailIfCheckBoxSelected()
 
     override fun getPasswordIfCheckBoxSelected(): MutableLiveData<String> =
-        localAuthDataSource.getPasswordIfCheckBoxSelected()
+        authRepository.getPasswordIfCheckBoxSelected()
 
     override fun isCheckBoxSelected(): MutableLiveData<Boolean> =
-        localAuthDataSource.isCheckBoxSelected()
+        authRepository.isCheckBoxSelected()
 
     override suspend fun onLoginClicked(emailText: String, passwordText: String): Boolean =
-        localAuthDataSource.onLoginClicked(emailText, passwordText)
+        authRepository.onLoginClicked(emailText, passwordText)
 
     // Каждый раз, когда мы кликаем, будет исполняться этот метод. Здесь мы сохраняем статус check box
     override suspend fun setRememberLoginAndPasswordSelectedOrNot(isSelected: Boolean) =
-        localAuthDataSource.setRememberLoginAndPasswordSelectedOrNot(isSelected)
+        authRepository.setRememberLoginAndPasswordSelectedOrNot(isSelected)
 
 }

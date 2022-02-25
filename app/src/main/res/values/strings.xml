@@ -9,39 +9,8 @@
     <string name="signIn_signUp">Sign up</string>
     <string name="signIn_credentials_incorrect">Email or password is incorrect</string>
 
-    <string name="signUp_signUp">Sign up</string>
-    <string name="signUp_confirmPassword">Confirm password</string>
-    <string name="signUp_alreadyHave">Already have an Account?</string>
-    <string name="signUp_email_incorrect">Email is incorrect or user has already registered</string>
-    <string name="signUp_password_incorrect">Please enter a valid password. It should has at least 6 chars</string>
-
     <string name="content_description_email">Email</string>
     <string name="content_description_password">Password</string>
     <string name="content_description_confirm_password">Confirm password</string>
     <string name="content_description_userName">User Name</string>
-
-    <string name="logout_intention_question">Do you want to log out?</string>
-
-    <string name="homeRadio_zoomPlus">+</string>
-    <string name="homeRadio_zoomMinus">-</string>
-    <string name="homeRadio_addToFavourites">Add to favourites</string>
-    <string name="homeRadio_goToFavourites">Go to favourites</string>
-    <string name="homeRadio_selectRadioStation">Select radio station</string>
-    <string name="homeRadio_canTakeTime">It may take time to connect.</string>
-    <string name="homeRadio_mayNotWork">Also selected radio station may not work right now.</string>
-
-    <string name="dialogInternetTrouble_title">Cashing failed</string>
-    <string name="dialogInternetTrouble_text">If it is the first start - please, try turn on and then turn off airplane mode, and then restart the program.</string>
-    <string name="dialogInternetTrouble_text2">Otherwise, just ignore this message.</string>
-
-    <string name="radioStationList_title">Radio station list. Select one:</string>
-    <string name="radioStationList_count">Radio station click count: </string>
-
-    <string name="foregroundNotification_name">Cashing. Please, wait. </string>
-    <string name="foregroundNotification_description">Cashing… </string>
-    <string name="foregroundNotification_failedName">Cashing failed.</string>
-    <string name="foregroundNotification_failedDescription">Please, try turn on and then turn off airplane mode. And then restart the program, if needed.</string>
-
-    <string name="favouriteRadioStationList_title">My favourites:</string>
-    <string name="favouriteRadioStationList_empty">It\'s empty here. Try adding stars to your favourite stations.</string>
 </resources>

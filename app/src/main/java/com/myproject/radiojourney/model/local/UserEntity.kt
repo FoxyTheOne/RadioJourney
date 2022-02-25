@@ -4,9 +4,6 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-/**
- * Класс для сохранения в базе данных Room почты и пароля пользователей
- */
 @Entity
 class UserEntity(
     @PrimaryKey(autoGenerate = true)

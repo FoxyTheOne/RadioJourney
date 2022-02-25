@@ -1,4 +1,4 @@
-package com.myproject.radiojourney.presentation.authentication.signUp
+package com.myproject.radiojourney.presentation.content
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -9,7 +9,7 @@ import com.myproject.radiojourney.R
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class SignUpFragment: Fragment() {
+class HomeRadioFragment: Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
