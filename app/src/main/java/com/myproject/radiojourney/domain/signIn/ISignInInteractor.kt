@@ -1,7 +1,5 @@
 package com.myproject.radiojourney.domain.signIn
 
-import androidx.lifecycle.MutableLiveData
-
 interface ISignInInteractor {
 
     suspend fun isRememberLoginAndPasswordSelected(): Boolean

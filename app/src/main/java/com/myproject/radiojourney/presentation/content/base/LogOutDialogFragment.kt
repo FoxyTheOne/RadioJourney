@@ -8,6 +8,9 @@ import androidx.appcompat.widget.AppCompatButton
 import androidx.fragment.app.DialogFragment
 import com.myproject.radiojourney.R
 
+/**
+ * Фрагмент всплывающего окна для уточнения перед выходом
+ */
 class LogOutDialogFragment : DialogFragment() {
 
     // Переменная нашего интерфейса, чтобы вызвать его метод

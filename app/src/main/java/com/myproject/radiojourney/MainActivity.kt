@@ -7,23 +7,22 @@ import androidx.fragment.app.FragmentManager
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
- * Mvvm
- * Clean Architecture
- * SOLID
- * Hilt
- * Навигация - с помощью navigation
- * Custom font, color style,button color (градиент)
+ * В этом проекте используется шаблон проектирования архитектуры приложения MVVM. Используется подход Clean Architecture.
+ * При создании проекта я старалась опираться на принципы проектирования SOLID (Single responsibility, open-closed, liskov substitution, interface segregation, dependency inversion)
+ * В проекте используется dependency injection Hilt, т.к. это рекомендация google. А так же потому, что мне нравится его использовать.
+ * Так же в проекте я использую navigation, что я считаю очень удобным.
+ * В фрагментах с аунтентификацией я использую View binding.
  *
- * View binding
- * В своём проекте я не использовала View binding чисто из своих эстетических соображений.
- * Мне нравится, как выглядит код, где мы пользуемся переменными для view, которые инициализировали самостоятельно. Без множества safe операторов "?."
- * Однако, для демонстрации освоения этого материала, я воспользовалась View binding в SignInFragment
+ * Так же в проекте я научилась использовать свой custom font, color style, button color (градиент).
+ * Названия всех интерфейсов я начинаю с буквы I, чтобы было порще ориентироваться в коде проекта.
  *
- * Shared preferences. Должны быть Singleton, поэтому для верности в Module пометила аннотацией @Singleton
+ * Для хранения небольших пар ключ-значение (логин и пароль, токен) я использую Shared preferences.
+ * Shared preferences д.б. быть Singleton, поэтому для верности в Module я пометила аннотацией @Singleton
  *
- * Coroutines
- *
- * Названия всех интерфейсов я начинаю с буквы I, чтобы было порще ориентироваться в коде проекта и не возникало путаницы
+ * Для запросов в ViewModel я пользуюсь Coroutines.
+ * В основном использую Dispatchers.IO (создаёт необходмое количество потоков, но минимум 64), т.к. он предназначен
+ * для выполнения операций ввода-вывода (н-р, операции с файлами, сетевыми запросами, локальной базой данных).
+ * А так же launch, когда нам нужно просто сделать вызов функции.
  */
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), IAppSettings {

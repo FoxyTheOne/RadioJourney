@@ -1,14 +1,12 @@
 package com.myproject.radiojourney.domain.iRepository
 
-import androidx.lifecycle.MutableLiveData
-
+/**
+ * Repository. Domain layer.
+ */
 interface IAuthRepository {
     suspend fun isRememberLoginAndPasswordSelected(): Boolean
     suspend fun getEmail(): String?
     suspend fun getPassword(): String?
-//    fun getEmailIfCheckBoxSelected(): MutableLiveData<String>
-//    fun getPasswordIfCheckBoxSelected(): MutableLiveData<String>
-//    fun isCheckBoxSelected(): MutableLiveData<Boolean>
 
     suspend fun onLoginClicked(emailText: String, passwordText: String): Boolean
 
@@ -16,8 +14,9 @@ interface IAuthRepository {
     suspend fun setRememberLoginAndPasswordSelectedOrNot(isSelected: Boolean)
 
     suspend fun checkEmail(email: String): Boolean
-    fun checkPassword(password: String, confirmPassword: String): Boolean
+    suspend fun checkPassword(password: String, confirmPassword: String): Boolean
     suspend fun registerNewUser(email: String, password: String)
+
     fun logout()
 
 }

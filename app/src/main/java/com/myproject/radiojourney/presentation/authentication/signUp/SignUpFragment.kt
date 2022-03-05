@@ -9,15 +9,18 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.LayoutSignUpBinding
+import com.myproject.radiojourney.presentation.authentication.base.BaseAuthFragmentAbstract
 import dagger.hilt.android.AndroidEntryPoint
 
+/**
+ * Аутентификация. Фрагмент для регистрации
+ */
 @AndroidEntryPoint
-class SignUpFragment : Fragment() {
+class SignUpFragment : BaseAuthFragmentAbstract() {
     companion object {
         private const val TAG = "SignUpFragment"
     }
@@ -182,7 +185,8 @@ class SignUpFragment : Fragment() {
         })
         viewModel.showPasswordErrorLiveData.observe(this, {
             binding?.textFieldPasswordSignUp?.error = getString(R.string.signUp_password_incorrect)
-            binding?.textFieldConfirmPasswordSignUp?.error = getString(R.string.signUp_password_incorrect)
+            binding?.textFieldConfirmPasswordSignUp?.error =
+                getString(R.string.signUp_password_incorrect)
             Toast.makeText(
                 context,
                 "Something wrong with your password. Please, try again!",

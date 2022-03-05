@@ -1,27 +1,21 @@
 package com.myproject.radiojourney.domain.signIn
 
-import androidx.lifecycle.MutableLiveData
 import com.myproject.radiojourney.domain.iRepository.IAuthRepository
 import javax.inject.Inject
 
 /**
- * Interactor работает с Repository
+ * Interactor. Domain layer. Работает только с Repository.
+ * Interactor ответственен за обеспечение данными отдельные экраны (для каждого экрана - отдельный Interactor)
+ * При работе с model, здесь происходит преобразование local -> presentation (опционально)
  */
 class SignInInteractor @Inject constructor(
     private val authRepository: IAuthRepository
 ) : ISignInInteractor {
-    override suspend fun isRememberLoginAndPasswordSelected() = authRepository.isRememberLoginAndPasswordSelected()
+    override suspend fun isRememberLoginAndPasswordSelected() =
+        authRepository.isRememberLoginAndPasswordSelected()
+
     override suspend fun getEmail(): String? = authRepository.getEmail()
     override suspend fun getPassword(): String? = authRepository.getPassword()
-
-//    override fun getEmailIfCheckBoxSelected(): MutableLiveData<String> =
-//        authRepository.getEmailIfCheckBoxSelected()
-//
-//    override fun getPasswordIfCheckBoxSelected(): MutableLiveData<String> =
-//        authRepository.getPasswordIfCheckBoxSelected()
-//
-//    override fun isCheckBoxSelected(): MutableLiveData<Boolean> =
-//        authRepository.isCheckBoxSelected()
 
     override suspend fun onLoginClicked(emailText: String, passwordText: String): Boolean =
         authRepository.onLoginClicked(emailText, passwordText)

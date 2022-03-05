@@ -2,7 +2,6 @@ package com.myproject.radiojourney.data.sharedPreference
 
 import android.content.Context
 import android.util.Log
-import com.myproject.radiojourney.presentation.authentication.signIn.SignInViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
@@ -24,7 +23,7 @@ class AppSharedPreference @Inject constructor(@ApplicationContext context: Conte
         private const val PREFERENCE_USER_TOKEN = "USER_TOKEN"
     }
 
-    // У нас будет один общий файл, поэтому .getSharedPreferences
+    // У нас будет один общий файл, поэтому .getSharedPreferences()
     private val sharedPreference = context.getSharedPreferences(
         PREFERENCE_NAME,
         Context.MODE_PRIVATE

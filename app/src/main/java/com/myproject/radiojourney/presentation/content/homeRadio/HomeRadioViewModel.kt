@@ -10,6 +10,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * ViewModel. Здесь осуществляется подписка, запрос через корутины. Работает с Interactor
+ */
 @HiltViewModel
 class HomeRadioViewModel @Inject constructor(
     private val logOutInteractor: ILogOutInteractor

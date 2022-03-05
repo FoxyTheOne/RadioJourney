@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * Подписка, запрос. Работает с Interactor
+ * ViewModel. Здесь осуществляется подписка, запрос через корутины. Работает с Interactor
  */
 @HiltViewModel
 class SignInViewModel @Inject constructor(
@@ -36,23 +36,16 @@ class SignInViewModel @Inject constructor(
     val showProgressLiveData = MutableLiveData<Boolean>()
     val hideProgressLiveData = MutableLiveData<Boolean>()
 
-//    // Если в предыдущий раз галочка была выбрана - восстанавливаем сохраненные значения
-//    fun getStoredData() {
-//        // Dispatchers.IO создаёт необходмое количество потоков, но минимум 64. Предназначен для выполнения операций ввода-вывода (н-р, операции с файлами, сетевыми запросами, локальной базой данных)
-//        // launch - потому что нам нужно просто сделать вызов функции
-//        viewModelScope.launch(Dispatchers.IO) {
-//            emailLiveData = signInInteractor.getEmailIfCheckBoxSelected()
-//            passwordLiveData = signInInteractor.getPasswordIfCheckBoxSelected()
-//            checkBoxRememberLoginAndPasswordLiveData = signInInteractor.isCheckBoxSelected()
-//        }
-//    }
-
     // Если в предыдущий раз галочка была выбрана - восстанавливаем сохраненные значения
     fun getStoredData() {
         viewModelScope.launch(Dispatchers.IO) {
             // Узнём, была ли выбрана галочка в последний раз
-            val isRememberLoginAndPasswordSelected = signInInteractor.isRememberLoginAndPasswordSelected()
-            Log.d(TAG, "Узнали, была ли выбрана галочка: CHECK_BOX_SELECTED = $isRememberLoginAndPasswordSelected")
+            val isRememberLoginAndPasswordSelected =
+                signInInteractor.isRememberLoginAndPasswordSelected()
+            Log.d(
+                TAG,
+                "Узнали, была ли выбрана галочка: CHECK_BOX_SELECTED = $isRememberLoginAndPasswordSelected"
+            )
             // Если да - восстанавливаем значения полей и ставим флажок в CheckBox
             if (isRememberLoginAndPasswordSelected) {
                 val email = signInInteractor.getEmail().toString()

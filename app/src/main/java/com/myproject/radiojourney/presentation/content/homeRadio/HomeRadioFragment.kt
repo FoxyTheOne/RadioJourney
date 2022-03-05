@@ -15,7 +15,10 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 /**
- * С View binding не работает обработка клика Toolbar
+ * Главная страница.
+ * Содержит карту с метками, описание выбранной радиостанции и кнопки "добавить в избранное", "перейти в мой список".
+ *
+ * С View binding не работает обработка клика Toolbar?
  */
 @AndroidEntryPoint
 class HomeRadioFragment : BaseContentFragmentAbstract() {

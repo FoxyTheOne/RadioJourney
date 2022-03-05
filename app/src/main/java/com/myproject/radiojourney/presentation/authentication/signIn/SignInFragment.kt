@@ -17,8 +17,11 @@ import com.myproject.radiojourney.presentation.authentication.base.BaseAuthFragm
 
 import dagger.hilt.android.AndroidEntryPoint
 
+/**
+ * Аутентификация. Фрагмент для входа в приложение
+ */
 @AndroidEntryPoint
-class SignInFragment: BaseAuthFragmentAbstract() {
+class SignInFragment : BaseAuthFragmentAbstract() {
     companion object {
         private const val TAG = "SignUpFragment"
     }
@@ -131,7 +134,7 @@ class SignInFragment: BaseAuthFragmentAbstract() {
         }
 
         // Каждый раз, когда мы кликаем, будет исполняться этот метод. Здесь мы сохраняем статус check box
-        binding?.checkBoxSignInRememberLoginAndPassword?.setOnCheckedChangeListener{ _, selected ->
+        binding?.checkBoxSignInRememberLoginAndPassword?.setOnCheckedChangeListener { _, selected ->
             viewModel.setRememberLoginAndPasswordSelectedOrNot(selected) // Передаём наш isSelected (при нажатии на кнопку) в наш listener
             Log.d(TAG, "Проверка CHECK_BOX_SELECTED = $selected")
         }
@@ -145,8 +148,13 @@ class SignInFragment: BaseAuthFragmentAbstract() {
 
         viewModel.showCredentialsErrorLiveData.observe(viewLifecycleOwner, {
             binding?.textFieldEmailSignIn?.error = getString(R.string.signIn_credentials_incorrect)
-            binding?.textFieldPasswordSignIn?.error = getString(R.string.signIn_credentials_incorrect)
-            Toast.makeText(context, "Something wrong with your data. Please, try again!", Toast.LENGTH_LONG).show()
+            binding?.textFieldPasswordSignIn?.error =
+                getString(R.string.signIn_credentials_incorrect)
+            Toast.makeText(
+                context,
+                "Something wrong with your data. Please, try again!",
+                Toast.LENGTH_LONG
+            ).show()
         })
 
         // Показываем или прячем Progress
@@ -158,9 +166,11 @@ class SignInFragment: BaseAuthFragmentAbstract() {
         })
 
         // Слушаем check box
-        viewModel.checkBoxRememberLoginAndPasswordLiveData.observe(viewLifecycleOwner, { isSelected ->
-            binding?.checkBoxSignInRememberLoginAndPassword?.isChecked = isSelected
-        })
+        viewModel.checkBoxRememberLoginAndPasswordLiveData.observe(
+            viewLifecycleOwner,
+            { isSelected ->
+                binding?.checkBoxSignInRememberLoginAndPassword?.isChecked = isSelected
+            })
 
         // Слушаем email и password
         viewModel.emailLiveData.observe(viewLifecycleOwner, { email ->
