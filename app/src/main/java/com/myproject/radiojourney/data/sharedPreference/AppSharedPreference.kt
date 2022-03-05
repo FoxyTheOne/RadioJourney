@@ -1,12 +1,16 @@
 package com.myproject.radiojourney.data.sharedPreference
 
 import android.content.Context
+import android.util.Log
+import com.myproject.radiojourney.presentation.authentication.signIn.SignInViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
 class AppSharedPreference @Inject constructor(@ApplicationContext context: Context) :
     IAppSharedPreference {
     companion object {
+        private const val TAG = "AppSharedPreference"
+
         // Константа - имя файла
         private const val PREFERENCE_NAME = "AppSharedPreference"
 
@@ -32,6 +36,7 @@ class AppSharedPreference @Inject constructor(@ApplicationContext context: Conte
             PREFERENCE_IS_REMEMBER_LOGIN_AND_PASSWORD_SELECTED,
             isSelected
         )?.apply()
+        Log.d(TAG, "Сохранено в AppSharedPreference: CHECK_BOX_SELECTED = $isSelected")
     }
 
     // Выбрана ли галочка "оставаться в системе", т.е. сохранить данные (выбирали ли эту галочку ранее)
@@ -73,16 +78,16 @@ class AppSharedPreference @Inject constructor(@ApplicationContext context: Conte
     }
 
     override fun saveToken(token: Int?) {
-        sharedPreference?.edit()?.putInt(
+        sharedPreference?.edit()?.putString(
             PREFERENCE_USER_TOKEN,
-            token ?: 0
+            (token ?: "").toString()
         )?.apply()
     }
 
-    override fun getToken(): Int {
-        return sharedPreference?.getInt(
+    override fun getToken(): String {
+        return sharedPreference?.getString(
             PREFERENCE_USER_TOKEN,
-            0
-        ) ?: 0
+            ""
+        ) ?: ""
     }
 }

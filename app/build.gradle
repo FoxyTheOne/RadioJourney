@@ -4,6 +4,8 @@ plugins {
     // Hilt
     id 'kotlin-kapt'
     id 'dagger.hilt.android.plugin'
+    // Navigation pass data
+    id 'androidx.navigation.safeargs'
 }
 
 android {

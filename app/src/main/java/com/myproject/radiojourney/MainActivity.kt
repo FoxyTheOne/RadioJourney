@@ -2,6 +2,7 @@ package com.myproject.radiojourney
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.FragmentManager
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -25,7 +26,7 @@ import dagger.hilt.android.AndroidEntryPoint
  * Названия всех интерфейсов я начинаю с буквы I, чтобы было порще ориентироваться в коде проекта и не возникало путаницы
  */
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), IAppSettings {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -42,4 +43,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun clearBackStack() = supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
+
+    override fun setToolbar(toolbar: Toolbar?) {
+        setSupportActionBar(toolbar)
+    }
+
 }

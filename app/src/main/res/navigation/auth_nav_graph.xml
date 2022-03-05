@@ -24,6 +24,16 @@
         <action
             android:id="@+id/action_signUpFragment_to_signInFragment"
             app:destination="@id/signInFragment"
-            app:popUpToInclusive="true" />
+            app:popUpToInclusive="true">
+            <!-- Передаём email на следующий фрагмент при успешной регистрации -->
+            <argument
+                android:name="user_email"
+                app:argType="string" />
+
+        </action>
     </fragment>
+    <!-- Global action -->
+    <action
+        android:id="@+id/action_global_content_nav_graph"
+        app:destination="@id/content_nav_graph" />
 </navigation>

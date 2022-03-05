@@ -2,6 +2,7 @@ package com.myproject.radiojourney.di
 
 import android.content.Context
 import androidx.room.Room
+import com.myproject.radiojourney.IAppSettings
 import com.myproject.radiojourney.data.dataSource.local.ILocalAuthDataSource
 import com.myproject.radiojourney.data.dataSource.local.LocalAuthDataSource
 import com.myproject.radiojourney.data.localDatabaseRoom.AppRoomDBAbstract
@@ -9,18 +10,22 @@ import com.myproject.radiojourney.data.localDatabaseRoom.IUserDAO
 import com.myproject.radiojourney.data.repository.AuthRepository
 import com.myproject.radiojourney.data.sharedPreference.AppSharedPreference
 import com.myproject.radiojourney.data.sharedPreference.IAppSharedPreference
-import com.myproject.radiojourney.domain.SignInInteractor
-import com.myproject.radiojourney.domain.ISignInInteractor
-import com.myproject.radiojourney.domain.iAuthRepository.IAuthRepository
+import com.myproject.radiojourney.domain.signIn.SignInInteractor
+import com.myproject.radiojourney.domain.signIn.ISignInInteractor
+import com.myproject.radiojourney.domain.iRepository.IAuthRepository
+import com.myproject.radiojourney.domain.logOut.ILogOutInteractor
+import com.myproject.radiojourney.domain.logOut.LogOutInteractor
+import com.myproject.radiojourney.domain.signUp.ISignUpInteractor
+import com.myproject.radiojourney.domain.signUp.SignUpInteractor
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.components.ActivityComponent
 import dagger.hilt.android.components.ViewModelComponent
+import dagger.hilt.android.qualifiers.ActivityContext
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 
 @Module
@@ -63,9 +68,19 @@ abstract class ViewModelModule {
     }
 
     @Binds
-    abstract fun bindsAuthInteractor(
+    abstract fun bindsSignInInteractor(
         signInInteractor: SignInInteractor
     ) : ISignInInteractor
+
+    @Binds
+    abstract fun bindsSignUpInteractor(
+        signUpInteractor: SignUpInteractor
+    ) : ISignUpInteractor
+
+    @Binds
+    abstract fun bindsLogOutInteractor(
+        logOutInteractor: LogOutInteractor
+    ) : ILogOutInteractor
 
     @Binds
     abstract fun bindsAuthRepository(
@@ -76,5 +91,17 @@ abstract class ViewModelModule {
     abstract fun bindsLocalAuthDataSource(
         localAuthDataSource: LocalAuthDataSource
     ) : ILocalAuthDataSource
+
+}
+
+@Module
+@InstallIn(ActivityComponent::class)
+class ActivityModule {
+
+    // Приравняем наш context к IAppSettings. Мы можем так сделать, т.к. наш activity расширяет IAppSettings
+    @Provides
+    fun providesAppSettings(@ActivityContext context: Context): IAppSettings {
+        return (context as IAppSettings)
+    }
 
 }

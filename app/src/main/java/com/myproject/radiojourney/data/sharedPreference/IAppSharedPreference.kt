@@ -15,5 +15,5 @@ interface IAppSharedPreference {
     fun getPassword(): String
 
     fun saveToken(token: Int?)
-    fun getToken(): Int
+    fun getToken(): String
 }

@@ -1,21 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@color/background"
     android:fillViewport="true">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <!-- Google maps -->
-        <fragment
-            android:id="@+id/map"
-            android:name="com.google.android.gms.maps.SupportMapFragment"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:background="@color/background"
+        android:orientation="vertical">
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/home_toolbar"
@@ -24,218 +19,38 @@
             android:background="?attr/colorPrimary"
             android:elevation="4dp"
             android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
-            app:layout_constraintBottom_toTopOf="@+id/linear_radioStationDescription"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
             app:menu="@menu/home_toolbar_menu"
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-            app:title="@string/app_name"
-            tools:targetApi="lollipop" />
+            app:title="@string/app_name" />
 
-        <LinearLayout
-            android:id="@+id/linear_radioStationDescription"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/background_transparent"
-            android:orientation="horizontal"
-            app:layout_constraintBottom_toTopOf="@+id/linear_canTakeTime"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/home_toolbar">
-
-            <androidx.appcompat.widget.AppCompatImageView
-                android:id="@+id/image_play"
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:layout_gravity="center"
-                android:layout_marginStart="@dimen/space_beforeOrAfterElement" />
-
-            <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/text_radioStationTitle"
-                style="@style/login_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:padding="@dimen/space_beforeOrAfterElement"
-                android:text="@string/homeRadio_selectRadioStation" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/linear_canTakeTime"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/background_transparent"
-            android:gravity="start"
-            android:orientation="vertical"
-            android:paddingBottom="@dimen/space_beforeOrAfterElement"
-            app:layout_constraintBottom_toTopOf="@+id/linear_radioStationButtons"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linear_radioStationDescription">
-
-            <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/text_canTakeTime"
-                style="@style/login_bottom"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="start"
-                android:paddingStart="@dimen/space_beforeOrAfterElement"
-                android:paddingEnd="@dimen/space_beforeOrAfterElement"
-                android:text="@string/homeRadio_canTakeTime" />
-
-            <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/text_mayNotWork"
-                style="@style/login_bottom"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="start"
-                android:paddingStart="@dimen/space_beforeOrAfterElement"
-                android:paddingEnd="@dimen/space_beforeOrAfterElement"
-                android:text="@string/homeRadio_mayNotWork" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/linear_radioStationButtons"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/background_transparent"
-            android:gravity="end"
-            android:orientation="horizontal"
-            android:paddingBottom="@dimen/space_beforeOrAfterElement"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linear_canTakeTime">
-
-            <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/button_addToFavourites"
-                style="@style/Widget.AppCompat.ActionButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="@dimen/space_small"
-                android:background="@drawable/button_rounded_corners"
-                android:text="@string/homeRadio_addToFavourites"
-                android:textColor="@color/white"
-                android:textSize="@dimen/button_text"
-                android:textStyle="bold"
-                app:backgroundTint="@null" />
-
-            <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/button_goToFavourites"
-                style="@style/Widget.AppCompat.ActionButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="@dimen/space_beforeOrAfterElement"
-                android:background="@drawable/button_rounded_corners"
-                android:text="@string/homeRadio_goToFavourites"
-                android:textColor="@color/white"
-                android:textSize="@dimen/button_text"
-                android:textStyle="bold"
-                app:backgroundTint="@null" />
-        </LinearLayout>
-
-        <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/image_star"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginStart="@dimen/space_beforeOrAfterElement"
-            android:layout_marginBottom="@dimen/space_beforeOrAfterElement"
-            app:layout_constraintBottom_toBottomOf="@+id/linear_radioStationButtons"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/linear_radioStationButtons" />
-
-        <Button
-            android:id="@+id/button_zoomPlus"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/space_beforeOrAfterElement"
-            android:layout_marginBottom="@dimen/space_small"
-            android:text="@string/homeRadio_zoomPlus"
+            android:text="TEST"
             android:textColor="@color/white_transparent_80"
-            app:backgroundTint="@color/orange_transparent"
-            app:layout_constraintBottom_toTopOf="@+id/button_zoomMinus"
-            app:layout_constraintEnd_toEndOf="parent" />
-
-        <Button
-            android:id="@+id/button_zoomMinus"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/space_beforeOrAfterElement"
-            android:layout_marginBottom="@dimen/space_small"
-            android:text="@string/homeRadio_zoomMinus"
-            android:textColor="@color/white_transparent_80"
-            app:backgroundTint="@color/orange_transparent"
-            app:layout_constraintBottom_toTopOf="@+id/button_youAreHere"
-            app:layout_constraintEnd_toEndOf="parent" />
-
-        <Button
-            android:id="@+id/button_youAreHere"
-            style="@style/Widget.MaterialComponents.Button.TextButton.Icon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/space_beforeOrAfterElement"
-            android:layout_marginBottom="@dimen/space_beforeOrAfterElement"
-            app:backgroundTint="@color/orange_transparent"
-            app:icon="@drawable/marker"
-            app:iconGravity="textStart"
-            app:iconSize="20dp"
-            app:iconTint="@color/white_transparent_80"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            android:layout_gravity="center"/>
 
         <!-- layout для ProgressBar -->
         <FrameLayout
             android:id="@+id/frameLayout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
             android:background="@color/black_transparent_22"
-            android:visibility="gone" />
+            android:visibility="gone"
+
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
 
         <ProgressBar
             android:id="@+id/progressCircular"
+            android:visibility="gone"
+
             android:layout_width="60dp"
             android:layout_height="60dp"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="parent"
+
+            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintBottom_toBottomOf="parent" />
 
-        <!-- ProgressBar
-            android:id="@+id/progress_horizontal"
-            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/space_beforeOrAfterElement"
-            android:layout_marginTop="@dimen/space_small"
-            android:layout_marginEnd="@dimen/space_beforeOrAfterElement"
-            android:progress="0"
-            android:visibility="visible"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintEnd_toStartOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" / -->
-
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/text_loadingData"
-            style="@style/login_title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:text="Loading data..."
-            android:textColor="@color/black"
-            android:visibility="visible"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_chainStyle="packed" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
 
 </ScrollView>

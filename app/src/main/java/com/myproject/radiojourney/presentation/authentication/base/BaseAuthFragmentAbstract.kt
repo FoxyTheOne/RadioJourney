@@ -9,24 +9,20 @@ import com.myproject.radiojourney.data.sharedPreference.IAppSharedPreference
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
-/**
- * Базовый фрагмент для расширения фрагментами с аутентификацией.
- * Содержит логику перехода сразу на content, если в предыдущий раз пользователь залогинился
- */
 @AndroidEntryPoint
 abstract class BaseAuthFragmentAbstract : Fragment() {
     companion object {
         private const val TAG = "BaseAuthFragment"
     }
 
-    // Воспользуемся global navigation actions, чотбы открывать сразу content, если есть token
+    // Воспользуемся global navigation actions, чотбы открывать сразу контент, если есть токен
     @Inject
     lateinit var preference: IAppSharedPreference
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val tokenForCheck = preference.getToken()
+        val tokenForCheck =  preference.getToken()
         Log.d(TAG, "tokenForCheck = $tokenForCheck")
 
         if (tokenForCheck.isNotBlank()) {

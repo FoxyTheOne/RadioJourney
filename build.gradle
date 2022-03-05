@@ -13,6 +13,8 @@ buildscript {
 
         // Hilt
         classpath "com.google.dagger:hilt-android-gradle-plugin:2.40.5"
+        // Navigation pass data
+        classpath "androidx.navigation:navigation-safe-args-gradle-plugin:2.4.1"
     }
 }
 

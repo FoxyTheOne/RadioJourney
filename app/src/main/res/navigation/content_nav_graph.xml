@@ -6,10 +6,10 @@
 
     <fragment
         android:id="@+id/homeRadioFragment"
-        android:name="com.myproject.radiojourney.presentation.content.HomeRadioFragment"
+        android:name="com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioFragment"
         android:label="HomeRadioFragment" >
         <action
-            android:id="@+id/action_homeRadioFragment_to_content_nav_graph"
+            android:id="@+id/action_homeRadioFragment_to_auth_nav_graph"
             app:destination="@id/auth_nav_graph"
             app:popUpToInclusive="true" />
     </fragment>

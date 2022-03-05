@@ -1,6 +1,7 @@
 package com.myproject.radiojourney.presentation.authentication.signIn
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,16 +9,20 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.LayoutSignInBinding
+import com.myproject.radiojourney.presentation.authentication.base.BaseAuthFragmentAbstract
 
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class SignInFragment: Fragment() {
+class SignInFragment: BaseAuthFragmentAbstract() {
+    companion object {
+        private const val TAG = "SignUpFragment"
+    }
+
     // VIEW BINDING -> 1. Объявляем переменную. This property is only valid between onCreateView and onDestroyView
     private var binding: LayoutSignInBinding? = null
     private val viewModel by viewModels<SignInViewModel>()
@@ -40,11 +45,16 @@ class SignInFragment: Fragment() {
 
         initListeners()
         subscribeOnLiveData()
+
+        // Получаем результат при успешной регистрации на предыдущей странице
+        arguments?.getString("user_email")?.let { email ->
+            binding?.textFieldEmailSignIn?.editText?.setText(email)
+        }
     }
 
     private fun initListeners() {
         // Сохраняем введенные в поля значения для последующего восстановления при необходимости:
-        binding?.textFieldEmail?.editText?.addTextChangedListener {
+        binding?.textFieldEmailSignIn?.editText?.addTextChangedListener {
             it?.let {
                 viewModel.setUpdatedEmail(it.toString())
 
@@ -54,28 +64,28 @@ class SignInFragment: Fragment() {
                         requireContext(),
                         R.color.box_stroke_color_default
                     )?.let { colorList ->
-                        binding?.textFieldEmail?.setBoxStrokeColorStateList(colorList)
+                        binding?.textFieldEmailSignIn?.setBoxStrokeColorStateList(colorList)
                     }
                 } else {
                     ContextCompat.getColorStateList(
                         requireContext(),
                         R.color.box_stroke_color_with_text
                     )?.let { colorList ->
-                        binding?.textFieldEmail?.setBoxStrokeColorStateList(colorList)
-                        binding?.textFieldEmail?.hintTextColor = colorList
+                        binding?.textFieldEmailSignIn?.setBoxStrokeColorStateList(colorList)
+                        binding?.textFieldEmailSignIn?.hintTextColor = colorList
                     }
                     ContextCompat.getColorStateList(
                         requireContext(),
                         R.color.icon_in_box_with_text
                     )?.let { colorList ->
-                        binding?.textFieldEmail?.setStartIconTintList(colorList)
+                        binding?.textFieldEmailSignIn?.setStartIconTintList(colorList)
                     }
                 }
 
             }
         }
 
-        binding?.textFieldPassword?.editText?.addTextChangedListener {
+        binding?.textFieldPasswordSignIn?.editText?.addTextChangedListener {
             it?.let {
                 viewModel.setUpdatedPassword(it.toString())
 
@@ -85,22 +95,22 @@ class SignInFragment: Fragment() {
                         requireContext(),
                         R.color.box_stroke_color_default
                     )?.let { colorList ->
-                        binding?.textFieldPassword?.setBoxStrokeColorStateList(colorList)
+                        binding?.textFieldPasswordSignIn?.setBoxStrokeColorStateList(colorList)
                     }
                 } else {
                     ContextCompat.getColorStateList(
                         requireContext(),
                         R.color.box_stroke_color_with_text
                     )?.let { colorList ->
-                        binding?.textFieldPassword?.setBoxStrokeColorStateList(colorList)
-                        binding?.textFieldPassword?.hintTextColor = colorList
+                        binding?.textFieldPasswordSignIn?.setBoxStrokeColorStateList(colorList)
+                        binding?.textFieldPasswordSignIn?.hintTextColor = colorList
                     }
                     ContextCompat.getColorStateList(
                         requireContext(),
                         R.color.icon_in_box_with_text
                     )?.let { colorList ->
-                        binding?.textFieldPassword?.setStartIconTintList(colorList)
-                        binding?.textFieldPassword?.setEndIconTintList(colorList)
+                        binding?.textFieldPasswordSignIn?.setStartIconTintList(colorList)
+                        binding?.textFieldPasswordSignIn?.setEndIconTintList(colorList)
                     }
                 }
 
@@ -109,20 +119,21 @@ class SignInFragment: Fragment() {
 
         // Определяем действие по клику на кнопку:
         binding?.buttonLogin?.setOnClickListener {
-            val emailText = binding?.textFieldEmail?.editText?.text.toString()
-            val passwordText = binding?.textFieldPassword?.editText?.text.toString()
+            val emailText = binding?.textFieldEmailSignIn?.editText?.text.toString()
+            val passwordText = binding?.textFieldPasswordSignIn?.editText?.text.toString()
 
             viewModel.onLoginClicked(emailText, passwordText)
         }
 
         // Переход на signUpFragment
-        binding?.linearBottomComponentTextGoToSignUp?.setOnClickListener {
+        binding?.linearSignInBottomComponentTextGoToSignUp?.setOnClickListener {
             this.findNavController().navigate(R.id.action_signInFragment_to_signUpFragment)
         }
 
         // Каждый раз, когда мы кликаем, будет исполняться этот метод. Здесь мы сохраняем статус check box
-        binding?.checkBoxRememberLoginAndPassword?.setOnCheckedChangeListener{ _, selected ->
+        binding?.checkBoxSignInRememberLoginAndPassword?.setOnCheckedChangeListener{ _, selected ->
             viewModel.setRememberLoginAndPasswordSelectedOrNot(selected) // Передаём наш isSelected (при нажатии на кнопку) в наш listener
+            Log.d(TAG, "Проверка CHECK_BOX_SELECTED = $selected")
         }
     }
 
@@ -133,12 +144,12 @@ class SignInFragment: Fragment() {
         })
 
         viewModel.showCredentialsErrorLiveData.observe(viewLifecycleOwner, {
-            binding?.textFieldEmail?.error = getString(R.string.signIn_credentials_incorrect)
-            binding?.textFieldPassword?.error = getString(R.string.signIn_credentials_incorrect)
+            binding?.textFieldEmailSignIn?.error = getString(R.string.signIn_credentials_incorrect)
+            binding?.textFieldPasswordSignIn?.error = getString(R.string.signIn_credentials_incorrect)
             Toast.makeText(context, "Something wrong with your data. Please, try again!", Toast.LENGTH_LONG).show()
         })
 
-        // Показываем или ппрячем Progress
+        // Показываем или прячем Progress
         viewModel.showProgressLiveData.observe(viewLifecycleOwner, {
             showProgress()
         })
@@ -148,17 +159,19 @@ class SignInFragment: Fragment() {
 
         // Слушаем check box
         viewModel.checkBoxRememberLoginAndPasswordLiveData.observe(viewLifecycleOwner, { isSelected ->
-            binding?.checkBoxRememberLoginAndPassword?.isChecked = isSelected
+            binding?.checkBoxSignInRememberLoginAndPassword?.isChecked = isSelected
         })
 
         // Слушаем email и password
         viewModel.emailLiveData.observe(viewLifecycleOwner, { email ->
-            binding?.textFieldEmail?.editText?.setText(email)
-            binding?.textFieldEmail?.editText?.setSelection(email.length)
+            Log.d(TAG, "Восстановление текста email = $email")
+            binding?.textFieldEmailSignIn?.editText?.setText(email)
+            binding?.textFieldEmailSignIn?.editText?.setSelection(email.length)
         })
         viewModel.passwordLiveData.observe(viewLifecycleOwner, { password ->
-            binding?.textFieldPassword?.editText?.setText(password)
-            binding?.textFieldPassword?.editText?.setSelection(password.length)
+            Log.d(TAG, "Восстановление текста password = $password")
+            binding?.textFieldPasswordSignIn?.editText?.setText(password)
+            binding?.textFieldPasswordSignIn?.editText?.setSelection(password.length)
         })
     }
 

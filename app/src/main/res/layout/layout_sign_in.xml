@@ -23,12 +23,12 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toTopOf="@+id/text_upper"
+            app:layout_constraintBottom_toTopOf="@+id/text_upperSignIn"
 
             app:layout_constraintVertical_chainStyle="packed"/>
 
         <TextView
-            android:id="@+id/text_upper"
+            android:id="@+id/text_upperSignIn"
             style="@style/login_title"
             android:text="@string/signIn_signIn"
 
@@ -39,12 +39,12 @@
             app:layout_constraintTop_toBottomOf="@+id/icon_appRadioImage"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toTopOf="@+id/textField_email"
+            app:layout_constraintBottom_toTopOf="@+id/textField_emailSignIn"
 
             app:layout_constraintVertical_chainStyle="packed" />
 
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/textField_email"
+            android:id="@+id/textField_emailSignIn"
             style="@style/MyInputLayoutStyle"
             android:textColorHint="@color/white_transparent_60"
             app:boxStrokeColor="@color/box_stroke_color_default"
@@ -57,12 +57,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingHorizontal="@dimen/space_beforeOrAfterElement"
-            android:layout_marginBottom="@dimen/space_beforeOrAfterElement"
 
-            app:layout_constraintTop_toBottomOf="@+id/text_upper"
+            app:layout_constraintTop_toBottomOf="@+id/text_upperSignIn"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintBottom_toTopOf="@+id/textField_password"
+            app:layout_constraintBottom_toTopOf="@+id/textField_passwordSignIn"
 
             app:layout_constraintVertical_chainStyle="packed" >
 
@@ -75,7 +74,7 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/textField_password"
+            android:id="@+id/textField_passwordSignIn"
             style="@style/MyInputLayoutStyle"
             android:textColorHint="@color/white_transparent_60"
             app:boxStrokeColor="@color/box_stroke_color_default"
@@ -85,13 +84,13 @@
             app:endIconTint="@color/gray_startIcon_TextInputLayout"
             android:hint="@string/signIn_password"
             app:endIconMode="password_toggle"
+            app:errorEnabled="true"
 
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingHorizontal="@dimen/space_beforeOrAfterElement"
-            android:layout_marginBottom="@dimen/space_beforeOrAfterElement"
 
-            app:layout_constraintTop_toBottomOf="@+id/textField_email"
+            app:layout_constraintTop_toBottomOf="@+id/textField_emailSignIn"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintBottom_toTopOf="@+id/button_login"
@@ -121,15 +120,15 @@
             android:layout_marginHorizontal="@dimen/space_beforeOrAfterElement"
             android:layout_marginBottom="@dimen/space_beforeOrAfterElement"
 
-            app:layout_constraintTop_toBottomOf="@+id/textField_password"
+            app:layout_constraintTop_toBottomOf="@+id/textField_passwordSignIn"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintBottom_toTopOf="@+id/checkBox_rememberLoginAndPassword"
+            app:layout_constraintBottom_toTopOf="@+id/checkBoxSignIn_rememberLoginAndPassword"
 
             app:layout_constraintVertical_chainStyle="packed" />
 
         <androidx.appcompat.widget.AppCompatCheckBox
-            android:id="@+id/checkBox_rememberLoginAndPassword"
+            android:id="@+id/checkBoxSignIn_rememberLoginAndPassword"
             style="@style/login_bottom"
             android:buttonTint="@color/bright_orange"
             android:text="@string/signIn_CheckBox"
@@ -143,20 +142,20 @@
             app:layout_constraintTop_toBottomOf="@+id/button_login"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintBottom_toTopOf="@+id/linear_bottomComponent"
+            app:layout_constraintBottom_toTopOf="@+id/linear_signInBottomComponent"
 
             app:layout_constraintVertical_chainStyle="packed" />
 
         <LinearLayout
-            android:id="@+id/linear_bottomComponent"
+            android:id="@+id/linear_signInBottomComponent"
             android:orientation="horizontal"
             android:gravity="center"
 
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/space_beforeOrAfterElement"
+            android:layout_marginBottom="@dimen/space_32"
 
-            app:layout_constraintTop_toBottomOf="@+id/checkBox_rememberLoginAndPassword"
+            app:layout_constraintTop_toBottomOf="@+id/checkBoxSignIn_rememberLoginAndPassword"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -164,7 +163,7 @@
             app:layout_constraintVertical_chainStyle="packed">
 
             <TextView
-                android:id="@+id/linear_bottomComponent_lowerText"
+                android:id="@+id/linear_signInBottomComponent_lowerText"
                 style="@style/login_bottom"
                 android:text="@string/signIn_needAnAccount"
 
@@ -173,7 +172,7 @@
                 android:paddingEnd="@dimen/space_small"/>
 
             <TextView
-                android:id="@+id/linear_bottomComponent_textGoToSignUp"
+                android:id="@+id/linear_signInBottomComponent_textGoToSignUp"
                 style="@style/login_bottom_orange"
                 android:text="@string/signIn_signUp"
 
