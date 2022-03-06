@@ -1,11 +1,14 @@
 package com.myproject.radiojourney.presentation.authentication.signIn
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
@@ -18,7 +21,8 @@ import com.myproject.radiojourney.presentation.authentication.base.BaseAuthFragm
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
- * Аутентификация. Фрагмент для входа в приложение
+ * Аутентификация. Фрагмент для входа в приложение.
+ * Перед входом - запрос разрешения на определение местоположения.
  */
 @AndroidEntryPoint
 class SignInFragment : BaseAuthFragmentAbstract() {
@@ -43,6 +47,47 @@ class SignInFragment : BaseAuthFragmentAbstract() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Оформим запрос на PERMISSION, если он не был дан в предыдущий раз
+        // !!! Т.к. запросов много, а не один, мы пишем .RequestMultiplePermissions() вместо .RequestPermission()
+        // Т.обр., в лямбду к нам залетает не boolean, а map. ключом этого map будет string (наши permissions), а второе значение - это boolean
+        // Следовательно, для обращения к определенному PERMISSION, мы обращаемся к нему по ключу типа permissionsMap[...] == true
+        val requestPermissionLauncher =
+            registerForActivityResult(
+                ActivityResultContracts.RequestMultiplePermissions()
+            ) { permissionsMap ->
+                if (permissionsMap[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+                    ||
+                    permissionsMap[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
+                    // Если дано одно из разрешений, открываем следующий фрагмент
+                    this.findNavController().navigate(R.id.action_signInFragment_to_content_nav_graph)
+                } else {
+                    Toast.makeText(requireContext(), "We have no access to your location", Toast.LENGTH_LONG).show()
+                }
+            }
+
+        // Переход на контент в случае успешной аутентификации
+        viewModel.signInSuccessLiveData.observe(viewLifecycleOwner, {
+            // Если одно из разрешений уже есть, открываем LocationFragment
+            if (ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+                ||
+                ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                this.findNavController().navigate(R.id.action_signInFragment_to_content_nav_graph)
+            } else {
+                // Если нет - вызываем requestPermissionLauncher
+                requestPermissionLauncher.launch(arrayOf(
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ))
+            }
+        })
+
         // Если в предыдущий раз галочка была выбрана - восстанавливаем сохраненные значения
         viewModel.getStoredData()
 
@@ -53,6 +98,7 @@ class SignInFragment : BaseAuthFragmentAbstract() {
         arguments?.getString("user_email")?.let { email ->
             binding?.textFieldEmailSignIn?.editText?.setText(email)
         }
+
     }
 
     private fun initListeners() {
@@ -141,11 +187,6 @@ class SignInFragment : BaseAuthFragmentAbstract() {
     }
 
     private fun subscribeOnLiveData() {
-        // Переход на контент в случае успешной аутентификации
-        viewModel.signInSuccessLiveData.observe(viewLifecycleOwner, {
-            this.findNavController().navigate(R.id.action_signInFragment_to_content_nav_graph)
-        })
-
         viewModel.showCredentialsErrorLiveData.observe(viewLifecycleOwner, {
             binding?.textFieldEmailSignIn?.error = getString(R.string.signIn_credentials_incorrect)
             binding?.textFieldPasswordSignIn?.error =

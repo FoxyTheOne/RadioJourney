@@ -21,4 +21,7 @@
     <string name="content_description_userName">User Name</string>
 
     <string name="logout_intention_question">Do you want to log out?</string>
+
+    <string name="homeRadio_zoomPlus">+</string>
+    <string name="homeRadio_zoomMinus">-</string>
 </resources>

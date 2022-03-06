@@ -4,11 +4,13 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/drawable/button_rounded_corners.xml" value="0.36974358974358973" />
+        <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/drawable/ic_launcher_background.xml" value="0.37552083333333336" />
         <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/layout/activity_main.xml" value="0.29528985507246375" />
         <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/layout/layout_home_radio.xml" value="0.359375" />
         <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/layout/layout_logout_dialog.xml" value="0.359375" />
         <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/layout/layout_sign_in.xml" value="0.29528985507246375" />
         <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/layout/layout_sign_up.xml" value="0.359375" />
+        <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/layout/marker_info_contents.xml" value="0.359375" />
         <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/menu/home_toolbar_menu.xml" value="0.359375" />
       </map>
     </option>

@@ -7,6 +7,8 @@ import androidx.fragment.app.FragmentManager
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
+ * Описать логику приложения.
+ *
  * В этом проекте используется шаблон проектирования архитектуры приложения MVVM. Используется подход Clean Architecture.
  * При создании проекта я старалась опираться на принципы проектирования SOLID (Single responsibility, open-closed, liskov substitution, interface segregation, dependency inversion)
  * В проекте используется dependency injection Hilt, т.к. это рекомендация google. А так же потому, что мне нравится его использовать.
