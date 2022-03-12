@@ -7,10 +7,12 @@ import android.view.ViewGroup
 import androidx.appcompat.widget.AppCompatButton
 import androidx.fragment.app.DialogFragment
 import com.myproject.radiojourney.R
+import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * Фрагмент всплывающего окна для уточнения перед выходом
  */
+@AndroidEntryPoint
 class LogOutDialogFragment : DialogFragment() {
 
     // Переменная нашего интерфейса, чтобы вызвать его метод

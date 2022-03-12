@@ -1,6 +1,6 @@
 package com.myproject.radiojourney.data.repository
 
-import com.myproject.radiojourney.data.dataSource.local.ILocalAuthDataSource
+import com.myproject.radiojourney.data.dataSource.local.auth.ILocalAuthDataSource
 import com.myproject.radiojourney.domain.iRepository.IAuthRepository
 import javax.inject.Inject
 

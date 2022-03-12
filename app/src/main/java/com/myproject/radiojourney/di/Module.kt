@@ -3,16 +3,27 @@ package com.myproject.radiojourney.di
 import android.content.Context
 import androidx.room.Room
 import com.myproject.radiojourney.IAppSettings
-import com.myproject.radiojourney.data.dataSource.local.ILocalAuthDataSource
-import com.myproject.radiojourney.data.dataSource.local.LocalAuthDataSource
+import com.myproject.radiojourney.data.dataSource.local.auth.ILocalAuthDataSource
+import com.myproject.radiojourney.data.dataSource.local.auth.LocalAuthDataSource
+import com.myproject.radiojourney.data.dataSource.local.radio.ILocalRadioDataSource
+import com.myproject.radiojourney.data.dataSource.local.radio.LocalRadioDataSource
+import com.myproject.radiojourney.data.dataSource.network.INetworkRadioDataSource
+import com.myproject.radiojourney.data.dataSource.network.NetworkRadioDataSource
+import com.myproject.radiojourney.data.dataSource.network.service.IRadioServiceWrapper
+import com.myproject.radiojourney.data.dataSource.network.service.RadioServiceWrapper
 import com.myproject.radiojourney.data.localDatabaseRoom.AppRoomDBAbstract
+import com.myproject.radiojourney.data.localDatabaseRoom.ICountryDAO
 import com.myproject.radiojourney.data.localDatabaseRoom.IUserDAO
 import com.myproject.radiojourney.data.repository.AuthRepository
+import com.myproject.radiojourney.data.repository.ContentRepository
 import com.myproject.radiojourney.data.sharedPreference.AppSharedPreference
 import com.myproject.radiojourney.data.sharedPreference.IAppSharedPreference
+import com.myproject.radiojourney.domain.homeRadio.HomeRadioInteractor
+import com.myproject.radiojourney.domain.homeRadio.IHomeRadioInteractor
 import com.myproject.radiojourney.domain.signIn.SignInInteractor
 import com.myproject.radiojourney.domain.signIn.ISignInInteractor
 import com.myproject.radiojourney.domain.iRepository.IAuthRepository
+import com.myproject.radiojourney.domain.iRepository.IContentRepository
 import com.myproject.radiojourney.domain.logOut.ILogOutInteractor
 import com.myproject.radiojourney.domain.logOut.LogOutInteractor
 import com.myproject.radiojourney.domain.signUp.ISignUpInteractor
@@ -65,6 +76,11 @@ abstract class ViewModelModule {
         fun providesUserDAO(appDatabase: AppRoomDBAbstract): IUserDAO {
             return appDatabase.getUserDAO()
         }
+
+        @Provides
+        fun providesCountryDAO(appDatabase: AppRoomDBAbstract): ICountryDAO {
+            return appDatabase.getCountryDAO()
+        }
     }
 
     @Binds
@@ -83,14 +99,39 @@ abstract class ViewModelModule {
     ) : ILogOutInteractor
 
     @Binds
+    abstract fun bindsHomeRadioInteractor(
+        homeRadioInteractor: HomeRadioInteractor
+    ) : IHomeRadioInteractor
+
+    @Binds
     abstract fun bindsAuthRepository(
         authRepository: AuthRepository
     ) : IAuthRepository
 
     @Binds
+    abstract fun bindsContentRepository(
+        contentRepository: ContentRepository
+    ) : IContentRepository
+
+    @Binds
     abstract fun bindsLocalAuthDataSource(
         localAuthDataSource: LocalAuthDataSource
     ) : ILocalAuthDataSource
+
+    @Binds
+    abstract fun bindsLocalRadioDataSource(
+        localRadioDataSource: LocalRadioDataSource
+    ) : ILocalRadioDataSource
+
+    @Binds
+    abstract fun bindsNetworkRadioDataSource(
+        networkRadioDataSource: NetworkRadioDataSource
+    ) : INetworkRadioDataSource
+
+    @Binds
+    abstract fun bindRadioServiceWrapper(
+        radioServiceWrapper: RadioServiceWrapper
+    ): IRadioServiceWrapper
 
 }
 

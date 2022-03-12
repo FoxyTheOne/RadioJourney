@@ -7,9 +7,12 @@ import android.widget.TextView
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.Marker
 import com.myproject.radiojourney.R
+import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
 
-class MarkerInfoWindowAdapter(
-    private val context: Context
+class MarkerInfoWindowAdapter @Inject constructor(
+    @ApplicationContext private val context: Context
 ) : GoogleMap.InfoWindowAdapter {
 
     private lateinit var inflater: LayoutInflater

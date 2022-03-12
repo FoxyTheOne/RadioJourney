@@ -1,20 +1,18 @@
 package com.myproject.radiojourney.presentation.content.homeRadio
 
 import android.annotation.SuppressLint
-import android.content.Context
+import android.app.Dialog
 import android.graphics.Bitmap
-import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
 import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.view.*
-import android.widget.Button
-import android.widget.FrameLayout
-import android.widget.ProgressBar
+import android.widget.*
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -29,7 +27,10 @@ import com.myproject.radiojourney.R
 import com.myproject.radiojourney.model.local.Place
 import com.myproject.radiojourney.presentation.content.base.BaseContentFragmentAbstract
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collect
 import javax.inject.Inject
+import com.myproject.radiojourney.model.presentation.CountryPresentation
+
 
 /**
  * Главная страница.
@@ -56,6 +57,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
     private val viewModel by viewModels<HomeRadioViewModel>()
     private lateinit var frameLayout: FrameLayout
     private lateinit var progressCircular: ProgressBar
+    private lateinit var dialogInternetTrouble: Dialog
 
     // Переменная для нашего FusedLocationProviderClient
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
@@ -72,10 +74,11 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
     private lateinit var buttonZoomPlus: Button
     private lateinit var buttonZoomMinus: Button
     private lateinit var buttonYouAreHere: Button
-    // ADD MARKERS TO MAP -> 1. Для примера, сейчас. Потом подгружать список по запросу
-    private val places: List<Place> = listOf(
-        Place(name = "Minsk", latLng = LatLng(53.90580039557321, 27.562806971874416))
-    )
+
+//    // ADD MARKERS TO MAP -> 1. Для примера, сейчас. Потом подгружать список по запросу
+//    private val places: List<Place> = listOf(
+//        Place(name = "Minsk", latLng = LatLng(53.90580039557321, 27.562806971874416))
+//    )
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -103,6 +106,11 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         buttonZoomMinus = view.findViewById(R.id.button_zoomMinus)
         buttonYouAreHere = view.findViewById(R.id.button_youAreHere)
 
+        // Настройки диалогового окна
+        dialogInternetTrouble = Dialog(requireContext())
+        // Передайте ссылку на разметку
+        dialogInternetTrouble.setContentView(R.layout.layout_internet_trouble_dialog)
+
         // GOOGLE MAPS -> 2.2. Obtain the SupportMapFragment and get notified when the map is ready to be used.
         // Необходимо найти supportFragmentManager в списке всех фрагментов
         // val mapFragment = requireActivity().supportFragmentManager.findFragmentById(R.id.map) не сработает,т.к. этот метод ищет внутри активити.
@@ -113,12 +121,11 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         mapFragment.getMapAsync(this)
         // Testing Customize markers
         mapFragment.getMapAsync { googleMap ->
-            // ADD MARKERS TO MAP -> 2. Здесь мы добавляем метки городов на карту
-            addMarkers(googleMap)
+//            // ADD MARKERS TO MAP -> 2. Здесь мы добавляем метки городов на карту
+//            addMarkers(googleMap)
             // Set custom info window adapter
             googleMap.setInfoWindowAdapter(MarkerInfoWindowAdapter(requireContext()))
         }
-
 
         // Настраиваем наш customMarker
         customMarkerYouAreHere = Bitmap.createScaledBitmap(
@@ -133,10 +140,10 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         customMarkerRadio = Bitmap.createScaledBitmap(
             (ContextCompat.getDrawable(
                 requireContext(),
-                R.drawable.radio_icon
+                R.drawable.radio_icon4
             ) as BitmapDrawable).bitmap,
-            100,
-            100,
+            80,
+            80,
             false
         )
 
@@ -146,6 +153,11 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 
         initListeners()
         subscribeOnLiveData()
+
+        // Получаем список кодов стран, преобразуем в локальные модели, сохраняем в Room.
+        viewModel.getCountryListAndSaveToRoom()
+        // Затем подписываемся на локальную БД с помощью CountryListFlow (либо CountryListLiveData)
+        subscribeOnFlow()
     }
 
     private fun initListeners() {
@@ -165,6 +177,30 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         viewModel.hideProgressLiveData.observe(viewLifecycleOwner, {
             hideProgress()
         })
+        viewModel.dialogInternetTroubleLiveData.observe(viewLifecycleOwner, {
+            dialogInternetTrouble.show()
+        })
+    }
+
+    private fun subscribeOnFlow() {
+        lifecycleScope.launchWhenStarted {
+            viewModel.countryListFlow.collect { countryPresentationList ->
+                showProgress()
+                countryPresentationList.forEach { countryPresentation ->
+                    addMarkersOnMap(countryPresentation)
+                }
+                hideProgress()
+
+                if (countryPresentationList == emptyList<CountryPresentation>()){
+                    showProgress()
+                    Toast.makeText(
+                        context,
+                        "Cashing. Please, wait.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
     }
 
     private fun showProgress() {
@@ -249,23 +285,43 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 5f))
     }
 
-    // ADD MARKERS TO MAP -> 3. Здесь мы добавляем метки городов на карту
-    // Adds marker representations of the places list on the provided GoogleMap object
-    private fun addMarkers(googleMap: GoogleMap) {
-        places.forEach { place ->
-            customMarkerRadio?.let { customBitmapMarker ->
-                val marker = googleMap.addMarker(
-                    MarkerOptions()
-                        .title(place.name)
-                        .snippet("Открыть список радиостанций")
-                        .position(place.latLng)
-                        .icon(BitmapDescriptorFactory.fromBitmap(customBitmapMarker))
-                )
-            }
+//    // ADD MARKERS TO MAP -> 3. Здесь мы добавляем метки городов на карту
+//    // Adds marker representations of the places list on the provided GoogleMap object
+//    private fun addMarkers(googleMap: GoogleMap) {
+//        places.forEach { place ->
+//            customMarkerRadio?.let { customBitmapMarker ->
+//                val marker = googleMap.addMarker(
+//                    MarkerOptions()
+//                        .title(place.name)
+//                        .snippet("Открыть список радиостанций")
+//                        .position(place.latLng)
+//                        .icon(BitmapDescriptorFactory.fromBitmap(customBitmapMarker))
+//                )
+//            }
+//
+//            // Set place as the tag on the marker object so it can be referenced within
+//            // MarkerInfoWindowAdapter
+//            marker?.tag = place
+//        }
+//    }
+
+    private fun addMarkersOnMap(countryPresentation: CountryPresentation) {
+        Log.d(
+            TAG,
+            "Метод addMarkersOnMap вызван: страна = ${countryPresentation.countryName}"
+        )
+        customMarkerRadio?.let { customBitmapMarker ->
+            val marker = mMap.addMarker(
+                MarkerOptions()
+                    .title(countryPresentation.countryName)
+                    .snippet("Список радиостанций (${countryPresentation.stationcount})")
+                    .position(countryPresentation.countryLocation)
+                    .icon(BitmapDescriptorFactory.fromBitmap(customBitmapMarker))
+            )
 
             // Set place as the tag on the marker object so it can be referenced within
             // MarkerInfoWindowAdapter
-            marker?.tag = place
+            marker?.tag = countryPresentation
         }
     }
 

@@ -24,4 +24,7 @@
 
     <string name="homeRadio_zoomPlus">+</string>
     <string name="homeRadio_zoomMinus">-</string>
+
+    <string name="dialogInternetTrouble_title">Internet exception</string>
+    <string name="dialogInternetTrouble_text">Please, try turn on and then turn off airplane mode. And then restart the program, if needed.</string>
 </resources>

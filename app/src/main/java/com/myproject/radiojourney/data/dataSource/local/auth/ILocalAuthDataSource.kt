@@ -1,7 +1,5 @@
 package com.myproject.radiojourney.data.dataSource.local.auth
 
-import com.myproject.radiojourney.model.local.UserWithStations
-
 interface ILocalAuthDataSource {
 
     suspend fun isRememberLoginAndPasswordSelected(): Boolean
@@ -18,7 +16,5 @@ interface ILocalAuthDataSource {
     suspend fun registerNewUser(email: String, password: String)
 
     fun logout()
-
-    suspend fun getUsersWithStations(): List<UserWithStations>
 
 }

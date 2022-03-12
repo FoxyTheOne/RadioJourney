@@ -11,6 +11,6 @@ interface IUserDAO {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveUser(user: UserEntity)
 
-    @Query("SELECT * from UserEntity WHERE email LIKE :email")
+    @Query("SELECT * from UserEntity WHERE email LIKE:email")
     suspend fun getUser(email: String): UserEntity?
 }
