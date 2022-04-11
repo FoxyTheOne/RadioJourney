@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-# Draft_graduate_work
-It is a repository for preparing graduate work
-=======
 # TMS_GRADUATE_WORK
 It is a repository for preparing graduate work. I will continue improving the project in private repository.
 
@@ -78,5 +74,3 @@ I hope this helps!
 ------------------
 
 Copyright 2022, Piatrova Alina. All rights reserved.
-
->>>>>>> 03ecaa4 (Returning graduate work to private repository)
