@@ -1,0 +1,47 @@
+<resources>
+    <string name="app_name">RadioJourney</string>
+
+    <string name="signIn_signIn">Вход</string>
+    <string name="signIn_email">Email</string>
+    <string name="signIn_password">Пароль</string>
+    <string name="signIn_CheckBox">Запомнить почту и пароль</string>
+    <string name="signIn_needAnAccount">Создать аккаунт?</string>
+    <string name="signIn_signUp">Регистрация</string>
+    <string name="signIn_credentials_incorrect">Не верный email или пароль</string>
+
+    <string name="signUp_signUp">Регистрация</string>
+    <string name="signUp_confirmPassword">Подтверждение пароля</string>
+    <string name="signUp_alreadyHave">Уже есть аккаунт?</string>
+    <string name="signUp_email_incorrect">Не вернаый email или такой пользователь уже зарегистрирован</string>
+    <string name="signUp_password_incorrect">Пожалуйста, введите корректный пароль - минимум 6 символов</string>
+
+    <string name="content_description_email">Email</string>
+    <string name="content_description_password">Пароль</string>
+    <string name="content_description_confirm_password">Подтверждение пароля</string>
+    <string name="content_description_userName">Имя пользователя</string>
+
+    <string name="logout_intention_question">Хотите выйти?</string>
+
+    <string name="homeRadio_zoomPlus">+</string>
+    <string name="homeRadio_zoomMinus">-</string>
+    <string name="homeRadio_addToFavourites">Добавить</string>
+    <string name="homeRadio_goToFavourites">Избранное</string>
+    <string name="homeRadio_selectRadioStation">Выберите радиостанцию</string>
+    <string name="homeRadio_canTakeTime">Соединение может занять некоторое время.</string>
+    <string name="homeRadio_mayNotWork">Также выбранная радиостанция может не работать в данный момент.</string>
+
+    <string name="dialogInternetTrouble_title">Кеширование не удалось</string>
+    <string name="dialogInternetTrouble_text">Если это первый запуск - пожалуйста, включите и выключите авиарежим, после чего перезапустите программу.</string>
+    <string name="dialogInternetTrouble_text2">Если же нет, не обращайте внимание на ошибку.</string>
+
+    <string name="radioStationList_title">Список радиостанций. Выберите:</string>
+    <string name="radioStationList_count">Счётчик нажатий: </string>
+
+    <string name="foregroundNotification_name">Кеширование локаций</string>
+    <string name="foregroundNotification_description">Кеширование… </string>
+    <string name="foregroundNotification_failedName">Кеширование не удалось.</string>
+    <string name="foregroundNotification_failedDescription">Пожалуйста, включите и выключите авиарежим, после чего перезапустите программу.</string>
+
+    <string name="favouriteRadioStationList_title">Избранное:</string>
+    <string name="favouriteRadioStationList_empty">Здесь пусто. Попробуйте добавлять звезды понравившимся радиостанциям.</string>
+</resources>

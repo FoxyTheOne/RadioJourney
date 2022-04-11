@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/background"
+    android:orientation="vertical">
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/text_radioStationName"
+        style="@style/login_bottom_orange"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/space_beforeOrAfterElement"
+        android:paddingTop="@dimen/space_beforeOrAfterElement"
+        android:paddingEnd="@dimen/space_beforeOrAfterElement"
+        tools:text="Radio station name" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/text_radioStationClickCount"
+            style="@style/login_bottom"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/space_beforeOrAfterElement"
+            android:text="@string/radioStationList_count" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/text_radioStationClickCount2"
+            style="@style/login_bottom"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/space_beforeOrAfterElement"
+            android:paddingEnd="@dimen/space_beforeOrAfterElement"
+            tools:text="2" />
+
+    </LinearLayout>
+
+</LinearLayout>

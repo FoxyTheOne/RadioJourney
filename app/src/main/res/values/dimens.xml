@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="space_small">8dp</dimen>
+    <dimen name="space_beforeOrAfterElement">16dp</dimen>
+    <dimen name="space_32">32dp</dimen>
+
+    <dimen name="button_text">14sp</dimen>
+    <dimen name="button_smallText">14sp</dimen>
+</resources>
