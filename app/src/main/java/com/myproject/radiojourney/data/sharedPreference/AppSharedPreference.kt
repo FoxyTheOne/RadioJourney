@@ -16,11 +16,14 @@ class AppSharedPreference @Inject constructor(@ApplicationContext context: Conte
         // Ключ для отслеживания, проставлена галочка или нет
         private const val PREFERENCE_IS_REMEMBER_LOGIN_AND_PASSWORD_SELECTED =
             "PREFERENCE_IS_REMEMBER_LOGIN_AND_PASSWORD_SELECTED"
+        private const val PREFERENCE_IS_RADIO_STATION_STORED =
+            "PREFERENCE_IS_RADIO_STATION_STORED"
 
         // Ключи для данных
         private const val PREFERENCE_USER_EMAIL = "PREFERENCE_EMAIL"
         private const val PREFERENCE_USER_PASSWORD = "PREFERENCE_PASSWORD"
         private const val PREFERENCE_USER_TOKEN = "USER_TOKEN"
+        private const val PREFERENCE_RADIO_STATION_URL = "PREFERENCE_RADIO_STATION_URL"
     }
 
     // У нас будет один общий файл, поэтому .getSharedPreferences()
@@ -86,6 +89,38 @@ class AppSharedPreference @Inject constructor(@ApplicationContext context: Conte
     override fun getToken(): String {
         return sharedPreference?.getString(
             PREFERENCE_USER_TOKEN,
+            ""
+        ) ?: ""
+    }
+
+    override fun setIsRadioStationStored(isStored: Boolean) {
+        sharedPreference?.edit()?.putBoolean(
+            PREFERENCE_IS_RADIO_STATION_STORED,
+            isStored
+        )?.apply()
+        Log.d(
+            TAG,
+            "Сохранено в AppSharedPreference: PREFERENCE_IS_RADIO_STATION_STORED = $isStored"
+        )
+    }
+
+    override fun isRadioStationStored(): Boolean {
+        return sharedPreference?.getBoolean(
+            PREFERENCE_IS_RADIO_STATION_STORED,
+            false
+        ) ?: false
+    }
+
+    override fun saveRadioStationUrl(url: String) {
+        sharedPreference?.edit()?.putString(
+            PREFERENCE_RADIO_STATION_URL,
+            url
+        )?.apply()
+    }
+
+    override fun getRadioStationUrl(): String {
+        return sharedPreference?.getString(
+            PREFERENCE_RADIO_STATION_URL,
             ""
         ) ?: ""
     }

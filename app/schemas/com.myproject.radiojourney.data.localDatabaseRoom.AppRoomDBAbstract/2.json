@@ -2,7 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 2,
+<<<<<<< HEAD
     "identityHash": "5b1bb494c2e79e1dc1013b0db8a649f8",
+=======
+    "identityHash": "1329a739da00c678476d806a4d91ad99",
+>>>>>>> 03ecaa4 (Returning graduate work to private repository)
     "entities": [
       {
         "tableName": "UserEntity",
@@ -73,12 +77,57 @@
         },
         "indices": [],
         "foreignKeys": []
+<<<<<<< HEAD
+=======
+      },
+      {
+        "tableName": "RadioStationLocal",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`stationName` TEXT NOT NULL, `url` TEXT NOT NULL, `clickCount` INTEGER NOT NULL, `countrycode` TEXT NOT NULL, PRIMARY KEY(`url`))",
+        "fields": [
+          {
+            "fieldPath": "stationName",
+            "columnName": "stationName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "url",
+            "columnName": "url",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "clickCount",
+            "columnName": "clickCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "countryCode",
+            "columnName": "countrycode",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "url"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [],
+        "foreignKeys": []
+>>>>>>> 03ecaa4 (Returning graduate work to private repository)
       }
     ],
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+<<<<<<< HEAD
       "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '5b1bb494c2e79e1dc1013b0db8a649f8')"
+=======
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1329a739da00c678476d806a4d91ad99')"
+>>>>>>> 03ecaa4 (Returning graduate work to private repository)
     ]
   }
 }

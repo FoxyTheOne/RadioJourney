@@ -1,18 +1,18 @@
 package com.myproject.radiojourney.data.repository
 
 import android.content.Context
-import android.location.Address
-import android.location.Geocoder
 import android.util.Log
-import com.google.android.gms.maps.model.LatLng
+import com.myproject.radiojourney.data.dataSource.local.auth.ILocalAuthDataSource
 import com.myproject.radiojourney.data.dataSource.local.radio.ILocalRadioDataSource
 import com.myproject.radiojourney.data.dataSource.network.INetworkRadioDataSource
 import com.myproject.radiojourney.domain.iRepository.IContentRepository
 import com.myproject.radiojourney.model.local.CountryLocal
+import com.myproject.radiojourney.model.local.RadioStationFavouriteLocal
+import com.myproject.radiojourney.model.local.RadioStationLocal
+import com.myproject.radiojourney.model.local.UserWithStations
+import com.myproject.radiojourney.model.presentation.RadioStationPresentation
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
-import java.io.IOException
-import java.util.*
 import javax.inject.Inject
 
 /**
@@ -23,56 +23,74 @@ import javax.inject.Inject
 class ContentRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val networkRadioDataSource: INetworkRadioDataSource,
-    private val localRadioDataSource: ILocalRadioDataSource
+    private val localRadioDataSource: ILocalRadioDataSource,
+    private val localAuthDataSource: ILocalAuthDataSource
 ) : IContentRepository {
     companion object {
         private const val TAG = "ContentRepository"
     }
 
-    override suspend fun getCountryListAndSaveToRoom() {
-        // Получаем список кодов стран из networkRadioDataSource
-        val countryCodeRemoteList = networkRadioDataSource.getCountryCodeList()
-
-        // Преобразуем коды (remote) в читабельные страны (local) с локацией
-        val countryLocalList = mutableListOf<CountryLocal>()
-
-        val geocoder = Geocoder(context)
-        var addresses = mutableListOf<Address>()
-
-        countryCodeRemoteList.forEach { countryCodeRemote ->
-            // Узнаем название страны
-            val loc: Locale = Locale("", countryCodeRemote.name)
-            val countryName = loc.displayName
-            Log.d(TAG, "результат countryName: $countryName")
-
-            // Узнаем местоположение
-            // В этом месте вылетает, если проблема с интернетом
-            addresses = geocoder.getFromLocationName(countryName, 1)
-            var latitude: Double = 0.0
-            var longitude: Double = 0.0
-            if (addresses.size > 0) {
-                latitude = addresses[0].latitude;
-                longitude = addresses[0].longitude;
-            }
-            Log.d(TAG, "результат addresses: $latitude, $longitude")
-
-            // remote -> local
-            val countryLocal = CountryLocal.fromRemoteToLocal(
-                countryCodeRemote,
-                countryName = countryName,
-                countryLocation = LatLng(latitude, longitude)
-            )
-            countryLocalList.add(countryLocal)
-        }
-
-        countryLocalList.forEach { countryLocal ->
-            Log.d(TAG, "результат преобразования названия страны: ${countryLocal.countryName}")
-        }
-
-        // Теперь сохраним наши страны в Room
-        localRadioDataSource.saveCountryList(countryLocalList)
-    }
-
     override fun subscribeOnCountryList(): Flow<List<CountryLocal>> =
         localRadioDataSource.subscribeOnCountryList()
+
+    override suspend fun getRadioStationList(countryCode: String): List<RadioStationLocal> {
+        // Получаем список радиостанций из networkRadioDataSource
+        val radioStationRemoteList = networkRadioDataSource.getRadioStationList(countryCode)
+
+        // Преобразуем модельки remote -> local
+        val radioStationLocalList = mutableListOf<RadioStationLocal>()
+
+        radioStationRemoteList.forEach { radioStationRemote ->
+            val radioStationLocal = RadioStationLocal.fromRemoteToLocal(radioStationRemote)
+            radioStationLocalList.add(radioStationLocal)
+        }
+
+        Log.d(
+            TAG,
+            "Успешный запрос; результат запроса радиостанций[0]: ${radioStationLocalList[0]}"
+        )
+
+        return radioStationLocalList.toList()
+    }
+
+    override suspend fun isRadioStationStored(): Boolean =
+        localRadioDataSource.isRadioStationStored()
+
+    override suspend fun getRadioStationUrl(): String? = localRadioDataSource.getRadioStationUrl()
+    override suspend fun getRadioStationSaved(radioStationUrl: String): RadioStationLocal? =
+        localRadioDataSource.getRadioStationSaved(radioStationUrl)
+
+    override suspend fun saveRadioStationUrl(
+        isStored: Boolean,
+        radioStation: RadioStationPresentation
+    ) {
+        val radioStationLocal = RadioStationLocal.fromPresentationToLocal(radioStation)
+        localRadioDataSource.saveRadioStationUrl(isStored, radioStationLocal)
+    }
+
+    override suspend fun saveFavouriteRadioStationUrl(isStored: Boolean, url: String) =
+        localRadioDataSource.saveFavouriteRadioStationUrl(isStored, url)
+
+    override suspend fun getToken(): Int? {
+        // Узнаём userCreatorId
+        // В нашем случае userCreatorId = token
+        val userCreatorId = localRadioDataSource.getToken()
+        val userCreatorIdInt = userCreatorId.toIntOrNull()
+        Log.d(TAG, "Результат преобразования $userCreatorId String в Int = $userCreatorIdInt")
+
+        return userCreatorIdInt
+    }
+
+    override suspend fun addStationToFavourites(currentRadioStationFavouriteLocal: RadioStationFavouriteLocal) {
+        localRadioDataSource.addStationToFavourites(currentRadioStationFavouriteLocal)
+    }
+
+    override suspend fun isStationInFavourites(url: String): Boolean =
+        localRadioDataSource.isStationInFavourites(url)
+
+    override suspend fun deleteRadioStationFromFavourite(currentRadioStationFavouriteLocal: RadioStationFavouriteLocal) =
+        localRadioDataSource.deleteRadioStationFromFavourite(currentRadioStationFavouriteLocal)
+
+    override suspend fun getUsersWithStations(): List<UserWithStations> =
+        localAuthDataSource.getUsersWithStations()
 }

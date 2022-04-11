@@ -26,7 +26,7 @@ abstract class BaseAuthFragmentAbstract : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val tokenForCheck =  preference.getToken()
+        val tokenForCheck = preference.getToken()
         Log.d(TAG, "tokenForCheck = $tokenForCheck")
 
         if (tokenForCheck.isNotBlank()) {

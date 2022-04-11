@@ -11,12 +11,15 @@
         <action
             android:id="@+id/action_signInFragment_to_signUpFragment"
             app:destination="@id/signUpFragment"
+            app:popUpTo="@id/signInFragment"
             app:popUpToInclusive="true" />
         <action
             android:id="@+id/action_signInFragment_to_content_nav_graph"
             app:destination="@id/content_nav_graph"
+            app:popUpTo="@id/signInFragment"
             app:popUpToInclusive="true" />
     </fragment>
+
     <fragment
         android:id="@+id/signUpFragment"
         android:name="com.myproject.radiojourney.presentation.authentication.signUp.SignUpFragment"
@@ -24,6 +27,7 @@
         <action
             android:id="@+id/action_signUpFragment_to_signInFragment"
             app:destination="@id/signInFragment"
+            app:popUpTo="@id/signUpFragment"
             app:popUpToInclusive="true">
             <!-- Передаём email на следующий фрагмент при успешной регистрации -->
             <argument
@@ -32,6 +36,7 @@
 
         </action>
     </fragment>
+
     <!-- Global action -->
     <action
         android:id="@+id/action_global_content_nav_graph"

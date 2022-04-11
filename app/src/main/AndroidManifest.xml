@@ -12,6 +12,14 @@
      -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- 1.
+    Разрешение для Foreground Service:
+     -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!--
+        Разрешение для Alert Window:
+    -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <application
         android:name=".App"
@@ -23,7 +31,9 @@
         android:theme="@style/Theme.RadioJourney">
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:configChanges="orientation"
+            android:exported="true"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -31,6 +41,10 @@
             </intent-filter>
         </activity>
 
+        <!--
+         2. Декларируем Foreground Service:
+          -->
+        <service android:name=".utils.service.ProgressForegroundService" />
         <!--
         Google maps:
          -->

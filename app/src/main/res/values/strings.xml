@@ -24,7 +24,24 @@
 
     <string name="homeRadio_zoomPlus">+</string>
     <string name="homeRadio_zoomMinus">-</string>
+    <string name="homeRadio_addToFavourites">Add to favourites</string>
+    <string name="homeRadio_goToFavourites">Go to favourites</string>
+    <string name="homeRadio_selectRadioStation">Select radio station</string>
+    <string name="homeRadio_canTakeTime">It may take time to connect.</string>
+    <string name="homeRadio_mayNotWork">Also selected radio station may not work right now.</string>
 
-    <string name="dialogInternetTrouble_title">Internet exception</string>
-    <string name="dialogInternetTrouble_text">Please, try turn on and then turn off airplane mode. And then restart the program, if needed.</string>
+    <string name="dialogInternetTrouble_title">Cashing failed</string>
+    <string name="dialogInternetTrouble_text">If it is the first start - please, try turn on and then turn off airplane mode, and then restart the program.</string>
+    <string name="dialogInternetTrouble_text2">Otherwise, just ignore this message.</string>
+
+    <string name="radioStationList_title">Radio station list. Select one:</string>
+    <string name="radioStationList_count">Radio station click count: </string>
+
+    <string name="foregroundNotification_name">Cashing. Please, wait. </string>
+    <string name="foregroundNotification_description">Cashing… </string>
+    <string name="foregroundNotification_failedName">Cashing failed.</string>
+    <string name="foregroundNotification_failedDescription">Please, try turn on and then turn off airplane mode. And then restart the program, if needed.</string>
+
+    <string name="favouriteRadioStationList_title">My favourites:</string>
+    <string name="favouriteRadioStationList_empty">It\'s empty here. Try adding stars to your favourite stations.</string>
 </resources>

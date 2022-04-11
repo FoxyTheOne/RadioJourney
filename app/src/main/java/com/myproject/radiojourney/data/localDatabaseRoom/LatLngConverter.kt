@@ -3,31 +3,10 @@ package com.myproject.radiojourney.data.localDatabaseRoom
 import androidx.room.TypeConverter
 import com.google.android.gms.maps.model.LatLng
 
-import com.google.gson.reflect.TypeToken
-
-import com.google.gson.Gson
-import java.lang.reflect.Type
-
-
 /**
  * Конвертер для LatLng
  */
 object LatLngConverter {
-
-//    @TypeConverter
-//    fun stringToModel(json: String?): LatLng? {
-//        val gson = Gson()
-//        val type: Type = object : TypeToken<LatLng?>() {}.type
-//        return gson.fromJson(json, type)
-//    }
-//
-//    @TypeConverter
-//    fun modelToString(position: LatLng?): String? {
-//        val gson = Gson()
-//        val type: Type = object : TypeToken<LatLng?>() {}.type
-//        return gson.toJson(position, type)
-//    }
-
     private const val ENTRY_SEPARATOR = "||"
 
     @TypeConverter

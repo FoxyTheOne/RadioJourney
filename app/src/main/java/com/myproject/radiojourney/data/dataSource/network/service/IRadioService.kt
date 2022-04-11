@@ -1,6 +1,7 @@
 package com.myproject.radiojourney.data.dataSource.network.service
 
 import com.myproject.radiojourney.model.remote.CountryCodeRemote
+import com.myproject.radiojourney.model.remote.RadioStationRemote
 import retrofit2.http.GET
 import retrofit2.http.Path
 
@@ -14,15 +15,24 @@ import retrofit2.http.Path
  * 4. Описываем метод в файле Module для hilt
  */
 interface IRadioService {
-    // Пример - http://de1.api.radio-browser.info/json/countrycodes
     companion object {
         private const val BASE_PATH = "json"
         private const val COUNTRY_CODE_PATH = "countrycodes"
+        private const val STATIONS_PATH = "stations"
+        private const val BY_COUNTRY_CODE_EXACT_PATH = "bycountrycodeexact"
     }
 
+    // Пример - http://de1.api.radio-browser.info/json/countrycodes
     @GET("$BASE_PATH/{countrycodes}")
     suspend fun getCountryCodeList(
         @Path("countrycodes") countryCodes: String = COUNTRY_CODE_PATH
     ): List<CountryCodeRemote>
 
+    // Пример - http://de1.api.radio-browser.info/{format}/stations/bycountrycodeexact/{searchterm}
+    @GET("$BASE_PATH/{stations}/{bycountrycodeexact}/{searchterm}")
+    suspend fun getRadioStationList(
+        @Path("stations") stations: String = STATIONS_PATH,
+        @Path("bycountrycodeexact") byCountryCodeExact: String = BY_COUNTRY_CODE_EXACT_PATH,
+        @Path("searchterm") searchTerm: String
+    ): List<RadioStationRemote>
 }

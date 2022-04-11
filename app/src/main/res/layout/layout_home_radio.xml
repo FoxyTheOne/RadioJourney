@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:fillViewport="true">
 
-    <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -38,11 +38,18 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/background_transparent"
-            android:orientation="vertical"
-            app:layout_constraintBottom_toTopOf="@+id/linear_radioStationButtons"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toTopOf="@+id/linear_canTakeTime"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/home_toolbar">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/image_play"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="center"
+                android:layout_marginStart="@dimen/space_beforeOrAfterElement" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/text_radioStationTitle"
@@ -51,20 +58,43 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:padding="@dimen/space_beforeOrAfterElement"
-                android:text="radioStationTitle"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/home_toolbar" />
+                android:text="@string/homeRadio_selectRadioStation" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/linear_canTakeTime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/background_transparent"
+            android:gravity="start"
+            android:orientation="vertical"
+            android:paddingBottom="@dimen/space_beforeOrAfterElement"
+            app:layout_constraintBottom_toTopOf="@+id/linear_radioStationButtons"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/linear_radioStationDescription">
 
             <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/text_radioStationDescription"
+                android:id="@+id/text_canTakeTime"
                 style="@style/login_bottom"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_gravity="start"
                 android:paddingStart="@dimen/space_beforeOrAfterElement"
                 android:paddingEnd="@dimen/space_beforeOrAfterElement"
-                android:paddingBottom="@dimen/space_beforeOrAfterElement"
-                android:text="radioStationDescription" />
+                android:text="@string/homeRadio_canTakeTime" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/text_mayNotWork"
+                style="@style/login_bottom"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:paddingStart="@dimen/space_beforeOrAfterElement"
+                android:paddingEnd="@dimen/space_beforeOrAfterElement"
+                android:text="@string/homeRadio_mayNotWork" />
+
         </LinearLayout>
 
         <LinearLayout
@@ -77,34 +107,44 @@
             android:paddingBottom="@dimen/space_beforeOrAfterElement"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linear_radioStationDescription">
+            app:layout_constraintTop_toBottomOf="@+id/linear_canTakeTime">
 
             <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/button_addToFavorites"
+                android:id="@+id/button_addToFavourites"
                 style="@style/Widget.AppCompat.ActionButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/space_small"
                 android:background="@drawable/button_rounded_corners"
-                android:text="addToFavorites"
+                android:text="@string/homeRadio_addToFavourites"
                 android:textColor="@color/white"
                 android:textSize="@dimen/button_text"
                 android:textStyle="bold"
                 app:backgroundTint="@null" />
 
             <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/button_goToFavorites"
+                android:id="@+id/button_goToFavourites"
                 style="@style/Widget.AppCompat.ActionButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/space_beforeOrAfterElement"
                 android:background="@drawable/button_rounded_corners"
-                android:text="goToFavorites"
+                android:text="@string/homeRadio_goToFavourites"
                 android:textColor="@color/white"
                 android:textSize="@dimen/button_text"
                 android:textStyle="bold"
                 app:backgroundTint="@null" />
         </LinearLayout>
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/image_star"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="@dimen/space_beforeOrAfterElement"
+            android:layout_marginBottom="@dimen/space_beforeOrAfterElement"
+            app:layout_constraintBottom_toBottomOf="@+id/linear_radioStationButtons"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/linear_radioStationButtons" />
 
         <Button
             android:id="@+id/button_zoomPlus"
@@ -164,6 +204,21 @@
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/text_loadingData"
+            style="@style/login_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Loading data..."
+            android:textColor="@color/black"
+            android:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

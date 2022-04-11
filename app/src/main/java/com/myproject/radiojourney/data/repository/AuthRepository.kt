@@ -34,5 +34,4 @@ class AuthRepository @Inject constructor(
         localAuthDataSource.registerNewUser(email, password)
 
     override fun logout() = localAuthDataSource.logout()
-
 }

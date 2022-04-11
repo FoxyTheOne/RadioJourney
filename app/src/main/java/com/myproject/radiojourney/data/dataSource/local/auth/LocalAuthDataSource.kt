@@ -2,9 +2,10 @@ package com.myproject.radiojourney.data.dataSource.local.auth
 
 import com.myproject.radiojourney.data.localDatabaseRoom.IUserDAO
 import com.myproject.radiojourney.data.sharedPreference.IAppSharedPreference
-import com.myproject.radiojourney.extension.isEmailValid
-import com.myproject.radiojourney.extension.isPasswordValid
+import com.myproject.radiojourney.utils.extension.isEmailValid
+import com.myproject.radiojourney.utils.extension.isPasswordValid
 import com.myproject.radiojourney.model.local.UserEntity
+import com.myproject.radiojourney.model.local.UserWithStations
 import javax.inject.Inject
 
 /**
@@ -68,4 +69,6 @@ class LocalAuthDataSource @Inject constructor(
 
     // Выход из аккаунта
     override fun logout() = preference.saveToken(null)
+    override suspend fun getUsersWithStations(): List<UserWithStations> =
+        userDAO.getUsersWithStations()
 }

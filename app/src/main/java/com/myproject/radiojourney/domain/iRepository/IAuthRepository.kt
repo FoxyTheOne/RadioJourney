@@ -18,5 +18,4 @@ interface IAuthRepository {
     suspend fun registerNewUser(email: String, password: String)
 
     fun logout()
-
 }

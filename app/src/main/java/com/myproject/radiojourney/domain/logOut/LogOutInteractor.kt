@@ -11,7 +11,5 @@ import javax.inject.Inject
 class LogOutInteractor @Inject constructor(
     private val authRepository: IAuthRepository
 ) : ILogOutInteractor {
-
     override suspend fun onLogout() = authRepository.logout()
-
 }

@@ -16,4 +16,9 @@ interface IAppSharedPreference {
 
     fun saveToken(token: Int?)
     fun getToken(): String
+
+    fun setIsRadioStationStored(isStored: Boolean)
+    fun isRadioStationStored(): Boolean
+    fun saveRadioStationUrl(url: String)
+    fun getRadioStationUrl(): String
 }

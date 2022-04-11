@@ -12,7 +12,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/space_beforeOrAfterElement"
-        android:layout_marginBottom="@dimen/space_32"
+        android:layout_marginBottom="@dimen/space_beforeOrAfterElement"
         android:text="@string/dialogInternetTrouble_title"
         android:textSize="20sp"
         android:textStyle="bold"
@@ -27,15 +27,29 @@
         style="@style/login_bottom"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_beforeOrAfterElement"
-        android:layout_marginBottom="@dimen/space_32"
+        android:layout_marginBottom="@dimen/space_beforeOrAfterElement"
         android:text="@string/dialogInternetTrouble_text"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/text_internetTrouble2"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/title_internetTrouble"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/text_internetTrouble2"
+        style="@style/login_bottom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/space_beforeOrAfterElement"
+        android:text="@string/dialogInternetTrouble_text2"
         android:textSize="20sp"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/title_internetTrouble"
+        app:layout_constraintTop_toBottomOf="@+id/text_internetTrouble"
         app:layout_constraintVertical_chainStyle="packed" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

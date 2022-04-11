@@ -8,6 +8,8 @@ plugins {
     id 'androidx.navigation.safeargs'
     // Google maps
     id 'com.google.android.libraries.mapsplatform.secrets-gradle-plugin'
+    // Parcelable implementation generator
+    id 'kotlin-parcelize'
 }
 
 android {
@@ -29,7 +31,6 @@ android {
                 arguments += ["room.schemaLocation": "$projectDir/schemas".toString()]
             }
         }
-
     }
 
     buildTypes {
@@ -52,7 +53,6 @@ android {
     buildFeatures {
         viewBinding = true
     }
-
 }
 
 dependencies {
@@ -108,5 +108,6 @@ dependencies {
 }
 
 kapt {
-    correctErrorTypes = true // Дополнит. настройка, чтобы hilt показывал корректные сообщения об ошибке во время компиляции
+    // Дополнит. настройка, чтобы hilt показывал корректные сообщения об ошибке во время компиляции
+    correctErrorTypes = true
 }

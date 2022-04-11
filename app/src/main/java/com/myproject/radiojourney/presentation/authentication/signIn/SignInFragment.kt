@@ -17,7 +17,6 @@ import androidx.navigation.fragment.findNavController
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.LayoutSignInBinding
 import com.myproject.radiojourney.presentation.authentication.base.BaseAuthFragmentAbstract
-
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
@@ -57,11 +56,17 @@ class SignInFragment : BaseAuthFragmentAbstract() {
             ) { permissionsMap ->
                 if (permissionsMap[Manifest.permission.ACCESS_COARSE_LOCATION] == true
                     ||
-                    permissionsMap[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
+                    permissionsMap[Manifest.permission.ACCESS_FINE_LOCATION] == true
+                ) {
                     // Если дано одно из разрешений, открываем следующий фрагмент
-                    this.findNavController().navigate(R.id.action_signInFragment_to_content_nav_graph)
+                    this.findNavController()
+                        .navigate(R.id.action_signInFragment_to_content_nav_graph)
                 } else {
-                    Toast.makeText(requireContext(), "We have no access to your location", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        requireContext(),
+                        "We have no access to your location",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             }
 
@@ -81,10 +86,12 @@ class SignInFragment : BaseAuthFragmentAbstract() {
                 this.findNavController().navigate(R.id.action_signInFragment_to_content_nav_graph)
             } else {
                 // Если нет - вызываем requestPermissionLauncher
-                requestPermissionLauncher.launch(arrayOf(
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ))
+                requestPermissionLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    )
+                )
             }
         })
 

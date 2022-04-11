@@ -8,10 +8,10 @@ import dagger.hilt.android.AndroidEntryPoint
  * Содержит логику открытия всплывающего окна при нажатии на кнопку выхода на тулбаре. Непосредственно логика метода onLogOut() описывается в фрагменте, который содержит тулбар
  */
 @AndroidEntryPoint
-abstract class BaseContentFragmentAbstract: Fragment(), ILogOutListener {
+abstract class BaseContentFragmentAbstract : Fragment(), ILogOutListener {
     fun showLogoutDialog() {
         val supportFragment = requireActivity().supportFragmentManager
-        // Создаём DialogFragment для диалогового окна
+        // Создаём LogOutDialogFragment для диалогового окна
         val logOutDialogFragment = LogOutDialogFragment()
         logOutDialogFragment.setLogOutListener(this)
         logOutDialogFragment.show(supportFragment, "LogOutDialogFragment")

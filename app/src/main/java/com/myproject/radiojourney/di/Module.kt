@@ -11,13 +11,13 @@ import com.myproject.radiojourney.data.dataSource.network.INetworkRadioDataSourc
 import com.myproject.radiojourney.data.dataSource.network.NetworkRadioDataSource
 import com.myproject.radiojourney.data.dataSource.network.service.IRadioServiceWrapper
 import com.myproject.radiojourney.data.dataSource.network.service.RadioServiceWrapper
-import com.myproject.radiojourney.data.localDatabaseRoom.AppRoomDBAbstract
-import com.myproject.radiojourney.data.localDatabaseRoom.ICountryDAO
-import com.myproject.radiojourney.data.localDatabaseRoom.IUserDAO
+import com.myproject.radiojourney.data.localDatabaseRoom.*
 import com.myproject.radiojourney.data.repository.AuthRepository
 import com.myproject.radiojourney.data.repository.ContentRepository
 import com.myproject.radiojourney.data.sharedPreference.AppSharedPreference
 import com.myproject.radiojourney.data.sharedPreference.IAppSharedPreference
+import com.myproject.radiojourney.domain.favouriteList.FavouriteListInteractor
+import com.myproject.radiojourney.domain.favouriteList.IFavouriteListInteractor
 import com.myproject.radiojourney.domain.homeRadio.HomeRadioInteractor
 import com.myproject.radiojourney.domain.homeRadio.IHomeRadioInteractor
 import com.myproject.radiojourney.domain.signIn.SignInInteractor
@@ -26,6 +26,8 @@ import com.myproject.radiojourney.domain.iRepository.IAuthRepository
 import com.myproject.radiojourney.domain.iRepository.IContentRepository
 import com.myproject.radiojourney.domain.logOut.ILogOutInteractor
 import com.myproject.radiojourney.domain.logOut.LogOutInteractor
+import com.myproject.radiojourney.domain.radioList.IRadioListInteractor
+import com.myproject.radiojourney.domain.radioList.RadioListInteractor
 import com.myproject.radiojourney.domain.signUp.ISignUpInteractor
 import com.myproject.radiojourney.domain.signUp.SignUpInteractor
 import dagger.Binds
@@ -56,13 +58,43 @@ abstract class SingletonModule {
 
             return roomDatabase
         }
+
+        @Provides
+        fun providesCountryDAO(appDatabase: AppRoomDBAbstract): ICountryDAO {
+            return appDatabase.getCountryDAO()
+        }
+
+        @Provides
+        fun providesRadioStationDAO(appDatabase: AppRoomDBAbstract): IRadioStationDAO {
+            return appDatabase.getRadioStationDAO()
+        }
+
+        @Provides
+        fun providesRadioStationFavouriteDAO(appDatabase: AppRoomDBAbstract): IRadioStationFavouriteDAO {
+            return appDatabase.getRadioStationFavouriteDAO()
+        }
     }
 
     @Binds
     @Singleton
     abstract fun bindsSharedPreference(
         appSharedPreference: AppSharedPreference
-    ) : IAppSharedPreference
+    ): IAppSharedPreference
+
+    @Binds
+    abstract fun bindsLocalRadioDataSource(
+        localRadioDataSource: LocalRadioDataSource
+    ): ILocalRadioDataSource
+
+    @Binds
+    abstract fun bindsNetworkRadioDataSource(
+        networkRadioDataSource: NetworkRadioDataSource
+    ): INetworkRadioDataSource
+
+    @Binds
+    abstract fun bindRadioServiceWrapper(
+        radioServiceWrapper: RadioServiceWrapper
+    ): IRadioServiceWrapper
 
 }
 
@@ -77,61 +109,83 @@ abstract class ViewModelModule {
             return appDatabase.getUserDAO()
         }
 
-        @Provides
-        fun providesCountryDAO(appDatabase: AppRoomDBAbstract): ICountryDAO {
-            return appDatabase.getCountryDAO()
-        }
+        // Переношу следующие конструкторы в SingletonModule, т.к. их будет использовать LocalRadioDataSource, который использует Foreground service
+//        @Provides
+//        fun providesCountryDAO(appDatabase: AppRoomDBAbstract): ICountryDAO {
+//            return appDatabase.getCountryDAO()
+//        }
+
+//        @Provides
+//        fun providesRadioStationDAO(appDatabase: AppRoomDBAbstract): IRadioStationDAO {
+//            return appDatabase.getRadioStationDAO()
+//        }
+
+//        @Provides
+//        fun providesRadioStationFavouriteDAO(appDatabase: AppRoomDBAbstract): IRadioStationFavouriteDAO {
+//            return appDatabase.getRadioStationFavouriteDAO()
+//        }
     }
 
     @Binds
     abstract fun bindsSignInInteractor(
         signInInteractor: SignInInteractor
-    ) : ISignInInteractor
+    ): ISignInInteractor
 
     @Binds
     abstract fun bindsSignUpInteractor(
         signUpInteractor: SignUpInteractor
-    ) : ISignUpInteractor
+    ): ISignUpInteractor
 
     @Binds
     abstract fun bindsLogOutInteractor(
         logOutInteractor: LogOutInteractor
-    ) : ILogOutInteractor
+    ): ILogOutInteractor
 
     @Binds
     abstract fun bindsHomeRadioInteractor(
         homeRadioInteractor: HomeRadioInteractor
-    ) : IHomeRadioInteractor
+    ): IHomeRadioInteractor
+
+    @Binds
+    abstract fun bindsRadioListInteractor(
+        radioListInteractor: RadioListInteractor
+    ): IRadioListInteractor
+
+    @Binds
+    abstract fun bindsIFavouriteListInteractor(
+        favouriteListInteractor: FavouriteListInteractor
+    ): IFavouriteListInteractor
 
     @Binds
     abstract fun bindsAuthRepository(
         authRepository: AuthRepository
-    ) : IAuthRepository
+    ): IAuthRepository
 
     @Binds
     abstract fun bindsContentRepository(
         contentRepository: ContentRepository
-    ) : IContentRepository
+    ): IContentRepository
 
     @Binds
     abstract fun bindsLocalAuthDataSource(
         localAuthDataSource: LocalAuthDataSource
-    ) : ILocalAuthDataSource
+    ): ILocalAuthDataSource
 
-    @Binds
-    abstract fun bindsLocalRadioDataSource(
-        localRadioDataSource: LocalRadioDataSource
-    ) : ILocalRadioDataSource
+    // Переношу следующие конструкторы в SingletonModule, т.к. их будет использовать LocalRadioDataSource, который использует Foreground service
+//    @Binds
+//    abstract fun bindsLocalRadioDataSource(
+//        localRadioDataSource: LocalRadioDataSource
+//    ) : ILocalRadioDataSource
+//
+//    @Binds
+//    abstract fun bindsNetworkRadioDataSource(
+//        networkRadioDataSource: NetworkRadioDataSource
+//    ) : INetworkRadioDataSource
 
-    @Binds
-    abstract fun bindsNetworkRadioDataSource(
-        networkRadioDataSource: NetworkRadioDataSource
-    ) : INetworkRadioDataSource
-
-    @Binds
-    abstract fun bindRadioServiceWrapper(
-        radioServiceWrapper: RadioServiceWrapper
-    ): IRadioServiceWrapper
+//    @Binds
+//    abstract fun bindRadioServiceWrapper(
+//        radioServiceWrapper: RadioServiceWrapper
+//    ): IRadioServiceWrapper
 
 }
 

@@ -3,9 +3,7 @@ package com.myproject.radiojourney.model.local
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import androidx.room.TypeConverters
 import com.google.android.gms.maps.model.LatLng
-import com.myproject.radiojourney.data.localDatabaseRoom.LatLngConverter
 import com.myproject.radiojourney.model.remote.CountryCodeRemote
 
 /**

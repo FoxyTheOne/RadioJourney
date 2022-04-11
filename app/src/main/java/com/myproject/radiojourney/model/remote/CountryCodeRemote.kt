@@ -1,7 +1,6 @@
 package com.myproject.radiojourney.model.remote
 
 import com.google.gson.annotations.SerializedName
-import javax.inject.Inject
 
 /*
 Copyright (c) 2022 Kotlin Data Classes Generated from JSON powered by http://www.json2kotlin.com
@@ -14,8 +13,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 For support, please feel free to contact me at https://www.linkedin.com/in/syedabsar */
 
-
-data class CountryCodeRemote (
-	@SerializedName("name") val name: String,
-	@SerializedName("stationcount") val stationcount: Int
+data class CountryCodeRemote(
+    @SerializedName("name") val name: String,
+    @SerializedName("stationcount") val stationcount: Int
 )

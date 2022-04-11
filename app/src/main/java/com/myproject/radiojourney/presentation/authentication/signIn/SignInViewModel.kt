@@ -5,7 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myproject.radiojourney.domain.signIn.ISignInInteractor
-import com.myproject.radiojourney.extension.call
+import com.myproject.radiojourney.utils.extension.call
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

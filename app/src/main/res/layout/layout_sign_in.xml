@@ -10,197 +10,173 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/background" >
+        android:background="@color/background">
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/icon_appRadioImage"
-            app:srcCompat="@drawable/radio_icon3"
             android:layout_width="300dp"
             android:layout_height="300dp"
             android:layout_gravity="center"
             android:layout_marginBottom="@dimen/space_beforeOrAfterElement"
-
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toTopOf="@+id/text_upperSignIn"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed"
 
-            app:layout_constraintVertical_chainStyle="packed"/>
+            app:srcCompat="@drawable/radio_icon3" />
 
         <TextView
             android:id="@+id/text_upperSignIn"
             style="@style/login_title"
-            android:text="@string/signIn_signIn"
-
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/space_beforeOrAfterElement"
-
-            app:layout_constraintTop_toBottomOf="@+id/icon_appRadioImage"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:text="@string/signIn_signIn"
             app:layout_constraintBottom_toTopOf="@+id/textField_emailSignIn"
-
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/icon_appRadioImage"
             app:layout_constraintVertical_chainStyle="packed" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/textField_emailSignIn"
             style="@style/MyInputLayoutStyle"
-            android:textColorHint="@color/white_transparent_60"
-            app:boxStrokeColor="@color/box_stroke_color_default"
-            app:startIconDrawable="@drawable/email"
-            app:startIconContentDescription="@string/content_description_email"
-            app:startIconTint="@color/gray_startIcon_TextInputLayout"
-            android:hint="@string/signIn_email"
-            app:errorEnabled="true"
-
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:hint="@string/signIn_email"
             android:paddingHorizontal="@dimen/space_beforeOrAfterElement"
-
-            app:layout_constraintTop_toBottomOf="@+id/text_upperSignIn"
+            android:textColorHint="@color/white_transparent_60"
+            app:boxStrokeColor="@color/box_stroke_color_default"
+            app:errorEnabled="true"
+            app:layout_constraintBottom_toTopOf="@+id/textField_passwordSignIn"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintBottom_toTopOf="@+id/textField_passwordSignIn"
-
-            app:layout_constraintVertical_chainStyle="packed" >
+            app:layout_constraintTop_toBottomOf="@+id/text_upperSignIn"
+            app:layout_constraintVertical_chainStyle="packed"
+            app:startIconContentDescription="@string/content_description_email"
+            app:startIconDrawable="@drawable/email"
+            app:startIconTint="@color/gray_startIcon_TextInputLayout">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/textField_email_editText"
-                android:textColor="@color/white"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textEmailAddress" />
+                android:inputType="textEmailAddress"
+                android:textColor="@color/white" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/textField_passwordSignIn"
             style="@style/MyInputLayoutStyle"
-            android:textColorHint="@color/white_transparent_60"
-            app:boxStrokeColor="@color/box_stroke_color_default"
-            app:startIconDrawable="@drawable/password"
-            app:startIconContentDescription="@string/content_description_password"
-            app:startIconTint="@color/gray_startIcon_TextInputLayout"
-            app:endIconTint="@color/gray_startIcon_TextInputLayout"
-            android:hint="@string/signIn_password"
-            app:endIconMode="password_toggle"
-            app:errorEnabled="true"
-
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:hint="@string/signIn_password"
             android:paddingHorizontal="@dimen/space_beforeOrAfterElement"
-
-            app:layout_constraintTop_toBottomOf="@+id/textField_emailSignIn"
+            android:textColorHint="@color/white_transparent_60"
+            app:boxStrokeColor="@color/box_stroke_color_default"
+            app:endIconMode="password_toggle"
+            app:endIconTint="@color/gray_startIcon_TextInputLayout"
+            app:errorEnabled="true"
+            app:layout_constraintBottom_toTopOf="@+id/button_login"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintBottom_toTopOf="@+id/button_login"
-
-            app:layout_constraintVertical_chainStyle="packed" >
+            app:layout_constraintTop_toBottomOf="@+id/textField_emailSignIn"
+            app:layout_constraintVertical_chainStyle="packed"
+            app:startIconContentDescription="@string/content_description_password"
+            app:startIconDrawable="@drawable/password"
+            app:startIconTint="@color/gray_startIcon_TextInputLayout">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:textColor="@color/white"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textPassword" />
+                android:inputType="textPassword"
+                android:textColor="@color/white" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/button_login"
             style="@style/Widget.AppCompat.ActionButton"
-            app:backgroundTint="@null"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/space_beforeOrAfterElement"
+            android:layout_marginTop="@dimen/space_small"
+            android:layout_marginBottom="@dimen/space_beforeOrAfterElement"
             android:background="@drawable/button_rounded_corners"
             android:text="@string/signIn_signIn"
             android:textColor="@color/white"
             android:textSize="@dimen/button_text"
             android:textStyle="bold"
-
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_small"
-            android:layout_marginHorizontal="@dimen/space_beforeOrAfterElement"
-            android:layout_marginBottom="@dimen/space_beforeOrAfterElement"
-
-            app:layout_constraintTop_toBottomOf="@+id/textField_passwordSignIn"
+            app:backgroundTint="@null"
+            app:layout_constraintBottom_toTopOf="@+id/checkBoxSignIn_rememberLoginAndPassword"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintBottom_toTopOf="@+id/checkBoxSignIn_rememberLoginAndPassword"
-
+            app:layout_constraintTop_toBottomOf="@+id/textField_passwordSignIn"
             app:layout_constraintVertical_chainStyle="packed" />
 
         <androidx.appcompat.widget.AppCompatCheckBox
             android:id="@+id/checkBoxSignIn_rememberLoginAndPassword"
             style="@style/login_bottom"
-            android:buttonTint="@color/bright_orange"
-            android:text="@string/signIn_CheckBox"
-            android:gravity="center"
-
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingHorizontal="@dimen/space_beforeOrAfterElement"
             android:layout_marginBottom="@dimen/space_beforeOrAfterElement"
-
-            app:layout_constraintTop_toBottomOf="@+id/button_login"
+            android:buttonTint="@color/bright_orange"
+            android:gravity="center"
+            android:paddingHorizontal="@dimen/space_beforeOrAfterElement"
+            android:text="@string/signIn_CheckBox"
+            app:layout_constraintBottom_toTopOf="@+id/linear_signInBottomComponent"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintBottom_toTopOf="@+id/linear_signInBottomComponent"
-
+            app:layout_constraintTop_toBottomOf="@+id/button_login"
             app:layout_constraintVertical_chainStyle="packed" />
 
         <LinearLayout
             android:id="@+id/linear_signInBottomComponent"
-            android:orientation="horizontal"
-            android:gravity="center"
-
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/space_32"
-
-            app:layout_constraintTop_toBottomOf="@+id/checkBoxSignIn_rememberLoginAndPassword"
+            android:gravity="center"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-
+            app:layout_constraintTop_toBottomOf="@+id/checkBoxSignIn_rememberLoginAndPassword"
             app:layout_constraintVertical_chainStyle="packed">
 
             <TextView
                 android:id="@+id/linear_signInBottomComponent_lowerText"
                 style="@style/login_bottom"
-                android:text="@string/signIn_needAnAccount"
-
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingEnd="@dimen/space_small"/>
+                android:paddingEnd="@dimen/space_small"
+                android:text="@string/signIn_needAnAccount" />
 
             <TextView
                 android:id="@+id/linear_signInBottomComponent_textGoToSignUp"
                 style="@style/login_bottom_orange"
-                android:text="@string/signIn_signUp"
-
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:text="@string/signIn_signUp" />
 
         </LinearLayout>
 
         <!-- layout для ProgressBar -->
         <FrameLayout
             android:id="@+id/frameLayout"
-            android:background="@color/black_transparent_22"
-            android:visibility="gone"
-
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:background="@color/black_transparent_22"
+            android:visibility="gone" />
 
         <ProgressBar
             android:id="@+id/progressCircular"
-            android:visibility="gone"
-
             android:layout_width="60dp"
             android:layout_height="60dp"
-
-            app:layout_constraintTop_toTopOf="parent"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
