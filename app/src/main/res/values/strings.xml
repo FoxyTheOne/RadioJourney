@@ -24,15 +24,15 @@
 
     <string name="homeRadio_zoomPlus">+</string>
     <string name="homeRadio_zoomMinus">-</string>
-    <string name="homeRadio_addToFavourites">Add to favourites</string>
-    <string name="homeRadio_goToFavourites">Go to favourites</string>
+    <string name="homeRadio_goToRecommended">Recommended</string>
+    <string name="homeRadio_goToFavourites">Favorites</string>
     <string name="homeRadio_selectRadioStation">Select radio station</string>
     <string name="homeRadio_canTakeTime">It may take time to connect.</string>
     <string name="homeRadio_mayNotWork">Also selected radio station may not work right now.</string>
 
-    <string name="dialogInternetTrouble_title">Cashing failed</string>
-    <string name="dialogInternetTrouble_text">If it is the first start - please, try turn on and then turn off airplane mode, and then restart the program.</string>
-    <string name="dialogInternetTrouble_text2">Otherwise, just ignore this message.</string>
+    <string name="dialogInternetTrouble_title">Some internet trouble!</string>
+    <string name="dialogInternetTrouble_text">If it is the first start and cashing didn\'t end - please, try turn on and then turn off airplane mode, and then restart the program.</string>
+    <string name="dialogInternetTrouble_text2">Otherwise, just ignore this message. Repeat your last action if needed.</string>
 
     <string name="radioStationList_title">Radio station list. Select one:</string>
     <string name="radioStationList_count">Radio station click count: </string>
@@ -44,4 +44,6 @@
 
     <string name="favouriteRadioStationList_title">My favourites:</string>
     <string name="favouriteRadioStationList_empty">It\'s empty here. Try adding stars to your favourite stations.</string>
+
+    <string name="recommendedRadioStationList_title">Recommended radio stations:</string>
 </resources>

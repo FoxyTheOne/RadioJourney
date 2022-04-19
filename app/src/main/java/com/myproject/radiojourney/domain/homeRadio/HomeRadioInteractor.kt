@@ -91,4 +91,7 @@ class HomeRadioInteractor @Inject constructor(
             )
         contentRepository.deleteRadioStationFromFavourite(currentRadioStationFavouriteLocal)
     }
+
+    override suspend fun setRecommendedRadioStations() =
+        contentRepository.setRecommendedRadioStations()
 }

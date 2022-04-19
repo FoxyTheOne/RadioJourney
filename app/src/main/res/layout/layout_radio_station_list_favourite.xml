@@ -27,7 +27,7 @@
             tools:targetApi="lollipop" />
 
         <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/text_radioStationDialogCity"
+            android:id="@+id/text_myFavorites_title"
             style="@style/login_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -48,7 +48,7 @@
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/text_radioStationDialogCity"
+            app:layout_constraintTop_toBottomOf="@+id/text_myFavorites_title"
             app:layout_constraintVertical_chainStyle="packed" />
 
         <TextView
@@ -61,7 +61,7 @@
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/text_radioStationDialogCity" />
+            app:layout_constraintTop_toBottomOf="@+id/text_myFavorites_title" />
 
         <!-- layout для ProgressBar -->
         <FrameLayout

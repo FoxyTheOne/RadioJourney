@@ -10,33 +10,38 @@ data class RadioStationPresentation(
     val url: String,
     val clickCount: Int,
     val countryCode: String,
-    var isStationInFavourite: Boolean
+    var isStationInFavourite: Boolean,
+    var isStationInRecommended: Boolean
 ) :
     Parcelable {
 
     companion object {
         fun fromLocalToPresentation(
             radioStationLocal: RadioStationLocal,
-            isStationInFavourite: Boolean = radioStationLocal.isStationInFavourite
+            isStationInFavourite: Boolean = radioStationLocal.isStationInFavourite,
+            isStationInRecommended: Boolean = radioStationLocal.isStationInRecommended
         ): RadioStationPresentation =
             RadioStationPresentation(
                 stationName = radioStationLocal.stationName,
                 url = radioStationLocal.url,
                 clickCount = radioStationLocal.clickCount,
                 countryCode = radioStationLocal.countryCode,
-                isStationInFavourite = isStationInFavourite
+                isStationInFavourite = isStationInFavourite,
+                isStationInRecommended = isStationInRecommended
             )
 
         fun fromFavouritePresentationToPresentation(
             radioFavouritePresentation: RadioStationFavouritePresentation,
-            isStationInFavourite: Boolean = radioFavouritePresentation.isStationInFavourite
+            isStationInFavourite: Boolean = radioFavouritePresentation.isStationInFavourite,
+            isStationInRecommended: Boolean = radioFavouritePresentation.isStationInRecommended
         ): RadioStationPresentation =
             RadioStationPresentation(
                 stationName = radioFavouritePresentation.stationName,
                 url = radioFavouritePresentation.url,
                 clickCount = radioFavouritePresentation.clickCount,
                 countryCode = radioFavouritePresentation.countryCode,
-                isStationInFavourite = isStationInFavourite
+                isStationInFavourite = isStationInFavourite,
+                isStationInRecommended = isStationInRecommended
             )
     }
 

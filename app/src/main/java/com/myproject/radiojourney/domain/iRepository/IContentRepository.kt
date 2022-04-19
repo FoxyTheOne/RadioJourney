@@ -29,4 +29,7 @@ interface IContentRepository {
     suspend fun deleteRadioStationFromFavourite(currentRadioStationFavouriteLocal: RadioStationFavouriteLocal)
 
     suspend fun getUsersWithStations(): List<UserWithStations>
+    suspend fun getRecommendedRadioStationList(): List<RadioStationLocal>
+
+    suspend fun setRecommendedRadioStations()
 }

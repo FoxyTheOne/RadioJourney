@@ -1,45 +1,38 @@
-package com.myproject.radiojourney.presentation.content.radioList
+package com.myproject.radiojourney.presentation.content.recommendedList
 
-import android.app.Dialog
 import android.os.Bundle
 import android.util.Log
 import android.view.*
+import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.DefaultItemAnimator
+import androidx.recyclerview.widget.RecyclerView
 import com.myproject.radiojourney.IAppSettings
 import com.myproject.radiojourney.R
-import com.myproject.radiojourney.databinding.LayoutRadioStationListBinding
-import com.myproject.radiojourney.model.presentation.RadioStationPresentation
+import com.myproject.radiojourney.databinding.LayoutRadioStationListRecommendedBinding
 import com.myproject.radiojourney.presentation.content.base.BaseContentFragmentAbstract
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 /**
- * Страница со списком радиостанций по конкретной стране
+ * Страница рекомендуемых радиостанций
  */
 @AndroidEntryPoint
-class RadioListFragment : BaseContentFragmentAbstract() {
+class RecommendedListFragment : BaseContentFragmentAbstract() {
     companion object {
-        private const val TAG = "RadioListFragment"
+        private const val TAG = "RecommendedListFragment"
     }
 
     @Inject
     lateinit var appSettings: IAppSettings
 
     // VIEW BINDING -> 1. Объявляем переменную. This property is only valid between onCreateView and onDestroyView
-    private var binding: LayoutRadioStationListBinding? = null
+    private var binding: LayoutRadioStationListRecommendedBinding? = null
 
-    private val viewModel by viewModels<RadioListViewModel>()
-    private lateinit var dialogInternetTrouble: Dialog
-    private lateinit var countryCode: String
-    private lateinit var countryName: String
-    private var radioStationList = listOf(
-        RadioStationPresentation("Test", "test", 2, "test",
-            isStationInFavourite = false,
-            isStationInRecommended = false
-        )
-    )
+    private val viewModel by viewModels<RecommendedListViewModel>()
+    private lateinit var recommendedListAdapter: RecommendedListAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -47,7 +40,7 @@ class RadioListFragment : BaseContentFragmentAbstract() {
         savedInstanceState: Bundle?
     ): View? {
         // VIEW BINDING -> 2. Инициализация
-        binding = LayoutRadioStationListBinding.inflate(inflater, container, false)
+        binding = LayoutRadioStationListRecommendedBinding.inflate(inflater, container, false)
         // TOOLBAR
         setHasOptionsMenu(true)
         // TOOLBAR - где будет находиться в нашем layout
@@ -60,54 +53,48 @@ class RadioListFragment : BaseContentFragmentAbstract() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Получаем результат с предыдущей страницы
-        arguments?.getString("country_code")?.let { country_code_string ->
-            val resultArray = country_code_string.split("||")
-            countryCode = resultArray[0]
-            countryName = resultArray[1]
-        }
-        binding?.textMyFavoritesTitle?.text = countryName
-
-        // Получаем список радиостанций, преобразуем. Сохранять в Room не будем. Радиостанций очень много, будет занимать много места на телефоне.
-        // Кроме того, списки на сервере постоянно обновляются. Возможно какой-то радиостанции в списке уже не будет, а в локальной БД она ещё осталась. Пользователь выберет её и будет ошибка.
-        viewModel.getRadioStationList(countryCode)
-
-        // Настройки диалогового окна
-        dialogInternetTrouble = Dialog(requireContext())
-        // Передайте ссылку на разметку
-        dialogInternetTrouble.setContentView(R.layout.layout_internet_trouble_dialog)
+        // Получаем список рекомендуемого для отображения
+        viewModel.getRadioStationRecommendedListAndShow()
 
         subscribeOnLiveData()
     }
 
     private fun subscribeOnLiveData() {
-        // Показываем или прячем Progress
-        viewModel.showProgressLiveData.observe(viewLifecycleOwner, {
-            showProgress()
+        viewModel.failedLiveData.observe(viewLifecycleOwner, {
+            Toast.makeText(context, "Failure. Something went wrong", Toast.LENGTH_LONG).show()
         })
-        viewModel.hideProgressLiveData.observe(viewLifecycleOwner, {
-            hideProgress()
-        })
-        viewModel.dialogInternetTroubleLiveData.observe(viewLifecycleOwner, {
-            dialogInternetTrouble.show()
-        })
-        viewModel.radioStationListLiveData.observe(
+        viewModel.radioStationRecommendedListLiveData.observe(
             viewLifecycleOwner,
             { radioStationPresentationList ->
-                radioStationList = radioStationPresentationList
                 showProgress()
 
-                // 1.5. ОБРАБОТКА КЛИКА -> Получаем результат клика во фрагменте (описываем нашу анонимную функцию из RecyclerView)
-                binding?.recyclerViewRadioStationList?.adapter =
-                    RadioListAdapter(radioStationList) { radioStationPresentationOnClick ->
+                if (radioStationPresentationList != null && radioStationPresentationList.isNotEmpty()) {
+
+                    recommendedListAdapter = RecommendedListAdapter(
+                        radioStationPresentationList
+                    ) { radioStationPresentationOnClick ->
                         Log.d(TAG, "Выбранный элемент списка: $radioStationPresentationOnClick")
                         // Открываем по клику другой фрагмент, передаём туда нашу радиостанцию
                         val direction =
-                            RadioListFragmentDirections.actionRadioListFragmentToHomeRadioFragment(
+                            RecommendedListFragmentDirections.actionRecommendedListFragmentToHomeRadioFragment(
                                 radioStationPresentationOnClick
                             )
                         this.findNavController().navigate(direction)
                     }
+                    binding?.recyclerViewRecommendedRadioStationList?.adapter =
+                        recommendedListAdapter
+
+                    val animator: DefaultItemAnimator = object : DefaultItemAnimator() {
+                        override fun canReuseUpdatedViewHolder(viewHolder: RecyclerView.ViewHolder): Boolean {
+                            return true
+                        }
+                    }
+                    binding?.recyclerViewRecommendedRadioStationList?.itemAnimator = animator
+
+                } else {
+                    hideProgress()
+                    return@observe
+                }
 
                 Log.d(
                     TAG,
@@ -116,6 +103,13 @@ class RadioListFragment : BaseContentFragmentAbstract() {
 
                 hideProgress()
             })
+        viewModel.favoritesFailedLiveData.observe(viewLifecycleOwner, {
+            Toast.makeText(
+                context,
+                "Interacting with favourites failed. Smth wrong with your token. Try re-login.",
+                Toast.LENGTH_LONG
+            ).show()
+        })
     }
 
     private fun showProgress() {
@@ -152,7 +146,7 @@ class RadioListFragment : BaseContentFragmentAbstract() {
     // TOOLBAR - Описываем метод из интерфейса ILogOutListener для выхода из аккаунта приложения
     override fun onLogOut() {
         viewModel.logout()
-        this.findNavController().navigate(R.id.action_radioListFragment_to_auth_nav_graph)
+        this.findNavController().navigate(R.id.action_recommendedListFragment_to_auth_nav_graph)
     }
 
     // VIEW BINDING -> 3. onDestroyView()

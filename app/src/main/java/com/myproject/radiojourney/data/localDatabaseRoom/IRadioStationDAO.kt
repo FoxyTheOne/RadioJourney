@@ -17,4 +17,7 @@ interface IRadioStationDAO {
 
     @Query("SELECT * from RadioStationLocal WHERE countrycode LIKE:countryCode")
     fun getRadioStationList(countryCode: String): Flow<List<RadioStationLocal>>
+
+    @Query("SELECT * from RadioStationLocal WHERE isStationInRecommended LIKE:isStationInRecommended")
+    fun getRecommendedRadioStationList(isStationInRecommended: Boolean): List<RadioStationLocal>
 }

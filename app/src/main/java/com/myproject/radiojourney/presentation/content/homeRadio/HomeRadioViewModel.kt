@@ -206,4 +206,14 @@ class HomeRadioViewModel @Inject constructor(
             }
         }
     }
+
+    fun setRecommendedRadioStations() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                homeRadioInteractor.setRecommendedRadioStations()
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+        }
+    }
 }

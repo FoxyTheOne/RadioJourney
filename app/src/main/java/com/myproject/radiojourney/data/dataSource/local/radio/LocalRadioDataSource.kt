@@ -67,4 +67,10 @@ class LocalRadioDataSource @Inject constructor(
 
     override suspend fun deleteRadioStationFromFavourite(radioStationFavourite: RadioStationFavouriteLocal) =
         radioStationFavouriteDAO.deleteRadioStationFromFavourite(radioStationFavourite)
+
+    override suspend fun getRecommendedRadioStationList(): List<RadioStationLocal> =
+        radioStationDAO.getRecommendedRadioStationList(true)
+
+    override suspend fun saveRadioStationList(vararg radioStationLocalList: RadioStationLocal) =
+        radioStationDAO.saveRadioStationList(*radioStationLocalList)
 }

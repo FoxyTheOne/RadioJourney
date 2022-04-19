@@ -24,7 +24,7 @@
 
     <string name="homeRadio_zoomPlus">+</string>
     <string name="homeRadio_zoomMinus">-</string>
-    <string name="homeRadio_addToFavourites">Добавить</string>
+    <string name="homeRadio_goToRecommended">Рекомендуемое</string>
     <string name="homeRadio_goToFavourites">Избранное</string>
     <string name="homeRadio_selectRadioStation">Выберите радиостанцию</string>
     <string name="homeRadio_canTakeTime">Соединение может занять некоторое время.</string>
@@ -44,4 +44,6 @@
 
     <string name="favouriteRadioStationList_title">Избранное:</string>
     <string name="favouriteRadioStationList_empty">Здесь пусто. Попробуйте добавлять звезды понравившимся радиостанциям.</string>
+
+    <string name="recommendedRadioStationList_title">Рекомендуемые радиостанции:</string>
 </resources>

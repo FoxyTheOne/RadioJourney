@@ -93,4 +93,66 @@ class ContentRepository @Inject constructor(
 
     override suspend fun getUsersWithStations(): List<UserWithStations> =
         localAuthDataSource.getUsersWithStations()
+
+    override suspend fun getRecommendedRadioStationList(): List<RadioStationLocal> =
+        localRadioDataSource.getRecommendedRadioStationList()
+
+    override suspend fun setRecommendedRadioStations() {
+        val antyradioURL = "https://n-4-2.dcs.redcdn.pl/sc/o2/Eurozet/live/antyradio.livx?audio=5"
+        val antyradio = localRadioDataSource.getRadioStationSaved(antyradioURL)
+        if (antyradio != null) {
+            antyradio.isStationInRecommended = true
+            localRadioDataSource.saveRadioStationList(antyradio)
+        } else {
+            val radioStationsPL = networkRadioDataSource.getRadioStationList("PL")
+            radioStationsPL.forEach { radioStationRemote ->
+                if (radioStationRemote.url == antyradioURL) {
+                    localRadioDataSource.saveRadioStationList(
+                        RadioStationLocal.fromRemoteToLocal(
+                            radioStationRemote,
+                            isStationInRecommended = true
+                        )
+                    )
+                }
+            }
+        }
+
+        val easyFMURL = "https://netradio.ziniur.lt/easyfm.mp3"
+        val easyFM = localRadioDataSource.getRadioStationSaved(easyFMURL)
+        if (easyFM != null) {
+            easyFM.isStationInRecommended = true
+            localRadioDataSource.saveRadioStationList(easyFM)
+        } else {
+            val radioStationsLT = networkRadioDataSource.getRadioStationList("LT")
+            radioStationsLT.forEach { radioStationRemote ->
+                if (radioStationRemote.url == easyFMURL) {
+                    localRadioDataSource.saveRadioStationList(
+                        RadioStationLocal.fromRemoteToLocal(
+                            radioStationRemote,
+                            isStationInRecommended = true
+                        )
+                    )
+                }
+            }
+        }
+
+        val ro90s3NeRgYURL = "https://s11.ssl-stream.com/ssl/90s_energy?mp=/stream"
+        val ro90s3NeRgY = localRadioDataSource.getRadioStationSaved(ro90s3NeRgYURL)
+        if (ro90s3NeRgY != null) {
+            ro90s3NeRgY.isStationInRecommended = true
+            localRadioDataSource.saveRadioStationList(ro90s3NeRgY)
+        } else {
+            val radioStationsRO = networkRadioDataSource.getRadioStationList("RO")
+            radioStationsRO.forEach { radioStationRemote ->
+                if (radioStationRemote.url == ro90s3NeRgYURL) {
+                    localRadioDataSource.saveRadioStationList(
+                        RadioStationLocal.fromRemoteToLocal(
+                            radioStationRemote,
+                            isStationInRecommended = true
+                        )
+                    )
+                }
+            }
+        }
+    }
 }

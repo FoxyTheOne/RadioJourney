@@ -25,4 +25,6 @@ interface IHomeRadioInteractor {
         userCreatorIdInt: Int,
         currentRadioStation: RadioStationPresentation
     )
+
+    suspend fun setRecommendedRadioStations()
 }

@@ -23,14 +23,16 @@ data class RadioStationFavouriteLocal(
     @ColumnInfo(name = "stationName") val stationName: String,
     @ColumnInfo(name = "clickCount") val clickCount: Int,
     @ColumnInfo(name = "countryCode") val countryCode: String,
-    @ColumnInfo(name = "isStationInFavourite") var isStationInFavourite: Boolean
+    @ColumnInfo(name = "isStationInFavourite") var isStationInFavourite: Boolean,
+    @ColumnInfo(name = "isStationInRecommended") var isStationInRecommended: Boolean
 ) {
 
     companion object {
         fun fromPresentationToFavouriteLocal(
             presentation: RadioStationPresentation,
             userCreatorId: Int,
-            isStationInFavourite: Boolean = presentation.isStationInFavourite
+            isStationInFavourite: Boolean = presentation.isStationInFavourite,
+            isStationInRecommended: Boolean = presentation.isStationInRecommended,
         ): RadioStationFavouriteLocal =
             RadioStationFavouriteLocal(
                 url = presentation.url,
@@ -38,12 +40,14 @@ data class RadioStationFavouriteLocal(
                 stationName = presentation.stationName,
                 clickCount = presentation.clickCount,
                 countryCode = presentation.countryCode,
-                isStationInFavourite = isStationInFavourite
+                isStationInFavourite = isStationInFavourite,
+                isStationInRecommended = isStationInRecommended
             )
 
         fun fromFavouritePresentationToFavouriteLocal(
             favouritePresentation: RadioStationFavouritePresentation,
-            isStationInFavourite: Boolean = favouritePresentation.isStationInFavourite
+            isStationInFavourite: Boolean = favouritePresentation.isStationInFavourite,
+            isStationInRecommended: Boolean = favouritePresentation.isStationInRecommended
         ): RadioStationFavouriteLocal =
             RadioStationFavouriteLocal(
                 url = favouritePresentation.url,
@@ -51,7 +55,8 @@ data class RadioStationFavouriteLocal(
                 stationName = favouritePresentation.stationName,
                 clickCount = favouritePresentation.clickCount,
                 countryCode = favouritePresentation.countryCode,
-                isStationInFavourite = isStationInFavourite
+                isStationInFavourite = isStationInFavourite,
+                isStationInRecommended = isStationInRecommended
             )
     }
 

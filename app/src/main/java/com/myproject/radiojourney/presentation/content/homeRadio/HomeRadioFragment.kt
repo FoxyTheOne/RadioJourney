@@ -82,12 +82,12 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
     // GOOGLE MAPS -> 2.1. Объявляем переменную, в соответствии с инструкцией от гугла
     private lateinit var mMap: GoogleMap
 
-    // GOOGLE MAPS -> 3.6. Объявляем переменную для маркера
+    // GOOGLE MAPS -> 2.6. Объявляем переменную для маркера
     private var marker: Marker? = null
     private var customMarkerYouAreHere: Bitmap? = null
     private var customMarkerRadio: Bitmap? = null
 
-//    // ADD MARKERS TO MAP -> 1. Для примера, сейчас. Потом подгружать список по запросу
+    //    // ADD MARKERS TO MAP -> 1. Для примера, сейчас. Потом подгружать список по запросу
 //    private val places: List<Place> = listOf(
 //        Place(name = "Minsk", latLng = LatLng(53.90580039557321, 27.562806971874416))
 //    )
@@ -182,6 +182,8 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             false
         )
 
+        viewModel.setRecommendedRadioStations()
+
         // LOCATION -> 1.5. Создадим метод для получения Current location либо Last location
         getCurrentOrLastLocation()
         // Получить локацию нужно разово, при открытии фрагмента. Обновлять не нужно.
@@ -238,13 +240,12 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                 viewModel.checkIsStationInFavouritesAndChangeTheStar(it)
             }
         }
-        binding?.buttonAddToFavourites?.setOnClickListener {
-            if (isStationSelected) {
-                val currentRadioStation = viewModel.radioStationSavedLiveData.value
-                currentRadioStation?.let {
-                    viewModel.addStationToFavourites(it)
-                }
-            }
+        binding?.buttonGoToRecommended?.setOnClickListener {
+            // Если нажали, перед переходом нужно остановить музыку
+            stopAudio()
+
+            this.findNavController()
+                .navigate(R.id.action_homeRadioFragment_to_recommendedListFragment)
         }
         binding?.buttonGoToFavourites?.setOnClickListener {
             // Если нажали, перед переходом нужно остановить музыку

@@ -25,6 +25,9 @@
         <action
             android:id="@+id/action_homeRadioFragment_to_favouriteListFragment"
             app:destination="@id/favouriteListFragment" />
+        <action
+            android:id="@+id/action_homeRadioFragment_to_recommendedListFragment"
+            app:destination="@id/recommendedListFragment" />
     </fragment>
 
     <fragment
@@ -62,6 +65,25 @@
             <argument
                 android:name="radio_station_favourite"
                 app:argType="com.myproject.radiojourney.model.presentation.RadioStationFavouritePresentation" />
+        </action>
+    </fragment>
+
+    <fragment
+        android:id="@+id/recommendedListFragment"
+        android:name="com.myproject.radiojourney.presentation.content.recommendedList.RecommendedListFragment"
+        android:label="RecommendedListFragment">
+        <action
+            android:id="@+id/action_recommendedListFragment_to_auth_nav_graph"
+            app:destination="@id/auth_nav_graph"
+            app:popUpTo="@id/content_nav_graph"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_recommendedListFragment_to_homeRadioFragment"
+            app:destination="@id/homeRadioFragment">
+
+            <argument
+                android:name="radio_station"
+                app:argType="com.myproject.radiojourney.model.presentation.RadioStationPresentation" />
         </action>
     </fragment>
 

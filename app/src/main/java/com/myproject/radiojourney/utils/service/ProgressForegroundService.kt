@@ -84,12 +84,6 @@ class ProgressForegroundService @Inject constructor() : Service() {
         TODO("Not yet implemented")
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        Log.d(TAG, "onDestroy")
-        serviceJob.cancel()
-    }
-
     // FOREGROUND_SERVICE -> 2. Создадим Channel CashingCountries
     @RequiresApi(Build.VERSION_CODES.O)
     private fun createChannelCashingCountries() {
@@ -223,4 +217,10 @@ class ProgressForegroundService @Inject constructor() : Service() {
     }
 
     // FOREGROUND_SERVICE -> 6. Запустим наш Foreground Service из NotificationFragment
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d(TAG, "onDestroy")
+        serviceJob.cancel()
+    }
 }

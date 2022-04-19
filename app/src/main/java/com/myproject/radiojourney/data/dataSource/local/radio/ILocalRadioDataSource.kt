@@ -21,4 +21,8 @@ interface ILocalRadioDataSource {
 
     suspend fun isStationInFavourites(url: String): Boolean
     suspend fun deleteRadioStationFromFavourite(radioStationFavourite: RadioStationFavouriteLocal)
+
+    suspend fun getRecommendedRadioStationList(): List<RadioStationLocal>
+
+    suspend fun saveRadioStationList(vararg radioStationLocalList: RadioStationLocal)
 }

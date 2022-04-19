@@ -110,13 +110,13 @@
             app:layout_constraintTop_toBottomOf="@+id/linear_canTakeTime">
 
             <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/button_addToFavourites"
+                android:id="@+id/button_goToRecommended"
                 style="@style/Widget.AppCompat.ActionButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/space_small"
                 android:background="@drawable/button_rounded_corners"
-                android:text="@string/homeRadio_addToFavourites"
+                android:text="@string/homeRadio_goToRecommended"
                 android:textColor="@color/white"
                 android:textSize="@dimen/button_text"
                 android:textStyle="bold"

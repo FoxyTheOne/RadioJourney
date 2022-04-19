@@ -28,6 +28,8 @@ import com.myproject.radiojourney.domain.logOut.ILogOutInteractor
 import com.myproject.radiojourney.domain.logOut.LogOutInteractor
 import com.myproject.radiojourney.domain.radioList.IRadioListInteractor
 import com.myproject.radiojourney.domain.radioList.RadioListInteractor
+import com.myproject.radiojourney.domain.recommendedList.IRecommendedListInteractor
+import com.myproject.radiojourney.domain.recommendedList.RecommendedListInteractor
 import com.myproject.radiojourney.domain.signUp.ISignUpInteractor
 import com.myproject.radiojourney.domain.signUp.SignUpInteractor
 import dagger.Binds
@@ -54,7 +56,7 @@ abstract class SingletonModule {
                 appContext,
                 AppRoomDBAbstract::class.java,
                 "AppRoomDatabase"
-            ).build()
+            ).fallbackToDestructiveMigration().build()
 
             return roomDatabase
         }
@@ -152,9 +154,14 @@ abstract class ViewModelModule {
     ): IRadioListInteractor
 
     @Binds
-    abstract fun bindsIFavouriteListInteractor(
+    abstract fun bindsFavouriteListInteractor(
         favouriteListInteractor: FavouriteListInteractor
     ): IFavouriteListInteractor
+
+    @Binds
+    abstract fun bindsRecommendedListInteractor(
+        recommendedListInteractor: RecommendedListInteractor
+    ): IRecommendedListInteractor
 
     @Binds
     abstract fun bindsAuthRepository(
