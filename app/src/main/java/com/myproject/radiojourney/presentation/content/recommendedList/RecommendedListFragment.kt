@@ -6,6 +6,7 @@ import android.view.*
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
@@ -146,7 +147,8 @@ class RecommendedListFragment : BaseContentFragmentAbstract() {
     // TOOLBAR - Описываем метод из интерфейса ILogOutListener для выхода из аккаунта приложения
     override fun onLogOut() {
         viewModel.logout()
-        this.findNavController().navigate(R.id.action_recommendedListFragment_to_auth_nav_graph)
+//        this.findNavController().navigate(R.id.action_recommendedListFragment_to_auth_nav_graph)
+        activity?.finish()
     }
 
     // VIEW BINDING -> 3. onDestroyView()

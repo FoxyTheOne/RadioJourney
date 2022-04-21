@@ -2,7 +2,7 @@ package com.myproject.radiojourney.data.repository
 
 import android.content.Context
 import android.util.Log
-import com.myproject.radiojourney.data.dataSource.local.auth.ILocalAuthDataSource
+import com.myproject.radiojourney.data.dataSource.local.auth.ILocalUserDataSource
 import com.myproject.radiojourney.data.dataSource.local.radio.ILocalRadioDataSource
 import com.myproject.radiojourney.data.dataSource.network.INetworkRadioDataSource
 import com.myproject.radiojourney.domain.iRepository.IContentRepository
@@ -24,7 +24,7 @@ class ContentRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val networkRadioDataSource: INetworkRadioDataSource,
     private val localRadioDataSource: ILocalRadioDataSource,
-    private val localAuthDataSource: ILocalAuthDataSource
+    private val localUserDataSource: ILocalUserDataSource
 ) : IContentRepository {
     companion object {
         private const val TAG = "ContentRepository"
@@ -92,7 +92,7 @@ class ContentRepository @Inject constructor(
         localRadioDataSource.deleteRadioStationFromFavourite(currentRadioStationFavouriteLocal)
 
     override suspend fun getUsersWithStations(): List<UserWithStations> =
-        localAuthDataSource.getUsersWithStations()
+        localUserDataSource.getUsersWithStations()
 
     override suspend fun getRecommendedRadioStationList(): List<RadioStationLocal> =
         localRadioDataSource.getRecommendedRadioStationList()

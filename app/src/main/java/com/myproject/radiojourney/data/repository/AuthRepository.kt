@@ -1,6 +1,6 @@
 package com.myproject.radiojourney.data.repository
 
-import com.myproject.radiojourney.data.dataSource.local.auth.ILocalAuthDataSource
+import com.myproject.radiojourney.data.dataSource.local.auth.ILocalUserDataSource
 import com.myproject.radiojourney.domain.iRepository.IAuthRepository
 import javax.inject.Inject
 
@@ -10,28 +10,28 @@ import javax.inject.Inject
  * При работе с model, здесь происходит запрос в remote, преобразование remote -> local, сохранение результата в базу данных.
  */
 class AuthRepository @Inject constructor(
-    private val localAuthDataSource: ILocalAuthDataSource
+    private val localUserDataSource: ILocalUserDataSource
 ) : IAuthRepository {
     override suspend fun isRememberLoginAndPasswordSelected(): Boolean =
-        localAuthDataSource.isRememberLoginAndPasswordSelected()
+        localUserDataSource.isRememberLoginAndPasswordSelected()
 
-    override suspend fun getEmail(): String? = localAuthDataSource.getEmail()
-    override suspend fun getPassword(): String? = localAuthDataSource.getPassword()
+    override suspend fun getEmail(): String? = localUserDataSource.getEmail()
+    override suspend fun getPassword(): String? = localUserDataSource.getPassword()
 
-    override suspend fun onLoginClicked(emailText: String, passwordText: String): Boolean =
-        localAuthDataSource.onLoginClicked(emailText, passwordText)
+    override suspend fun onLoginClicked() =
+        localUserDataSource.onLoginClicked()
 
     // Каждый раз, когда мы кликаем, будет исполняться этот метод. Здесь мы сохраняем статус check box
     override suspend fun setRememberLoginAndPasswordSelectedOrNot(isSelected: Boolean) =
-        localAuthDataSource.setRememberLoginAndPasswordSelectedOrNot(isSelected)
+        localUserDataSource.setRememberLoginAndPasswordSelectedOrNot(isSelected)
 
-    override suspend fun checkEmail(email: String): Boolean = localAuthDataSource.checkEmail(email)
+    override suspend fun checkEmail(email: String): Boolean = localUserDataSource.checkEmail(email)
 
     override suspend fun checkPassword(password: String, confirmPassword: String): Boolean =
-        localAuthDataSource.checkPassword(password, confirmPassword)
+        localUserDataSource.checkPassword(password, confirmPassword)
 
     override suspend fun registerNewUser(email: String, password: String) =
-        localAuthDataSource.registerNewUser(email, password)
+        localUserDataSource.registerNewUser(email, password)
 
-    override fun logout() = localAuthDataSource.logout()
+    override fun logout() = localUserDataSource.logout()
 }

@@ -33,6 +33,10 @@ class ProgressForegroundService @Inject constructor() : Service() {
     companion object {
         private const val TAG = "ProgressForeground"
         private const val CHANNEL_CASHING_ID = "CHANNEL_CASHING_ID" // 5
+        private const val FILTER_FOR_BROADCAST = "FILTER_FOR_BROADCAST"
+        private const val KEY_BROADCAST_LIST_SIZE = "KEY_BROADCAST_LIST_SIZE"
+        private const val KEY_BROADCAST_COUNT = "KEY_BROADCAST_COUNT"
+        private const val KEY_BROADCAST_END = "KEY_BROADCAST_END"
     }
 
     @Inject
@@ -125,6 +129,11 @@ class ProgressForegroundService @Inject constructor() : Service() {
 
                 // Для отображения прогресса
                 val listSize = countryCodeRemoteList.size
+
+                val intent = Intent(FILTER_FOR_BROADCAST) // FILTER is a string to identify this intent
+                intent.putExtra(KEY_BROADCAST_LIST_SIZE, listSize)
+                sendBroadcast(intent)
+
                 if (listSize > 0) {
 
                     // Преобразуем коды (remote) в читабельные страны (local) с локацией
@@ -136,6 +145,7 @@ class ProgressForegroundService @Inject constructor() : Service() {
                     var longitude = 0.0
 
                     var countryCodeRemoteCount = 0
+                    var percentCount = 10
                     countryCodeRemoteList.forEach { countryCodeRemote ->
                         countryCodeRemoteCount += 1
 
@@ -173,6 +183,15 @@ class ProgressForegroundService @Inject constructor() : Service() {
                             // 5.3. Передаём notificationManager наш билдер notification
                             notificationManager.notify(5, builder.build())
                         }
+
+                        // 1.Broadcast для горизонтальной полосы прогресса в фрагменте (2,3 - в фрагменте)
+                        val countingForBroadcast = percentCount*listSize/100
+                        if (countryCodeRemoteCount == countingForBroadcast) {
+                            percentCount += 10
+
+                            intent.putExtra(KEY_BROADCAST_COUNT, countryCodeRemoteCount)
+                            sendBroadcast(intent)
+                        }
                     }
 
                     Log.d(
@@ -193,6 +212,9 @@ class ProgressForegroundService @Inject constructor() : Service() {
                 }
 
                 // 5.4. Когда прогресс заканчивается, закрываем Foreground, удаляем уведомления, stop service
+                intent.putExtra(KEY_BROADCAST_END, 100)
+                sendBroadcast(intent)
+
                 stopForeground(true)
                 notificationManager.cancelAll()
                 stopSelf()

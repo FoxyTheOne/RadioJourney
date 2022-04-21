@@ -2,10 +2,85 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/app_navigation"
-    app:startDestination="@id/auth_nav_graph">
+    app:startDestination="@id/firstScreenLoadingFragment">
 
-    <include app:graph="@navigation/auth_nav_graph" />
+    <fragment
+        android:id="@+id/homeRadioFragment"
+        android:name="com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioFragment"
+        android:label="HomeRadioFragment">
+        <action
+            android:id="@+id/action_homeRadioFragment_to_radioListFragment"
+            app:destination="@id/radioListFragment">
+            <!-- Передаём countryCode на следующий фрагмент для запроса списка станций -->
+            <argument
+                android:name="country_code"
+                app:argType="string" />
 
-    <include app:graph="@navigation/content_nav_graph" />
+        </action>
+        <action
+            android:id="@+id/action_homeRadioFragment_to_favouriteListFragment"
+            app:destination="@id/favouriteListFragment" />
+        <action
+            android:id="@+id/action_homeRadioFragment_to_recommendedListFragment"
+            app:destination="@id/recommendedListFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/radioListFragment"
+        android:name="com.myproject.radiojourney.presentation.content.radioList.RadioListFragment"
+        android:label="RadioListFragment">
+        <action
+            android:id="@+id/action_radioListFragment_to_homeRadioFragment"
+            app:destination="@id/homeRadioFragment">
+
+            <argument
+                android:name="radio_station"
+                app:argType="com.myproject.radiojourney.model.presentation.RadioStationPresentation" />
+        </action>
+    </fragment>
+
+    <fragment
+        android:id="@+id/favouriteListFragment"
+        android:name="com.myproject.radiojourney.presentation.content.favouriteList.FavouriteListFragment"
+        android:label="FavouriteListFragment">
+        <action
+            android:id="@+id/action_favouriteListFragment_to_homeRadioFragment"
+            app:destination="@id/homeRadioFragment">
+
+            <argument
+                android:name="radio_station_favourite"
+                app:argType="com.myproject.radiojourney.model.presentation.RadioStationFavouritePresentation" />
+        </action>
+    </fragment>
+
+    <fragment
+        android:id="@+id/recommendedListFragment"
+        android:name="com.myproject.radiojourney.presentation.content.recommendedList.RecommendedListFragment"
+        android:label="RecommendedListFragment">
+        <action
+            android:id="@+id/action_recommendedListFragment_to_homeRadioFragment"
+            app:destination="@id/homeRadioFragment">
+
+            <argument
+                android:name="radio_station"
+                app:argType="com.myproject.radiojourney.model.presentation.RadioStationPresentation" />
+        </action>
+    </fragment>
+
+    <fragment
+        android:id="@+id/firstScreenLoadingFragment"
+        android:name="com.myproject.radiojourney.presentation.firstScreen.FirstScreenLoadingFragment"
+        android:label="FirstScreenLoadingFragment">
+        <action
+            android:id="@+id/action_firstScreenLoadingFragment_to_homeRadioFragment"
+            app:destination="@id/homeRadioFragment"
+            app:popUpTo="@id/firstScreenLoadingFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <!-- Global action -->
+    <action
+        android:id="@+id/action_global_home_radio_fragment"
+        app:destination="@id/homeRadioFragment" />
 
 </navigation>

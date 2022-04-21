@@ -3,8 +3,8 @@ package com.myproject.radiojourney.di
 import android.content.Context
 import androidx.room.Room
 import com.myproject.radiojourney.IAppSettings
-import com.myproject.radiojourney.data.dataSource.local.auth.ILocalAuthDataSource
-import com.myproject.radiojourney.data.dataSource.local.auth.LocalAuthDataSource
+import com.myproject.radiojourney.data.dataSource.local.auth.ILocalUserDataSource
+import com.myproject.radiojourney.data.dataSource.local.auth.LocalUserDataSource
 import com.myproject.radiojourney.data.dataSource.local.radio.ILocalRadioDataSource
 import com.myproject.radiojourney.data.dataSource.local.radio.LocalRadioDataSource
 import com.myproject.radiojourney.data.dataSource.network.INetworkRadioDataSource
@@ -20,8 +20,8 @@ import com.myproject.radiojourney.domain.favouriteList.FavouriteListInteractor
 import com.myproject.radiojourney.domain.favouriteList.IFavouriteListInteractor
 import com.myproject.radiojourney.domain.homeRadio.HomeRadioInteractor
 import com.myproject.radiojourney.domain.homeRadio.IHomeRadioInteractor
-import com.myproject.radiojourney.domain.signIn.SignInInteractor
-import com.myproject.radiojourney.domain.signIn.ISignInInteractor
+import com.myproject.radiojourney.domain.signIn.LoginScreenInteractor
+import com.myproject.radiojourney.domain.signIn.ILoginScreenInteractor
 import com.myproject.radiojourney.domain.iRepository.IAuthRepository
 import com.myproject.radiojourney.domain.iRepository.IContentRepository
 import com.myproject.radiojourney.domain.logOut.ILogOutInteractor
@@ -129,9 +129,9 @@ abstract class ViewModelModule {
     }
 
     @Binds
-    abstract fun bindsSignInInteractor(
-        signInInteractor: SignInInteractor
-    ): ISignInInteractor
+    abstract fun bindsLoginScreenInteractor(
+        loginScreenInteractor: LoginScreenInteractor
+    ): ILoginScreenInteractor
 
     @Binds
     abstract fun bindsSignUpInteractor(
@@ -174,9 +174,9 @@ abstract class ViewModelModule {
     ): IContentRepository
 
     @Binds
-    abstract fun bindsLocalAuthDataSource(
-        localAuthDataSource: LocalAuthDataSource
-    ): ILocalAuthDataSource
+    abstract fun bindsLocalUserDataSource(
+        localUserDataSource: LocalUserDataSource
+    ): ILocalUserDataSource
 
     // Переношу следующие конструкторы в SingletonModule, т.к. их будет использовать LocalRadioDataSource, который использует Foreground service
 //    @Binds

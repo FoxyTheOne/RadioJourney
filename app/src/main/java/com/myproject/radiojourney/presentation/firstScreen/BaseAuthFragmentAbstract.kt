@@ -1,4 +1,4 @@
-package com.myproject.radiojourney.presentation.authentication.base
+package com.myproject.radiojourney.presentation.firstScreen
 
 import android.os.Bundle
 import android.util.Log
@@ -30,7 +30,7 @@ abstract class BaseAuthFragmentAbstract : Fragment() {
         Log.d(TAG, "tokenForCheck = $tokenForCheck")
 
         if (tokenForCheck.isNotBlank()) {
-            findNavController().navigate(R.id.action_global_content_nav_graph)
+            findNavController().navigate(R.id.action_global_home_radio_fragment)
         }
     }
 }

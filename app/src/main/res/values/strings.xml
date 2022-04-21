@@ -1,26 +1,17 @@
 <resources>
     <string name="app_name">RadioJourney</string>
 
-    <string name="signIn_signIn">Sign in</string>
-    <string name="signIn_email">Email</string>
-    <string name="signIn_password">Password</string>
-    <string name="signIn_CheckBox">Remember email and password</string>
-    <string name="signIn_needAnAccount">Need an Account?</string>
-    <string name="signIn_signUp">Sign up</string>
-    <string name="signIn_credentials_incorrect">Email or password is incorrect</string>
-
-    <string name="signUp_signUp">Sign up</string>
-    <string name="signUp_confirmPassword">Confirm password</string>
-    <string name="signUp_alreadyHave">Already have an Account?</string>
-    <string name="signUp_email_incorrect">Email is incorrect or user has already registered</string>
-    <string name="signUp_password_incorrect">Please enter a valid password. It should has at least 6 chars</string>
+    <string name="first_screen_tittle">Welcome to RadioJourney!</string>
+    <string name="first_screen_text1">If it is the first start - please, wait until cashing ends.</string>
+    <string name="first_screen_text2">In case first cashing failed, try turn on and then turn off airplane mode, and then restart the program.</string>
+    <string name="first_screen_button">Start journey</string>
 
     <string name="content_description_email">Email</string>
     <string name="content_description_password">Password</string>
     <string name="content_description_confirm_password">Confirm password</string>
     <string name="content_description_userName">User Name</string>
 
-    <string name="logout_intention_question">Do you want to log out?</string>
+    <string name="logout_intention_question">Do you want to exit?</string>
 
     <string name="homeRadio_zoomPlus">+</string>
     <string name="homeRadio_zoomMinus">-</string>

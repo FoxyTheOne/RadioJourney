@@ -182,6 +182,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             false
         )
 
+        // TODO передавать list url и там обрабатывать в for each
         viewModel.setRecommendedRadioStations()
 
         // LOCATION -> 1.5. Создадим метод для получения Current location либо Last location
@@ -599,7 +600,8 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         stopAudio()
 
         viewModel.logout()
-        this.findNavController().navigate(R.id.action_homeRadioFragment_to_auth_nav_graph)
+//        this.findNavController().navigate(R.id.action_homeRadioFragment_to_auth_nav_graph)
+        activity?.finish()
     }
 
     // VIEW BINDING -> 3. onDestroyView()

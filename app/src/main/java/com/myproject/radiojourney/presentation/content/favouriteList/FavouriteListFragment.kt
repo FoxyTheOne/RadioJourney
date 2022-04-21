@@ -182,7 +182,8 @@ class FavouriteListFragment : BaseContentFragmentAbstract() {
     // TOOLBAR - Описываем метод из интерфейса ILogOutListener для выхода из аккаунта приложения
     override fun onLogOut() {
         viewModel.logout()
-        this.findNavController().navigate(R.id.action_favouriteListFragment_to_auth_nav_graph)
+//        this.findNavController().navigate(R.id.action_favouriteListFragment_to_auth_nav_graph)
+        activity?.finish()
     }
 
     // VIEW BINDING -> 3. onDestroyView()

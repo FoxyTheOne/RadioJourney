@@ -2,13 +2,15 @@ package com.myproject.radiojourney.data.dataSource.local.auth
 
 import com.myproject.radiojourney.model.local.UserWithStations
 
-interface ILocalAuthDataSource {
+interface ILocalUserDataSource {
+
+    suspend fun getUsersWithStations(): List<UserWithStations>
 
     suspend fun isRememberLoginAndPasswordSelected(): Boolean
     suspend fun getEmail(): String?
     suspend fun getPassword(): String?
 
-    suspend fun onLoginClicked(emailText: String, passwordText: String): Boolean
+    suspend fun onLoginClicked()
 
     // Каждый раз, когда мы кликаем, будет исполняться этот метод. Здесь мы сохраняем статус check box
     suspend fun setRememberLoginAndPasswordSelectedOrNot(isSelected: Boolean)
@@ -18,7 +20,5 @@ interface ILocalAuthDataSource {
     suspend fun registerNewUser(email: String, password: String)
 
     fun logout()
-
-    suspend fun getUsersWithStations(): List<UserWithStations>
 
 }

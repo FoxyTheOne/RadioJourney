@@ -9,6 +9,7 @@ import androidx.appcompat.widget.AppCompatTextView
 import androidx.recyclerview.widget.RecyclerView
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.model.presentation.RadioStationFavouritePresentation
+import java.util.*
 
 // 1.1. ОБРАБОТКА КЛИКА -> передадим в конструктор анонимную функцию (как класса Adapter, так и вложенного класса). Затем отдаём эту лямбду каждому ViewHolder
 class FavouiteListAdapter(
@@ -82,7 +83,11 @@ class FavouiteListAdapter(
             // 1.3. ОБРАБОТКА КЛИКА -> В методе обработки элемента списка, инициализируем нашу переменную
             this.radioStationFavourite = radioStationFavourite
 
-            textRadioStationCity.text = radioStationFavourite.countryCode
+            // Узнаем название страны
+            val loc = Locale("", radioStationFavourite.countryCode)
+            val countryName = loc.displayName
+            textRadioStationCity.text = countryName
+
             textRadioStationName.text = radioStationFavourite.stationName
             textRadioStationClickCount.text = radioStationFavourite.clickCount.toString()
 

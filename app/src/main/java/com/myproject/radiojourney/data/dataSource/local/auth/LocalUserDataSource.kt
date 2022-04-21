@@ -11,10 +11,13 @@ import javax.inject.Inject
 /**
  * LocalAuthDataSource Будет доставать данные, либо сохранять их в локальную базу данных (SharedPreference, Room)
  */
-class LocalAuthDataSource @Inject constructor(
+class LocalUserDataSource @Inject constructor(
     private val preference: IAppSharedPreference,
     private val userDAO: IUserDAO
-) : ILocalAuthDataSource {
+) : ILocalUserDataSource {
+    override suspend fun getUsersWithStations(): List<UserWithStations> =
+        userDAO.getUsersWithStations()
+
     override suspend fun isRememberLoginAndPasswordSelected(): Boolean =
         preference.isRememberLoginAndPasswordSelected()
 
@@ -22,21 +25,9 @@ class LocalAuthDataSource @Inject constructor(
     override suspend fun getPassword(): String = preference.getPassword()
 
     // Проверка, есть ли такой зарегистрированный User и верно ли введен пароль
-    override suspend fun onLoginClicked(emailText: String, passwordText: String): Boolean {
-        val user = userDAO.getUser(emailText)
-        val userPassword = user?.password
-        val isPasswordTheSame = userPassword == passwordText
-
-        return if (isPasswordTheSame) {
-            // Сохраняем значения в preference для восстановления их в полях email и password, если будет выбрана галочка в check box
-            preference.saveEmail(emailText)
-            preference.savePassword(passwordText)
-            // Сохраняем токен
-            preference.saveToken(user?.id ?: 0)
-            true
-        } else {
-            false
-        }
+    override suspend fun onLoginClicked() {
+        val token = Math.random()*1000
+        preference.saveToken(token.toInt())
     }
 
     // Каждый раз, когда мы кликаем, будет исполняться этот метод. Здесь мы сохраняем статус check box
@@ -69,6 +60,4 @@ class LocalAuthDataSource @Inject constructor(
 
     // Выход из аккаунта
     override fun logout() = preference.saveToken(null)
-    override suspend fun getUsersWithStations(): List<UserWithStations> =
-        userDAO.getUsersWithStations()
 }

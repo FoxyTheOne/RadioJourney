@@ -28,11 +28,10 @@ class HomeRadioViewModel @Inject constructor(
     }
 
     val failedLiveData = MutableLiveData<Boolean>()
+    val radioStationSavedLiveData = MutableLiveData<RadioStationPresentation>()
 
     // Подписка на локальную БД
     val countryListFlow = homeRadioInteractor.subscribeOnCountryList()
-
-    val radioStationSavedLiveData = MutableLiveData<RadioStationPresentation>()
 
     // LiveData, которые будут отвечать за отображение прогресса (кружок)
     val showProgressLiveData = MutableLiveData<Boolean>()
