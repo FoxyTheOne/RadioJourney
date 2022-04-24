@@ -9,15 +9,17 @@ import androidx.room.Relation
  * To do this, create a new data class where each instance holds an instance of the parent entity and a list of all corresponding child entity instances.
  * Add the @Relation annotation to the instance of the child entity, with parentColumn set to the name of the primary key column of the parent entity
  * and entityColumn set to the name of the column of the child entity that references the parent entity's primary key.
+ *
+ * Не нужен после удаления экранов SignIn и SignUp
  */
-data class UserWithStations(
-    @Embedded
-    val user: UserEntity,
-    @Relation(
-        // parentColumn - имя столбца первичного ключа родительской сущности
-        parentColumn = "id",
-        // entityColumn — имя столбца дочерней сущности, которая ссылается на первичный ключ родительской сущности
-        entityColumn = "userCreatorId"
-    )
-    val stations: List<RadioStationFavouriteLocal>
-)
+//data class UserWithStations(
+//    @Embedded
+//    val user: UserEntity,
+//    @Relation(
+//        // parentColumn - имя столбца первичного ключа родительской сущности
+//        parentColumn = "id",
+//        // entityColumn — имя столбца дочерней сущности, которая ссылается на первичный ключ родительской сущности
+//        entityColumn = "userCreatorId"
+//    )
+//    val stations: List<RadioStationFavouriteLocal>
+//)

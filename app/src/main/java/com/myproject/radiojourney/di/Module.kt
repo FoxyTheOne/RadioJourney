@@ -5,33 +5,39 @@ import androidx.room.Room
 import com.myproject.radiojourney.IAppSettings
 import com.myproject.radiojourney.data.dataSource.local.auth.ILocalUserDataSource
 import com.myproject.radiojourney.data.dataSource.local.auth.LocalUserDataSource
+import com.myproject.radiojourney.data.dataSource.local.favorite.ILocalFavoriteDataSource
+import com.myproject.radiojourney.data.dataSource.local.favorite.LocalFavoriteDataSource
 import com.myproject.radiojourney.data.dataSource.local.radio.ILocalRadioDataSource
 import com.myproject.radiojourney.data.dataSource.local.radio.LocalRadioDataSource
+import com.myproject.radiojourney.data.dataSource.local.recommended.ILocalRecommendedDataSource
+import com.myproject.radiojourney.data.dataSource.local.recommended.LocalRecommendedDataSource
 import com.myproject.radiojourney.data.dataSource.network.INetworkRadioDataSource
 import com.myproject.radiojourney.data.dataSource.network.NetworkRadioDataSource
 import com.myproject.radiojourney.data.dataSource.network.service.IRadioServiceWrapper
 import com.myproject.radiojourney.data.dataSource.network.service.RadioServiceWrapper
 import com.myproject.radiojourney.data.localDatabaseRoom.*
 import com.myproject.radiojourney.data.repository.AuthRepository
-import com.myproject.radiojourney.data.repository.ContentRepository
+import com.myproject.radiojourney.data.repository.FavoriteStationRepository
+import com.myproject.radiojourney.data.repository.RadioStationRepository
+import com.myproject.radiojourney.data.repository.RecommendedStationRepository
 import com.myproject.radiojourney.data.sharedPreference.AppSharedPreference
 import com.myproject.radiojourney.data.sharedPreference.IAppSharedPreference
-import com.myproject.radiojourney.domain.favouriteList.FavouriteListInteractor
-import com.myproject.radiojourney.domain.favouriteList.IFavouriteListInteractor
-import com.myproject.radiojourney.domain.homeRadio.HomeRadioInteractor
-import com.myproject.radiojourney.domain.homeRadio.IHomeRadioInteractor
-import com.myproject.radiojourney.domain.signIn.LoginScreenInteractor
-import com.myproject.radiojourney.domain.signIn.ILoginScreenInteractor
+import com.myproject.radiojourney.domain.favouriteList.FavouriteListUseCase
+import com.myproject.radiojourney.domain.favouriteList.IFavouriteListUseCase
+import com.myproject.radiojourney.domain.homeRadio.HomeRadioUseCase
+import com.myproject.radiojourney.domain.homeRadio.IHomeRadioUseCase
+import com.myproject.radiojourney.domain.firstScreenLoading.LoginScreenUseCase
+import com.myproject.radiojourney.domain.firstScreenLoading.ILoginScreenUseCase
 import com.myproject.radiojourney.domain.iRepository.IAuthRepository
-import com.myproject.radiojourney.domain.iRepository.IContentRepository
-import com.myproject.radiojourney.domain.logOut.ILogOutInteractor
-import com.myproject.radiojourney.domain.logOut.LogOutInteractor
-import com.myproject.radiojourney.domain.radioList.IRadioListInteractor
-import com.myproject.radiojourney.domain.radioList.RadioListInteractor
-import com.myproject.radiojourney.domain.recommendedList.IRecommendedListInteractor
-import com.myproject.radiojourney.domain.recommendedList.RecommendedListInteractor
-import com.myproject.radiojourney.domain.signUp.ISignUpInteractor
-import com.myproject.radiojourney.domain.signUp.SignUpInteractor
+import com.myproject.radiojourney.domain.iRepository.IFavoriteStationRepository
+import com.myproject.radiojourney.domain.iRepository.IRadioStationRepository
+import com.myproject.radiojourney.domain.iRepository.IRecommendedStationRepository
+import com.myproject.radiojourney.domain.logOut.ILogOutUseCase
+import com.myproject.radiojourney.domain.logOut.LogOutUseCase
+import com.myproject.radiojourney.domain.radioList.IRadioListUseCase
+import com.myproject.radiojourney.domain.radioList.RadioListUseCase
+import com.myproject.radiojourney.domain.recommendedList.IRecommendedListUseCase
+import com.myproject.radiojourney.domain.recommendedList.RecommendedListUseCase
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -69,11 +75,6 @@ abstract class SingletonModule {
         @Provides
         fun providesRadioStationDAO(appDatabase: AppRoomDBAbstract): IRadioStationDAO {
             return appDatabase.getRadioStationDAO()
-        }
-
-        @Provides
-        fun providesRadioStationFavouriteDAO(appDatabase: AppRoomDBAbstract): IRadioStationFavouriteDAO {
-            return appDatabase.getRadioStationFavouriteDAO()
         }
     }
 
@@ -121,47 +122,37 @@ abstract class ViewModelModule {
 //        fun providesRadioStationDAO(appDatabase: AppRoomDBAbstract): IRadioStationDAO {
 //            return appDatabase.getRadioStationDAO()
 //        }
-
-//        @Provides
-//        fun providesRadioStationFavouriteDAO(appDatabase: AppRoomDBAbstract): IRadioStationFavouriteDAO {
-//            return appDatabase.getRadioStationFavouriteDAO()
-//        }
     }
 
     @Binds
+    abstract fun bindsFavouriteListInteractor(
+        favouriteListInteractor: FavouriteListUseCase
+    ): IFavouriteListUseCase
+
+    @Binds
     abstract fun bindsLoginScreenInteractor(
-        loginScreenInteractor: LoginScreenInteractor
-    ): ILoginScreenInteractor
-
-    @Binds
-    abstract fun bindsSignUpInteractor(
-        signUpInteractor: SignUpInteractor
-    ): ISignUpInteractor
-
-    @Binds
-    abstract fun bindsLogOutInteractor(
-        logOutInteractor: LogOutInteractor
-    ): ILogOutInteractor
+        loginScreenInteractor: LoginScreenUseCase
+    ): ILoginScreenUseCase
 
     @Binds
     abstract fun bindsHomeRadioInteractor(
-        homeRadioInteractor: HomeRadioInteractor
-    ): IHomeRadioInteractor
+        homeRadioInteractor: HomeRadioUseCase
+    ): IHomeRadioUseCase
+
+    @Binds
+    abstract fun bindsLogOutInteractor(
+        logOutInteractor: LogOutUseCase
+    ): ILogOutUseCase
 
     @Binds
     abstract fun bindsRadioListInteractor(
-        radioListInteractor: RadioListInteractor
-    ): IRadioListInteractor
-
-    @Binds
-    abstract fun bindsFavouriteListInteractor(
-        favouriteListInteractor: FavouriteListInteractor
-    ): IFavouriteListInteractor
+        radioListInteractor: RadioListUseCase
+    ): IRadioListUseCase
 
     @Binds
     abstract fun bindsRecommendedListInteractor(
-        recommendedListInteractor: RecommendedListInteractor
-    ): IRecommendedListInteractor
+        recommendedListInteractor: RecommendedListUseCase
+    ): IRecommendedListUseCase
 
     @Binds
     abstract fun bindsAuthRepository(
@@ -169,14 +160,34 @@ abstract class ViewModelModule {
     ): IAuthRepository
 
     @Binds
-    abstract fun bindsContentRepository(
-        contentRepository: ContentRepository
-    ): IContentRepository
+    abstract fun bindsFavoriteStationRepository(
+        favoriteStationRepository: FavoriteStationRepository
+    ): IFavoriteStationRepository
+
+    @Binds
+    abstract fun bindsRadioStationRepository(
+        radioStationRepository: RadioStationRepository
+    ): IRadioStationRepository
+
+    @Binds
+    abstract fun bindsRecommendedStationRepository(
+        recommendedStationRepository: RecommendedStationRepository
+    ): IRecommendedStationRepository
 
     @Binds
     abstract fun bindsLocalUserDataSource(
         localUserDataSource: LocalUserDataSource
     ): ILocalUserDataSource
+
+    @Binds
+    abstract fun bindsLocalFavoriteDataSource(
+        localFavoriteDataSource: LocalFavoriteDataSource
+    ): ILocalFavoriteDataSource
+
+    @Binds
+    abstract fun bindsLocalRecommendedDataSource(
+        localRecommendedDataSource: LocalRecommendedDataSource
+    ): ILocalRecommendedDataSource
 
     // Переношу следующие конструкторы в SingletonModule, т.к. их будет использовать LocalRadioDataSource, который использует Foreground service
 //    @Binds

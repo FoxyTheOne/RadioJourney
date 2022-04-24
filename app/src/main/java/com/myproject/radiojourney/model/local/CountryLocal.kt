@@ -7,7 +7,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.myproject.radiojourney.model.remote.CountryCodeRemote
 
 /**
- * Класс для сохранения в базе данных Room почты и пароля пользователей
+ * Класс для сохранения в базе данных Room локаций
  */
 @Entity
 data class CountryLocal(

@@ -8,9 +8,9 @@ import com.myproject.radiojourney.model.remote.RadioStationRemote
 
 @Entity
 data class RadioStationLocal(
-    @ColumnInfo(name = "stationName") val stationName: String,
     @PrimaryKey
     @ColumnInfo(name = "url") val url: String,
+    @ColumnInfo(name = "stationName") val stationName: String,
     @ColumnInfo(name = "clickCount") val clickCount: Int,
     @ColumnInfo(name = "countryCode") val countryCode: String,
     @ColumnInfo(name = "isStationInFavourite") var isStationInFavourite: Boolean,

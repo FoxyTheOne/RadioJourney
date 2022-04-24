@@ -6,6 +6,8 @@ import androidx.room.PrimaryKey
 
 /**
  * Класс для сохранения в базе данных Room почты и пароля пользователей
+ *
+ * Не нужен после удаления экранов SignIn и SignUp
  */
 @Entity
 class UserEntity(

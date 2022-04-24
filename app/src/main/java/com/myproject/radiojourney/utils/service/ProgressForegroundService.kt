@@ -56,7 +56,7 @@ class ProgressForegroundService @Inject constructor() : Service() {
         // Настройки диалогового окна
         dialogInternetTrouble = Dialog(this)
         // Передайте ссылку на разметку
-        dialogInternetTrouble.setContentView(R.layout.layout_internet_trouble_dialog)
+        dialogInternetTrouble.setContentView(R.layout.layout_internet_trouble_dialog_cashing)
 
         // FOREGROUND_SERVICE -> 3. Вызываем метод для создания Channel
         // Добавляем проверку, т.к. создавать NotificationChannel можно только начиная с API 26
@@ -130,7 +130,8 @@ class ProgressForegroundService @Inject constructor() : Service() {
                 // Для отображения прогресса
                 val listSize = countryCodeRemoteList.size
 
-                val intent = Intent(FILTER_FOR_BROADCAST) // FILTER is a string to identify this intent
+                val intent =
+                    Intent(FILTER_FOR_BROADCAST) // FILTER is a string to identify this intent
                 intent.putExtra(KEY_BROADCAST_LIST_SIZE, listSize)
                 sendBroadcast(intent)
 
@@ -185,7 +186,7 @@ class ProgressForegroundService @Inject constructor() : Service() {
                         }
 
                         // 1.Broadcast для горизонтальной полосы прогресса в фрагменте (2,3 - в фрагменте)
-                        val countingForBroadcast = percentCount*listSize/100
+                        val countingForBroadcast = percentCount * listSize / 100
                         if (countryCodeRemoteCount == countingForBroadcast) {
                             percentCount += 10
 

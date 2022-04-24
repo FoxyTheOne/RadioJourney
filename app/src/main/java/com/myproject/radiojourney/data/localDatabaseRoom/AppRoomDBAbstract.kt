@@ -5,16 +5,15 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.myproject.radiojourney.model.local.CountryLocal
-import com.myproject.radiojourney.model.local.RadioStationFavouriteLocal
 import com.myproject.radiojourney.model.local.RadioStationLocal
 import com.myproject.radiojourney.model.local.UserEntity
 
 @Database(
-    entities = [UserEntity::class, CountryLocal::class, RadioStationLocal::class, RadioStationFavouriteLocal::class],
-    version = 6,
+    entities = [UserEntity::class, CountryLocal::class, RadioStationLocal::class],
+    version = 7,
     exportSchema = true,
 //    autoMigrations = [
-//        AutoMigration(from = 5, to = 6)
+//        AutoMigration(from = 6, to = 7)
 //    ]
 )
 @TypeConverters(LatLngConverter::class)
@@ -22,5 +21,4 @@ abstract class AppRoomDBAbstract : RoomDatabase() {
     abstract fun getUserDAO(): IUserDAO
     abstract fun getCountryDAO(): ICountryDAO
     abstract fun getRadioStationDAO(): IRadioStationDAO
-    abstract fun getRadioStationFavouriteDAO(): IRadioStationFavouriteDAO
 }

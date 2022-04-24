@@ -1,5 +1,5 @@
 package com.myproject.radiojourney.domain.logOut
 
-interface ILogOutInteractor {
+interface ILogOutUseCase {
     suspend fun onLogout()
 }

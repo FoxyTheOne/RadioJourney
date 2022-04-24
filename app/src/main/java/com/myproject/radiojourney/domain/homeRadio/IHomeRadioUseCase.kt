@@ -1,0 +1,23 @@
+package com.myproject.radiojourney.domain.homeRadio
+
+import com.myproject.radiojourney.model.presentation.CountryPresentation
+import com.myproject.radiojourney.model.presentation.RadioStationPresentation
+import kotlinx.coroutines.flow.Flow
+
+interface IHomeRadioUseCase {
+    fun subscribeOnCountryList(): Flow<List<CountryPresentation>>
+
+    suspend fun isRadioStationStored(): Boolean
+    suspend fun getRadioStationUrl(): String?
+    suspend fun getRadioStationSaved(radioStationUrl: String): RadioStationPresentation?
+
+    // Поменять в Shared Preference setIsRadioStationStored на true. Сохранить в Shared Preference (url)
+    suspend fun saveRadioStationUrl(isStored: Boolean, url: String)
+    // И сохранить радиостанцию в Room
+    suspend fun saveRadioStationInRoom(radioStation: RadioStationPresentation)
+
+    suspend fun addStationInRoomToFavourites(currentRadioStation: RadioStationPresentation)
+    suspend fun deleteStationInRoomFromFavourite(currentRadioStation: RadioStationPresentation)
+
+    suspend fun setRecommendedRadioStations(recommendedList: Map<String, String>)
+}

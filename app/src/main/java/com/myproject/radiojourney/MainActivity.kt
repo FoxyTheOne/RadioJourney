@@ -20,15 +20,13 @@ import dagger.hilt.android.AndroidEntryPoint
  *
  * По клику на радио, пользователь возвращается на главный экран и может его прослушать, если это радио в данный момент работает.
  *
- * Перед входом в приложение для практики реализованы экраны Sign up и Sign in с минимальными проверками правильности ввода данных.
  * Перед входом в приложение запрашивается разрешение на доступ к местоположению.
  *
  * - В проекте используется архитектурный паттерн MVVM и подход Clean Architecture;
  * - Используется DI – Hilt, а также Navigation component и View Binding;
  * - Для хранения небольших пар ключ-значение (логин и пароль, токен и тп.) я использую Shared preferences;
  * - Для сохранения локаций маркеров на карте, а также для хранения избранных радиостанций используется реляционная база данных Room.
- * При первом запуске нужно дождаться окончания кеширования, в дальнейшем данные берутся из подписки на локальную базу данных.
- * Регистрация пользователя сделана для примера, поэтому регистрируемые данные так же сохраняются в Room;
+ * При первом запуске нужно дождаться окончания кеширования, в дальнейшем данные берутся из подписки на локальную базу данных;
  * - Для отображения прогресса кеширования в уведомлении используется Foreground service;
  * - Все запросы на сервер, либо в локальную БД из ViewModel я делаю через Coroutines;
  * - Для запроса на сервер используется Retrofit2.
@@ -43,15 +41,13 @@ import dagger.hilt.android.AndroidEntryPoint
  *
  * By clicking on the radio, the user returns to the main screen and can listen to it if this radio is currently working.
  *
- * There are Sign up and Sign in screens with minimal checks of data entry. They are implemented just for practice.
  * Before entering the application, you are asked for your location permission.
  *
  * - The project uses the MVVM architectural pattern and the Clean Architecture concept;
  * - Hilt is used here, as well as Navigation component and View Binding;
  * - To store small key-value pairs (token for instance), I use Shared preferences;
  * - The Room database is used to store marker locations on the map, as well as to store favorite radio stations.
- * You need to wait for the end of caching at the first start. Further the data is taken from the subscription to the local database.
- * User registration is done for practice, so the logged data is also stored in the Room;
+ * You need to wait for the end of caching at the first start. Further the data is taken from the subscription to the local database;
  * - I use Foreground service to display caching progress in notification;
  * - I make all requests to the server, or to the local database from the ViewModel, through Coroutines;
  * - For the request to the server, Retrofit2 is used.

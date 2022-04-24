@@ -1,5 +1,6 @@
 package com.myproject.radiojourney.presentation.content.favouriteList
 
+import android.app.Dialog
 import android.os.Bundle
 import android.util.Log
 import android.view.*
@@ -32,6 +33,7 @@ class FavouriteListFragment : BaseContentFragmentAbstract() {
     private var binding: LayoutRadioStationListFavouriteBinding? = null
 
     private val viewModel by viewModels<FavouriteListViewModel>()
+    private lateinit var dialogInternetTrouble: Dialog
     private lateinit var favouriteListAdapter: FavouiteListAdapter
 
     override fun onCreateView(
@@ -56,6 +58,11 @@ class FavouriteListFragment : BaseContentFragmentAbstract() {
         // Получаем список избранного для отображения
         viewModel.getRadioStationFavouriteListAndShow()
 
+        // Настройки диалогового окна
+        dialogInternetTrouble = Dialog(requireContext())
+        // Передайте ссылку на разметку
+        dialogInternetTrouble.setContentView(R.layout.layout_internet_trouble_dialog)
+
         initListeners()
         subscribeOnLiveData()
     }
@@ -75,12 +82,8 @@ class FavouriteListFragment : BaseContentFragmentAbstract() {
         viewModel.hideProgressLiveData.observe(viewLifecycleOwner, {
             hideProgress()
         })
-        viewModel.favouritesFailedLiveData.observe(viewLifecycleOwner, {
-            Toast.makeText(
-                context,
-                "Interacting with favourites failed. Smth wrong with your token. Try re-login.",
-                Toast.LENGTH_LONG
-            ).show()
+        viewModel.dialogInternetTroubleLiveData.observe(viewLifecycleOwner, {
+            dialogInternetTrouble.show()
         })
         viewModel.failedLiveData.observe(viewLifecycleOwner, {
             Toast.makeText(context, "Failure. Something went wrong", Toast.LENGTH_LONG).show()
@@ -140,6 +143,7 @@ class FavouriteListFragment : BaseContentFragmentAbstract() {
 
                 hideProgress()
             })
+        // TODO проверить, нужны ли stationSavedInFavouritesLiveData и stationDeletedFromFavouritesLiveData после изменения логики
         viewModel.stationSavedInFavouritesLiveData.observe(viewLifecycleOwner, {
             binding?.recyclerViewRadioStationList?.adapter?.notifyDataSetChanged()
         })

@@ -1,5 +1,6 @@
 package com.myproject.radiojourney.presentation.content.recommendedList
 
+import android.app.Dialog
 import android.os.Bundle
 import android.util.Log
 import android.view.*
@@ -33,6 +34,7 @@ class RecommendedListFragment : BaseContentFragmentAbstract() {
     private var binding: LayoutRadioStationListRecommendedBinding? = null
 
     private val viewModel by viewModels<RecommendedListViewModel>()
+    private lateinit var dialogInternetTrouble: Dialog
     private lateinit var recommendedListAdapter: RecommendedListAdapter
 
     override fun onCreateView(
@@ -57,10 +59,25 @@ class RecommendedListFragment : BaseContentFragmentAbstract() {
         // Получаем список рекомендуемого для отображения
         viewModel.getRadioStationRecommendedListAndShow()
 
+        // Настройки диалогового окна
+        dialogInternetTrouble = Dialog(requireContext())
+        // Передайте ссылку на разметку
+        dialogInternetTrouble.setContentView(R.layout.layout_internet_trouble_dialog)
+
         subscribeOnLiveData()
     }
 
     private fun subscribeOnLiveData() {
+        // Показываем или прячем Progress
+        viewModel.showProgressLiveData.observe(viewLifecycleOwner, {
+            showProgress()
+        })
+        viewModel.hideProgressLiveData.observe(viewLifecycleOwner, {
+            hideProgress()
+        })
+        viewModel.dialogInternetTroubleLiveData.observe(viewLifecycleOwner, {
+            dialogInternetTrouble.show()
+        })
         viewModel.failedLiveData.observe(viewLifecycleOwner, {
             Toast.makeText(context, "Failure. Something went wrong", Toast.LENGTH_LONG).show()
         })
@@ -104,13 +121,6 @@ class RecommendedListFragment : BaseContentFragmentAbstract() {
 
                 hideProgress()
             })
-        viewModel.favoritesFailedLiveData.observe(viewLifecycleOwner, {
-            Toast.makeText(
-                context,
-                "Interacting with favourites failed. Smth wrong with your token. Try re-login.",
-                Toast.LENGTH_LONG
-            ).show()
-        })
     }
 
     private fun showProgress() {

@@ -1,6 +1,7 @@
 package com.myproject.radiojourney.presentation.firstScreen
 
 import android.Manifest
+import android.app.Dialog
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -16,14 +17,12 @@ import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.LayoutFirstScreenLoadingBinding
 import dagger.hilt.android.AndroidEntryPoint
 import android.content.Intent
-
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.IntentFilter
 import androidx.lifecycle.lifecycleScope
 import com.myproject.radiojourney.model.presentation.CountryPresentation
 import kotlinx.coroutines.flow.collect
-
 
 /**
  * Фрагмент для загрузки и входа в приложение.
@@ -42,6 +41,7 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
     // VIEW BINDING -> 1. Объявляем переменную. This property is only valid between onCreateView and onDestroyView
     private var binding: LayoutFirstScreenLoadingBinding? = null
     private val viewModel by viewModels<FirstScreenLoadingViewModel>()
+    private lateinit var dialogInternetTrouble: Dialog
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -106,10 +106,10 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
             }
         })
 
-        // TODO Подписка на локальную базу данных. Если база данных не пуста, триггерим signInLiveData, чтобы зайти в приложение, если есть разрешения.
-        // Так же подсвечиваем кнопочку для входа, чтобы пользователь мог нажать и подтвердить permissions, если всё время их отклоняет
-
-        // TODO кнопка становится видимой по окончанию кеширования (через LiveData, чтобы не триггерило, если фрагмент уже закрыт)
+        // Настройки диалогового окна
+        dialogInternetTrouble = Dialog(requireContext())
+        // Передайте ссылку на разметку
+        dialogInternetTrouble.setContentView(R.layout.layout_internet_trouble_dialog)
 
         initListeners()
         subscribeOnLiveData()
@@ -120,12 +120,12 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
     }
 
     // 3.Broadcast для горизонтальной полосы прогресса в фрагменте (1 - в сервисе)
-    // Регистрируем в onResume и отписываемся в unregisterReceiver
     override fun onResume() {
         super.onResume()
         activity?.registerReceiver(receiver, IntentFilter(FILTER_FOR_BROADCAST))
     }
 
+    // 3.Broadcast - регистрируем в onResume и отписываемся в onPause
     override fun onPause() {
         super.onPause()
         activity?.unregisterReceiver(receiver)
@@ -145,13 +145,21 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
         viewModel.hideProgressLiveData.observe(viewLifecycleOwner, {
             hideProgress()
         })
+        viewModel.dialogInternetTroubleLiveData.observe(viewLifecycleOwner, {
+            dialogInternetTrouble.show()
+        })
+        viewModel.failedLiveData.observe(viewLifecycleOwner, {
+            Toast.makeText(context, "Failure. Something went wrong", Toast.LENGTH_LONG).show()
+        })
     }
 
     private fun subscribeOnFlow() {
         lifecycleScope.launchWhenCreated {
             viewModel.countryListFlow.collect {
-                binding?.buttonLogIn?.isVisible = true
-                binding?.progressBarHorizontal?.isVisible = false
+                if (it != listOf<CountryPresentation>()) {
+                    binding?.buttonLogIn?.isVisible = true
+                    binding?.progressBarHorizontal?.isVisible = false
+                }
             }
         }
     }
@@ -190,7 +198,6 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
             if (endOfBroadcast == 100) {
                 binding?.progressBarHorizontal?.progress = 100
             }
-
         }
     }
 }

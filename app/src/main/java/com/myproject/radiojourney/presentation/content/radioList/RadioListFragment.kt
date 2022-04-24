@@ -35,7 +35,8 @@ class RadioListFragment : BaseContentFragmentAbstract() {
     private lateinit var countryCode: String
     private lateinit var countryName: String
     private var radioStationList = listOf(
-        RadioStationPresentation("Test", "test", 2, "test",
+        RadioStationPresentation(
+            "Test", "test", 2, "test",
             isStationInFavourite = false,
             isStationInRecommended = false
         )

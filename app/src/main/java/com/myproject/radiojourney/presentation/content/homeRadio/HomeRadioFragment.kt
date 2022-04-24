@@ -36,7 +36,6 @@ import com.google.android.gms.maps.model.Marker
 import com.myproject.radiojourney.model.presentation.RadioStationPresentation
 import android.widget.Toast
 import com.myproject.radiojourney.databinding.LayoutHomeRadioBinding
-import com.myproject.radiojourney.model.presentation.RadioStationFavouritePresentation
 import kotlinx.coroutines.*
 import java.io.IOException
 import java.lang.Exception
@@ -88,9 +87,9 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
     private var customMarkerRadio: Bitmap? = null
 
     //    // ADD MARKERS TO MAP -> 1. Для примера, сейчас. Потом подгружать список по запросу
-//    private val places: List<Place> = listOf(
-//        Place(name = "Minsk", latLng = LatLng(53.90580039557321, 27.562806971874416))
-//    )
+    //    private val places: List<Place> = listOf(
+    //        Place(name = "Minsk", latLng = LatLng(53.90580039557321, 27.562806971874416))
+    //    )
     private var countryList = listOf<CountryPresentation>()
 
     override fun onCreateView(
@@ -113,7 +112,6 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         super.onViewCreated(view, savedInstanceState)
         binding?.imagePlay?.setImageResource(R.drawable.play_white)
         binding?.imageStar?.setImageResource(R.drawable.star_transparent)
-//        progressHorizontal = view.findViewById(R.id.progress_horizontal)
 
         // Настройки диалогового окна
         dialogInternetTrouble = Dialog(requireContext())
@@ -128,20 +126,18 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         audioManager = context?.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
         if (arguments != null) {
-            // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
-            arguments?.getParcelable<RadioStationPresentation>("radio_station")
+            arguments?.getParcelable<RadioStationPresentation>("radio_station") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
                 ?.let { radioStation ->
                     Log.d(TAG, "Выбранный элемент списка: $radioStation")
-                    viewModel.saveRadioStationAndShow(radioStation)
+                    viewModel.saveRadioStationAndShow(radioStation, false)
                 }
-            arguments?.getParcelable<RadioStationFavouritePresentation>("radio_station_favourite")
+            arguments?.getParcelable<RadioStationPresentation>("radio_station_favourite")
                 ?.let { radioStationFavourite ->
                     Log.d(TAG, "Выбранный элемент списка: $radioStationFavourite")
-                    viewModel.saveFavouriteRadioStationAndShow(radioStationFavourite)
+                    viewModel.saveRadioStationAndShow(radioStationFavourite, true)
                 }
         } else {
-            // 1. Подгрузить радиостанцию из Shared Preference, если она там сохранена. Если нет - текст "выберите радиостанцию"
-            viewModel.getStoredRadioStation()
+            viewModel.getStoredRadioStation() // 1. Подгрузить радиостанцию из Shared Preference, если она там сохранена. Если нет - текст "выберите радиостанцию"
         }
 
         // GOOGLE MAPS -> 2.2. Obtain the SupportMapFragment and get notified when the map is ready to be used.
@@ -182,18 +178,15 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             false
         )
 
-        // TODO передавать list url и там обрабатывать в for each
-        viewModel.setRecommendedRadioStations()
-
         // LOCATION -> 1.5. Создадим метод для получения Current location либо Last location
         getCurrentOrLastLocation()
         // Получить локацию нужно разово, при открытии фрагмента. Обновлять не нужно.
 
+        viewModel.setRecommendedRadioStations()
         initListeners()
         subscribeOnLiveData()
 
-        // COUNTRY LIST MARKERS ON MAP -> 1. Получаем список кодов стран, преобразуем в локальные модели, сохраняем в Room.
-        // Будем делать эту работу в foreground service, чтобы отображать уведомление прогресса.
+        // COUNTRY LIST MARKERS ON MAP -> 1. Получаем список кодов стран, преобразуем в локальные модели, сохраняем в Room. Будем делать эту работу в foreground service, чтобы отображать уведомление прогресса.
         // !!! Запустить нужно только 1 раз, при запуске программы, затем stopSelf() и больше этот сервис не запускать. Поэтому вызываем сервис из MainActivity
 
         // COUNTRY LIST MARKERS ON MAP -> 2. Затем подписываемся на локальную БД с помощью CountryListFlow (либо CountryListLiveData)
@@ -214,11 +207,9 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         binding?.textRadioStationTitle?.setOnClickListener {
             if (isStationSelected) {
                 if (isPaused) {
-                    // Нажали кнопку play
-                    playAudio()
+                    playAudio() // <- Нажали кнопку play
                 } else {
-                    // Нажали кнопку stop
-                    stopAudio()
+                    stopAudio() // <- Нажали кнопку stop
                     Toast.makeText(context, "Audio stopped", Toast.LENGTH_SHORT).show()
                 }
             }
@@ -226,11 +217,9 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         binding?.imagePlay?.setOnClickListener {
             if (isStationSelected) {
                 if (isPaused) {
-                    // Нажали кнопку play
-                    playAudio()
+                    playAudio() // <- Нажали кнопку play
                 } else {
-                    // Нажали кнопку stop
-                    stopAudio()
+                    stopAudio() // <- Нажали кнопку stop
                     Toast.makeText(context, "Audio stopped", Toast.LENGTH_SHORT).show()
                 }
             }
@@ -242,16 +231,12 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             }
         }
         binding?.buttonGoToRecommended?.setOnClickListener {
-            // Если нажали, перед переходом нужно остановить музыку
-            stopAudio()
-
+            stopAudio() // <- Если нажали, перед переходом нужно остановить музыку
             this.findNavController()
                 .navigate(R.id.action_homeRadioFragment_to_recommendedListFragment)
         }
         binding?.buttonGoToFavourites?.setOnClickListener {
-            // Если нажали, перед переходом нужно остановить музыку
-            stopAudio()
-
+            stopAudio() // <- Если нажали, перед переходом нужно остановить музыку
             this.findNavController()
                 .navigate(R.id.action_homeRadioFragment_to_favouriteListFragment)
         }
@@ -268,6 +253,9 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         viewModel.dialogInternetTroubleLiveData.observe(viewLifecycleOwner, {
             dialogInternetTrouble.show()
         })
+        viewModel.failedLiveData.observe(viewLifecycleOwner, {
+            Toast.makeText(context, "Failure. Something went wrong", Toast.LENGTH_LONG).show()
+        })
         viewModel.radioStationSavedLiveData.observe(
             viewLifecycleOwner,
             { radioStationPresentation ->
@@ -275,16 +263,6 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                 audioUrl = radioStationPresentation.url
                 isStationSelected = true
             })
-        viewModel.addStationToFavouritesFailedLiveData.observe(viewLifecycleOwner, {
-            Toast.makeText(
-                context,
-                "Interacting with favourites failed. Smth wrong with your token. Try re-login.",
-                Toast.LENGTH_LONG
-            ).show()
-        })
-        viewModel.failedLiveData.observe(viewLifecycleOwner, {
-            Toast.makeText(context, "Failure. Something went wrong", Toast.LENGTH_LONG).show()
-        })
         viewModel.stationSavedInFavouritesLiveData.observe(viewLifecycleOwner, {
             binding?.imageStar?.setImageResource(R.drawable.star)
         })
@@ -305,11 +283,11 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                 }
                 hideProgress()
 
-                if (countryPresentationList == emptyList<CountryPresentation>()) {
+                if (countryPresentationList == emptyList<CountryPresentation>()) { // Мы переходим на эту страницу только если БД не пуста. Если массив пустой - что-то пошло не так
                     showProgress()
                     Toast.makeText(
                         context,
-                        "Cashing. Please, wait.",
+                        "Something went wrong. Waiting for database response.",
                         Toast.LENGTH_LONG
                     ).show()
                 }
@@ -341,8 +319,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                 } else {
                     setAudioStreamType(AudioManager.STREAM_MUSIC)
                 }
-                // setAudioStreamType – задает аудио-поток, который будет использован для проигрывания.
-                // Их существует несколько: STREAM_MUSIC, STREAM_NOTIFICATION и п.
+                // setAudioStreamType – задает аудио-поток, который будет использован для проигрывания. Их существует несколько: STREAM_MUSIC, STREAM_NOTIFICATION и пр.
                 // Предполагаю, что созданы они для того, чтобы можно было задавать разные уровни громкости, например, играм, звонкам и уведомлениям.
                 // Этот метод можно и пропустить, если вам не надо явно указывать какой-то поток. Насколько я понял, по умолчанию используется STREAM_MUSIC.
 
@@ -355,10 +332,8 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                 }
 
                 // Далее используется метод prepare или prepareAsync (в паре с OnPreparedListener).
-                // Эти методы подготавливают плеер к проигрыванию. И, как понятно из названия, prepareAsync делает это асинхронно,
-                // и, когда все сделает, сообщит об этом слушателю из метода setOnPreparedListener.
-                // А метод prepare работает синхронно. Соотвественно, если хотим прослушать файл из инета, то используем prepareAsync,
-                // иначе наше приложение повесится, т.к. заблокируется основной поток, который обслуживает UI.
+                // Эти методы подготавливают плеер к проигрыванию. Как понятно из названия, prepareAsync делает это асинхронно и, когда все сделает, сообщит об этом слушателю из метода setOnPreparedListener.
+                // А метод prepare работает синхронно. Соотвественно, если хотим прослушать файл из инета, то используем prepareAsync, иначе наше приложение повесится, т.к. заблокируется основной поток, который обслуживает UI.
                 Log.d(TAG, "PLAY URL (MP3), MEDIA PLAYER -> prepareAsync")
                 setOnPreparedListener {
                     Log.d(TAG, "PLAY URL (MP3), MEDIA PLAYER -> onPrepared")
@@ -390,14 +365,12 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
     // Он освобождает используемые проигрывателем ресурсы, его рекомендуется вызывать когда вы закончили работу с плеером.
     // Более того, хелп рекомендует вызывать этот метод и при onPause/onStop, если нет острой необходимости держать объект.
     private fun releaseMediaPlayer() {
-
         try {
             mediaPlayer?.release()
             mediaPlayer = null
         } catch (e: Exception) {
             e.printStackTrace()
         }
-
     }
 
     // PLAY URL (MP3), MEDIA PLAYER -> 5. Метод для остановки проигрывания
@@ -596,11 +569,8 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 
     // TOOLBAR - Описываем метод из интерфейса ILogOutListener для выхода из аккаунта приложения
     override fun onLogOut() {
-        // Если нажали, перед переходом нужно остановить музыку
-        stopAudio()
-
+        stopAudio() // Если нажали, перед переходом нужно остановить музыку
         viewModel.logout()
-//        this.findNavController().navigate(R.id.action_homeRadioFragment_to_auth_nav_graph)
         activity?.finish()
     }
 
@@ -612,7 +582,6 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 
     // PLAY URL (MP3), MEDIA PLAYER -> 6. В методе onDestroy обязательно освобождаем ресурсы проигрывателя
     override fun onDestroy() {
-//        context?.unregisterReceiver(myBroadcastReceiver)
         releaseMediaPlayer()
         super.onDestroy()
     }

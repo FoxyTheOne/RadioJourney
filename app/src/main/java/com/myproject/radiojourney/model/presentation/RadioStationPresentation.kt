@@ -29,20 +29,6 @@ data class RadioStationPresentation(
                 isStationInFavourite = isStationInFavourite,
                 isStationInRecommended = isStationInRecommended
             )
-
-        fun fromFavouritePresentationToPresentation(
-            radioFavouritePresentation: RadioStationFavouritePresentation,
-            isStationInFavourite: Boolean = radioFavouritePresentation.isStationInFavourite,
-            isStationInRecommended: Boolean = radioFavouritePresentation.isStationInRecommended
-        ): RadioStationPresentation =
-            RadioStationPresentation(
-                stationName = radioFavouritePresentation.stationName,
-                url = radioFavouritePresentation.url,
-                clickCount = radioFavouritePresentation.clickCount,
-                countryCode = radioFavouritePresentation.countryCode,
-                isStationInFavourite = isStationInFavourite,
-                isStationInRecommended = isStationInRecommended
-            )
     }
 
 }

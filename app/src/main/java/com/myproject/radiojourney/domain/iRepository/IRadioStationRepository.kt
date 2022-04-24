@@ -1,0 +1,21 @@
+package com.myproject.radiojourney.domain.iRepository
+
+import com.myproject.radiojourney.model.local.CountryLocal
+import com.myproject.radiojourney.model.local.RadioStationLocal
+import kotlinx.coroutines.flow.Flow
+
+interface IRadioStationRepository {
+    fun subscribeOnCountryList(): Flow<List<CountryLocal>>
+
+    suspend fun isRadioStationStored(): Boolean
+    suspend fun getRadioStationUrl(): String?
+    suspend fun getRadioStationSaved(radioStationUrl: String): RadioStationLocal?
+
+    // Поменять в Shared Preference setIsRadioStationStored на true. Сохранить в Shared Preference (url)
+    suspend fun saveRadioStationUrl(isStored: Boolean, url: String)
+
+    // И сохранить радиостанцию в Room
+    suspend fun saveRadioStationInRoom(radioStationLocal: RadioStationLocal)
+
+    suspend fun getRadioStationList(countryCode: String): List<RadioStationLocal>
+}

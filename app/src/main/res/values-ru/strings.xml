@@ -3,7 +3,7 @@
 
     <string name="first_screen_tittle">Приветствуем в RadioJourney!</string>
     <string name="first_screen_text1">Если это первый запуск - пожалуйста, дождитесь окончания кеширования.</string>
-    <string name="first_screen_text2">Если первое кеширование не удалось, попробуйте включить и выключить авиарежим, после чего перезапустить программу.</string>
+    <string name="first_screen_text2">Если кеширование при первом запуске не удалось, попробуйте включить и выключить авиарежим, после чего перезапустить программу.</string>
     <string name="first_screen_button">Начать путешествие</string>
 
     <string name="content_description_email">Email</string>
@@ -21,9 +21,10 @@
     <string name="homeRadio_canTakeTime">Соединение может занять некоторое время.</string>
     <string name="homeRadio_mayNotWork">Также выбранная радиостанция может не работать в данный момент.</string>
 
-    <string name="dialogInternetTrouble_title">Кеширование не удалось</string>
-    <string name="dialogInternetTrouble_text">Если это первый запуск - пожалуйста, включите и выключите авиарежим, после чего перезапустите программу.</string>
-    <string name="dialogInternetTrouble_text2">Если же нет, не обращайте внимание на ошибку.</string>
+    <string name="dialogInternetTrouble_title">Проблема с соединением!</string>
+    <string name="dialogInternetTrouble_text_cashing">Если это первый запуск и кеширование не закончилось - пожалуйста, включите и выключите авиарежим, после чего перезапустите программу.</string>
+    <string name="dialogInternetTrouble_text2_cashing">Если же нет, не обращайте внимание на ошибку. Если нужно, повторите последнее действие</string>
+    <string name="dialogInternetTrouble_text">Возникла проблема при запросе на сервер. Попробуйте повторить последнее действие или проверье ваше интернет соендинение.</string>
 
     <string name="radioStationList_title">Список радиостанций. Выберите:</string>
     <string name="radioStationList_count">Счётчик нажатий: </string>

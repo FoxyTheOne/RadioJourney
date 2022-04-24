@@ -1,9 +1,6 @@
 package com.myproject.radiojourney.data.localDatabaseRoom
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
+import androidx.room.*
 import com.myproject.radiojourney.model.local.RadioStationLocal
 import kotlinx.coroutines.flow.Flow
 
@@ -20,4 +17,7 @@ interface IRadioStationDAO {
 
     @Query("SELECT * from RadioStationLocal WHERE isStationInRecommended LIKE:isStationInRecommended")
     fun getRecommendedRadioStationList(isStationInRecommended: Boolean): List<RadioStationLocal>
+
+    @Query("SELECT * from RadioStationLocal WHERE isStationInFavourite LIKE:isStationInFavorite")
+    fun getFavoriteRadioStationList(isStationInFavorite: Boolean): List<RadioStationLocal>
 }

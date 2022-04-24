@@ -1,11 +1,12 @@
 package com.myproject.radiojourney.presentation.content.favouriteList
 
+import android.accounts.AccountsException
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.myproject.radiojourney.domain.favouriteList.IFavouriteListInteractor
-import com.myproject.radiojourney.domain.logOut.ILogOutInteractor
-import com.myproject.radiojourney.model.presentation.RadioStationFavouritePresentation
+import com.myproject.radiojourney.domain.favouriteList.IFavouriteListUseCase
+import com.myproject.radiojourney.domain.logOut.ILogOutUseCase
+import com.myproject.radiojourney.model.presentation.RadioStationPresentation
 import com.myproject.radiojourney.utils.extension.call
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -14,21 +15,25 @@ import java.io.IOException
 import javax.inject.Inject
 
 /**
- * ViewModel. Здесь осуществляется подписка, запрос через корутины. Работает с Interactor
+ * Presentation layer, ViewModel. Работа с компонентами Android. Работает только с Interactor.
+ *
+ * Interactor - объект, который реализует UseCase, используя бизнес-объекты Entities.
+ * Здесь осуществляется подписка, запрос через корутины.
  */
 @HiltViewModel
 class FavouriteListViewModel @Inject constructor(
-    private val logOutInteractor: ILogOutInteractor,
-    private val favouriteListInteractor: IFavouriteListInteractor
+    private val logOutInteractor: ILogOutUseCase,
+    private val favouriteListInteractor: IFavouriteListUseCase
 ) : ViewModel() {
-    companion object {
-        private const val TAG = "FavouriteListViewModel"
-    }
 
-    val favouritesFailedLiveData = MutableLiveData<Boolean>()
     val failedLiveData = MutableLiveData<Boolean>()
+
+    // LiveData для открытия диалогового окна
+    val dialogInternetTroubleLiveData = MutableLiveData<Boolean>()
+
+    // Favorite
     val radioStationFavouriteListLiveData =
-        MutableLiveData<List<RadioStationFavouritePresentation>>()
+        MutableLiveData<List<RadioStationPresentation>>()
     val stationSavedInFavouritesLiveData = MutableLiveData<Boolean>()
     val stationDeletedFromFavouritesLiveData = MutableLiveData<Boolean>()
 
@@ -47,17 +52,14 @@ class FavouriteListViewModel @Inject constructor(
     fun getRadioStationFavouriteListAndShow() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                // Уточняем Id
-                val userCreatorIdInt = favouriteListInteractor.getToken()
-                if (userCreatorIdInt != null) {
-                    val radioStationFavouritePresentationList =
-                        favouriteListInteractor.getRadioStationFavouriteList(userCreatorIdInt)
-                    radioStationFavouriteListLiveData.postValue(
-                        radioStationFavouritePresentationList
-                    )
-                } else {
-                    favouritesFailedLiveData.call()
-                }
+                val radioStationFavouritePresentationList =
+                    favouriteListInteractor.getRadioStationFavouriteList(true)
+                radioStationFavouriteListLiveData.postValue(
+                    radioStationFavouritePresentationList
+                )
+            } catch (e1: AccountsException) {
+                e1.printStackTrace()
+                dialogInternetTroubleLiveData.call()
             } catch (e: IOException) {
                 e.printStackTrace()
                 failedLiveData.call()
@@ -65,42 +67,46 @@ class FavouriteListViewModel @Inject constructor(
         }
     }
 
-    fun checkIsStationInFavouritesAndChangeTheStar(currentFavouriteRadioStation: RadioStationFavouritePresentation) {
+    fun checkIsStationInFavouritesAndChangeTheStar(currentFavouriteRadioStation: RadioStationPresentation) {
         viewModelScope.launch(Dispatchers.IO) {
-            // Уточняем Id
-            val userCreatorIdInt = favouriteListInteractor.getToken()
-            if (userCreatorIdInt != null) {
-                // Проверяем, есть ли станция в избранном.
-                val isStationInFavourites =
-                    favouriteListInteractor.isStationInFavourites(currentFavouriteRadioStation.url)
-                if (isStationInFavourites) {
+            try {
+                if (currentFavouriteRadioStation.isStationInFavourite) {
                     // Если станция есть в избранном и нажали на звезду, нужно из избранного удалить и убрать звезду
-                    try {
-                        favouriteListInteractor.deleteRadioStationFromFavourite(
-                            currentFavouriteRadioStation
-                        )
-                        stationDeletedFromFavouritesLiveData.call()
-                        // В случае успеха, так же ставим false в объекте текущей радиостанции
-                        currentFavouriteRadioStation.isStationInFavourite = false
-                    } catch (e: IOException) {
-                        e.printStackTrace()
-                        failedLiveData.call()
+                    favouriteListInteractor.deleteStationInRoomFromFavourite(
+                        currentFavouriteRadioStation
+                    )
+                    stationDeletedFromFavouritesLiveData.call()
+                    // В случае успеха, так же ставим false в объекте текущей радиостанции
+                    radioStationFavouriteListLiveData.value.apply {
+                        this?.forEach {
+                            if (it.url == currentFavouriteRadioStation.url) {
+                                it.isStationInFavourite = false
+                            }
+                        }
                     }
                 } else {
                     // Если станции в избранном нет, нужно добавить её в избранное и поставить звезду
-                    try {
-                        favouriteListInteractor.addStationToFavourites(currentFavouriteRadioStation)
-                        stationSavedInFavouritesLiveData.call()
-                        // В случае успеха, так же ставим true в объекте текущей радиостанции
-                        currentFavouriteRadioStation.isStationInFavourite = true
-                    } catch (e: IOException) {
-                        e.printStackTrace()
-                        failedLiveData.call()
+                    favouriteListInteractor.addStationInRoomToFavourites(
+                        currentFavouriteRadioStation
+                    )
+                    stationSavedInFavouritesLiveData.call()
+                    // В случае успеха, так же ставим true в объекте текущей радиостанции
+                    radioStationFavouriteListLiveData.value.apply {
+                        this?.forEach {
+                            if (it.url == currentFavouriteRadioStation.url) {
+                                it.isStationInFavourite = true
+                            }
+                        }
                     }
                 }
-            } else {
-                favouritesFailedLiveData.call()
+            } catch (e1: AccountsException) {
+                e1.printStackTrace()
+                dialogInternetTroubleLiveData.call()
+            } catch (e: IOException) {
+                e.printStackTrace()
+                failedLiveData.call()
             }
         }
     }
+
 }

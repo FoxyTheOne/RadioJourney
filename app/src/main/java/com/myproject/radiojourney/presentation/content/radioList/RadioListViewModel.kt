@@ -4,8 +4,8 @@ import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.myproject.radiojourney.domain.logOut.ILogOutInteractor
-import com.myproject.radiojourney.domain.radioList.IRadioListInteractor
+import com.myproject.radiojourney.domain.logOut.ILogOutUseCase
+import com.myproject.radiojourney.domain.radioList.IRadioListUseCase
 import com.myproject.radiojourney.utils.extension.call
 import com.myproject.radiojourney.model.presentation.RadioStationPresentation
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,12 +15,15 @@ import java.io.IOException
 import javax.inject.Inject
 
 /**
- * ViewModel. Здесь осуществляется подписка, запрос через корутины. Работает с Interactor
+ * Presentation layer, ViewModel. Работа с компонентами Android. Работает только с Interactor.
+ *
+ * Interactor - объект, который реализует UseCase, используя бизнес-объекты Entities.
+ * Здесь осуществляется подписка, запрос через корутины.
  */
 @HiltViewModel
 class RadioListViewModel @Inject constructor(
-    private val logOutInteractor: ILogOutInteractor,
-    private val radioListInteractor: IRadioListInteractor
+    private val logOutInteractor: ILogOutUseCase,
+    private val radioListInteractor: IRadioListUseCase
 ) : ViewModel() {
     companion object {
         private const val TAG = "RadioListViewModel"
