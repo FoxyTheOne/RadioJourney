@@ -2,15 +2,15 @@ package com.myproject.radiojourney.presentation.content.homeRadio
 
 import android.annotation.SuppressLint
 import android.app.Dialog
-import android.content.Context
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.*
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.location.Location
-import android.media.AudioAttributes
-import android.media.AudioManager
-import android.media.MediaPlayer
 import android.os.Build
 import android.os.Bundle
+import android.os.IBinder
 import android.util.Log
 import android.view.*
 import android.widget.*
@@ -36,9 +36,8 @@ import com.google.android.gms.maps.model.Marker
 import com.myproject.radiojourney.model.presentation.RadioStationPresentation
 import android.widget.Toast
 import com.myproject.radiojourney.databinding.LayoutHomeRadioBinding
+import com.myproject.radiojourney.utils.musicPlayer.*
 import kotlinx.coroutines.*
-import java.io.IOException
-import java.lang.Exception
 
 /**
  * Главная страница.
@@ -50,9 +49,12 @@ import java.lang.Exception
  * LOCATION -> 1.3. Для доступа к местоположению, нужно разрешение. Логика запроса разрешения - в предыдущем фрагменте
  * LOCATION -> 1.4. Получим наш FusedLocationProviderClient. Именно он имеет в себе методы, с помощью которых мы можем определить локацию
  * GOOGLE MAPS -> 2. В инструкции от гугла всё делается в activity, а у нас - фрагмент. Следовательно, будут небольшие изменения
+ *
+ * TODO повторить проверку разрешения определения местоположения
  */
 @AndroidEntryPoint
-class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
+class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPlayable {
+    // MUSIC PLAYER ON NOTIFICATION -> 7. Implements IPlayable
     companion object {
         private const val TAG = "HomeRadioFragment"
     }
@@ -65,14 +67,8 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 
     private val viewModel by viewModels<HomeRadioViewModel>()
     private lateinit var dialogInternetTrouble: Dialog
+    private lateinit var notificationManager: NotificationManager
     private var isPaused = true
-
-    // PLAY URL (MP3), MEDIA PLAYER -> 1. Создаём переменные
-    // MediaPlayer – класс, который позволит вам проигрывать аудио/видео файлы с возможностью сделать паузу и перемотать в нужную позицию.
-    // MediaPlayer умеет работать с различными источниками, это может быть: путь к файлу (на SD или в инете), адрес потока, Uri или файл из папки res/raw.
-    private var mediaPlayer: MediaPlayer? = null
-    private var audioManager: AudioManager? = null
-    private var audioUrl: String = ""
     private var isStationSelected = false
 
     // Переменная для нашего FusedLocationProviderClient
@@ -92,6 +88,30 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
     //    )
     private var countryList = listOf<CountryPresentation>()
 
+    // BOUND_SERVICE -> 8. Создадим наш Service connection (второй параметр при запуске сервиса с помощью Intent)
+    // BOUND_SERVICE -> 8.1. Создадим переменную, чтобы инициализировать её при создании Service connection
+    private var iMusicPlayerBinder: IMusicPlayerBinder? = null
+
+    // BOUND_SERVICE -> 8.2. Создадим экземпляр Service connection
+    private val connection = object : ServiceConnection {
+        // Когда мы забандимся к нашему сервису, вызовется метод onServiceConnected() и мы получим экземпляр binder: IBinder?
+        override fun onServiceConnected(componentName: ComponentName?, binder: IBinder?) {
+            // Проверяем binder на null. Если он не null, приводим к типу нашего байндера и вызываем наш метод, который вернет интерфейс сервиса IAppBinder и мы сможем вызывать его методы
+            binder?.let {
+                iMusicPlayerBinder =
+                    (it as MusicPlayerBoundService.MusicPlayerBoundServiceBinder).getAppBoundService()
+                // В этом месте мы можем заново привязаться, если переводили Bound service в Foreground при закрытии приложения (вызвав наш метод из интерфейса):
+                // iAppBinder?.goToBound()
+            }
+            iMusicPlayerBinder?.stopMediaPlayerAudio() // Останавливаем радио здесь, а не при получении аргументов с предыдущих страниц, т.к. экземпляр binder мы получаем позже и там метод не сработает
+        }
+
+        // этот метод будет вызван, если связь с сервисом была прервана неожиданно
+        override fun onServiceDisconnected(name: ComponentName?) {
+            stopAudio()
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -108,10 +128,25 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         return binding?.root
     }
 
+    // BOUND_SERVICE -> 7. Подпишемся на сервис в нашем фрагменте. Если мы подписываемся на Bound Service в каком-то методе жизненного цикла, мы обязательно должны просчитать точку входа и точку выхода (н-р, если мы входим в методе onStart, то в методе onStop должны отписаться)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding?.imagePlay?.setImageResource(R.drawable.play_white)
         binding?.imageStar?.setImageResource(R.drawable.star_transparent)
+
+        // Создаём канал для последующих уведомлений, регистрируем бродкасты
+        createChannel()
+        activity?.registerReceiver(broadcastReceiver, IntentFilter("TRACKS_TRACKS"))
+        activity?.registerReceiver(broadcastReceiverFailures, IntentFilter("FAILURE_PLAYING"))
+
+        // BOUND_SERVICE -> 7.1. Запускаем сервис с помощью Intent:
+        requireContext().bindService(
+            Intent(requireContext(), MusicPlayerBoundService::class.java),
+            connection,
+            Context.BIND_AUTO_CREATE
+        )
+        // BIND_AUTO_CREATE - каждый раз, когда мы бандимся, если сервис не был создан, он будет создаваться автоматически
+        // Второй параметр - Service connection. Это объект, внутри которого мы будем получать наш AppServiceBinder (байндер). Здесь не достаточно просто создать экземпляр класса
 
         // Настройки диалогового окна
         dialogInternetTrouble = Dialog(requireContext())
@@ -122,19 +157,34 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         fusedLocationProviderClient =
             LocationServices.getFusedLocationProviderClient(requireContext())
 
-        // PLAY URL (MP3), MEDIA PLAYER -> 2. Получаем AudioManager
-        audioManager = context?.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-
         if (arguments != null) {
             arguments?.getParcelable<RadioStationPresentation>("radio_station") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
                 ?.let { radioStation ->
                     Log.d(TAG, "Выбранный элемент списка: $radioStation")
                     viewModel.saveRadioStationAndShow(radioStation, false)
+                    // Так же останавливаем проигрывание из уведомления и обновляем его (возможно, выбрали другую радиостанцию)
+                    context?.let{
+                        CreateNotification.createNotification(
+                            it,
+                            radioStation,
+                            R.drawable.ic_play_arrow_orange
+                        )
+                    }
+                    // (Останавливаем радио в методе onServiceConnected, а не при получении аргументов с предыдущих страниц, т.к. экземпляр binder мы получаем позже, поэтому здесь метод не сработает)
                 }
             arguments?.getParcelable<RadioStationPresentation>("radio_station_favourite")
                 ?.let { radioStationFavourite ->
                     Log.d(TAG, "Выбранный элемент списка: $radioStationFavourite")
                     viewModel.saveRadioStationAndShow(radioStationFavourite, true)
+                    // Так же останавливаем проигрывание из уведомления и обновляем его (возможно, выбрали другую радиостанцию)
+                    context?.let{
+                        CreateNotification.createNotification(
+                            it,
+                            radioStationFavourite,
+                            R.drawable.ic_play_arrow_orange
+                        )
+                    }
+                    // (Останавливаем радио в методе onServiceConnected, а не при получении аргументов с предыдущих страниц, т.к. экземпляр binder мы получаем позже, поэтому здесь метод не сработает)
                 }
         } else {
             viewModel.getStoredRadioStation() // 1. Подгрузить радиостанцию из Shared Preference, если она там сохранена. Если нет - текст "выберите радиостанцию"
@@ -260,7 +310,6 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             viewLifecycleOwner,
             { radioStationPresentation ->
                 binding?.textRadioStationTitle?.text = radioStationPresentation.stationName
-                audioUrl = radioStationPresentation.url
                 isStationSelected = true
             })
         viewModel.stationSavedInFavouritesLiveData.observe(viewLifecycleOwner, {
@@ -295,95 +344,44 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         }
     }
 
-    // PLAY URL (MP3), MEDIA PLAYER -> 3. Метод для запуска проигрывания.
-    private fun playAudio() {
-        // Сначала мы освобождаем ресурсы текущего проигрывателя.
-        releaseMediaPlayer()
+    // MUSIC PLAYER ON NOTIFICATION -> 2. Create a channel for the notification. Called from onCreate
+    private fun createChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // Создаём Channel и регистрируем его
+            val channel = NotificationChannel(
+                CreateNotification.CHANNEL_ID,
+                "RadioStationPlaying",
+                NotificationManager.IMPORTANCE_LOW
+            )
+            // Находим NotificationManager
+            val notificationManager =
+                requireContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            // И вызываем у него метод createNotificationChannel(), куда передаём наш channel
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
 
-        // Затем стартуем проигрывание.
-        Toast.makeText(context, "Connecting to radio station...", Toast.LENGTH_SHORT).show()
+    override fun playAudio() {
+        // Изменяем уведомление и включаем радио
+        val radioStationSaved = viewModel.radioStationSavedLiveData.value
+        radioStationSaved?.let {
+            iMusicPlayerBinder?.playMediaPlayerAudioAndShowNotification(it)
+        }
+
         binding?.imagePlay?.setImageResource(R.drawable.pause_white)
         isPaused = false
-
-        try {
-            Log.d(TAG, "PLAY URL (MP3), MEDIA PLAYER -> start playing HTTP")
-            mediaPlayer = MediaPlayer().apply {
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    setAudioAttributes(
-                        AudioAttributes.Builder()
-                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                            .setUsage(AudioAttributes.USAGE_MEDIA)
-                            .build()
-                    )
-                } else {
-                    setAudioStreamType(AudioManager.STREAM_MUSIC)
-                }
-                // setAudioStreamType – задает аудио-поток, который будет использован для проигрывания. Их существует несколько: STREAM_MUSIC, STREAM_NOTIFICATION и пр.
-                // Предполагаю, что созданы они для того, чтобы можно было задавать разные уровни громкости, например, играм, звонкам и уведомлениям.
-                // Этот метод можно и пропустить, если вам не надо явно указывать какой-то поток. Насколько я понял, по умолчанию используется STREAM_MUSIC.
-
-                reset()
-
-                try {
-                    setDataSource(audioUrl)
-                } catch (e: IOException) {
-                    e.printStackTrace()
-                }
-
-                // Далее используется метод prepare или prepareAsync (в паре с OnPreparedListener).
-                // Эти методы подготавливают плеер к проигрыванию. Как понятно из названия, prepareAsync делает это асинхронно и, когда все сделает, сообщит об этом слушателю из метода setOnPreparedListener.
-                // А метод prepare работает синхронно. Соотвественно, если хотим прослушать файл из инета, то используем prepareAsync, иначе наше приложение повесится, т.к. заблокируется основной поток, который обслуживает UI.
-                Log.d(TAG, "PLAY URL (MP3), MEDIA PLAYER -> prepareAsync")
-                setOnPreparedListener {
-                    Log.d(TAG, "PLAY URL (MP3), MEDIA PLAYER -> onPrepared")
-                    it.start() // Метод start запускает проигрывание
-                    Toast.makeText(context, "Audio started playing", Toast.LENGTH_SHORT).show()
-                }
-                prepareAsync() // might take long! (for buffering, etc)
-                setOnErrorListener { _, what, extra ->
-                    Toast.makeText(context, "Failed to connect.", Toast.LENGTH_SHORT).show()
-                    stopAudio()
-                    Log.d(TAG, "PLAY URL (MP3), MEDIA PLAYER -> setOnErrorListener $what $extra")
-                    true
-                }
-            }
-        } catch (e: IOException) {
-            e.printStackTrace()
-            Toast.makeText(
-                context,
-                "Failed to connect. Try to click \"play\" or select another station",
-                Toast.LENGTH_SHORT
-            ).show()
-            stopAudio()
-        }
-
-        if (mediaPlayer == null) return
     }
 
-    // PLAY URL (MP3), MEDIA PLAYER -> 4. В методе releaseMP мы выполняем метод release.
-    // Он освобождает используемые проигрывателем ресурсы, его рекомендуется вызывать когда вы закончили работу с плеером.
-    // Более того, хелп рекомендует вызывать этот метод и при onPause/onStop, если нет острой необходимости держать объект.
-    private fun releaseMediaPlayer() {
-        try {
-            mediaPlayer?.release()
-            mediaPlayer = null
-        } catch (e: Exception) {
-            e.printStackTrace()
+    override fun stopAudio() {
+        // Останавливаем проигрывание
+        iMusicPlayerBinder?.stopMediaPlayerAudio()
+        // Изменяем уведомление
+        val radioStationSaved = viewModel.radioStationSavedLiveData.value
+        radioStationSaved?.let {
+            iMusicPlayerBinder?.stopMediaPlayerNotification(it)
         }
-    }
-
-    // PLAY URL (MP3), MEDIA PLAYER -> 5. Метод для остановки проигрывания
-    private fun stopAudio() {
         binding?.imagePlay?.setImageResource(R.drawable.play_white)
         isPaused = true
-
-        mediaPlayer?.let {
-            if (it.isPlaying) {
-                it.stop() // Останавливает проигрывание
-            }
-        }
-        releaseMediaPlayer()
     }
 
     private fun showProgress() {
@@ -580,9 +578,39 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         binding = null
     }
 
-    // PLAY URL (MP3), MEDIA PLAYER -> 6. В методе onDestroy обязательно освобождаем ресурсы проигрывателя
     override fun onDestroy() {
-        releaseMediaPlayer()
+        // MUSIC PLAYER ON NOTIFICATION -> END. Запускали сервис - убираем уведомления. Регистрировали бродкаст - отписываемся
+        notificationManager.cancelAll()
+        activity?.unregisterReceiver(broadcastReceiver)
+        activity?.unregisterReceiver(broadcastReceiverFailures)
+
+        // BOUND_SERVICE -> 7.2. Заканчиваем соединение. Сюда также передаём наш Service connection. Создадим его (см. выше)
+        requireContext().unbindService(connection)
+
         super.onDestroy()
+    }
+
+    // MUSIC PLAYER ON NOTIFICATION -> 8. Receiving Broadcast
+    private var broadcastReceiver: BroadcastReceiver? = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent) {
+
+            // Describe different situations, such as prev track, play, next track
+            when (intent.getStringExtra("action_name")) {
+                CreateNotification.ACTION_PLAY -> if (isPaused) {
+                    playAudio() // <- Нажали кнопку play
+                } else {
+                    stopAudio() // <- Нажали кнопку stop
+                }
+                else -> Log.d(TAG, "Wrong action")
+            }
+        }
+    }
+
+    // Если не получилось запустить радиостанцию методом playMediaPlayerAudioAndShowNotification(), нужно изменить кнопочку обратно на паузу. Получаем intent из MusicPlayerBoundService
+    private var broadcastReceiverFailures: BroadcastReceiver? = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent) {
+            binding?.imagePlay?.setImageResource(R.drawable.play_white)
+            isPaused = intent.getBooleanExtra("play_failure", true)
+        }
     }
 }

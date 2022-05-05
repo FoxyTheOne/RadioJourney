@@ -56,6 +56,8 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // TODO подписать снизу, откуда картинка
+
         // Оформим запрос на PERMISSION, если он не был дан в предыдущий раз
         // !!! Т.к. запросов много, а не один, мы пишем .RequestMultiplePermissions() вместо .RequestPermission()
         // Т.обр., в лямбду к нам залетает не boolean, а map. ключом этого map будет string (наши permissions), а второе значение - это boolean

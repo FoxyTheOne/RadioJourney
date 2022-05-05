@@ -34,7 +34,7 @@ class FavouriteListFragment : BaseContentFragmentAbstract() {
 
     private val viewModel by viewModels<FavouriteListViewModel>()
     private lateinit var dialogInternetTrouble: Dialog
-    private lateinit var favouriteListAdapter: FavouiteListAdapter
+    private lateinit var favouriteListAdapter: FavoriteListAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -99,7 +99,7 @@ class FavouriteListFragment : BaseContentFragmentAbstract() {
 
                 if (favouriteStationList != null && favouriteStationList.isNotEmpty()) {
 
-                    favouriteListAdapter = FavouiteListAdapter(
+                    favouriteListAdapter = FavoriteListAdapter(
                         favouriteStationList,
                         { radioStationFavouriteOnClick ->
                             Log.d(TAG, "Выбранный элемент списка: $radioStationFavouriteOnClick")
@@ -143,7 +143,6 @@ class FavouriteListFragment : BaseContentFragmentAbstract() {
 
                 hideProgress()
             })
-        // TODO проверить, нужны ли stationSavedInFavouritesLiveData и stationDeletedFromFavouritesLiveData после изменения логики
         viewModel.stationSavedInFavouritesLiveData.observe(viewLifecycleOwner, {
             binding?.recyclerViewRadioStationList?.adapter?.notifyDataSetChanged()
         })

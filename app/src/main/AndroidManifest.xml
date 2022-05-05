@@ -46,6 +46,11 @@
           -->
         <service android:name=".utils.service.ProgressForegroundService" />
         <!--
+         И другие компоненты
+          -->
+        <receiver android:name=".utils.musicPlayer.NotificationActionBroadcast" />
+        <service android:name=".utils.musicPlayer.MusicPlayerBoundService" />
+        <!--
         Google maps:
          -->
         <meta-data

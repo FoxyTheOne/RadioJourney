@@ -15,6 +15,7 @@ import com.myproject.radiojourney.IAppSettings
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.LayoutRadioStationListRecommendedBinding
 import com.myproject.radiojourney.presentation.content.base.BaseContentFragmentAbstract
+import com.myproject.radiojourney.presentation.content.favouriteList.FavouriteListFragment
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -86,19 +87,31 @@ class RecommendedListFragment : BaseContentFragmentAbstract() {
             { radioStationPresentationList ->
                 showProgress()
 
+                // 1.5. ОБРАБОТКА КЛИКА -> Получаем результат клика во фрагменте (описываем нашу анонимную функцию из RecyclerView)
+                // Инициализация адаптера
                 if (radioStationPresentationList != null && radioStationPresentationList.isNotEmpty()) {
 
                     recommendedListAdapter = RecommendedListAdapter(
-                        radioStationPresentationList
-                    ) { radioStationPresentationOnClick ->
-                        Log.d(TAG, "Выбранный элемент списка: $radioStationPresentationOnClick")
-                        // Открываем по клику другой фрагмент, передаём туда нашу радиостанцию
-                        val direction =
-                            RecommendedListFragmentDirections.actionRecommendedListFragmentToHomeRadioFragment(
-                                radioStationPresentationOnClick
+                        radioStationPresentationList,
+                        { radioStationPresentationOnClick ->
+                            Log.d(TAG, "Выбранный элемент списка: $radioStationPresentationOnClick")
+                            // Открываем по клику другой фрагмент, передаём туда нашу радиостанцию
+                            val direction =
+                                RecommendedListFragmentDirections.actionRecommendedListFragmentToHomeRadioFragment(
+                                    radioStationPresentationOnClick
+                                )
+                            this.findNavController().navigate(direction)
+                        },
+                        { radioStationOnStarClick ->
+                            Log.d(
+                                TAG,
+                                "Выбранный элемент списка: $radioStationOnStarClick"
                             )
-                        this.findNavController().navigate(direction)
-                    }
+                            // По клику нужно добавить либо удалить из избранного, предварительно проверив наличие радиостанции в базе
+                            viewModel.checkIsStationInFavouritesAndChangeTheStar(
+                                radioStationOnStarClick
+                            )
+                        })
                     binding?.recyclerViewRecommendedRadioStationList?.adapter =
                         recommendedListAdapter
 
@@ -121,6 +134,12 @@ class RecommendedListFragment : BaseContentFragmentAbstract() {
 
                 hideProgress()
             })
+        viewModel.stationSavedInFavouritesLiveData.observe(viewLifecycleOwner, {
+            binding?.recyclerViewRecommendedRadioStationList?.adapter?.notifyDataSetChanged()
+        })
+        viewModel.stationDeletedFromFavouritesLiveData.observe(viewLifecycleOwner, {
+            binding?.recyclerViewRecommendedRadioStationList?.adapter?.notifyDataSetChanged()
+        })
     }
 
     private fun showProgress() {

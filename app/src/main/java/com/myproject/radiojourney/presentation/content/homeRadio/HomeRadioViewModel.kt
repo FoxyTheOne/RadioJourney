@@ -47,13 +47,29 @@ class HomeRadioViewModel @Inject constructor(
     val stationSavedInFavouritesLiveData = MutableLiveData<Boolean>()
     val stationDeletedFromFavouritesLiveData = MutableLiveData<Boolean>()
 
-    // Recommended
-    private val antyradioURL =
-        "https://n-4-2.dcs.redcdn.pl/sc/o2/Eurozet/live/antyradio.livx?audio=5"
-    private val easyFMURL = "https://netradio.ziniur.lt/easyfm.mp3"
-    private val ro90s3NeRgYURL = "https://s11.ssl-stream.com/ssl/90s_energy?mp=/stream"
+    // Recommended - проверено работают
+    private val eeRockFMEstonia = "https://edge02.cdn.bitflip.ee:8888/rck?_i=5f5ab186"// checked
+    private val eeRetroFMEstonia = "https://edge02.cdn.bitflip.ee:8888/RETRO?_i=258f436b"// checked
+    private val ltEasyFMURL = "https://netradio.ziniur.lt/easyfm.mp3" // checked
+    private val plAntyradioURL =
+        "https://n-4-2.dcs.redcdn.pl/sc/o2/Eurozet/live/antyradio.livx?audio=5" // checked
+    private val plNnowySwiat = "https://stream.nowyswiat.online/mp3" // checking
+    private val plMeloradioAcoustic = "https://ml.cdn.eurozet.pl/MELACO.mp3"
+    private val mdVocalTranceRadioDeepVocalHouse = "http://176.9.36.203:8000/deep_320"
+    private val roRo90s3NeRgYURL = "https://s11.ssl-stream.com/ssl/90s_energy?mp=/stream"
+    private val skBestFM = "http://stream.bestfm.sk/128.mp3" // checked
+    private val us2000FMHardRock = "http://bigrradio.cdnstream1.com/5104_128" // checking
+
     private val recommendedList =
-        mapOf(antyradioURL to "PL", easyFMURL to "LT", ro90s3NeRgYURL to "RO")
+        mapOf(
+            eeRockFMEstonia to "EE", eeRetroFMEstonia to "EE",
+            ltEasyFMURL to "LT",
+            plAntyradioURL to "PL", plNnowySwiat to "PL", plMeloradioAcoustic to "PL",
+            mdVocalTranceRadioDeepVocalHouse to "MD",
+            roRo90s3NeRgYURL to "RO",
+            skBestFM to "SK",
+            us2000FMHardRock to "US"
+        )
 
     fun logout() {
         viewModelScope.launch(Dispatchers.IO) {

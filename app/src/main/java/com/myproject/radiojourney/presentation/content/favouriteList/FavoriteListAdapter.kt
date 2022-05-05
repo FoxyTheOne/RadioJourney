@@ -12,14 +12,14 @@ import com.myproject.radiojourney.model.presentation.RadioStationPresentation
 import java.util.*
 
 // 1.1. ОБРАБОТКА КЛИКА -> передадим в конструктор анонимную функцию (как класса Adapter, так и вложенного класса). Затем отдаём эту лямбду каждому ViewHolder
-class FavouiteListAdapter(
+class FavoriteListAdapter(
     private val favouriteStationList: List<RadioStationPresentation>,
     private val onItemClicked: (RadioStationPresentation) -> Unit,
     private val onStarClicked: (RadioStationPresentation) -> Unit
 ) :
-    RecyclerView.Adapter<FavouiteListAdapter.FavoriteListViewHolder>() {
+    RecyclerView.Adapter<FavoriteListAdapter.FavoriteListViewHolder>() {
     companion object {
-        private const val TAG = "FavouiteListAdapter"
+        private const val TAG = "FavoriteListAdapter"
     }
 
     // Создаём элемент списка. Initialize itemView for each item
@@ -91,9 +91,7 @@ class FavouiteListAdapter(
             textRadioStationName.text = radioStationFavourite.stationName
             textRadioStationClickCount.text = radioStationFavourite.clickCount.toString()
 
-            val isStationSavedInFavourites = radioStationFavourite.isStationInFavourite
-
-            if (isStationSavedInFavourites) {
+            if (radioStationFavourite.isStationInFavourite) {
                 imageStar.setImageResource(R.drawable.star)
             } else {
                 imageStar.setImageResource(R.drawable.star_transparent)
