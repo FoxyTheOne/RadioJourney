@@ -1,16 +1,10 @@
 package com.myproject.radiojourney
 
-import android.app.NotificationManager
-import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
-import android.content.ServiceConnection
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.IBinder
 import androidx.appcompat.widget.Toolbar
-import com.myproject.radiojourney.utils.musicPlayer.IMusicPlayerBinder
-import com.myproject.radiojourney.utils.musicPlayer.MusicPlayerBoundService
+import com.myproject.radiojourney.utils.musicPlayer.ForegroundNotificationService
 import com.myproject.radiojourney.utils.service.ProgressForegroundService
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -61,28 +55,6 @@ import dagger.hilt.android.AndroidEntryPoint
  */
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), IAppSettings {
-    // BOUND_SERVICE -> 8. Создадим наш Service connection (второй параметр при запуске сервиса с помощью Intent)
-    // BOUND_SERVICE -> 8.1. Создадим переменную, чтобы инициализировать её при создании Service connection
-    private var iMusicPlayerBinder: IMusicPlayerBinder? = null
-
-    // BOUND_SERVICE -> 8.2. Создадим экземпляр Service connection
-    private val connection = object : ServiceConnection {
-        // Когда мы забандимся к нашему сервису, вызовется метод onServiceConnected() и мы получим экземпляр binder: IBinder?
-        override fun onServiceConnected(componentName: ComponentName?, binder: IBinder?) {
-            // Проверяем binder на null. Если он не null, приводим к типу нашего байндера и вызываем наш метод, который вернет интерфейс сервиса IAppBinder и мы сможем вызывать его методы
-            binder?.let {
-                iMusicPlayerBinder =
-                    (it as MusicPlayerBoundService.MusicPlayerBoundServiceBinder).getAppBoundService()
-                // В этом месте мы можем заново привязаться, если переводили Bound service в Foreground при закрытии приложения (вызвав наш метод из интерфейса):
-                // iAppBinder?.goToBound()
-            }
-        }
-
-        // этот метод будет вызван, если связь с сервисом была прервана неожиданно
-        override fun onServiceDisconnected(name: ComponentName?) {}
-    }
-
-    // BOUND_SERVICE -> 7. Подпишемся на сервис (прослушивание музыки с уведомлением). Если мы подписываемся на Bound Service в каком-то методе жизненного цикла, мы обязательно должны просчитать точку входа и точку выхода (н-р, если мы входим в методе onStart, то в методе onStop должны отписаться)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -96,26 +68,27 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             )
         )
 
-        // BOUND_SERVICE -> 7.1. Запускаем сервис с помощью Intent:
-        this.bindService(
-            Intent(this, MusicPlayerBoundService::class.java),
-            connection,
-            Context.BIND_AUTO_CREATE
+        // Starting foreground service (music notification)
+        this.startService(
+            Intent(
+                this,
+                ForegroundNotificationService::class.java
+            )
         )
-        // BIND_AUTO_CREATE - каждый раз, когда мы бандимся, если сервис не был создан, он будет создаваться автоматически
-        // Второй параметр - Service connection. Это объект, внутри которого мы будем получать наш AppServiceBinder (байндер). Здесь не достаточно просто создать экземпляр класса
-
     }
 
     override fun onDestroy() {
-        // BOUND_SERVICE -> 7.2. Заканчиваем соединение. Сюда также передаём наш Service connection. Создадим его (см. выше)
-        this.unbindService(connection)
-
+        // Stop foreground service (music notification)
+        this.stopService(
+            Intent(
+                this,
+                ForegroundNotificationService::class.java
+            )
+        )
         super.onDestroy()
     }
 
     override fun setToolbar(toolbar: Toolbar?) {
         setSupportActionBar(toolbar)
     }
-
 }

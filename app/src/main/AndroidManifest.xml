@@ -50,6 +50,7 @@
           -->
         <receiver android:name=".utils.musicPlayer.NotificationActionBroadcast" />
         <service android:name=".utils.musicPlayer.MusicPlayerBoundService" />
+        <service android:name=".utils.musicPlayer.ForegroundNotificationService" />
         <!--
         Google maps:
          -->

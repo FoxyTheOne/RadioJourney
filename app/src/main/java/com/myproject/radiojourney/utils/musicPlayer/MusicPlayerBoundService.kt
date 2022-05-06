@@ -13,6 +13,7 @@ import android.util.Log
 import android.widget.Toast
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.model.presentation.RadioStationPresentation
+import dagger.hilt.android.AndroidEntryPoint
 import java.io.IOException
 import java.lang.Exception
 
@@ -21,6 +22,7 @@ import java.lang.Exception
  * BOUND_SERVICE -> 1. Для начала, задекларируем Bound Service в Manifest
  * BOUND_SERVICE -> 4. Расширяем Service(), а так же наш интерфейс IAppBinder
  */
+@AndroidEntryPoint
 class MusicPlayerBoundService : Service(), IMusicPlayerBinder {
     companion object {
         private const val TAG = "MusicPlayerBoundService"
@@ -57,7 +59,7 @@ class MusicPlayerBoundService : Service(), IMusicPlayerBinder {
     override fun playMediaPlayerAudioAndShowNotification(radioStation: RadioStationPresentation) {
         // MUSIC PLAYER ON NOTIFICATION -> 3.1. Create notification on click. Called when play is play is pressed
         // Channel создан, теперь можно приступить непосредственно к созданию уведомления
-        CreateNotification.createNotification(
+        CreateNotification.updateNotification(
             this,
             radioStation,
             R.drawable.ic_pause_orange
@@ -140,7 +142,7 @@ class MusicPlayerBoundService : Service(), IMusicPlayerBinder {
     override fun stopMediaPlayerNotification(radioStation: RadioStationPresentation) {
         // MUSIC PLAYER ON NOTIFICATION -> 3.2. Create notification on click. Called when play is play is pressed
         // Channel создан, теперь можно приступить непосредственно к созданию уведомления
-        CreateNotification.createNotification(
+        CreateNotification.updateNotification(
             this,
             radioStation,
             R.drawable.ic_play_arrow_orange
@@ -171,7 +173,7 @@ class MusicPlayerBoundService : Service(), IMusicPlayerBinder {
     // BOUND_SERVICE -> 3. Создадим вложенный класс-байндер
     inner class MusicPlayerBoundServiceBinder : Binder() {
         // BOUND_SERVICE -> 6. Здесь мы должны написать код, чтобы байндер возвратил интерфейс
-        fun getAppBoundService(): IMusicPlayerBinder = this@MusicPlayerBoundService
+        fun getMusicPlayerBoundServiceInstance(): IMusicPlayerBinder = this@MusicPlayerBoundService
     }
 }
 

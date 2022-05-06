@@ -2,13 +2,11 @@ package com.myproject.radiojourney.presentation.content.homeRadio
 
 import android.annotation.SuppressLint
 import android.app.Dialog
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.*
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.location.Location
-import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
@@ -38,6 +36,8 @@ import android.widget.Toast
 import com.myproject.radiojourney.databinding.LayoutHomeRadioBinding
 import com.myproject.radiojourney.utils.musicPlayer.*
 import kotlinx.coroutines.*
+import android.content.Intent
+import com.myproject.radiojourney.Constants
 
 /**
  * Главная страница.
@@ -99,7 +99,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
             // Проверяем binder на null. Если он не null, приводим к типу нашего байндера и вызываем наш метод, который вернет интерфейс сервиса IAppBinder и мы сможем вызывать его методы
             binder?.let {
                 iMusicPlayerBinder =
-                    (it as MusicPlayerBoundService.MusicPlayerBoundServiceBinder).getAppBoundService()
+                    (it as MusicPlayerBoundService.MusicPlayerBoundServiceBinder).getMusicPlayerBoundServiceInstance()
                 // В этом месте мы можем заново привязаться, если переводили Bound service в Foreground при закрытии приложения (вызвав наш метод из интерфейса):
                 // iAppBinder?.goToBound()
             }
@@ -109,6 +109,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
         // этот метод будет вызван, если связь с сервисом была прервана неожиданно
         override fun onServiceDisconnected(name: ComponentName?) {
             stopAudio()
+            iMusicPlayerBinder = null
         }
     }
 
@@ -134,10 +135,16 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
         binding?.imagePlay?.setImageResource(R.drawable.play_white)
         binding?.imageStar?.setImageResource(R.drawable.star_transparent)
 
-        // Создаём канал для последующих уведомлений, регистрируем бродкасты
-        createChannel()
-        activity?.registerReceiver(broadcastReceiver, IntentFilter("TRACKS_TRACKS"))
-        activity?.registerReceiver(broadcastReceiverFailures, IntentFilter("FAILURE_PLAYING"))
+        // Регистрируем бродкасты, запускаем сервисы
+        activity?.startService(Intent(context, MusicPlayerBoundService::class.java))
+        activity?.registerReceiver(
+            broadcastReceiver,
+            IntentFilter(Constants.NOTIFICATION_MUSIC_ACTION_BROADCAST)
+        )
+        activity?.registerReceiver(
+            broadcastReceiverFailures,
+            IntentFilter(Constants.MUSIC_PLAYER_SERVICE_FAILURE_PLAYING_BROADCAST)
+        )
 
         // BOUND_SERVICE -> 7.1. Запускаем сервис с помощью Intent:
         requireContext().bindService(
@@ -163,8 +170,8 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
                     Log.d(TAG, "Выбранный элемент списка: $radioStation")
                     viewModel.saveRadioStationAndShow(radioStation, false)
                     // Так же останавливаем проигрывание из уведомления и обновляем его (возможно, выбрали другую радиостанцию)
-                    context?.let{
-                        CreateNotification.createNotification(
+                    context?.let {
+                        CreateNotification.updateNotification(
                             it,
                             radioStation,
                             R.drawable.ic_play_arrow_orange
@@ -177,8 +184,8 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
                     Log.d(TAG, "Выбранный элемент списка: $radioStationFavourite")
                     viewModel.saveRadioStationAndShow(radioStationFavourite, true)
                     // Так же останавливаем проигрывание из уведомления и обновляем его (возможно, выбрали другую радиостанцию)
-                    context?.let{
-                        CreateNotification.createNotification(
+                    context?.let {
+                        CreateNotification.updateNotification(
                             it,
                             radioStationFavourite,
                             R.drawable.ic_play_arrow_orange
@@ -341,23 +348,6 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
                     ).show()
                 }
             }
-        }
-    }
-
-    // MUSIC PLAYER ON NOTIFICATION -> 2. Create a channel for the notification. Called from onCreate
-    private fun createChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            // Создаём Channel и регистрируем его
-            val channel = NotificationChannel(
-                CreateNotification.CHANNEL_ID,
-                "RadioStationPlaying",
-                NotificationManager.IMPORTANCE_LOW
-            )
-            // Находим NotificationManager
-            val notificationManager =
-                requireContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            // И вызываем у него метод createNotificationChannel(), куда передаём наш channel
-            notificationManager.createNotificationChannel(channel)
         }
     }
 
@@ -585,8 +575,9 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
         activity?.unregisterReceiver(broadcastReceiverFailures)
 
         // BOUND_SERVICE -> 7.2. Заканчиваем соединение. Сюда также передаём наш Service connection. Создадим его (см. выше)
-        requireContext().unbindService(connection)
-
+        iMusicPlayerBinder?.let {
+            requireContext().unbindService(connection)
+        }
         super.onDestroy()
     }
 
@@ -596,7 +587,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
 
             // Describe different situations, such as prev track, play, next track
             when (intent.getStringExtra("action_name")) {
-                CreateNotification.ACTION_PLAY -> if (isPaused) {
+                Constants.NOTIFICATION_MUSIC_ACTION_PLAY -> if (isPaused) {
                     playAudio() // <- Нажали кнопку play
                 } else {
                     stopAudio() // <- Нажали кнопку stop

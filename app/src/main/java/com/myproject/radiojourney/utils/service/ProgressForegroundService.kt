@@ -217,7 +217,7 @@ class ProgressForegroundService @Inject constructor() : Service() {
                 sendBroadcast(intent)
 
                 stopForeground(true)
-                notificationManager.cancelAll()
+                notificationManager.cancel(5)
                 stopSelf()
 
             } catch (e: IOException) {
@@ -233,7 +233,7 @@ class ProgressForegroundService @Inject constructor() : Service() {
 //                }
 
                 stopForeground(true)
-                notificationManager.cancelAll()
+                notificationManager.cancel(5)
                 stopSelf()
             }
         }
