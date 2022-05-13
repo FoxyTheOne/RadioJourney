@@ -21,7 +21,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.IntentFilter
 import androidx.lifecycle.lifecycleScope
-import com.myproject.radiojourney.model.presentation.CountryPresentation
+import com.myproject.radiojourney.entities.presentation.CountryPresentation
 import kotlinx.coroutines.flow.collect
 
 /**

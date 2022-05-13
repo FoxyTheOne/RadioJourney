@@ -1,6 +1,6 @@
 package com.myproject.radiojourney.domain.favouriteList
 
-import com.myproject.radiojourney.model.presentation.RadioStationPresentation
+import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 
 interface IFavouriteListUseCase {
     suspend fun getRadioStationFavouriteList(isStationInFavorite: Boolean): List<RadioStationPresentation>

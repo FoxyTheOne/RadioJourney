@@ -2,7 +2,7 @@ package com.myproject.radiojourney.data.repository
 
 import com.myproject.radiojourney.data.dataSource.local.favorite.ILocalFavoriteDataSource
 import com.myproject.radiojourney.domain.iRepository.IFavoriteStationRepository
-import com.myproject.radiojourney.model.local.RadioStationLocal
+import com.myproject.radiojourney.entities.local.RadioStationLocal
 import javax.inject.Inject
 
 /**

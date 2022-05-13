@@ -1,19 +1,18 @@
 package com.myproject.radiojourney.data.localDatabaseRoom
 
-import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.myproject.radiojourney.model.local.CountryLocal
-import com.myproject.radiojourney.model.local.RadioStationLocal
-import com.myproject.radiojourney.model.local.UserEntity
+import com.myproject.radiojourney.entities.local.CountryLocal
+import com.myproject.radiojourney.entities.local.RadioStationLocal
+import com.myproject.radiojourney.entities.local.UserEntity
 
 @Database(
     entities = [UserEntity::class, CountryLocal::class, RadioStationLocal::class],
-    version = 7,
+    version = 8,
     exportSchema = true,
 //    autoMigrations = [
-//        AutoMigration(from = 6, to = 7)
+//        AutoMigration(from = 7, to = 8)
 //    ]
 )
 @TypeConverters(LatLngConverter::class)

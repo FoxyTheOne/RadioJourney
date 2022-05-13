@@ -12,7 +12,7 @@ import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
 import com.myproject.radiojourney.R
-import com.myproject.radiojourney.model.presentation.RadioStationPresentation
+import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.IOException
 import java.lang.Exception
@@ -94,7 +94,7 @@ class MusicPlayerBoundService : Service(), IMusicPlayerBinder {
                 reset()
 
                 try {
-                    setDataSource(radioStation.url)
+                    setDataSource(radioStation.urlResolved)
                 } catch (e: IOException) {
                     e.printStackTrace()
                 }

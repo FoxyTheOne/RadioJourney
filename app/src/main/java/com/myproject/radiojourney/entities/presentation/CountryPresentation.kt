@@ -1,7 +1,7 @@
-package com.myproject.radiojourney.model.presentation
+package com.myproject.radiojourney.entities.presentation
 
 import com.google.android.gms.maps.model.LatLng
-import com.myproject.radiojourney.model.local.CountryLocal
+import com.myproject.radiojourney.entities.local.CountryLocal
 
 data class CountryPresentation(
     val countryCode: String,

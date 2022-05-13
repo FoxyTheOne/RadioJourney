@@ -1,6 +1,6 @@
 package com.myproject.radiojourney.data.dataSource.local.favorite
 
-import com.myproject.radiojourney.model.local.RadioStationLocal
+import com.myproject.radiojourney.entities.local.RadioStationLocal
 
 interface ILocalFavoriteDataSource {
     // Поменять в Shared Preference setIsRadioStationStored на true. Сохранить в Shared Preference (url)

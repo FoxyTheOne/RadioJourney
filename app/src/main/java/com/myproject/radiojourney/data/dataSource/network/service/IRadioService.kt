@@ -1,7 +1,7 @@
 package com.myproject.radiojourney.data.dataSource.network.service
 
-import com.myproject.radiojourney.model.remote.CountryCodeRemote
-import com.myproject.radiojourney.model.remote.RadioStationRemote
+import com.myproject.radiojourney.entities.remote.CountryCodeRemote
+import com.myproject.radiojourney.entities.remote.RadioStationRemote
 import retrofit2.http.GET
 import retrofit2.http.Path
 

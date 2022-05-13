@@ -1,7 +1,4 @@
-package com.myproject.radiojourney.model.local
-
-import androidx.room.Embedded
-import androidx.room.Relation
+package com.myproject.radiojourney.entities.local
 
 /**
  * In order to query the list of users and corresponding playlists, you must first model the one-to-many relationship between the two entities.

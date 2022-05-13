@@ -2,6 +2,8 @@ package com.myproject.radiojourney.di
 
 import android.content.Context
 import androidx.room.Room
+import com.google.android.exoplayer2.C
+import com.google.android.exoplayer2.audio.AudioAttributes
 import com.myproject.radiojourney.IAppSettings
 import com.myproject.radiojourney.data.dataSource.local.auth.ILocalUserDataSource
 import com.myproject.radiojourney.data.dataSource.local.auth.LocalUserDataSource
@@ -43,9 +45,11 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ActivityComponent
+import dagger.hilt.android.components.ServiceComponent
 import dagger.hilt.android.components.ViewModelComponent
 import dagger.hilt.android.qualifiers.ActivityContext
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.android.scopes.ServiceScoped
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 

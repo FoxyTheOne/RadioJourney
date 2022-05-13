@@ -6,8 +6,8 @@ import com.myproject.radiojourney.data.dataSource.local.favorite.ILocalFavoriteD
 import com.myproject.radiojourney.data.dataSource.local.radio.ILocalRadioDataSource
 import com.myproject.radiojourney.data.dataSource.network.INetworkRadioDataSource
 import com.myproject.radiojourney.domain.iRepository.IRadioStationRepository
-import com.myproject.radiojourney.model.local.CountryLocal
-import com.myproject.radiojourney.model.local.RadioStationLocal
+import com.myproject.radiojourney.entities.local.CountryLocal
+import com.myproject.radiojourney.entities.local.RadioStationLocal
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject

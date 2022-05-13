@@ -1,9 +1,9 @@
 package com.myproject.radiojourney.data.dataSource.network
 
-import com.myproject.radiojourney.model.remote.CountryCodeRemote
+import com.myproject.radiojourney.entities.remote.CountryCodeRemote
 import android.util.Log
 import com.myproject.radiojourney.data.dataSource.network.service.IRadioServiceWrapper
-import com.myproject.radiojourney.model.remote.RadioStationRemote
+import com.myproject.radiojourney.entities.remote.RadioStationRemote
 import retrofit2.HttpException
 import java.io.IOException
 import java.net.InetAddress
@@ -98,13 +98,60 @@ class NetworkRadioDataSource @Inject constructor(
 
             Log.d(
                 TAG,
-                "Успешный запрос. Получен результат radioStationRemoteList [0]: ${radioStationRemoteList[0]}"
+                "Успешный запрос. Получен результат radioStationRemoteList $radioStationRemoteList, элемент[0]: ${radioStationRemoteList[0]}"
             )
 
             if (radioStationRemoteList != emptyList<String>()) break
         }
 
         return radioStationRemoteList
+    }
+
+    // API -> Для того, чтобы воспользоваться API радиостанций, нужно выполнить несколько шагов.
+    // These steps should be done in your APP or program.
+    override suspend fun getAllRadioStationsList(): List<RadioStationRemote> {
+        // 1. Get a list of available servers.
+        // Do a DNS-lookup of 'all.api.radio-browser.info'. This gives you a list of all available servers.
+        val listDNSResultArray = updateDNSList()
+
+        // 2. Randomize the list and choose the first entry of the now random list. If a request fails just retry the request with the next entry in the list.
+        listDNSResultArray.shuffle()
+
+        // Пробуем перебирать сервера.
+
+        // !!! Нам нужно получить полный список всех радиостанций для нашего сервиса.
+        // TODO после видеокурса переделать полный список в MAP, чтобы мы имели список из ключей-стран и значений - списка радиостанций. Предыдущие методы нам понадобятся так же, потому что список радиостанций лучше каждый раз обновлять - вдруг что-то обновилось на сервере
+        // Или же получать здесь список радиостанций по тому countrycode, который сейчас сохранён в shared preference??? Будет проще при добавлении в плейлист, возможно. А так же не нужно будет слишком много всего загрузать. Но будет ли такой код работать, для этого нужно, чтобы метод, который вызывает этот метод, срабатывал каждый раз при выборе новой радиостанции
+
+        // Для начала, находим список всех стран (countrycode)
+        var countryCodeRemoteList = getCountryCodeList()
+
+        // Затем запишем в список все радиостанции по всем значениям полученного списка стран
+        var allRadioStationRemoteList =
+            mutableListOf<RadioStationRemote>() // Пустой массив для результата запроса
+
+        val resultDNSIterator = listDNSResultArray.iterator()
+        while (resultDNSIterator.hasNext()) {
+            val baseURL = "https://${resultDNSIterator.next()}"
+            Log.d(TAG, "результат baseURL = $baseURL")
+
+            // radioServiceWrapper - обёртка. Инициализируем retrofit и получаем сервис:
+            val radioService = radioServiceWrapper.getRadioService(baseURL)
+            // И затем делаем запрос getCountryCodeList():
+            countryCodeRemoteList.forEach {
+                val countryRadioStationRemoteList = radioService.getRadioStationList(searchTerm = it.name)
+                allRadioStationRemoteList.addAll(countryRadioStationRemoteList)
+            }
+
+            Log.d(
+                TAG,
+                "Успешный запрос. Получен результат radioStationRemoteList $allRadioStationRemoteList, элемент[0]: ${allRadioStationRemoteList[0]}"
+            )
+
+            if (allRadioStationRemoteList != emptyList<String>()) break
+        }
+
+        return allRadioStationRemoteList
     }
 
     // do the DNS request

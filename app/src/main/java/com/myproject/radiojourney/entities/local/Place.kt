@@ -1,4 +1,4 @@
-package com.myproject.radiojourney.model.local
+package com.myproject.radiojourney.entities.local
 
 import com.google.android.gms.maps.model.LatLng
 

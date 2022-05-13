@@ -38,4 +38,8 @@
     <string name="favouriteRadioStationList_empty">Здесь пусто. Попробуйте добавлять звезды понравившимся радиостанциям.</string>
 
     <string name="recommendedRadioStationList_title">Рекомендуемые радиостанции:</string>
+
+    <!-- exoplayer -->
+    <string name="notification_channel_name">Поток радиостанции</string>
+    <string name="notification_channel_description">Показывает выбранную радиостанцию</string>
 </resources>

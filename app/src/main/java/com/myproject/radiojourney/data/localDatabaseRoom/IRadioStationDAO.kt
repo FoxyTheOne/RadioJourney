@@ -1,7 +1,7 @@
 package com.myproject.radiojourney.data.localDatabaseRoom
 
 import androidx.room.*
-import com.myproject.radiojourney.model.local.RadioStationLocal
+import com.myproject.radiojourney.entities.local.RadioStationLocal
 import kotlinx.coroutines.flow.Flow
 
 @Dao

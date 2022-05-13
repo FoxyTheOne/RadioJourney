@@ -4,8 +4,8 @@ import android.util.Log
 import com.myproject.radiojourney.data.localDatabaseRoom.ICountryDAO
 import com.myproject.radiojourney.data.localDatabaseRoom.IRadioStationDAO
 import com.myproject.radiojourney.data.sharedPreference.IAppSharedPreference
-import com.myproject.radiojourney.model.local.CountryLocal
-import com.myproject.radiojourney.model.local.RadioStationLocal
+import com.myproject.radiojourney.entities.local.CountryLocal
+import com.myproject.radiojourney.entities.local.RadioStationLocal
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 

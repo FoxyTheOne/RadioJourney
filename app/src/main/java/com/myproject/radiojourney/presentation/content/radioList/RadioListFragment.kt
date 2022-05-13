@@ -10,7 +10,7 @@ import androidx.navigation.fragment.findNavController
 import com.myproject.radiojourney.IAppSettings
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.LayoutRadioStationListBinding
-import com.myproject.radiojourney.model.presentation.RadioStationPresentation
+import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 import com.myproject.radiojourney.presentation.content.base.BaseContentFragmentAbstract
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -36,7 +36,7 @@ class RadioListFragment : BaseContentFragmentAbstract() {
     private lateinit var countryName: String
     private var radioStationList = listOf(
         RadioStationPresentation(
-            "Test", "test", 2, "test",
+            "Test", "test", "test", 2, "test",
             isStationInFavourite = false,
             isStationInRecommended = false
         )

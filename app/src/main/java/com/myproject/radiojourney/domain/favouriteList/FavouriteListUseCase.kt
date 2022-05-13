@@ -2,8 +2,8 @@ package com.myproject.radiojourney.domain.favouriteList
 
 import com.myproject.radiojourney.domain.iRepository.IFavoriteStationRepository
 import com.myproject.radiojourney.domain.iRepository.IRadioStationRepository
-import com.myproject.radiojourney.model.local.RadioStationLocal
-import com.myproject.radiojourney.model.presentation.RadioStationPresentation
+import com.myproject.radiojourney.entities.local.RadioStationLocal
+import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 import javax.inject.Inject
 
 /**

@@ -9,7 +9,7 @@ import android.os.Build
 import android.os.IBinder
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
-import com.myproject.radiojourney.Constants
+import com.myproject.radiojourney.other.Constants
 import com.myproject.radiojourney.R
 import dagger.hilt.android.AndroidEntryPoint
 

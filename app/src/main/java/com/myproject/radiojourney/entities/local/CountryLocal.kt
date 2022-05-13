@@ -1,10 +1,10 @@
-package com.myproject.radiojourney.model.local
+package com.myproject.radiojourney.entities.local
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.google.android.gms.maps.model.LatLng
-import com.myproject.radiojourney.model.remote.CountryCodeRemote
+import com.myproject.radiojourney.entities.remote.CountryCodeRemote
 
 /**
  * Класс для сохранения в базе данных Room локаций

@@ -1,7 +1,7 @@
 package com.myproject.radiojourney.data.localDatabaseRoom
 
 import androidx.room.*
-import com.myproject.radiojourney.model.local.UserEntity
+import com.myproject.radiojourney.entities.local.UserEntity
 
 @Dao
 interface IUserDAO {

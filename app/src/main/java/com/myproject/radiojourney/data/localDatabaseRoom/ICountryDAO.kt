@@ -4,7 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.myproject.radiojourney.model.local.CountryLocal
+import com.myproject.radiojourney.entities.local.CountryLocal
 import kotlinx.coroutines.flow.Flow
 
 @Dao

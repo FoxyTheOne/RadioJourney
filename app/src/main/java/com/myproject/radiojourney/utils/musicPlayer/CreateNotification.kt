@@ -9,9 +9,9 @@ import android.os.Build
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import com.myproject.radiojourney.Constants
+import com.myproject.radiojourney.other.Constants
 import com.myproject.radiojourney.R
-import com.myproject.radiojourney.model.presentation.RadioStationPresentation
+import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 import java.util.*
 
 /**

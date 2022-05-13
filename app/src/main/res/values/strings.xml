@@ -38,4 +38,9 @@
     <string name="favouriteRadioStationList_empty">It\'s empty here. Try adding stars to your favourite stations.</string>
 
     <string name="recommendedRadioStationList_title">Recommended radio stations:</string>
+
+    <!-- exoplayer -->
+    <string name="notification_channel_name">Radio station channel</string>
+    <string name="notification_channel_description">Shows the currently playing radio station</string>
+
 </resources>

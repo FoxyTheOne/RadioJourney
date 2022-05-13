@@ -28,16 +28,18 @@ import com.myproject.radiojourney.presentation.content.base.BaseContentFragmentA
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
 import javax.inject.Inject
-import com.myproject.radiojourney.model.presentation.CountryPresentation
+import com.myproject.radiojourney.entities.presentation.CountryPresentation
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
-import com.myproject.radiojourney.model.presentation.RadioStationPresentation
+import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 import android.widget.Toast
 import com.myproject.radiojourney.databinding.LayoutHomeRadioBinding
 import com.myproject.radiojourney.utils.musicPlayer.*
 import kotlinx.coroutines.*
 import android.content.Intent
-import com.myproject.radiojourney.Constants
+import com.myproject.radiojourney.other.Constants
+import com.myproject.radiojourney.other.Constants.MUSIC_PLAYER_SERVICE_FAILURE_PLAYING_BROADCAST
+import com.myproject.radiojourney.other.Constants.NOTIFICATION_MUSIC_ACTION_BROADCAST
 
 /**
  * Главная страница.
@@ -67,7 +69,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
 
     private val viewModel by viewModels<HomeRadioViewModel>()
     private lateinit var dialogInternetTrouble: Dialog
-    private lateinit var notificationManager: NotificationManager
+//    private lateinit var notificationManager: NotificationManager
     private var isPaused = true
     private var isStationSelected = false
 
@@ -139,11 +141,11 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
         activity?.startService(Intent(context, MusicPlayerBoundService::class.java))
         activity?.registerReceiver(
             broadcastReceiver,
-            IntentFilter(Constants.NOTIFICATION_MUSIC_ACTION_BROADCAST)
+            IntentFilter(NOTIFICATION_MUSIC_ACTION_BROADCAST)
         )
         activity?.registerReceiver(
             broadcastReceiverFailures,
-            IntentFilter(Constants.MUSIC_PLAYER_SERVICE_FAILURE_PLAYING_BROADCAST)
+            IntentFilter(MUSIC_PLAYER_SERVICE_FAILURE_PLAYING_BROADCAST)
         )
 
         // BOUND_SERVICE -> 7.1. Запускаем сервис с помощью Intent:
@@ -523,7 +525,10 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
                     // Перенесём countryCode на RadioListFragment для запроса списка станций
                     val direction =
                         HomeRadioFragmentDirections.actionHomeRadioFragmentToRadioListFragment("${country.countryCode}||${country.countryName}")
-                    this.findNavController().navigate(direction)
+                    if (this.findNavController().currentDestination?.id == R.id.homeRadioFragment) {
+                        this.findNavController().navigate(direction)
+                    }
+//                    this.findNavController().navigate(direction) - при переходе на Канаду - ошибка. Помогла проверка (см. выше)
                     Toast.makeText(
                         context,
                         "Asking server for the radio station list...",
@@ -570,7 +575,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
 
     override fun onDestroy() {
         // MUSIC PLAYER ON NOTIFICATION -> END. Запускали сервис - убираем уведомления. Регистрировали бродкаст - отписываемся
-        notificationManager.cancelAll()
+//        notificationManager.cancelAll()
         activity?.unregisterReceiver(broadcastReceiver)
         activity?.unregisterReceiver(broadcastReceiverFailures)
 

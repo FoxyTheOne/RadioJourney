@@ -1,7 +1,7 @@
 package com.myproject.radiojourney.domain.homeRadio
 
-import com.myproject.radiojourney.model.presentation.CountryPresentation
-import com.myproject.radiojourney.model.presentation.RadioStationPresentation
+import com.myproject.radiojourney.entities.presentation.CountryPresentation
+import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 import kotlinx.coroutines.flow.Flow
 
 interface IHomeRadioUseCase {

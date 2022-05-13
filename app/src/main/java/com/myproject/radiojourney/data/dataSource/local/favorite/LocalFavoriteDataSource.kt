@@ -2,7 +2,7 @@ package com.myproject.radiojourney.data.dataSource.local.favorite
 
 import com.myproject.radiojourney.data.localDatabaseRoom.IRadioStationDAO
 import com.myproject.radiojourney.data.sharedPreference.IAppSharedPreference
-import com.myproject.radiojourney.model.local.RadioStationLocal
+import com.myproject.radiojourney.entities.local.RadioStationLocal
 import javax.inject.Inject
 
 /**

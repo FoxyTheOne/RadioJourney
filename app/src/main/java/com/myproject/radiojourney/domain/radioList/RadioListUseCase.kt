@@ -1,7 +1,7 @@
 package com.myproject.radiojourney.domain.radioList
 
 import com.myproject.radiojourney.domain.iRepository.IRadioStationRepository
-import com.myproject.radiojourney.model.presentation.RadioStationPresentation
+import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 import javax.inject.Inject
 
 /**

@@ -1,6 +1,6 @@
 package com.myproject.radiojourney.domain.recommendedList
 
-import com.myproject.radiojourney.model.presentation.RadioStationPresentation
+import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 
 interface IRecommendedListUseCase {
     suspend fun getRadioStationRecommendedList(): List<RadioStationPresentation>

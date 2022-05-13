@@ -1,7 +1,7 @@
 package com.myproject.radiojourney.domain.iRepository
 
-import com.myproject.radiojourney.model.local.CountryLocal
-import com.myproject.radiojourney.model.local.RadioStationLocal
+import com.myproject.radiojourney.entities.local.CountryLocal
+import com.myproject.radiojourney.entities.local.RadioStationLocal
 import kotlinx.coroutines.flow.Flow
 
 interface IRadioStationRepository {
