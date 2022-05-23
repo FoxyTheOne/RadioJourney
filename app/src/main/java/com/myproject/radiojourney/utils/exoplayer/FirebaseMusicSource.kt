@@ -1,5 +1,6 @@
 package com.myproject.radiojourney.utils.exoplayer
 
+import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaBrowserCompat.MediaItem.FLAG_PLAYABLE
 import android.support.v4.media.MediaDescriptionCompat
@@ -21,7 +22,6 @@ import javax.inject.Inject
 class FirebaseMusicSource @Inject constructor(
     private val networkRadioDataSource: INetworkRadioDataSource
 ) {
-
     // 2.
     var radioStations = emptyList<MediaMetadataCompat>() // meta info about radioStations
 
@@ -29,6 +29,7 @@ class FirebaseMusicSource @Inject constructor(
         state = STATE_INITIALIZING
         val allRadioStations = networkRadioDataSource.getAllRadioStationsList()
 
+        // TODO
         radioStations = allRadioStations.map { radioStationRemote ->
             MediaMetadataCompat.Builder()
                 .putString(METADATA_KEY_ARTIST, radioStationRemote.country)
@@ -37,7 +38,8 @@ class FirebaseMusicSource @Inject constructor(
                 .putString(METADATA_KEY_DISPLAY_TITLE, radioStationRemote.name)
                 .putString(METADATA_KEY_MEDIA_URI, radioStationRemote.url_resolved)
                 .putString(METADATA_KEY_DISPLAY_SUBTITLE, radioStationRemote.country)
-                .putString(METADATA_KEY_DISPLAY_DESCRIPTION, radioStationRemote.country)
+                .putString(METADATA_KEY_DISPLAY_DESCRIPTION, radioStationRemote.countrycode)
+                .putLong(METADATA_KEY_USER_RATING, radioStationRemote.clickcount.toLong())
                 .build()
         }
         state = STATE_INITIALIZED
@@ -58,10 +60,10 @@ class FirebaseMusicSource @Inject constructor(
     // A list of media items
     fun asMediaItems() = radioStations.map { radioStation ->
         val desc = MediaDescriptionCompat.Builder()
-            .setMediaUri(radioStation.getString(METADATA_KEY_MEDIA_URI).toUri())
             .setTitle(radioStation.description.title)
-            .setSubtitle(radioStation.description.subtitle)
             .setMediaId(radioStation.description.mediaId)
+            .setMediaUri(radioStation.getString(METADATA_KEY_MEDIA_URI).toUri())
+            .setSubtitle(radioStation.description.subtitle)
             .build()
         MediaBrowserCompat.MediaItem(desc, FLAG_PLAYABLE)
     }.toMutableList()

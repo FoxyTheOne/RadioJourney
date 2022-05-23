@@ -1,9 +1,11 @@
-package com.myproject.radiojourney
+package com.myproject.radiojourney.presentation.mainActivity
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.appcompat.widget.Toolbar
+import com.myproject.radiojourney.IAppSettings
+import com.myproject.radiojourney.R
 import com.myproject.radiojourney.utils.musicPlayer.ForegroundNotificationService
 import com.myproject.radiojourney.utils.service.ProgressForegroundService
 import dagger.hilt.android.AndroidEntryPoint

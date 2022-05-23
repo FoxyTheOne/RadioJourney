@@ -40,6 +40,7 @@ import com.myproject.radiojourney.domain.radioList.IRadioListUseCase
 import com.myproject.radiojourney.domain.radioList.RadioListUseCase
 import com.myproject.radiojourney.domain.recommendedList.IRecommendedListUseCase
 import com.myproject.radiojourney.domain.recommendedList.RecommendedListUseCase
+import com.myproject.radiojourney.utils.exoplayer.MusicServiceConnection
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -80,6 +81,12 @@ abstract class SingletonModule {
         fun providesRadioStationDAO(appDatabase: AppRoomDBAbstract): IRadioStationDAO {
             return appDatabase.getRadioStationDAO()
         }
+
+        @Provides
+        @Singleton
+        fun providesMusicServiceConnection(
+            @ApplicationContext context: Context
+        ) = MusicServiceConnection(context) // Создаём экземпляр нашего класса MusicServiceConnection, для создания которого нужен context
     }
 
     @Binds

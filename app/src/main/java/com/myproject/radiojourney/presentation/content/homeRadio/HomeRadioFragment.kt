@@ -37,9 +37,12 @@ import com.myproject.radiojourney.databinding.LayoutHomeRadioBinding
 import com.myproject.radiojourney.utils.musicPlayer.*
 import kotlinx.coroutines.*
 import android.content.Intent
+import androidx.lifecycle.ViewModelProvider
 import com.myproject.radiojourney.other.Constants
 import com.myproject.radiojourney.other.Constants.MUSIC_PLAYER_SERVICE_FAILURE_PLAYING_BROADCAST
 import com.myproject.radiojourney.other.Constants.NOTIFICATION_MUSIC_ACTION_BROADCAST
+import com.myproject.radiojourney.other.Status
+import com.myproject.radiojourney.presentation.mainActivity.MainViewModel
 
 /**
  * Главная страница.
@@ -68,6 +71,17 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
     lateinit var appSettings: IAppSettings
 
     private val viewModel by viewModels<HomeRadioViewModel>()
+
+
+
+
+    // 1.1. ViewModel. We bind our viewModel to the cycle of our activity, not fragment. So, we need to do this way:
+    lateinit var mainViewModel: MainViewModel
+
+
+
+
+
     private lateinit var dialogInternetTrouble: Dialog
 //    private lateinit var notificationManager: NotificationManager
     private var isPaused = true
@@ -136,6 +150,17 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
         super.onViewCreated(view, savedInstanceState)
         binding?.imagePlay?.setImageResource(R.drawable.play_white)
         binding?.imageStar?.setImageResource(R.drawable.star_transparent)
+
+
+
+        // 1.2. ViewModel. We bind our viewModel to the lifecycle of our activity, not fragment. We pass our activity as an owner of the lifecycle.
+        // So, we need to do this way:
+        mainViewModel = ViewModelProvider(requireActivity())[MainViewModel::class.java]
+
+
+
+
+
 
         // Регистрируем бродкасты, запускаем сервисы
         activity?.startService(Intent(context, MusicPlayerBoundService::class.java))
@@ -301,6 +326,12 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
         }
     }
 
+    // Пример инициализации адаптера, из видео
+//        private fun setupRecyclerView() = rvAllSongs.apply {
+//            adapter = songAdapter
+//            layoutManager = LinearLayoutManager(requireContext())
+//        }
+
     private fun subscribeOnLiveData() {
         // Показываем или прячем Progress
         viewModel.showProgressLiveData.observe(viewLifecycleOwner, {
@@ -327,6 +358,27 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
         viewModel.stationDeletedFromFavouritesLiveData.observe(viewLifecycleOwner, {
             binding?.imageStar?.setImageResource(R.drawable.star_transparent)
         })
+
+
+
+
+
+        // Subscribe to mediaItems LiveData
+        // As result we have here List<RadioStationPresentation>, surrounded by Resource (Resource<List<RadioStationPresentation>>)
+        // That's why we can easily check the state of our current list of stations
+        mainViewModel.mediaItems.observe(viewLifecycleOwner) { result ->
+            when(result.status) {
+                Status.SUCCESS -> {
+                    binding?.progressCircular?.isVisible = false
+                    // Здесь можно заполнить наш адаптер для recycler view, если он есть на этой странице.
+//                    result.data?.let { songs ->
+//                        songAdapter.songs = songs // это триггернет setter из адаптера: var songs: List<Song>; get() = differ.currentList; !!! set(value) = differ.submitList(value) !!!
+//                    }
+                }
+                Status.ERROR -> Unit // We never emitted here an error status, so we don't do anything here
+                Status.LOADING -> binding?.progressCircular?.isVisible = true
+            }
+        }
     }
 
     private fun subscribeOnFlow() {

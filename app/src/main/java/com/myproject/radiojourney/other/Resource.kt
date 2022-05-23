@@ -16,7 +16,7 @@ data class Resource<out T>(val status: Status, val data: T?, val message: String
 
         fun <T> error(message: String, data: T?) = Resource(Status.ERROR, data, message)
 
-        // when you implement a cashing mehanizm, you could already have a data that comes from the cash while you load the data that comes from the remote data source
+        // when you implement a cashing mechanism, you could already have a data that comes from the cash while you load the data that comes from the remote data source
         fun <T> loading(data: T?) = Resource(Status.LOADING, data, null)
     }
 }

@@ -66,6 +66,60 @@ class RadioListAdapter(
             textRadioStationName.text = radioStation.stationName
             textRadioStationClickCount.text = radioStation.clickCount.toString()
         }
-
     }
+
+    // 1. Example with DiffUtil
+//        private val diffCallback = object : DiffUtil.ItemCallback<Song>() {
+//            // if Songs have the same media id
+//            override fun areItemsTheSame(oldItem: Song, newItem: Song): Boolean {
+//                return oldItem.mediaId == newItem.mediaId
+//            }
+//
+//            // if songs are really the same - the image, the title and so on
+//            override fun areContentsTheSame(oldItem: Song, newItem: Song): Boolean {
+//                return oldItem.hashCode() == newItem.hashCode()
+//            }
+//        }
+
+// 2. Example with DiffUtil
+//    private val differ = AsyncListDiffer(this, diffCallback)
+//
+//    var songs: List<Song>
+//        get() = differ.currentList
+//        set(value) = differ.submitList(value)
+//
+//    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SongViewHolder {
+//        return SongViewHolder(
+//            LayoutInflater.from(parent.context).inflate(
+//                R.layout.list_item,
+//                parent,
+//                false
+//            )
+//        )
+//    }
+//
+//    override fun onBindViewHolder(holder: SongViewHolder, position: Int) {
+//        val song = songs[position]
+//        holder.itemView.apply {
+//            tvPrimary.text = song.title
+//            tvSecondary.text = song.subtitle
+//            glide.load(song.imageUrl).into(ivItemImage)
+//
+//            setOnClickListener {
+//                onItemClickListener?.let { click ->
+//                    click(song)
+//                }
+//            }
+//        }
+//    }
+//
+//    private var onItemClickListener: ((Song) -> Unit)? = null
+//
+//    fun setOnItemClickListener(listener: (Song) -> Unit) {
+//        onItemClickListener = listener
+//    }
+//
+//    override fun getItemCount(): Int {
+//        return songs.size
+//    }
 }
