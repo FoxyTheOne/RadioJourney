@@ -8,6 +8,8 @@ import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.viewModels
+import androidx.viewpager2.widget.ViewPager2
+import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.IAppSettings
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.ActivityMainBinding
@@ -17,6 +19,7 @@ import com.myproject.radiojourney.other.Status
 import com.myproject.radiojourney.other.Status.*
 import com.myproject.radiojourney.presentation.adapter.SwipeRadioStationAdapter
 import com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioViewModel
+import com.myproject.radiojourney.utils.extension.isPlaying
 import com.myproject.radiojourney.utils.extension.toRadioStationPresentation
 import com.myproject.radiojourney.utils.musicPlayer.ForegroundNotificationService
 import com.myproject.radiojourney.utils.service.ProgressForegroundService
@@ -79,6 +82,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
     // Variable for currently playing song
     private var curPlayingRadioStation: RadioStationPresentation? = null
+    private var playbackState: PlaybackStateCompat? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,10 +92,10 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         val view: View = binding!!.root
         setContentView(view)
 
-        subscribeToObservers()
-
         binding?.vpSong?.adapter = swipeRadioStationAdapter
 
+        subscribeToObservers()
+        initListeners()
 
         // COUNTRY LIST MARKERS ON MAP -> 1. Получаем список кодов стран, преобразуем в локальные модели, сохраняем в Room.
         // Делается 1 раз, при запуске приложения и по окончанию stopSelf()
@@ -109,6 +113,29 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                 ForegroundNotificationService::class.java
             )
         )
+    }
+
+    private fun initListeners() {
+        // To detect if it is swiped
+        binding?.vpSong?.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            // function, that is called when the viewpager is swiped - onPageSelected()
+            override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
+                // We must check, if player is playing
+                if(playbackState?.isPlaying == true) {
+                    mainViewModel.playOrToggleSong(swipeRadioStationAdapter.radioStationList[position])
+                } else {
+                    curPlayingRadioStation = swipeRadioStationAdapter.radioStationList[position]
+                }
+            }
+        })
+
+        // Click listener (on image)
+        binding?.ivPlayPause?.setOnClickListener {
+            curPlayingRadioStation?.let {
+                mainViewModel.playOrToggleSong(it, true) // true, because now we want to autoplay
+            }
+        }
     }
 
     // when a new song play, widget.ViewPager2 must automatically swipe to the corresponding song
@@ -154,6 +181,51 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             // if we had an individual image
 //            glide.load(curPlayingSong?.imageUrl).into(ivCurSongImage)
             switchViewPagerToCurrentSong(curPlayingRadioStation ?: return@observe)
+        }
+
+        // LIVEDATA: Will be called everytime the playback changes (pause the player, play a song etc.) -> change our image
+        mainViewModel.playbackState.observe(this) {
+            playbackState = it
+            binding?.ivPlayPause?.setImageResource(
+                if (playbackState?.isPlaying == true) R.drawable.ic_pause_orange else R.drawable.ic_play_arrow_orange
+            )
+        }
+
+        // LIVEDATA: This event can be emitted once. We handled it in the class Event
+        mainViewModel.isConnected.observe(this) {
+            // The first time .getContentIfNotHandled() is handled, it will return the type boolean. But after that it will return null (the second time, on the same object)
+            it?.getContentIfNotHandled()?.let { result ->
+                when (result.status) {
+                    // If everything is ok, we don't want to show anything. Only if smth went wrong
+                    ERROR ->
+                        binding?.let { nonNullBinding ->
+                            Snackbar.make(
+                                nonNullBinding.rootLayout.rootView,
+                                result.message ?: "An unknown error occured",
+                                Snackbar.LENGTH_LONG
+                            ).show()
+                        }
+                    else -> Unit
+                }
+            }
+        }
+
+        // LIVEDATA: when error
+        mainViewModel.networkError.observe(this) {
+            it?.getContentIfNotHandled()?.let { result ->
+                when (result.status) {
+                    // If everything is ok, we don't want to show anything. Only if smth went wrong
+                    ERROR ->
+                        binding?.let { nonNullBinding ->
+                            Snackbar.make(
+                                nonNullBinding.rootLayout.rootView,
+                                result.message ?: "An unknown error occured",
+                                Snackbar.LENGTH_LONG
+                            ).show()
+                        }
+                    else -> Unit
+                }
+            }
         }
     }
 
