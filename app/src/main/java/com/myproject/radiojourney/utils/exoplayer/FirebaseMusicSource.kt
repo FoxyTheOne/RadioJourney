@@ -29,7 +29,7 @@ class FirebaseMusicSource @Inject constructor(
         state = STATE_INITIALIZING
         val allRadioStations = networkRadioDataSource.getAllRadioStationsList()
 
-        // TODO
+        // TODO огромный ответ, долго ждать
         radioStations = allRadioStations.map { radioStationRemote ->
             MediaMetadataCompat.Builder()
                 .putString(METADATA_KEY_ARTIST, radioStationRemote.country)
@@ -39,7 +39,6 @@ class FirebaseMusicSource @Inject constructor(
                 .putString(METADATA_KEY_MEDIA_URI, radioStationRemote.url_resolved)
                 .putString(METADATA_KEY_DISPLAY_SUBTITLE, radioStationRemote.country)
                 .putString(METADATA_KEY_DISPLAY_DESCRIPTION, radioStationRemote.countrycode)
-                .putLong(METADATA_KEY_USER_RATING, radioStationRemote.clickcount.toLong())
                 .build()
         }
         state = STATE_INITIALIZED
@@ -87,12 +86,12 @@ class FirebaseMusicSource @Inject constructor(
 
     // A function which will add actions to our list of actions (returns boolean - if it is ready or not)
     fun whenReady(action: (Boolean) -> Unit): Boolean {
-        if(state == STATE_CREATED || state == STATE_INITIALIZING) {
+        return if(state == STATE_CREATED || state == STATE_INITIALIZING) {
             onReadyListeners += action // We are not ready, so just add action to list (we will do it later, when we will be ready)
-            return false // not ready
+            false // not ready
         } else {
             action(state == STATE_INITIALIZED) // we are ready, so we can call action
-            return true
+            true
         }
     }
 }

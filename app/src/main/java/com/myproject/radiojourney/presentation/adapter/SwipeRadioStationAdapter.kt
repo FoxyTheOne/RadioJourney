@@ -4,7 +4,8 @@ import androidx.appcompat.widget.AppCompatTextView
 import androidx.recyclerview.widget.AsyncListDiffer
 import com.myproject.radiojourney.R
 
-class SwipeRadioStationAdapter: BaseRadioStationAdapter(R.layout.layout_swipe_radio_station_list_item) {
+class SwipeRadioStationAdapter :
+    BaseRadioStationAdapter(R.layout.layout_radio_station_swipe_item_new) {
 
     // Определяем абстрактную переменную
     override val differ = AsyncListDiffer(this, diffCallback)

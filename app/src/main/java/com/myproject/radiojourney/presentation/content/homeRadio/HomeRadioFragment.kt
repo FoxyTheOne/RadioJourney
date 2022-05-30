@@ -2,7 +2,6 @@ package com.myproject.radiojourney.presentation.content.homeRadio
 
 import android.annotation.SuppressLint
 import android.app.Dialog
-import android.app.NotificationManager
 import android.content.*
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
@@ -42,7 +41,7 @@ import com.myproject.radiojourney.other.Constants
 import com.myproject.radiojourney.other.Constants.MUSIC_PLAYER_SERVICE_FAILURE_PLAYING_BROADCAST
 import com.myproject.radiojourney.other.Constants.NOTIFICATION_MUSIC_ACTION_BROADCAST
 import com.myproject.radiojourney.other.Status
-import com.myproject.radiojourney.presentation.mainActivity.MainViewModel
+import com.myproject.radiojourney.presentation.MainViewModel
 
 /**
  * Главная страница.
