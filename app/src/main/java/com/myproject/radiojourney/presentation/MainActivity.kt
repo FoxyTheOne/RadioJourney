@@ -17,6 +17,7 @@ import com.myproject.radiojourney.databinding.ActivityMainBinding
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 import com.myproject.radiojourney.other.Status.*
 import com.myproject.radiojourney.presentation.adapter.SwipeRadioStationAdapter
+import com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioFragmentDirections
 import com.myproject.radiojourney.utils.extension.isPlaying
 import com.myproject.radiojourney.utils.extension.toRadioStationPresentation
 import com.myproject.radiojourney.utils.musicPlayer.ForegroundNotificationService
@@ -128,10 +129,27 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             }
         })
 
-        // Click listener (on image)
+        // Click listener (on play image)
         binding?.ivPlayPause?.setOnClickListener {
             curPlayingRadioStation?.let {
                 mainViewModel.playOrToggleSong(it, true) // true, because now we want to autoplay
+            }
+        }
+
+        // Navigate to the RadioListFragment if a song in player was clicked
+        swipeRadioStationAdapter.setItemClickListener {
+            // Узнаем название страны
+            // TODO Добавить "country" в RadioStationLocal и Presentation и брать эту строку оттуда
+            val loc = Locale("", it.countryCode)
+            val countryName = loc.displayName
+
+            // Перенесём countryCode на RadioListFragment для запроса списка станций
+            if (it.countryCode != "null") {
+                val direction =
+                    HomeRadioFragmentDirections.actionHomeRadioFragmentToRadioListFragment("${it.countryCode}||${countryName}")
+                if (this.findNavController(R.id.navHostFragment).currentDestination?.id == R.id.homeRadioFragment) {
+                    this.findNavController(R.id.navHostFragment).navigate(direction)
+                }
             }
         }
 
@@ -144,21 +162,6 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                     else -> showBottomBar()
                 }
             }
-
-        // TODO countryCode is null
-//        // to navigate to the RadioListFragment if song was clicked
-//        swipeRadioStationAdapter.setItemClickListener {
-//            // Узнаем название страны
-//            val loc = Locale("", it.countryCode)
-//            val countryName = loc.displayName
-//
-//            // Перенесём countryCode на RadioListFragment для запроса списка станций
-//            val direction =
-//                HomeRadioFragmentDirections.actionHomeRadioFragmentToRadioListFragment("${it.countryCode}||${countryName}")
-//            if (this.findNavController(R.id.navHostFragment).currentDestination?.id == R.id.homeRadioFragment) {
-//                this.findNavController(R.id.navHostFragment).navigate(direction)
-//            }
-//        }
     }
 
     // when a new song play, widget.ViewPager2 must automatically swipe to the corresponding song

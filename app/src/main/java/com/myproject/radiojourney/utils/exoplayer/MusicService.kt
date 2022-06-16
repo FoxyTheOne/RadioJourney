@@ -71,7 +71,12 @@ class MusicService : MediaBrowserServiceCompat() {
         super.onCreate()
 
         serviceScope.launch {
-            firebaseMusicSource.fetchMediaData() // Загрузаем метаданные всех радиостанций с сервера ПРИ ЗАПУСКЕ СЕРВИСА
+            // TODO узнать, какой country code был у последней радиостанции при последней запуске, если это не первый запуск
+            // если первый - запустить по умолчанию
+            val lastPlayedCountryCode = ""
+
+            // Загрузаем метаданные всех радиостанций с определенным country code ПРИ ЗАПУСКЕ СЕРВИСА
+            firebaseMusicSource.fetchMediaData(if(lastPlayedCountryCode.isNotBlank()) lastPlayedCountryCode else "AD")
         }
 
         // Pending intent for opening our activity when we click on notification

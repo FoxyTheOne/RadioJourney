@@ -55,12 +55,13 @@ class FirebaseMusicSource @Inject constructor(
     }
 
     // Метод для СОХРАНЕНИЯ МЕТАДАННЫХ по каждой радиостанции. Создаём список MediaMetadataCompat
-    suspend fun fetchMediaData() = withContext(Dispatchers.IO) {
+    suspend fun fetchMediaData(countryCode: String) = withContext(Dispatchers.IO) {
         state = STATE_INITIALIZING
-        val allRadioStations = networkRadioDataSource.getAllRadioStationsList()
+//        val allRadioStations = networkRadioDataSource.getAllRadioStationsList()
+        val countryCodeRadioStations = networkRadioDataSource.getRadioStationList(countryCode)
 
         // TODO огромный ответ, долго ждать
-        radioStations = allRadioStations.map { radioStationRemote ->
+        radioStations = countryCodeRadioStations.map { radioStationRemote ->
             MediaMetadataCompat.Builder()
                 .putString(METADATA_KEY_MEDIA_ID, radioStationRemote.url) // media Id / url (Primary key)
                 .putString(METADATA_KEY_MEDIA_URI, radioStationRemote.url_resolved) // url_resolved
