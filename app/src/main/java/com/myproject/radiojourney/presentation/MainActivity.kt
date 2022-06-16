@@ -7,24 +7,22 @@ import android.support.v4.media.session.PlaybackStateCompat
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.widget.Toolbar
-import androidx.fragment.app.viewModels
+import androidx.core.view.isVisible
+import androidx.navigation.findNavController
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.IAppSettings
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.ActivityMainBinding
-import com.myproject.radiojourney.databinding.LayoutHomeRadioBinding
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
-import com.myproject.radiojourney.other.Status
 import com.myproject.radiojourney.other.Status.*
 import com.myproject.radiojourney.presentation.adapter.SwipeRadioStationAdapter
-import com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioViewModel
 import com.myproject.radiojourney.utils.extension.isPlaying
 import com.myproject.radiojourney.utils.extension.toRadioStationPresentation
 import com.myproject.radiojourney.utils.musicPlayer.ForegroundNotificationService
 import com.myproject.radiojourney.utils.service.ProgressForegroundService
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
+import java.util.*
 
 /**
  * This source code is free for studying purposes but you are not allowed to copy and use it in other applications (projects).
@@ -76,7 +74,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
     // VIEW BINDING -> 1. Объявляем переменную. This property is only valid between onCreateView and onDestroyView
     private var binding: ActivityMainBinding? = null
 
-    private val mainViewModel by viewModels<MainViewModel>() // Такую же view model мы зарегистрировали в homeFragment
+    private val mainViewModel by viewModels<MainViewModel>() // Такую же view model мы зарегистрировали в homeFragment. Основная ViewModel, для общения с плейером в bottom bar
 
     private val swipeRadioStationAdapter = SwipeRadioStationAdapter()
 
@@ -122,7 +120,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
                 // We must check, if player is playing
-                if(playbackState?.isPlaying == true) {
+                if (playbackState?.isPlaying == true) {
                     mainViewModel.playOrToggleSong(swipeRadioStationAdapter.radioStationList[position])
                 } else {
                     curPlayingRadioStation = swipeRadioStationAdapter.radioStationList[position]
@@ -136,6 +134,31 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                 mainViewModel.playOrToggleSong(it, true) // true, because now we want to autoplay
             }
         }
+
+        // Let's add a listener to our NavContoller to hide BottomBar when we are on the first page, where we are cashing
+        this.findNavController(R.id.navHostFragment)
+            .addOnDestinationChangedListener { _, destination, _ ->
+                when (destination.id) {
+                    R.id.firstScreenLoadingFragment -> hideBottomBar()
+                    R.id.homeRadioFragment -> showBottomBar()
+                    else -> showBottomBar()
+                }
+            }
+
+        // TODO countryCode is null
+//        // to navigate to the RadioListFragment if song was clicked
+//        swipeRadioStationAdapter.setItemClickListener {
+//            // Узнаем название страны
+//            val loc = Locale("", it.countryCode)
+//            val countryName = loc.displayName
+//
+//            // Перенесём countryCode на RadioListFragment для запроса списка станций
+//            val direction =
+//                HomeRadioFragmentDirections.actionHomeRadioFragmentToRadioListFragment("${it.countryCode}||${countryName}")
+//            if (this.findNavController(R.id.navHostFragment).currentDestination?.id == R.id.homeRadioFragment) {
+//                this.findNavController(R.id.navHostFragment).navigate(direction)
+//            }
+//        }
     }
 
     // when a new song play, widget.ViewPager2 must automatically swipe to the corresponding song
@@ -153,7 +176,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
     private fun subscribeToObservers() {
         // LIVEDATA: to fill our widget.ViewPager2 with correct items, display right ones WHEN WE LAUNCH OUR APP
-        mainViewModel.mediaItems.observe(this) {
+        mainViewModel.mediaItemsListLiveData.observe(this) {
             it?.let { result ->
                 when (result.status) {
                     SUCCESS -> {
@@ -173,7 +196,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         }
 
         // LIVEDATA: every time we have new info about currently playing song (when the song switches)
-        mainViewModel.curPlayingSong.observe(this) {
+        mainViewModel.curPlayingSongLiveData.observe(this) {
             if (it == null) return@observe
 
             curPlayingRadioStation =
@@ -184,7 +207,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         }
 
         // LIVEDATA: Will be called everytime the playback changes (pause the player, play a song etc.) -> change our image
-        mainViewModel.playbackState.observe(this) {
+        mainViewModel.playbackStateLiveData.observe(this) {
             playbackState = it
             binding?.ivPlayPause?.setImageResource(
                 if (playbackState?.isPlaying == true) R.drawable.ic_pause_orange else R.drawable.ic_play_arrow_orange
@@ -192,7 +215,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         }
 
         // LIVEDATA: This event can be emitted once. We handled it in the class Event
-        mainViewModel.isConnected.observe(this) {
+        mainViewModel.isConnectedLiveData.observe(this) {
             // The first time .getContentIfNotHandled() is handled, it will return the type boolean. But after that it will return null (the second time, on the same object)
             it?.getContentIfNotHandled()?.let { result ->
                 when (result.status) {
@@ -211,7 +234,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         }
 
         // LIVEDATA: when error
-        mainViewModel.networkError.observe(this) {
+        mainViewModel.networkErrorLiveData.observe(this) {
             it?.getContentIfNotHandled()?.let { result ->
                 when (result.status) {
                     // If everything is ok, we don't want to show anything. Only if smth went wrong
@@ -227,6 +250,20 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                 }
             }
         }
+    }
+
+    // function for hiding our bottom bar
+    // TODO maybe use Group view?
+    private fun hideBottomBar() {
+        binding?.ivCurSongImage?.isVisible = false
+        binding?.vpSong?.isVisible = false
+        binding?.ivPlayPause?.isVisible = false
+    }
+
+    private fun showBottomBar() {
+        binding?.ivCurSongImage?.isVisible = true
+        binding?.vpSong?.isVisible = true
+        binding?.ivPlayPause?.isVisible = true
     }
 
     override fun onDestroy() {

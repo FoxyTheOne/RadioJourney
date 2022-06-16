@@ -2,8 +2,6 @@ package com.myproject.radiojourney.di
 
 import android.content.Context
 import androidx.room.Room
-import com.google.android.exoplayer2.C
-import com.google.android.exoplayer2.audio.AudioAttributes
 import com.myproject.radiojourney.IAppSettings
 import com.myproject.radiojourney.data.dataSource.local.auth.ILocalUserDataSource
 import com.myproject.radiojourney.data.dataSource.local.auth.LocalUserDataSource
@@ -20,22 +18,24 @@ import com.myproject.radiojourney.data.dataSource.network.service.RadioServiceWr
 import com.myproject.radiojourney.data.localDatabaseRoom.*
 import com.myproject.radiojourney.data.repository.AuthRepository
 import com.myproject.radiojourney.data.repository.FavoriteStationRepository
-import com.myproject.radiojourney.data.repository.RadioStationRepository
+import com.myproject.radiojourney.data.repository.MainRadioStationRepository
 import com.myproject.radiojourney.data.repository.RecommendedStationRepository
 import com.myproject.radiojourney.data.sharedPreference.AppSharedPreference
 import com.myproject.radiojourney.data.sharedPreference.IAppSharedPreference
-import com.myproject.radiojourney.domain.favouriteList.FavouriteListUseCase
-import com.myproject.radiojourney.domain.favouriteList.IFavouriteListUseCase
-import com.myproject.radiojourney.domain.homeRadio.HomeRadioUseCase
-import com.myproject.radiojourney.domain.homeRadio.IHomeRadioUseCase
-import com.myproject.radiojourney.domain.firstScreenLoading.LoginScreenUseCase
-import com.myproject.radiojourney.domain.firstScreenLoading.ILoginScreenUseCase
+import com.myproject.radiojourney.domain.favouriteListUseCase.FavouriteListUseCase
+import com.myproject.radiojourney.domain.favouriteListUseCase.IFavouriteListUseCase
+import com.myproject.radiojourney.domain.homeRadioUseCase.HomeRadioUseCase
+import com.myproject.radiojourney.domain.homeRadioUseCase.IHomeRadioUseCase
+import com.myproject.radiojourney.domain.firstScreenLoadingUseCase.LoginScreenUseCase
+import com.myproject.radiojourney.domain.firstScreenLoadingUseCase.ILoginScreenUseCase
 import com.myproject.radiojourney.domain.iRepository.IAuthRepository
 import com.myproject.radiojourney.domain.iRepository.IFavoriteStationRepository
-import com.myproject.radiojourney.domain.iRepository.IRadioStationRepository
+import com.myproject.radiojourney.domain.iRepository.IMainRadioStationRepository
 import com.myproject.radiojourney.domain.iRepository.IRecommendedStationRepository
-import com.myproject.radiojourney.domain.logOut.ILogOutUseCase
-import com.myproject.radiojourney.domain.logOut.LogOutUseCase
+import com.myproject.radiojourney.domain.logOutUseCase.ILogOutUseCase
+import com.myproject.radiojourney.domain.logOutUseCase.LogOutUseCase
+import com.myproject.radiojourney.domain.mainRadioUseCase.IMainRadioUseCase
+import com.myproject.radiojourney.domain.mainRadioUseCase.MainRadioUseCase
 import com.myproject.radiojourney.domain.radioList.IRadioListUseCase
 import com.myproject.radiojourney.domain.radioList.RadioListUseCase
 import com.myproject.radiojourney.domain.recommendedList.IRecommendedListUseCase
@@ -46,11 +46,9 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ActivityComponent
-import dagger.hilt.android.components.ServiceComponent
 import dagger.hilt.android.components.ViewModelComponent
 import dagger.hilt.android.qualifiers.ActivityContext
 import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.android.scopes.ServiceScoped
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -166,6 +164,11 @@ abstract class ViewModelModule {
     ): IRecommendedListUseCase
 
     @Binds
+    abstract fun bindsMainRadioUseCase(
+        mainRadioInteractor: MainRadioUseCase
+    ): IMainRadioUseCase
+
+    @Binds
     abstract fun bindsAuthRepository(
         authRepository: AuthRepository
     ): IAuthRepository
@@ -176,9 +179,9 @@ abstract class ViewModelModule {
     ): IFavoriteStationRepository
 
     @Binds
-    abstract fun bindsRadioStationRepository(
-        radioStationRepository: RadioStationRepository
-    ): IRadioStationRepository
+    abstract fun bindsMainRadioStationRepository(
+        mainRadioStationRepository: MainRadioStationRepository
+    ): IMainRadioStationRepository
 
     @Binds
     abstract fun bindsRecommendedStationRepository(

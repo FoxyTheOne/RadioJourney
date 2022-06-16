@@ -1,7 +1,7 @@
-package com.myproject.radiojourney.domain.favouriteList
+package com.myproject.radiojourney.domain.favouriteListUseCase
 
 import com.myproject.radiojourney.domain.iRepository.IFavoriteStationRepository
-import com.myproject.radiojourney.domain.iRepository.IRadioStationRepository
+import com.myproject.radiojourney.domain.iRepository.IMainRadioStationRepository
 import com.myproject.radiojourney.entities.local.RadioStationLocal
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 import javax.inject.Inject
@@ -15,7 +15,7 @@ import javax.inject.Inject
  */
 class FavouriteListUseCase @Inject constructor(
     private val favoriteStationRepository: IFavoriteStationRepository,
-    private val radioStationRepository: IRadioStationRepository
+    private val mainRadioStationRepository: IMainRadioStationRepository
 ) : IFavouriteListUseCase {
     override suspend fun getRadioStationFavouriteList(isStationInFavorite: Boolean): List<RadioStationPresentation> {
         // Получаем из репозитория список local
@@ -37,7 +37,7 @@ class FavouriteListUseCase @Inject constructor(
             currentRadioStation,
             isStationInFavourite = true
         )
-        radioStationRepository.saveRadioStationInRoom(currentRadioStationLocal)
+        mainRadioStationRepository.saveRadioStationInRoom(currentRadioStationLocal)
     }
 
     override suspend fun deleteStationInRoomFromFavourite(currentRadioStation: RadioStationPresentation) {
@@ -45,6 +45,6 @@ class FavouriteListUseCase @Inject constructor(
             currentRadioStation,
             isStationInFavourite = false
         )
-        radioStationRepository.saveRadioStationInRoom(currentRadioStationLocal)
+        mainRadioStationRepository.saveRadioStationInRoom(currentRadioStationLocal)
     }
 }

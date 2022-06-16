@@ -365,7 +365,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
         // Subscribe to mediaItems LiveData
         // As result we have here List<RadioStationPresentation>, surrounded by Resource (Resource<List<RadioStationPresentation>>)
         // That's why we can easily check the state of our current list of stations
-        mainViewModel.mediaItems.observe(viewLifecycleOwner) { result ->
+        mainViewModel.mediaItemsListLiveData.observe(viewLifecycleOwner) { result ->
             when(result.status) {
                 Status.SUCCESS -> {
                     binding?.progressCircular?.isVisible = false

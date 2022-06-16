@@ -5,7 +5,7 @@ import android.util.Log
 import com.myproject.radiojourney.data.dataSource.local.favorite.ILocalFavoriteDataSource
 import com.myproject.radiojourney.data.dataSource.local.radio.ILocalRadioDataSource
 import com.myproject.radiojourney.data.dataSource.network.INetworkRadioDataSource
-import com.myproject.radiojourney.domain.iRepository.IRadioStationRepository
+import com.myproject.radiojourney.domain.iRepository.IMainRadioStationRepository
 import com.myproject.radiojourney.entities.local.CountryLocal
 import com.myproject.radiojourney.entities.local.RadioStationLocal
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -19,12 +19,12 @@ import javax.inject.Inject
  * Подписка на локальную базу данных Room. Раскладываем данные.
  * При работе с model, здесь происходит запрос в remote, преобразование remote -> local, сохранение результата в базу данных.
  */
-class RadioStationRepository @Inject constructor(
+class MainRadioStationRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val networkRadioDataSource: INetworkRadioDataSource,
     private val localRadioDataSource: ILocalRadioDataSource,
     private val localFavoriteDataSource: ILocalFavoriteDataSource,
-) : IRadioStationRepository {
+) : IMainRadioStationRepository {
     companion object {
         private const val TAG = "ContentRepository"
     }

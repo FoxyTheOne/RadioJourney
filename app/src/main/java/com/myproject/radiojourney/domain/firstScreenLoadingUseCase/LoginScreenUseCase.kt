@@ -1,4 +1,4 @@
-package com.myproject.radiojourney.domain.logOut
+package com.myproject.radiojourney.domain.firstScreenLoadingUseCase
 
 import com.myproject.radiojourney.domain.iRepository.IAuthRepository
 import javax.inject.Inject
@@ -10,8 +10,8 @@ import javax.inject.Inject
  * При работе с model, здесь происходит преобразование local -> presentation, т.е.
  * преобразование моделей в модели нижнего уровня перед тем, как нижний уровень сможет их использовать.
  */
-class LogOutUseCase @Inject constructor(
+class LoginScreenUseCase @Inject constructor(
     private val authRepository: IAuthRepository
-) : ILogOutUseCase {
-    override suspend fun onLogout() = authRepository.logout()
+) : ILoginScreenUseCase {
+    override suspend fun onLoginClicked() = authRepository.onLoginClicked()
 }

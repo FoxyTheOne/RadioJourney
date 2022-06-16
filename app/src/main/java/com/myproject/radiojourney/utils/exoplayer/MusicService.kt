@@ -24,31 +24,18 @@ import javax.inject.Inject
 
 /**
  * Создадим наш Exoplayer и сервис для него.
- * 1. Создаём MusicService и наследуемся от MediaBrowserServiceCompat - it's like a Service for Media
- * 2. Имплементируем методы. Опишем их тело позже
- * 3. Внедряем необходимые зависимости
- * 4. Создаём CoroutineScope для задач, решаемых в сервисе, чтобы не перегружать наш main thread (don't forget serviceScope.cancel() in onDestroy!)
- * 5. Инициализируем наши переменные, а так же необходимые intent-ы в onCreate.
- * ...
- * 6. Добавляем переменные isForegroundService и musicNotificationManager
- * 7. Инициализируем musicNotificationManager. Lambda in this {} will be switched every time, when a new song begins;
- * musicNotificationManager.showNotification(exoPlayer)
- * 8. MusicPlaybackPreparer, MusicPlayerEventListener
- * 9. A variable of currentPlayingSong
- * 10. Initialize musicPlaybackPreparer in onCreate
- * 11. mediaSessionConnector.setPlaybackPreparer(musicPlaybackPreparer)
- * 12. exoPlayer.addListener(MusicPlayerEventListener(this))
- * 13. fetching our metadata from our class, created earlier (firebaseMusicSource)
- * 14. Create an inner class MusicQueueNavigator
- * 15. Describe functions onGetRoot and onLoadChildren
+ * Создаём MusicService и наследуемся от MediaBrowserServiceCompat - it's like a Service for Media
+ * Создаём CoroutineScope для задач, решаемых в сервисе, чтобы не перегружать наш main thread (don't forget serviceScope.cancel() in onDestroy!)
+ * Инициализируем наши переменные, а так же необходимые intent-ы в onCreate.
+ * Fetching our metadata from our class, created earlier (firebaseMusicSource)
+ * Create an inner class MusicQueueNavigator
+ * Describe functions onGetRoot and onLoadChildren
  */
 private const val SERVICE_TAG = "MusicService"
 
-// 1.
 @AndroidEntryPoint
 class MusicService : MediaBrowserServiceCompat() {
 
-    // 3.
     // Inject our data source factory
     @Inject
     lateinit var dataSourceFactory: DefaultDataSourceFactory
@@ -59,7 +46,6 @@ class MusicService : MediaBrowserServiceCompat() {
     @Inject
     lateinit var firebaseMusicSource: FirebaseMusicSource
 
-    // 4.
     // Create a coroutine scope to avoid using main thread for our tasks
     private val serviceJob = Job()
     private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
@@ -67,15 +53,11 @@ class MusicService : MediaBrowserServiceCompat() {
     private lateinit var mediaSession: MediaSessionCompat
     private lateinit var mediaSessionConnector: MediaSessionConnector // a class for connecting to media session
 
-    // 6.
     private lateinit var musicNotificationManager: MusicNotificationManager
 
     var isForegroundService = false // it will be needed for our exoplayer notificationListener
 
-    // 9.
     private var curPlayingSong: MediaMetadataCompat? = null
-
-    // 15.2
     private var isPlayerInitialized = false
 
     private lateinit var musicPlayerEventListener: MusicPlayerEventListener
@@ -85,15 +67,13 @@ class MusicService : MediaBrowserServiceCompat() {
             private set // <- !!! means that we can set it only here, but we can read it elsewhere
     }
 
-    // 2.
     override fun onCreate() {
         super.onCreate()
-        // 13.
+
         serviceScope.launch {
-            firebaseMusicSource.fetchMediaData() // Загрузаем метаданные всех радиостанций с сервера
+            firebaseMusicSource.fetchMediaData() // Загрузаем метаданные всех радиостанций с сервера ПРИ ЗАПУСКЕ СЕРВИСА
         }
 
-        // 5.
         // Pending intent for opening our activity when we click on notification
         val openActivityIntent = packageManager?.getLaunchIntentForPackage(packageName)?.let {
             PendingIntent.getActivity(this, 0, it, 0)
@@ -108,7 +88,6 @@ class MusicService : MediaBrowserServiceCompat() {
         // Now we need to sing our media token to our service
         sessionToken = mediaSession.sessionToken
 
-        // 7.
         // lambda in this {} will be switched every time, when a new song begins
         musicNotificationManager = MusicNotificationManager(
             this,
@@ -119,7 +98,6 @@ class MusicService : MediaBrowserServiceCompat() {
             curSongDuration = exoPlayer.duration
         }
 
-        // 10.
         // lambda in this {} will be switched every time, when user chooses a new song
         val musicPlaybackPreparer = MusicPlaybackPreparer(firebaseMusicSource) {
             curPlayingSong = it
@@ -135,18 +113,9 @@ class MusicService : MediaBrowserServiceCompat() {
         mediaSessionConnector.setQueueNavigator(MusicQueueNavigator()) // 14.2
         mediaSessionConnector.setPlayer(exoPlayer)
 
-        // 12.
         musicPlayerEventListener = MusicPlayerEventListener(this)
         exoPlayer.addListener(musicPlayerEventListener)
         musicNotificationManager.showNotification(exoPlayer)
-    }
-
-    // 14.1
-    // It will be called once our service needs new description from media item
-    private inner class MusicQueueNavigator : TimelineQueueNavigator(mediaSession) {
-        override fun getMediaDescription(player: Player, windowIndex: Int): MediaDescriptionCompat {
-            return firebaseMusicSource.radioStations[windowIndex].description // windowIndex - index of the song that is now playing
-        }
     }
 
     // Let's prepare our exoplayer
@@ -157,7 +126,7 @@ class MusicService : MediaBrowserServiceCompat() {
     ) {
         val curSongIndex =
             if (curPlayingSong == null) 0 else radioStations.indexOf(itemToPlay) // если песня не выбрана - просто играем первую. Либо ищем конкретную по индексу
-        exoPlayer.prepare(firebaseMusicSource.asMediaSource(dataSourceFactory)) // Вызываем метод из firebaseMusicSource, чтобы сформировать плейлист
+        exoPlayer.prepare(firebaseMusicSource.asMediaSource(dataSourceFactory)) // Вызываем метод из firebaseMusicSource, чтобы сформировать данные для плейлист
         exoPlayer.seekTo(
             curSongIndex,
             0L
@@ -166,21 +135,6 @@ class MusicService : MediaBrowserServiceCompat() {
             playNow // play song, when it will be ready (it will be false, and after - true, when ready)
     }
 
-    // when the task of the service has been removed (when the intent has been removed)
-    override fun onTaskRemoved(rootIntent: Intent?) {
-        super.onTaskRemoved(rootIntent)
-        exoPlayer.stop()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        serviceScope.cancel()
-
-        exoPlayer.removeListener(musicPlayerEventListener)
-        exoPlayer.release()
-    }
-
-    // 15.1
     // media root id - is the id to the very first media item (what should be shown first)
     // here we also can deny clients connect to a specific id
     override fun onGetRoot(
@@ -204,7 +158,7 @@ class MusicService : MediaBrowserServiceCompat() {
 
         // in our example we only have that root ID. If there will be more - add them in WHEN expression
         when (parentId) {
-            // first subscription in our app
+            // first subscription in our app. ПЕРВАЯ ЗАГРУЗКА, media ID по умолчанию - MEDIA_ROOT_ID
             MEDIA_ROOT_ID -> {
                 val resultsSent = firebaseMusicSource.whenReady { isInitialized ->
                     if (isInitialized) {
@@ -231,6 +185,27 @@ class MusicService : MediaBrowserServiceCompat() {
                     result.detach()
                 }
             }
+        }
+    }
+
+    // when the task of the service has been removed (when the intent has been removed)
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        exoPlayer.stop()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        serviceScope.cancel()
+
+        exoPlayer.removeListener(musicPlayerEventListener)
+        exoPlayer.release()
+    }
+
+    // It will be called once our service needs new description from media item
+    private inner class MusicQueueNavigator : TimelineQueueNavigator(mediaSession) {
+        override fun getMediaDescription(player: Player, windowIndex: Int): MediaDescriptionCompat {
+            return firebaseMusicSource.radioStations[windowIndex].description // windowIndex - index of the song that is now playing
         }
     }
 }

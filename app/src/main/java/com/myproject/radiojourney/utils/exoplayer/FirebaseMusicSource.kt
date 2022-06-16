@@ -22,54 +22,13 @@ import javax.inject.Inject
 class FirebaseMusicSource @Inject constructor(
     private val networkRadioDataSource: INetworkRadioDataSource
 ) {
-    // 2.
+    // Список, куда будут сохраняться метаданные по каждой радиостанции с помощью метода fetchMediaData()
     var radioStations = emptyList<MediaMetadataCompat>() // meta info about radioStations
 
-    suspend fun fetchMediaData() = withContext(Dispatchers.IO) {
-        state = STATE_INITIALIZING
-        val allRadioStations = networkRadioDataSource.getAllRadioStationsList()
-
-        // TODO огромный ответ, долго ждать
-        radioStations = allRadioStations.map { radioStationRemote ->
-            MediaMetadataCompat.Builder()
-                .putString(METADATA_KEY_ARTIST, radioStationRemote.country)
-                .putString(METADATA_KEY_MEDIA_ID, radioStationRemote.url)
-                .putString(METADATA_KEY_TITLE, radioStationRemote.name)
-                .putString(METADATA_KEY_DISPLAY_TITLE, radioStationRemote.name)
-                .putString(METADATA_KEY_MEDIA_URI, radioStationRemote.url_resolved)
-                .putString(METADATA_KEY_DISPLAY_SUBTITLE, radioStationRemote.country)
-                .putString(METADATA_KEY_DISPLAY_DESCRIPTION, radioStationRemote.countrycode)
-                .build()
-        }
-        state = STATE_INITIALIZED
-    }
-
-    // Для формирования плейлиста из нескольких песен/радиостанций. Info for exoplayer to stream songs
-    // TODO составлять список в плейлист из одной, выбранной страныю После того, как переделаем список с сервера в MAP
-    fun asMediaSource(dataSourceFactory: DefaultDataSourceFactory): ConcatenatingMediaSource {
-        val concatenatingMediaSource = ConcatenatingMediaSource() // empty by default
-        radioStations.forEach { radioStation ->
-            val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
-                .createMediaSource(radioStation.getString(METADATA_KEY_MEDIA_URI).toUri())
-            concatenatingMediaSource.addMediaSource(mediaSource) // Add one by one to our concatenatingMediaSource
-        }
-        return concatenatingMediaSource
-    }
-
-    // A list of media items
-    fun asMediaItems() = radioStations.map { radioStation ->
-        val desc = MediaDescriptionCompat.Builder()
-            .setTitle(radioStation.description.title)
-            .setMediaId(radioStation.description.mediaId)
-            .setMediaUri(radioStation.getString(METADATA_KEY_MEDIA_URI).toUri())
-            .setSubtitle(radioStation.description.subtitle)
-            .build()
-        MediaBrowserCompat.MediaItem(desc, FLAG_PLAYABLE)
-    }.toMutableList()
-
-    //1.
+    // Список лямбд action, которые будут передаваться в метод whenReady(), пока state == STATE_CREATED или state == STATE_INITIALIZING
     private val onReadyListeners = mutableListOf<(Boolean) -> Unit>()
 
+    // Параметр state с setter для того, чтобы можно было привязать к этому параметру определенную логику
     private var state: State = STATE_CREATED // State on default
         set(value) {
             if(value == STATE_INITIALIZED || value == STATE_ERROR) {
@@ -93,6 +52,57 @@ class FirebaseMusicSource @Inject constructor(
             action(state == STATE_INITIALIZED) // we are ready, so we can call action
             true
         }
+    }
+
+    // Метод для СОХРАНЕНИЯ МЕТАДАННЫХ по каждой радиостанции. Создаём список MediaMetadataCompat
+    suspend fun fetchMediaData() = withContext(Dispatchers.IO) {
+        state = STATE_INITIALIZING
+        val allRadioStations = networkRadioDataSource.getAllRadioStationsList()
+
+        // TODO огромный ответ, долго ждать
+        radioStations = allRadioStations.map { radioStationRemote ->
+            MediaMetadataCompat.Builder()
+                .putString(METADATA_KEY_MEDIA_ID, radioStationRemote.url) // media Id / url (Primary key)
+                .putString(METADATA_KEY_MEDIA_URI, radioStationRemote.url_resolved) // url_resolved
+                .putString(METADATA_KEY_TITLE, radioStationRemote.name) // station name
+                .putString(METADATA_KEY_DISPLAY_TITLE, radioStationRemote.name) // station name
+                .putLong(METADATA_KEY_DOWNLOAD_STATUS, radioStationRemote.clickcount.toLong()) // click count
+                .putString(METADATA_KEY_ARTIST, radioStationRemote.countrycode) // country code ?? (instead of country)
+                .putString(METADATA_KEY_DISPLAY_SUBTITLE, radioStationRemote.country) // country
+//                .putString(METADATA_KEY_ALBUM_ARTIST, radioStationRemote.countrycode) // country code
+                .build()
+        }
+        state = STATE_INITIALIZED
+    }
+
+    // A list of media items. Список MediaMetadataCompat теперь преобразуем в список MediaBrowserCompat.MediaItem (для нашей MainViewModel). Сформированный список вернется как результат работы функции там, где её вызвали.
+    // Метод необходимо выхывать после того, как список radioStations будет полностью сформирован!
+    fun asMediaItems() = radioStations.map { radioStation ->
+        val extrasRadioStationInfo = Bundle().apply {
+            putLong("ClickCount", radioStation.getLong(METADATA_KEY_DOWNLOAD_STATUS))
+            putString("CountryCode", radioStation.getString(METADATA_KEY_ARTIST))
+        }
+
+        val desc = MediaDescriptionCompat.Builder()
+            .setMediaId(radioStation.description.mediaId) // media Id / url (Primary key)
+            .setMediaUri(radioStation.getString(METADATA_KEY_MEDIA_URI).toUri()) // url_resolved
+            .setTitle(radioStation.description.title) // station name
+            .setSubtitle(radioStation.description.subtitle) // country
+            .setExtras(extrasRadioStationInfo) // <- click count, country code in extras
+            .build()
+        MediaBrowserCompat.MediaItem(desc, FLAG_PLAYABLE)
+    }.toMutableList() // Flag FLAG_PLAYABLE indicates that the item is playable, not the item that has children of its own.
+
+    // Для формирования плейлиста из нескольких песен/радиостанций. Info for exoplayer to stream songs
+    // TODO составлять список в плейлист из одной, выбранной страныю После того, как переделаем список с сервера в MAP
+    fun asMediaSource(dataSourceFactory: DefaultDataSourceFactory): ConcatenatingMediaSource {
+        val concatenatingMediaSource = ConcatenatingMediaSource() // empty by default
+        radioStations.forEach { radioStation ->
+            val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
+                .createMediaSource(radioStation.getString(METADATA_KEY_MEDIA_URI).toUri())
+            concatenatingMediaSource.addMediaSource(mediaSource) // Add one by one to our concatenatingMediaSource
+        }
+        return concatenatingMediaSource
     }
 }
 

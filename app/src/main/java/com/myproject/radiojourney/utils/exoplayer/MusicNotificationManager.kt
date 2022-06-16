@@ -16,7 +16,7 @@ class MusicNotificationManager(
     private val context: Context,
     sessionToken: MediaSessionCompat.Token,
     notificationListener: PlayerNotificationManager.NotificationListener,
-    private val newSongCallback: () -> Unit
+    private val newSongCallback: () -> Unit // called when a new song starts
 ) {
 
     private val notificationManager: PlayerNotificationManager // custom class from exoplayer for a notification
@@ -50,6 +50,7 @@ class MusicNotificationManager(
 
         // here we just return the title of the song
         override fun getCurrentContentTitle(player: Player): CharSequence {
+            newSongCallback() // maybe it's not the best place for this function, but only here it is called every time, whenever current song changes (skip, play etc.)
             return mediaController.metadata.description.title.toString()
         }
 

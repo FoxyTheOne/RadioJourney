@@ -4,8 +4,8 @@ import android.accounts.AccountsException
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.myproject.radiojourney.domain.homeRadio.IHomeRadioUseCase
-import com.myproject.radiojourney.domain.firstScreenLoading.ILoginScreenUseCase
+import com.myproject.radiojourney.domain.homeRadioUseCase.IHomeRadioUseCase
+import com.myproject.radiojourney.domain.firstScreenLoadingUseCase.ILoginScreenUseCase
 import com.myproject.radiojourney.utils.extension.call
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers

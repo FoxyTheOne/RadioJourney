@@ -1,4 +1,4 @@
-package com.myproject.radiojourney.domain.homeRadio
+package com.myproject.radiojourney.domain.homeRadioUseCase
 
 import com.myproject.radiojourney.entities.presentation.CountryPresentation
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation

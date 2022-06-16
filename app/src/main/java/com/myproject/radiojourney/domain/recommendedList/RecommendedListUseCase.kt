@@ -1,6 +1,6 @@
 package com.myproject.radiojourney.domain.recommendedList
 
-import com.myproject.radiojourney.domain.iRepository.IRadioStationRepository
+import com.myproject.radiojourney.domain.iRepository.IMainRadioStationRepository
 import com.myproject.radiojourney.domain.iRepository.IRecommendedStationRepository
 import com.myproject.radiojourney.entities.local.RadioStationLocal
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
@@ -15,7 +15,7 @@ import javax.inject.Inject
  */
 class RecommendedListUseCase @Inject constructor(
     private val recommendedStationRepository: IRecommendedStationRepository,
-    private val radioStationRepository: IRadioStationRepository
+    private val mainRadioStationRepository: IMainRadioStationRepository
 ) : IRecommendedListUseCase {
 
     override suspend fun getRadioStationRecommendedList(): List<RadioStationPresentation> {
@@ -39,7 +39,7 @@ class RecommendedListUseCase @Inject constructor(
             currentRadioStation,
             isStationInFavourite = true
         )
-        radioStationRepository.saveRadioStationInRoom(currentRadioStationLocal)
+        mainRadioStationRepository.saveRadioStationInRoom(currentRadioStationLocal)
     }
 
     override suspend fun deleteStationInRoomFromFavourite(currentRadioStation: RadioStationPresentation) {
@@ -47,7 +47,7 @@ class RecommendedListUseCase @Inject constructor(
             currentRadioStation,
             isStationInFavourite = false
         )
-        radioStationRepository.saveRadioStationInRoom(currentRadioStationLocal)
+        mainRadioStationRepository.saveRadioStationInRoom(currentRadioStationLocal)
     }
 
 }

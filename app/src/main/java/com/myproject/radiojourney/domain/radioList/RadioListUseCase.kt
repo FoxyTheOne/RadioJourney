@@ -1,6 +1,6 @@
 package com.myproject.radiojourney.domain.radioList
 
-import com.myproject.radiojourney.domain.iRepository.IRadioStationRepository
+import com.myproject.radiojourney.domain.iRepository.IMainRadioStationRepository
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 import javax.inject.Inject
 
@@ -12,10 +12,10 @@ import javax.inject.Inject
  * преобразование моделей в модели нижнего уровня перед тем, как нижний уровень сможет их использовать.
  */
 class RadioListUseCase @Inject constructor(
-    private val radioStationRepository: IRadioStationRepository
+    private val mainRadioStationRepository: IMainRadioStationRepository
 ) : IRadioListUseCase {
     override suspend fun getRadioStationList(countryCode: String): List<RadioStationPresentation> {
-        val radioStationLocalList = radioStationRepository.getRadioStationList(countryCode)
+        val radioStationLocalList = mainRadioStationRepository.getRadioStationList(countryCode)
 
         // Преобразуем модельки local -> presentation
         val radioStationPresentationList = mutableListOf<RadioStationPresentation>()

@@ -4,7 +4,7 @@ import com.myproject.radiojourney.entities.local.CountryLocal
 import com.myproject.radiojourney.entities.local.RadioStationLocal
 import kotlinx.coroutines.flow.Flow
 
-interface IRadioStationRepository {
+interface IMainRadioStationRepository {
     fun subscribeOnCountryList(): Flow<List<CountryLocal>>
 
     suspend fun isRadioStationStored(): Boolean

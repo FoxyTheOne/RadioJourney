@@ -18,17 +18,17 @@ import com.myproject.radiojourney.other.Resource
  */
 class MusicServiceConnection(context: Context) {
     // LiveData for our Service, where we will keep data (data for our fragments to update if server changes)
-    private val _isConnected = MutableLiveData<Event<Resource<Boolean>>>() // For current state. Event and Resource - are our classes
-    val isConnected: LiveData<Event<Resource<Boolean>>> = _isConnected
+    private val _isConnectedLiveData = MutableLiveData<Event<Resource<Boolean>>>() // For current state. Event and Resource - are our classes
+    val isConnectedLiveData: LiveData<Event<Resource<Boolean>>> = _isConnectedLiveData
 
-    private val _networkError = MutableLiveData<Event<Resource<Boolean>>>() // It must be private, so that other classes can't change it
-    val networkError: LiveData<Event<Resource<Boolean>>> = _networkError // And another LiveData, that equals to previous, so that classes can't change it
+    private val _networkErrorLiveData = MutableLiveData<Event<Resource<Boolean>>>() // It must be private, so that other classes can't change it
+    val networkErrorLiveData: LiveData<Event<Resource<Boolean>>> = _networkErrorLiveData // And another LiveData, that equals to previous, so that classes can't change it
 
-    private val _playbackState = MutableLiveData<PlaybackStateCompat?>() // Is player playing or not
-    val playbackState: LiveData<PlaybackStateCompat?> = _playbackState
+    private val _playbackStateLiveData = MutableLiveData<PlaybackStateCompat?>() // Is player playing or not
+    val playbackStateLiveData: LiveData<PlaybackStateCompat?> = _playbackStateLiveData
 
-    private val _curPlayingSong = MutableLiveData<MediaMetadataCompat?>() // Contains meta information of the song that is currently playing
-    val curPlayingSong: LiveData<MediaMetadataCompat?> = _curPlayingSong
+    private val _curPlayingSongLiveData = MutableLiveData<MediaMetadataCompat?>() // Contains meta information of the song that is currently playing
+    val curPlayingSongLiveData: LiveData<MediaMetadataCompat?> = _curPlayingSongLiveData
 
     lateinit var mediaController: MediaControllerCompat // 1. To use transport controls (pause, play the song, skip to the next) 2. For watching callbacks, that are useful for us here
 
@@ -72,17 +72,17 @@ class MusicServiceConnection(context: Context) {
             mediaController = MediaControllerCompat(context, mediaBrowser.sessionToken).apply {
                 registerCallback(MediaContollerCallback()) // <- our second inner class
             }
-            _isConnected.postValue(Event(Resource.success(true))) // post connection data to LiveData
+            _isConnectedLiveData.postValue(Event(Resource.success(true))) // post connection data to LiveData
         }
 
         override fun onConnectionSuspended() {
-            _isConnected.postValue(Event(Resource.error(
+            _isConnectedLiveData.postValue(Event(Resource.error(
                 "The connection was suspended", false
             )))
         }
 
         override fun onConnectionFailed() {
-            _isConnected.postValue(Event(Resource.error(
+            _isConnectedLiveData.postValue(Event(Resource.error(
                 "Couldn't connect to media browser", false
             )))
         }
@@ -91,11 +91,11 @@ class MusicServiceConnection(context: Context) {
     private inner class MediaContollerCallback : MediaControllerCompat.Callback() {
         // When playback state changes this function will be called
         override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
-            _playbackState.postValue(state) // We are posting our state and now we have an access to it from our fragment
+            _playbackStateLiveData.postValue(state) // We are posting our state and now we have an access to it from our fragment
         }
 
         override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
-            _curPlayingSong.postValue(metadata) // Getting new meta data (put it into LiveData)
+            _curPlayingSongLiveData.postValue(metadata) // Getting new meta data (put it into LiveData)
         }
 
         // Send custom events from our service to this connection callback. We will use it to notify when there is a network error
@@ -103,7 +103,7 @@ class MusicServiceConnection(context: Context) {
             super.onSessionEvent(event, extras)
             when(event) {
                 // Ловим исключение в случае проблемы с сервером
-                NETWORK_ERROR -> _networkError.postValue(
+                NETWORK_ERROR -> _networkErrorLiveData.postValue(
                     Event(
                         Resource.error(
                             "Couldn't connect to the server. Please check your internet connection.",
@@ -111,7 +111,7 @@ class MusicServiceConnection(context: Context) {
                         )
                     )
                 )
-                // Where we will set the NETWORK_ERROR, so that we can catch it here? We will do that in oue MusicService
+                // Where we will set the NETWORK_ERROR, so that we can catch it here? We will do that in our MusicService
             }
         }
 
