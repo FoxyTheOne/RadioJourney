@@ -13,6 +13,7 @@ data class RadioStationLocal(
     @ColumnInfo(name = "url_resolved") val urlResolved: String,
     @ColumnInfo(name = "stationName") val stationName: String,
     @ColumnInfo(name = "clickCount") val clickCount: Int,
+    @ColumnInfo(name = "country") val country: String,
     @ColumnInfo(name = "countryCode") val countryCode: String,
     @ColumnInfo(name = "isStationInFavourite") var isStationInFavourite: Boolean,
     @ColumnInfo(name = "isStationInRecommended") var isStationInRecommended: Boolean
@@ -28,6 +29,7 @@ data class RadioStationLocal(
             url = remote.url,
             urlResolved = remote.url_resolved,
             clickCount = remote.clickcount,
+            country = remote.country,
             countryCode = remote.countrycode,
             isStationInFavourite = isStationInFavourite,
             isStationInRecommended = isStationInRecommended
@@ -43,6 +45,7 @@ data class RadioStationLocal(
                 url = presentation.url,
                 urlResolved = presentation.urlResolved,
                 clickCount = presentation.clickCount,
+                country = presentation.country,
                 countryCode = presentation.countryCode,
                 isStationInFavourite = isStationInFavourite,
                 isStationInRecommended = isStationInRecommended

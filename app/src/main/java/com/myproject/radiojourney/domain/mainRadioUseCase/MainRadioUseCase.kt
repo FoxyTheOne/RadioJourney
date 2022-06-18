@@ -32,8 +32,8 @@ class MainRadioUseCase @Inject constructor(
                     ?.toInt()
                     ?: 0,
                 countryCode = it.description.subtitle.toString(),
-//                country = it.description.extras?.getString("CountryCode")
-//                    ?: "",
+                country = it.description.extras?.getString("Country")
+                    ?: "",
                 isStationInFavourite = radioStation?.isStationInFavourite
                     ?: false, // Если станция уже сохранена, узнаём её isStationInFavorite, если нет - false
                 isStationInRecommended = radioStation?.isStationInRecommended

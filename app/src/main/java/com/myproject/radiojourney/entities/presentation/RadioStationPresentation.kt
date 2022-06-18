@@ -11,6 +11,7 @@ data class RadioStationPresentation(
     val urlResolved: String,
     val clickCount: Int,
     val countryCode: String,
+    val country: String,
     var isStationInFavourite: Boolean,
     var isStationInRecommended: Boolean
 ) :
@@ -27,6 +28,7 @@ data class RadioStationPresentation(
                 url = radioStationLocal.url,
                 urlResolved = radioStationLocal.urlResolved,
                 clickCount = radioStationLocal.clickCount,
+                country = radioStationLocal.country,
                 countryCode = radioStationLocal.countryCode,
                 isStationInFavourite = isStationInFavourite,
                 isStationInRecommended = isStationInRecommended
