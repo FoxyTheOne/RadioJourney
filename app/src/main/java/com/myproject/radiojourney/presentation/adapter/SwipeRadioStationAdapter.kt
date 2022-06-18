@@ -20,8 +20,8 @@ class SwipeRadioStationAdapter :
             title.text = text
 
             setOnClickListener {
-                onItemClickListener?.let { click ->
-                    click(radioStation)
+                onItemClickListener?.let { clickLambda ->
+                    clickLambda(radioStation)
                 }
             }
         }

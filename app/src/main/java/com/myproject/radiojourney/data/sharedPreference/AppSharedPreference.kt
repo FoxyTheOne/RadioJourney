@@ -24,6 +24,8 @@ class AppSharedPreference @Inject constructor(@ApplicationContext context: Conte
         private const val PREFERENCE_USER_PASSWORD = "PREFERENCE_PASSWORD"
         private const val PREFERENCE_USER_TOKEN = "USER_TOKEN"
         private const val PREFERENCE_RADIO_STATION_URL = "PREFERENCE_RADIO_STATION_URL"
+        private const val PREFERENCE_LAST_LISTENED_URL = "PREFERENCE_LAST_LISTENED_URL"
+        private const val PREFERENCE_LAST_COUNTRY_CODE = "PREFERENCE_LAST_COUNTRY_CODE"
     }
 
     // У нас будет один общий файл, поэтому .getSharedPreferences()
@@ -121,6 +123,34 @@ class AppSharedPreference @Inject constructor(@ApplicationContext context: Conte
     override fun getRadioStationUrl(): String {
         return sharedPreference?.getString(
             PREFERENCE_RADIO_STATION_URL,
+            ""
+        ) ?: ""
+    }
+
+    override fun saveLastUsedRadioStationUrl(url: String) {
+        sharedPreference?.edit()?.putString(
+            PREFERENCE_LAST_LISTENED_URL,
+            url
+        )?.apply()
+    }
+
+    override fun getLastUsedRadioStationUrl(): String {
+        return sharedPreference?.getString(
+            PREFERENCE_LAST_LISTENED_URL,
+            ""
+        ) ?: ""
+    }
+
+    override fun saveLastUsedRadioStationCountryCode(countryCode: String) {
+        sharedPreference?.edit()?.putString(
+            PREFERENCE_LAST_COUNTRY_CODE,
+            countryCode
+        )?.apply()
+    }
+
+    override fun getLastUsedRadioStationCountryCode(): String {
+        return sharedPreference?.getString(
+            PREFERENCE_LAST_COUNTRY_CODE,
             ""
         ) ?: ""
     }

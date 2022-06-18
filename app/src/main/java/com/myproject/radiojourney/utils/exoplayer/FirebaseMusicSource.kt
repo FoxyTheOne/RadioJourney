@@ -11,6 +11,8 @@ import com.google.android.exoplayer2.source.ConcatenatingMediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.myproject.radiojourney.data.dataSource.network.INetworkRadioDataSource
+import com.myproject.radiojourney.entities.local.RadioStationLocal
+import com.myproject.radiojourney.entities.remote.RadioStationRemote
 import com.myproject.radiojourney.utils.exoplayer.State.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -60,7 +62,6 @@ class FirebaseMusicSource @Inject constructor(
 //        val allRadioStations = networkRadioDataSource.getAllRadioStationsList()
         val countryCodeRadioStations = networkRadioDataSource.getRadioStationList(countryCode)
 
-        // TODO огромный ответ, долго ждать
         radioStations = countryCodeRadioStations.map { radioStationRemote ->
             MediaMetadataCompat.Builder()
                 .putString(METADATA_KEY_MEDIA_ID, radioStationRemote.url) // media Id / url (Primary key)
@@ -68,9 +69,8 @@ class FirebaseMusicSource @Inject constructor(
                 .putString(METADATA_KEY_TITLE, radioStationRemote.name) // station name
                 .putString(METADATA_KEY_DISPLAY_TITLE, radioStationRemote.name) // station name
                 .putLong(METADATA_KEY_DOWNLOAD_STATUS, radioStationRemote.clickcount.toLong()) // click count
-                .putString(METADATA_KEY_ARTIST, radioStationRemote.countrycode) // country code ?? (instead of country)
-                .putString(METADATA_KEY_DISPLAY_SUBTITLE, radioStationRemote.country) // country
-//                .putString(METADATA_KEY_ALBUM_ARTIST, radioStationRemote.countrycode) // country code
+                .putString(METADATA_KEY_ARTIST, radioStationRemote.country) // country
+                .putString(METADATA_KEY_DISPLAY_SUBTITLE, radioStationRemote.countrycode) // country code
                 .build()
         }
         state = STATE_INITIALIZED
@@ -81,15 +81,15 @@ class FirebaseMusicSource @Inject constructor(
     fun asMediaItems() = radioStations.map { radioStation ->
         val extrasRadioStationInfo = Bundle().apply {
             putLong("ClickCount", radioStation.getLong(METADATA_KEY_DOWNLOAD_STATUS))
-            putString("CountryCode", radioStation.getString(METADATA_KEY_ARTIST))
+            putString("Country", radioStation.getString(METADATA_KEY_ARTIST))
         }
 
         val desc = MediaDescriptionCompat.Builder()
             .setMediaId(radioStation.description.mediaId) // media Id / url (Primary key)
             .setMediaUri(radioStation.getString(METADATA_KEY_MEDIA_URI).toUri()) // url_resolved
             .setTitle(radioStation.description.title) // station name
-            .setSubtitle(radioStation.description.subtitle) // country
-            .setExtras(extrasRadioStationInfo) // <- click count, country code in extras
+            .setSubtitle(radioStation.description.subtitle) // country code
+            .setExtras(extrasRadioStationInfo) // <- click count, country in extras
             .build()
         MediaBrowserCompat.MediaItem(desc, FLAG_PLAYABLE)
     }.toMutableList() // Flag FLAG_PLAYABLE indicates that the item is playable, not the item that has children of its own.

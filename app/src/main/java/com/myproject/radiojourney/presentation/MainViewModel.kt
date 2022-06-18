@@ -32,6 +32,10 @@ class MainViewModel @Inject constructor(
     val mediaItemsListLiveData: LiveData<Resource<List<RadioStationPresentation>>> =
         _mediaItemsListLiveData
 
+    // Saved to shared preference
+    private val _dataSavedSuccessfulLiveData = MutableLiveData<Boolean>()
+    val dataSavedSuccessfulLiveData: MutableLiveData<Boolean> = _dataSavedSuccessfulLiveData
+
     // LiveData from our ServiceConnection
     val isConnectedLiveData = musicServiceConnection.isConnectedLiveData
     val networkErrorLiveData = musicServiceConnection.networkErrorLiveData
@@ -114,11 +118,38 @@ class MainViewModel @Inject constructor(
         }
     }
 
+//    fun mediaMetadataCompatToRadioStationPresentation(curPlayingRadioStation: MediaMetadataCompat?): RadioStationPresentation? {
+//        try {
+//            viewModelScope.launch(Dispatchers.IO) {
+//                val curPlayingRadioStation =
+//                    mainRadioInteractor.mediaMetadataCompatToRadioStationPresentation(
+//                        curPlayingRadioStation
+//                    )
+//                )
+//            }
+//        } catch (e2: IOException) {
+//            e2.printStackTrace()
+//            _failedLiveData.call() // TODO use Resource class and its message
+//        }
+//    }
+
     // when View model is destroyed - заканчиваем нашу связь с сервисом
     override fun onCleared() {
         super.onCleared()
         musicServiceConnection.unsubscribe(
             MEDIA_ROOT_ID,
             object : MediaBrowserCompat.SubscriptionCallback() {})
+    }
+
+    fun saveLastUsedRadioStationUrlAndCode(url: String, countryCode: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                mainRadioInteractor.saveLastUsedRadioStationUrlAndCode(url, countryCode)
+                _dataSavedSuccessfulLiveData.call()
+            } catch (e2: IOException) {
+                e2.printStackTrace()
+                _failedLiveData.call() // TODO use Resource class and its message
+            }
+        }
     }
 }

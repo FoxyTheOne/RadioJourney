@@ -102,6 +102,7 @@ class RadioListFragment : BaseContentFragmentAbstract() {
                 binding?.recyclerViewRadioStationList?.adapter =
                     RadioListAdapter(radioStationList) { radioStationPresentationOnClick ->
                         Log.d(TAG, "Выбранный элемент списка: $radioStationPresentationOnClick")
+
                         // Открываем по клику другой фрагмент, передаём туда нашу радиостанцию
                         val direction =
                             RadioListFragmentDirections.actionRadioListFragmentToHomeRadioFragment(

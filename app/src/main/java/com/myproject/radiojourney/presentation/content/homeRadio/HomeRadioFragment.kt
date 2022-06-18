@@ -72,17 +72,13 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
     private val viewModel by viewModels<HomeRadioViewModel>()
 
 
-
-
     // 1.1. ViewModel. We bind our viewModel to the cycle of our activity, not fragment. So, we need to do this way:
     lateinit var mainViewModel: MainViewModel
 
 
-
-
-
     private lateinit var dialogInternetTrouble: Dialog
-//    private lateinit var notificationManager: NotificationManager
+
+    //    private lateinit var notificationManager: NotificationManager
     private var isPaused = true
     private var isStationSelected = false
 
@@ -151,14 +147,9 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
         binding?.imageStar?.setImageResource(R.drawable.star_transparent)
 
 
-
         // 1.2. ViewModel. We bind our viewModel to the lifecycle of our activity, not fragment. We pass our activity as an owner of the lifecycle.
         // So, we need to do this way:
         mainViewModel = ViewModelProvider(requireActivity())[MainViewModel::class.java]
-
-
-
-
 
 
         // Регистрируем бродкасты, запускаем сервисы
@@ -194,30 +185,40 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
             arguments?.getParcelable<RadioStationPresentation>("radio_station") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
                 ?.let { radioStation ->
                     Log.d(TAG, "Выбранный элемент списка: $radioStation")
-                    viewModel.saveRadioStationAndShow(radioStation, false)
-                    // Так же останавливаем проигрывание из уведомления и обновляем его (возможно, выбрали другую радиостанцию)
-                    context?.let {
-                        CreateNotification.updateNotification(
-                            it,
-                            radioStation,
-                            R.drawable.ic_play_arrow_orange
-                        )
-                    }
-                    // (Останавливаем радио в методе onServiceConnected, а не при получении аргументов с предыдущих страниц, т.к. экземпляр binder мы получаем позже, поэтому здесь метод не сработает)
+
+//                    // ДЛЯ СТАРОГО ПЛЕЙЕРА
+//                    viewModel.saveRadioStationAndShow(radioStation, false)
+//                    // Так же останавливаем проигрывание из уведомления и обновляем его (возможно, выбрали другую радиостанцию)
+//                    context?.let {
+//                        CreateNotification.updateNotification(
+//                            it,
+//                            radioStation,
+//                            R.drawable.ic_play_arrow_orange
+//                        )
+//                    }
+//                    // (Останавливаем радио в методе onServiceConnected, а не при получении аргументов с предыдущих страниц, т.к. экземпляр binder мы получаем позже, поэтому здесь метод не сработает)
+
+                    // TODO здесь мы получаем выбранную станцию из списка радиостанций по клику. Необходимо передать её в наш новый плейер
+                    mainViewModel.playOrToggleSong(radioStation, false)
                 }
             arguments?.getParcelable<RadioStationPresentation>("radio_station_favourite")
                 ?.let { radioStationFavourite ->
                     Log.d(TAG, "Выбранный элемент списка: $radioStationFavourite")
-                    viewModel.saveRadioStationAndShow(radioStationFavourite, true)
-                    // Так же останавливаем проигрывание из уведомления и обновляем его (возможно, выбрали другую радиостанцию)
-                    context?.let {
-                        CreateNotification.updateNotification(
-                            it,
-                            radioStationFavourite,
-                            R.drawable.ic_play_arrow_orange
-                        )
-                    }
-                    // (Останавливаем радио в методе onServiceConnected, а не при получении аргументов с предыдущих страниц, т.к. экземпляр binder мы получаем позже, поэтому здесь метод не сработает)
+
+//                    // ДЛЯ СТАРОГО ПЛЕЙЕРА
+//                    viewModel.saveRadioStationAndShow(radioStationFavourite, true)
+//                    // Так же останавливаем проигрывание из уведомления и обновляем его (возможно, выбрали другую радиостанцию)
+//                    context?.let {
+//                        CreateNotification.updateNotification(
+//                            it,
+//                            radioStationFavourite,
+//                            R.drawable.ic_play_arrow_orange
+//                        )
+//                    }
+//                    // (Останавливаем радио в методе onServiceConnected, а не при получении аргументов с предыдущих страниц, т.к. экземпляр binder мы получаем позже, поэтому здесь метод не сработает)
+
+                    // TODO здесь мы получаем выбранную станцию из списка радиостанций по клику. Необходимо передать её в наш новый плейер
+                    mainViewModel.playOrToggleSong(radioStationFavourite, false)
                 }
         } else {
             viewModel.getStoredRadioStation() // 1. Подгрузить радиостанцию из Shared Preference, если она там сохранена. Если нет - текст "выберите радиостанцию"
@@ -359,14 +360,11 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
         })
 
 
-
-
-
         // Subscribe to mediaItems LiveData
         // As result we have here List<RadioStationPresentation>, surrounded by Resource (Resource<List<RadioStationPresentation>>)
         // That's why we can easily check the state of our current list of stations
         mainViewModel.mediaItemsListLiveData.observe(viewLifecycleOwner) { result ->
-            when(result.status) {
+            when (result.status) {
                 Status.SUCCESS -> {
                     binding?.progressCircular?.isVisible = false
                     // Здесь можно заполнить наш адаптер для recycler view, если он есть на этой странице.

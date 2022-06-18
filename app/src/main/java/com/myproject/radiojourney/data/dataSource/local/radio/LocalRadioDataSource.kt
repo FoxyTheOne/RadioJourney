@@ -40,4 +40,9 @@ class LocalRadioDataSource @Inject constructor(
         countryDAO.saveCountryList(*countryLocalList.toTypedArray())
         Log.d(TAG, "результат Метод для сохранения стран в Room завершён")
     }
+
+    override suspend fun saveLastUsedRadioStationUrlAndCode(url: String, countryCode: String) {
+        preference.saveLastUsedRadioStationUrl(url)
+        preference.saveLastUsedRadioStationCountryCode(countryCode)
+    }
 }

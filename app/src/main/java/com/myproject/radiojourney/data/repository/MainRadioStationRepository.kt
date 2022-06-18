@@ -8,6 +8,7 @@ import com.myproject.radiojourney.data.dataSource.network.INetworkRadioDataSourc
 import com.myproject.radiojourney.domain.iRepository.IMainRadioStationRepository
 import com.myproject.radiojourney.entities.local.CountryLocal
 import com.myproject.radiojourney.entities.local.RadioStationLocal
+import com.myproject.radiojourney.utils.exoplayer.FirebaseMusicSource
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
@@ -24,6 +25,7 @@ class MainRadioStationRepository @Inject constructor(
     private val networkRadioDataSource: INetworkRadioDataSource,
     private val localRadioDataSource: ILocalRadioDataSource,
     private val localFavoriteDataSource: ILocalFavoriteDataSource,
+    private val firebaseMusicSource: FirebaseMusicSource
 ) : IMainRadioStationRepository {
     companion object {
         private const val TAG = "ContentRepository"
@@ -67,5 +69,9 @@ class MainRadioStationRepository @Inject constructor(
         )
 
         return radioStationLocalList.toList()
+    }
+
+    override suspend fun saveLastUsedRadioStationUrlAndCode(url: String, countryCode: String) {
+        localRadioDataSource.saveLastUsedRadioStationUrlAndCode(url,countryCode)
     }
 }

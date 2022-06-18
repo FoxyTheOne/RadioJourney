@@ -15,4 +15,6 @@ interface ILocalRadioDataSource {
     suspend fun saveRadioStationInRoom(radioStation: RadioStationLocal)
 
     suspend fun saveCountryList(countryLocalList: MutableList<CountryLocal>)
+
+    suspend fun saveLastUsedRadioStationUrlAndCode(url: String, countryCode: String)
 }

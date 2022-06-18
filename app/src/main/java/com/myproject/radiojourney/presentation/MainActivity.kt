@@ -3,6 +3,7 @@ package com.myproject.radiojourney.presentation
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v4.media.MediaMetadataCompat.*
 import android.support.v4.media.session.PlaybackStateCompat
 import android.view.View
 import androidx.activity.viewModels
@@ -19,7 +20,6 @@ import com.myproject.radiojourney.other.Status.*
 import com.myproject.radiojourney.presentation.adapter.SwipeRadioStationAdapter
 import com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioFragmentDirections
 import com.myproject.radiojourney.utils.extension.isPlaying
-import com.myproject.radiojourney.utils.extension.toRadioStationPresentation
 import com.myproject.radiojourney.utils.musicPlayer.ForegroundNotificationService
 import com.myproject.radiojourney.utils.service.ProgressForegroundService
 import dagger.hilt.android.AndroidEntryPoint
@@ -164,16 +164,57 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             }
     }
 
+    // ???
     // when a new song play, widget.ViewPager2 must automatically swipe to the corresponding song
     // parameter - the new song, that began to play
-    private fun switchViewPagerToCurrentSong(radioStation: RadioStationPresentation) {
-        val newItemIndex =
-            swipeRadioStationAdapter.radioStationList.indexOf(radioStation) // looking for the index of that song
-        // That function will return -1 if the song doesn't exist, so we must check:
-        if (newItemIndex != -1) {
-            binding?.vpSong?.currentItem =
-                newItemIndex // currentItem - is the index of the song, that is displayed. We change it to a new one
-            curPlayingRadioStation = radioStation // we also update our curPlayingRadioStation
+//    private fun switchViewPagerToCurrentSong(radioStation: RadioStationPresentation) {
+//        // TODO не находит, всегда индекс -1 Написать лог отследить список, в котором он ищет
+//        val checkStation1 = swipeRadioStationAdapter.radioStationList[0]
+//        val checkStation2 = swipeRadioStationAdapter.radioStationList[1]
+//        val checkStation3 = swipeRadioStationAdapter.radioStationList[2]
+//
+//        val needToFind = radioStation
+//
+//        val newItemIndex =
+//            swipeRadioStationAdapter.radioStationList.indexOf(radioStation) // looking for the index of that song
+//        // That function will return -1 if the song doesn't exist, so we must check:
+//        if (newItemIndex != -1) {
+//            binding?.vpSong?.currentItem =
+//                newItemIndex // currentItem - is the index of the song, that is displayed. We change it to a new one
+//            curPlayingRadioStation = radioStation // we also update our curPlayingRadioStation
+//        }
+//    }
+
+    private fun switchViewPagerToCurrentSong(mediaId: String, countryCode: String) {
+        // Сохранить country code и mediaId радиостанции в shared preference
+        mainViewModel.saveLastUsedRadioStationUrlAndCode(mediaId, countryCode)
+
+        var radioStationNeedToFind: RadioStationPresentation? = null
+
+        swipeRadioStationAdapter.radioStationList.forEach {
+            if (it.url == mediaId) {
+                radioStationNeedToFind = it
+            }
+        }
+
+        // Если радиостанция не нашлась, нужно обновить swipeAdapter и обновить плейлист, в которой найти и включить нужную станцию
+        if (radioStationNeedToFind == null) {
+            mainViewModel.dataSavedSuccessfulLiveData.observe(this) {
+                // TODO слушать live data для запуска сервиса?
+            }
+        }
+
+        radioStationNeedToFind?.let {
+            val newItemIndex =
+                swipeRadioStationAdapter.radioStationList.indexOf(radioStationNeedToFind) // looking for the index of that song
+            // That function will return -1 if the song doesn't exist, so we must check:
+            if (newItemIndex != -1) {
+                binding?.vpSong?.currentItem =
+                    newItemIndex // currentItem - is the index of the song, that is displayed. We change it to a new one
+
+                curPlayingRadioStation =
+                    radioStationNeedToFind // we also update our curPlayingRadioStation
+            }
         }
     }
 
@@ -189,7 +230,14 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 //                            if(radioStations.isNotEmpty()) {
 //                                glide.load((curPlayingSong ?: radioStations[0]).imageUrl).into(ivCurSongImage)
 //                            }
-                            switchViewPagerToCurrentSong(curPlayingRadioStation ?: return@observe)
+
+                            val a = curPlayingRadioStation?.countryCode
+                            val b = curPlayingRadioStation?.url
+
+                            switchViewPagerToCurrentSong(
+                                curPlayingRadioStation?.url ?: return@observe,
+                                curPlayingRadioStation?.countryCode ?: return@observe
+                            )
                         }
                     }
                     ERROR -> Unit // we don't need this
@@ -202,11 +250,21 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         mainViewModel.curPlayingSongLiveData.observe(this) {
             if (it == null) return@observe
 
-            curPlayingRadioStation =
-                it.toRadioStationPresentation() // we use a method from our extensions (to convert Media MetadataCompat to our RadioStationPresentation)
+//            curPlayingRadioStation =
+//                it.toRadioStationPresentation() // we use a method from our extensions (to convert Media MetadataCompat to our RadioStationPresentation)
+
             // if we had an individual image
 //            glide.load(curPlayingSong?.imageUrl).into(ivCurSongImage)
-            switchViewPagerToCurrentSong(curPlayingRadioStation ?: return@observe)
+
+//            switchViewPagerToCurrentSong(curPlayingRadioStation ?: return@observe)
+
+            val a = it.description.subtitle.toString()
+            val b = it.description.mediaId
+
+            switchViewPagerToCurrentSong(
+                it.description.mediaId ?: return@observe,
+                it.description.subtitle.toString()
+            )
         }
 
         // LIVEDATA: Will be called everytime the playback changes (pause the player, play a song etc.) -> change our image

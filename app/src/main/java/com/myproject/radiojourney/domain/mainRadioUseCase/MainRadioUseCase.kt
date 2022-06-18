@@ -31,12 +31,17 @@ class MainRadioUseCase @Inject constructor(
                 clickCount = it.description.extras?.getLong("ClickCount")
                     ?.toInt()
                     ?: 0,
-                countryCode = it.description.extras?.getString("CountryCode")
-                    ?: "",
+                countryCode = it.description.subtitle.toString(),
+//                country = it.description.extras?.getString("CountryCode")
+//                    ?: "",
                 isStationInFavourite = radioStation?.isStationInFavourite
                     ?: false, // Если станция уже сохранена, узнаём её isStationInFavorite, если нет - false
                 isStationInRecommended = radioStation?.isStationInRecommended
                     ?: false // Если станция уже сохранена, узнаём её isStationInRecommended, если нет - false
             )
         }
+
+    override suspend fun saveLastUsedRadioStationUrlAndCode(url: String, countryCode: String) {
+        mainRadioStationRepository.saveLastUsedRadioStationUrlAndCode(url, countryCode)
+    }
 }

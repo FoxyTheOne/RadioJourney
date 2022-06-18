@@ -21,4 +21,9 @@ interface IAppSharedPreference {
     fun isRadioStationStored(): Boolean
     fun saveRadioStationUrl(url: String)
     fun getRadioStationUrl(): String
+
+    fun saveLastUsedRadioStationUrl(url: String)
+    fun getLastUsedRadioStationUrl(): String
+    fun saveLastUsedRadioStationCountryCode(countryCode: String)
+    fun getLastUsedRadioStationCountryCode(): String
 }

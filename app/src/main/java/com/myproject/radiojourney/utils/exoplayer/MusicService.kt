@@ -13,6 +13,7 @@ import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import com.myproject.radiojourney.data.sharedPreference.IAppSharedPreference
 import com.myproject.radiojourney.other.Constants.MEDIA_ROOT_ID
 import com.myproject.radiojourney.other.Constants.NETWORK_ERROR
 import com.myproject.radiojourney.utils.exoplayer.callback.MusicPlaybackPreparer
@@ -20,6 +21,7 @@ import com.myproject.radiojourney.utils.exoplayer.callback.MusicPlayerEventListe
 import com.myproject.radiojourney.utils.exoplayer.callback.MusicPlayerNotificationListener
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
+import java.io.IOException
 import javax.inject.Inject
 
 /**
@@ -46,6 +48,9 @@ class MusicService : MediaBrowserServiceCompat() {
     @Inject
     lateinit var firebaseMusicSource: FirebaseMusicSource
 
+    @Inject
+    lateinit var preference: IAppSharedPreference
+
     // Create a coroutine scope to avoid using main thread for our tasks
     private val serviceJob = Job()
     private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
@@ -71,12 +76,22 @@ class MusicService : MediaBrowserServiceCompat() {
         super.onCreate()
 
         serviceScope.launch {
-            // TODO узнать, какой country code был у последней радиостанции при последней запуске, если это не первый запуск
-            // если первый - запустить по умолчанию
-            val lastPlayedCountryCode = ""
+            try {
+                // TODO узнать, какой country code был у последней радиостанции при последней запуске, если это не первый запуск
+                // если первый запуск - запустить по умолчанию
+                val lastPlayedCountryCode = preference.getLastUsedRadioStationCountryCode()
 
-            // Загрузаем метаданные всех радиостанций с определенным country code ПРИ ЗАПУСКЕ СЕРВИСА
-            firebaseMusicSource.fetchMediaData(if(lastPlayedCountryCode.isNotBlank()) lastPlayedCountryCode else "AD")
+                // Загрузаем метаданные всех радиостанций с определенным country code ПРИ ЗАПУСКЕ СЕРВИСА
+                firebaseMusicSource.fetchMediaData(
+                    if (lastPlayedCountryCode != "null" && lastPlayedCountryCode.isNotBlank()) lastPlayedCountryCode
+                    else "AD")
+
+
+            } catch (e: IOException) {
+                // Когда сохранён не верный CountryCode, по запросу такого не найдёт и выдаст ошибку retrofit2.HttpException: HTTP 404
+                e.printStackTrace()
+                firebaseMusicSource.fetchMediaData("AD")
+            }
         }
 
         // Pending intent for opening our activity when we click on notification
@@ -123,14 +138,47 @@ class MusicService : MediaBrowserServiceCompat() {
         musicNotificationManager.showNotification(exoPlayer)
     }
 
+    // Запущенный сервис будет работать пока у него не вызван stopSelf().
+    // Передавать данные в сервис можно так же с помощью startService(intent),
+    // новый сервис запускаться при этом не будет, а у запущенного сервиса будет вызван onStartCommand.
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        return super.onStartCommand(intent, flags, startId)
+    }
+
     // Let's prepare our exoplayer
     private fun preparePlayer(
         radioStations: List<MediaMetadataCompat>,
         itemToPlay: MediaMetadataCompat?,
         playNow: Boolean
     ) {
+        var lastItemIndex = 0
+
+        // Если мы только что запустили программу, то песня ещё не будет выбрана. Стоит отобразить в плейере ту, что была выбрана последней в предыдущем запуске
+        if (curPlayingSong == null) {
+            // Находим её mediaId
+            val lastUsedRadioStationUrl = preference.getLastUsedRadioStationUrl()
+            var radioStationNeedToFind: MediaMetadataCompat? = null
+
+            // Находим станцию по mediaId
+            if (lastUsedRadioStationUrl != "") {
+                radioStations.forEach {
+                    if (it.description.mediaId == lastUsedRadioStationUrl) {
+                        radioStationNeedToFind = it
+                    }
+                }
+            }
+
+            // Если станция нашлась, находим её иднекс для плейера. Если не нашлась - оставляем значение 0 (просто первая в списке)
+            radioStationNeedToFind?.let {
+                // looking for the index of last listened song
+                lastItemIndex = radioStations.indexOf(radioStationNeedToFind)
+                // That function will return -1 if the song doesn't exist, so we must check:
+                if (lastItemIndex == -1) lastItemIndex = 0
+            }
+        }
+
         val curSongIndex =
-            if (curPlayingSong == null) 0 else radioStations.indexOf(itemToPlay) // если песня не выбрана - просто играем первую. Либо ищем конкретную по индексу
+            if (curPlayingSong == null) lastItemIndex else radioStations.indexOf(itemToPlay) // если песня не выбрана - просто играем первую. Либо ищем конкретную по индексу
         exoPlayer.prepare(firebaseMusicSource.asMediaSource(dataSourceFactory)) // Вызываем метод из firebaseMusicSource, чтобы сформировать данные для плейлист
         exoPlayer.seekTo(
             curSongIndex,

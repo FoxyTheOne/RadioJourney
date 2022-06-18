@@ -18,4 +18,6 @@ interface IMainRadioStationRepository {
     suspend fun saveRadioStationInRoom(radioStationLocal: RadioStationLocal)
 
     suspend fun getRadioStationList(countryCode: String): List<RadioStationLocal>
+
+    suspend fun saveLastUsedRadioStationUrlAndCode(url: String, countryCode: String)
 }

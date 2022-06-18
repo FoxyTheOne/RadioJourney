@@ -96,12 +96,14 @@ class NetworkRadioDataSource @Inject constructor(
             // И затем делаем запрос getCountryCodeList():
             radioStationRemoteList = radioService.getRadioStationList(searchTerm = countryCode)
 
-            Log.d(
-                TAG,
-                "Успешный запрос. Получен результат radioStationRemoteList $radioStationRemoteList, элемент[0]: ${radioStationRemoteList[0]}"
-            )
+            if (radioStationRemoteList != emptyList<String>()) {
+                Log.d(
+                    TAG,
+                    "Успешный запрос. Получен результат radioStationRemoteList $radioStationRemoteList, элемент[0]: ${radioStationRemoteList[0]}"
+                )
 
-            if (radioStationRemoteList != emptyList<String>()) break
+                break
+            }
         }
 
         return radioStationRemoteList
@@ -109,7 +111,7 @@ class NetworkRadioDataSource @Inject constructor(
 
 //    // API -> Для того, чтобы воспользоваться API радиостанций, нужно выполнить несколько шагов.
 //    // These steps should be done in your APP or program.
-//    override suspend fun getAllRadioStationsList(): List<RadioStationRemote> {
+//    override suspend fun getAllRadioStationsList(): Map<String, RadioStationRemote> {
 //        // 1. Get a list of available servers.
 //        // Do a DNS-lookup of 'all.api.radio-browser.info'. This gives you a list of all available servers.
 //        val listDNSResultArray = updateDNSList()
