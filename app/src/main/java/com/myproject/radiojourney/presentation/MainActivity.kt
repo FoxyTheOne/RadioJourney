@@ -9,6 +9,7 @@ import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.isVisible
+import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.findNavController
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.snackbar.Snackbar
@@ -83,6 +84,8 @@ class MainActivity : AppCompatActivity(), IAppSettings {
     private var curPlayingRadioStation: RadioStationPresentation? = null
     private var playbackState: PlaybackStateCompat? = null
 
+    private var mOnPageChangeCallback: ViewPager2.OnPageChangeCallback? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 //        setContentView(R.layout.activity_main) <- заменяем на view binding:
@@ -92,6 +95,63 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         setContentView(view)
 
         binding?.vpSong?.adapter = swipeRadioStationAdapter
+
+        mOnPageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
+            // function, that is called when the viewpager is swiped - onPageSelected()
+            override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
+
+                // Если мы скачиваем новый плейлист, то здесь получаем position = 0
+                // Нужно проверить, действительно ли мы выбрали первую песню в плейлисте
+                if (position == 0) {
+//                    mainViewModel.newMediaIdLiveData.observe(this@MainActivity) { так не работает
+
+                        val radioStationList = swipeRadioStationAdapter.radioStationList
+
+                        mainViewModel.checkThePosition(position, radioStationList)
+
+                        mainViewModel.newPositionLiveData.observe(this@MainActivity) {
+                            namePosition(it)
+                        }
+
+//                    }
+
+//                    var newPosition = position
+//                    var radioStationNeedToFind: RadioStationPresentation? = null
+//                    val mediaId: String? = mainViewModel.newMediaIdLiveData.value
+//
+//                    // For sure, calculating chosen position
+//                    if (swipeRadioStationAdapter.radioStationList.isNotEmpty() && !mediaId.isNullOrBlank()) {
+//                        swipeRadioStationAdapter.radioStationList.forEach {
+//                            if (it.url == mediaId) {
+//                                radioStationNeedToFind = it
+//                            }
+//                        }
+//                    }
+//
+//                    radioStationNeedToFind?.let {
+//                        val newItemIndex =
+//                            swipeRadioStationAdapter.radioStationList.indexOf(radioStationNeedToFind) // looking for the index of that song
+//                        // That function will return -1 if the song doesn't exist, so we must check:
+//                        if (newItemIndex != -1) newPosition = newItemIndex
+//                    }
+
+                    // TODO Если будем повторять два раза, вынести в отдельный метод
+//                    // We must check, if player is playing
+//                    if (playbackState?.isPlaying == true) {
+//                        mainViewModel.playOrToggleSong(swipeRadioStationAdapter.radioStationList[newPosition])
+//                    } else {
+//                        curPlayingRadioStation =
+//                            swipeRadioStationAdapter.radioStationList[newPosition]
+////                        binding?.vpSong?.currentItem = newPosition
+//                    }
+
+                } else {
+                    namePosition(position)
+                }
+
+            }
+        }
 
         subscribeToObservers()
         initListeners()
@@ -116,18 +176,10 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
     private fun initListeners() {
         // To detect if it is swiped
-        binding?.vpSong?.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
-            // function, that is called when the viewpager is swiped - onPageSelected()
-            override fun onPageSelected(position: Int) {
-                super.onPageSelected(position)
-                // We must check, if player is playing
-                if (playbackState?.isPlaying == true) {
-                    mainViewModel.playOrToggleSong(swipeRadioStationAdapter.radioStationList[position])
-                } else {
-                    curPlayingRadioStation = swipeRadioStationAdapter.radioStationList[position]
-                }
-            }
-        })
+        mOnPageChangeCallback?.let {
+            binding?.vpSong?.registerOnPageChangeCallback(it)
+        }
+
 
         // Click listener (on play image)
         binding?.ivPlayPause?.setOnClickListener {
@@ -139,9 +191,9 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         // Navigate to the RadioListFragment if a song in player was clicked
         swipeRadioStationAdapter.setItemClickListener {
             // Узнаем название страны
-            // TODO Добавить "country" в RadioStationLocal и Presentation и брать эту строку оттуда
             val loc = Locale("", it.countryCode)
-            val countryName = loc.displayName
+            val countryName = loc.displayName // Название страны на используемом в настройках языке
+//            val countryName2 = it.country // Здесь строка всегда на английском
 
             // Перенесём countryCode на RadioListFragment для запроса списка станций
             if (it.countryCode != "null") {
@@ -187,22 +239,35 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
     private fun switchViewPagerToCurrentSong(mediaId: String, countryCode: String) {
         // Сохранить country code и mediaId радиостанции в shared preference
-        mainViewModel.saveLastUsedRadioStationUrlAndCode(mediaId, countryCode)
+//        mainViewModel.saveLastUsedRadioStationUrlAndCode(mediaId, countryCode) перенесём воview model
 
         var radioStationNeedToFind: RadioStationPresentation? = null
 
-        swipeRadioStationAdapter.radioStationList.forEach {
-            if (it.url == mediaId) {
-                radioStationNeedToFind = it
+        val testRadioStationList = swipeRadioStationAdapter.radioStationList
+
+        if (swipeRadioStationAdapter.radioStationList.isNotEmpty()) {
+            swipeRadioStationAdapter.radioStationList.forEach {
+                if (it.url == mediaId) {
+                    radioStationNeedToFind = it
+                }
             }
+
+//            // Если радиостанция в плейлисте не нашлась, нужно обновить swipeAdapter и обновить плейлист, в которой найти и включить нужную станцию
+//            if (radioStationNeedToFind == null) {
+//                mainViewModel.dataSavedSuccessfulLiveData.observe(this) {
+//                    // TODO перезапуск сервиса?
+////                Intent(this, MusicService::class.java).also { intent ->
+////                    startService(intent)
+////                }
+//                    // The startService() method returns immediately, and the Android system calls the service's onStartCommand() method. If the service isn't already running, the system first calls onCreate(), and then it calls onStartCommand().
+//                    // If the service doesn't also provide binding, the intent that is delivered with startService() is the only mode of communication between the application component and the service. However, if you want the service to send a result back, the client that starts the service can create a PendingIntent for a broadcast (with getBroadcast()) and deliver it to the service in the Intent that starts the service. The service can then use the broadcast to deliver a result.
+//                    // Multiple requests to start the service result in multiple corresponding calls to the service's onStartCommand(). However, only one request to stop the service (with stopSelf() or stopService()) is required to stop it.
+//
+//                    mainViewModel.fetchSongs(countryCode) // TODO Удалить, так не получается. В метод switchViewPagerToCurrentSong() прилетает уже песня из используемого плейлиста (остаётся текущая, если выбирать другую страну)
+//                }
+//            }
         }
 
-        // Если радиостанция не нашлась, нужно обновить swipeAdapter и обновить плейлист, в которой найти и включить нужную станцию
-        if (radioStationNeedToFind == null) {
-            mainViewModel.dataSavedSuccessfulLiveData.observe(this) {
-                // TODO слушать live data для запуска сервиса?
-            }
-        }
 
         radioStationNeedToFind?.let {
             val newItemIndex =
@@ -231,8 +296,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 //                                glide.load((curPlayingSong ?: radioStations[0]).imageUrl).into(ivCurSongImage)
 //                            }
 
-                            val a = curPlayingRadioStation?.countryCode
-                            val b = curPlayingRadioStation?.url
+                            // В этом месте данные в curPlayingRadioStation будут старые, т.е. данные о предыдущей радиостанции. Это нужно для сравнения предыдущей и текущей в дальнейшем в методе mainViewModel.playOrToggleSong()
 
                             switchViewPagerToCurrentSong(
                                 curPlayingRadioStation?.url ?: return@observe,
@@ -258,8 +322,8 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
 //            switchViewPagerToCurrentSong(curPlayingRadioStation ?: return@observe)
 
-            val a = it.description.subtitle.toString()
-            val b = it.description.mediaId
+            val test =
+                it.description.subtitle.toString() // !!! Сюда прилетает уже не то. Проверить Music Service
 
             switchViewPagerToCurrentSong(
                 it.description.mediaId ?: return@observe,
@@ -313,6 +377,17 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         }
     }
 
+    private fun namePosition(position: Int) {
+        // We must check, if player is playing
+        if (playbackState?.isPlaying == true) {
+            mainViewModel.playOrToggleSong(swipeRadioStationAdapter.radioStationList[position])
+        } else {
+            curPlayingRadioStation =
+                swipeRadioStationAdapter.radioStationList[position]
+//            binding?.vpSong?.currentItem = position /// ??? убрать
+        }
+    }
+
     // function for hiding our bottom bar
     // TODO maybe use Group view?
     private fun hideBottomBar() {
@@ -337,6 +412,10 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         )
         super.onDestroy()
         binding = null // VIEW BINDING -> 3. onDestroyView()
+
+        mOnPageChangeCallback?.let {
+            binding?.vpSong?.unregisterOnPageChangeCallback(it)
+        }
     }
 
     override fun setToolbar(toolbar: Toolbar?) {

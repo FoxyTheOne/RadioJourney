@@ -199,6 +199,8 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
 //                    // (Останавливаем радио в методе onServiceConnected, а не при получении аргументов с предыдущих страниц, т.к. экземпляр binder мы получаем позже, поэтому здесь метод не сработает)
 
                     // TODO здесь мы получаем выбранную станцию из списка радиостанций по клику. Необходимо передать её в наш новый плейер
+                    mainViewModel.saveNewMediaId(radioStation.url)
+                    mainViewModel.fetchSongs(radioStation.countryCode)
                     mainViewModel.playOrToggleSong(radioStation, false)
                 }
             arguments?.getParcelable<RadioStationPresentation>("radio_station_favourite")
@@ -218,6 +220,8 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
 //                    // (Останавливаем радио в методе onServiceConnected, а не при получении аргументов с предыдущих страниц, т.к. экземпляр binder мы получаем позже, поэтому здесь метод не сработает)
 
                     // TODO здесь мы получаем выбранную станцию из списка радиостанций по клику. Необходимо передать её в наш новый плейер
+                    mainViewModel.saveNewMediaId(radioStationFavourite.url)
+                    mainViewModel.fetchSongs(radioStationFavourite.countryCode)
                     mainViewModel.playOrToggleSong(radioStationFavourite, false)
                 }
         } else {

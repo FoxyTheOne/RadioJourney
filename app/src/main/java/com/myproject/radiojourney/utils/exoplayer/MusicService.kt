@@ -84,7 +84,8 @@ class MusicService : MediaBrowserServiceCompat() {
                 // Загрузаем метаданные всех радиостанций с определенным country code ПРИ ЗАПУСКЕ СЕРВИСА
                 firebaseMusicSource.fetchMediaData(
                     if (lastPlayedCountryCode != "null" && lastPlayedCountryCode.isNotBlank()) lastPlayedCountryCode
-                    else "AD")
+                    else "AD"
+                )
 
 
             } catch (e: IOException) {
@@ -119,7 +120,13 @@ class MusicService : MediaBrowserServiceCompat() {
         }
 
         // lambda in this {} will be switched every time, when user chooses a new song
-        val musicPlaybackPreparer = MusicPlaybackPreparer(firebaseMusicSource) {
+        val musicPlaybackPreparer = MusicPlaybackPreparer(firebaseMusicSource, serviceScope) {
+            if (isPlayerInitialized && it == null) {
+                return@MusicPlaybackPreparer // Если isPlayerInitialized == true, значит это точно не первый запуск. Если isPlayerInitialized && it == null - значит сюда передан результат раньше, чем скачался плейлист (Было curPlayingSong != null && it == null, работает с нюансами)
+            }
+
+            val test = it // it - всегда null
+
             curPlayingSong = it
             preparePlayer(
                 firebaseMusicSource.radioStations,
@@ -141,9 +148,29 @@ class MusicService : MediaBrowserServiceCompat() {
     // Запущенный сервис будет работать пока у него не вызван stopSelf().
     // Передавать данные в сервис можно так же с помощью startService(intent),
     // новый сервис запускаться при этом не будет, а у запущенного сервиса будет вызван onStartCommand.
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        return super.onStartCommand(intent, flags, startId)
-    }
+//    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+//
+//        serviceScope.launch {
+//            try {
+//                // TODO узнать, какой country code был у последней радиостанции при последней запуске, если это не первый запуск
+//                // если первый запуск - запустить по умолчанию
+//                val lastPlayedCountryCode = preference.getLastUsedRadioStationCountryCode()
+//
+//                // Загрузаем метаданные всех радиостанций с определенным country code ПРИ ЗАПУСКЕ СЕРВИСА
+//                firebaseMusicSource.fetchMediaData(
+//                    if (lastPlayedCountryCode != "null" && lastPlayedCountryCode.isNotBlank()) lastPlayedCountryCode
+//                    else "AD")
+//
+//
+//            } catch (e: IOException) {
+//                // Когда сохранён не верный CountryCode, по запросу такого не найдёт и выдаст ошибку retrofit2.HttpException: HTTP 404
+//                e.printStackTrace()
+//                firebaseMusicSource.fetchMediaData("AD")
+//            }
+//        }
+//
+//        return super.onStartCommand(intent, flags, startId)
+//    }
 
     // Let's prepare our exoplayer
     private fun preparePlayer(
@@ -152,6 +179,9 @@ class MusicService : MediaBrowserServiceCompat() {
         playNow: Boolean
     ) {
         var lastItemIndex = 0
+
+        val test = curPlayingSong?.description?.subtitle
+        val testRadioStations = radioStations
 
         // Если мы только что запустили программу, то песня ещё не будет выбрана. Стоит отобразить в плейере ту, что была выбрана последней в предыдущем запуске
         if (curPlayingSong == null) {
@@ -215,16 +245,25 @@ class MusicService : MediaBrowserServiceCompat() {
             MEDIA_ROOT_ID -> {
                 val resultsSent = firebaseMusicSource.whenReady { isInitialized ->
                     if (isInitialized) {
-                        result.sendResult(firebaseMusicSource.asMediaItems())
-                        // we also must check, if our player is initialized
-                        if (!isPlayerInitialized && firebaseMusicSource.radioStations.isNotEmpty()) {
-                            preparePlayer(
-                                firebaseMusicSource.radioStations,
-                                firebaseMusicSource.radioStations[0],
-                                false
-                            )
-                            isPlayerInitialized = true
+
+                        try {
+                            result.sendResult(firebaseMusicSource.asMediaItems())
+                            // we also must check, if our player is initialized
+                            if (!isPlayerInitialized && firebaseMusicSource.radioStations.isNotEmpty()) {
+                                preparePlayer(
+                                    firebaseMusicSource.radioStations,
+                                    firebaseMusicSource.radioStations[0],
+                                    false
+                                )
+                                isPlayerInitialized = true
+                            }
+                        } catch (exception: Exception) {
+                            // TODO
+                            // not recommend to notify here , instead notify when you
+                            // change existing list in MusicPlaybackPreparer onCommand()
+                            notifyChildrenChanged(MEDIA_ROOT_ID)
                         }
+
                         // if it is ready, but not initialized:
                     } else {
                         // If the result is null - we caught a network error
@@ -257,7 +296,10 @@ class MusicService : MediaBrowserServiceCompat() {
 
     // It will be called once our service needs new description from media item
     private inner class MusicQueueNavigator : TimelineQueueNavigator(mediaSession) {
-        override fun getMediaDescription(player: Player, windowIndex: Int): MediaDescriptionCompat {
+        override fun getMediaDescription(
+            player: Player,
+            windowIndex: Int
+        ): MediaDescriptionCompat {
             return firebaseMusicSource.radioStations[windowIndex].description // windowIndex - index of the song that is now playing
         }
     }

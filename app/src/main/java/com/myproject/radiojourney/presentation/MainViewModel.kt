@@ -1,5 +1,6 @@
 package com.myproject.radiojourney.presentation
 
+import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat.METADATA_KEY_MEDIA_ID
 import androidx.lifecycle.LiveData
@@ -8,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myproject.radiojourney.domain.mainRadioUseCase.IMainRadioUseCase
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
+import com.myproject.radiojourney.other.Constants.ADD_SONGS
 import com.myproject.radiojourney.other.Constants.MEDIA_ROOT_ID
 import com.myproject.radiojourney.other.Resource
 import com.myproject.radiojourney.utils.exoplayer.MusicServiceConnection
@@ -35,6 +37,12 @@ class MainViewModel @Inject constructor(
     // Saved to shared preference
     private val _dataSavedSuccessfulLiveData = MutableLiveData<Boolean>()
     val dataSavedSuccessfulLiveData: MutableLiveData<Boolean> = _dataSavedSuccessfulLiveData
+
+    // New mediaId for opening new playlist on a specific (chosen) position
+    private val _newMediaIdLiveData = MutableLiveData<String>()
+    val newMediaIdLiveData: MutableLiveData<String> = _newMediaIdLiveData
+    private val _newPositionLiveData = MutableLiveData<Int>()
+    val newPositionLiveData: MutableLiveData<Int> = _newPositionLiveData
 
     // LiveData from our ServiceConnection
     val isConnectedLiveData = musicServiceConnection.isConnectedLiveData
@@ -99,22 +107,33 @@ class MainViewModel @Inject constructor(
     // isPrepared, isPlaying, isPlayEnabled <- it's our extensions
     // In our case, METADATA_KEY_MEDIA_ID = radioStationRemote.url
     fun playOrToggleSong(mediaItem: RadioStationPresentation, toggle: Boolean = false) {
-        val isPrepared = playbackStateLiveData.value?.isPrepared
-            ?: false // Checking by our Extensions from playbackState. If it is not prepared - false
-        // if we want to play the same song (pause and play it again)
-        if (isPrepared && mediaItem.url ==
-            curPlayingSongLiveData.value?.getString(METADATA_KEY_MEDIA_ID)
-        ) { // curPlayingSong.value?.getString(METADATA_KEY_MEDIA_ID) <- it's how we get metadata of currently playing song
-            playbackStateLiveData.value?.let { playbackState ->
-                when {
-                    playbackState.isPlaying -> if (toggle) musicServiceConnection.transportControls.pause()
-                    playbackState.isPlayEnabled -> musicServiceConnection.transportControls.play()
-                    else -> Unit
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val isPrepared = playbackStateLiveData.value?.isPrepared
+                    ?: false // Checking by our Extensions from playbackState. If it is not prepared - false
+
+                // if we want to play the same song (pause and play it again)
+                if (isPrepared && mediaItem.url ==
+                    curPlayingSongLiveData.value?.getString(METADATA_KEY_MEDIA_ID)
+                ) { // curPlayingSong.value?.getString(METADATA_KEY_MEDIA_ID) <- it's how we get metadata of currently playing song
+                    playbackStateLiveData.value?.let { playbackState ->
+                        when {
+                            playbackState.isPlaying -> if (toggle) musicServiceConnection.transportControls.pause()
+                            playbackState.isPlayEnabled -> musicServiceConnection.transportControls.play()
+                            else -> Unit
+                        }
+                        saveLastUsedRadioStationUrlAndCode(mediaItem.url, mediaItem.countryCode)
+                    }
+
+                    // if we want to play another song
+                } else {
+                    musicServiceConnection.transportControls.playFromMediaId(mediaItem.url, null)
+                    saveLastUsedRadioStationUrlAndCode(mediaItem.url, mediaItem.countryCode)
                 }
+            } catch (e2: IOException) {
+                e2.printStackTrace()
+                _failedLiveData.call() // TODO use Resource class and its message
             }
-            // if we want to play another song
-        } else {
-            musicServiceConnection.transportControls.playFromMediaId(mediaItem.url, null)
         }
     }
 
@@ -133,15 +152,7 @@ class MainViewModel @Inject constructor(
 //        }
 //    }
 
-    // when View model is destroyed - заканчиваем нашу связь с сервисом
-    override fun onCleared() {
-        super.onCleared()
-        musicServiceConnection.unsubscribe(
-            MEDIA_ROOT_ID,
-            object : MediaBrowserCompat.SubscriptionCallback() {})
-    }
-
-    fun saveLastUsedRadioStationUrlAndCode(url: String, countryCode: String) {
+    private fun saveLastUsedRadioStationUrlAndCode(url: String, countryCode: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 mainRadioInteractor.saveLastUsedRadioStationUrlAndCode(url, countryCode)
@@ -151,5 +162,56 @@ class MainViewModel @Inject constructor(
                 _failedLiveData.call() // TODO use Resource class and its message
             }
         }
+    }
+
+    // !!! Попробуем изменять плейлист
+    fun fetchSongs(countryCode: String) {
+        val args = Bundle()
+//        args.putInt("nRecNo", 2)
+        args.putString("nRecNo", countryCode)
+        musicServiceConnection.sendCommand(ADD_SONGS, args)
+    }
+
+    // when View model is destroyed - заканчиваем нашу связь с сервисом
+    override fun onCleared() {
+        super.onCleared()
+        musicServiceConnection.unsubscribe(
+            MEDIA_ROOT_ID,
+            object : MediaBrowserCompat.SubscriptionCallback() {})
+    }
+
+    fun checkThePosition(position: Int, radioStationList: List<RadioStationPresentation>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                var newPosition = position
+                var radioStationNeedToFind: RadioStationPresentation? = null
+                val mediaId: String? = newMediaIdLiveData.value
+
+                // For sure, calculating chosen position
+                if (radioStationList.isNotEmpty() && !mediaId.isNullOrBlank()) {
+                    radioStationList.forEach {
+                        if (it.url == mediaId) {
+                            radioStationNeedToFind = it
+                        }
+                    }
+                }
+
+                radioStationNeedToFind?.let {
+                    // looking for the index of that song
+                    val newItemIndex = radioStationList.indexOf(radioStationNeedToFind)
+                    // That function will return -1 if the song doesn't exist, so we must check:
+                    if (newItemIndex != -1) newPosition = newItemIndex
+                }
+
+                _newPositionLiveData.postValue(newPosition)
+            } catch (e2: IOException) {
+                e2.printStackTrace()
+                _failedLiveData.call() // TODO use Resource class and its message
+            }
+        }
+    }
+
+    fun saveNewMediaId(mediaId: String) {
+        _newMediaIdLiveData.postValue(mediaId)
     }
 }

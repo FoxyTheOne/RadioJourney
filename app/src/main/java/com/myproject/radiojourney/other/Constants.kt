@@ -19,4 +19,6 @@ object Constants {
     const val NETWORK_ERROR = "NETWORK_ERROR"
 
     const val UPDATE_PLAYER_POSITION_INTERVAL = 100L // we will update our seek bar 10 times a second
+
+    const val ADD_SONGS = "Add Songs"
 }
