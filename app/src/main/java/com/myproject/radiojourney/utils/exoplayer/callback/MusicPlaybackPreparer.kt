@@ -4,14 +4,11 @@ import android.net.Uri
 import android.os.Bundle
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import android.support.v4.os.ResultReceiver
 import com.google.android.exoplayer2.ControlDispatcher
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
-import com.myproject.radiojourney.data.sharedPreference.IAppSharedPreference
-import com.myproject.radiojourney.other.Constants
 import com.myproject.radiojourney.utils.exoplayer.FirebaseMusicSource
-import com.myproject.radiojourney.utils.exoplayer.State
+import com.myproject.radiojourney.utils.exoplayer.callback.State.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.io.IOException
@@ -26,16 +23,18 @@ class MusicPlaybackPreparer(
     private var lastCountryCode: String? = null
 
     // Список лямбд action, которые будут передаваться в метод whenReady(), пока state == STATE_CREATED или state == STATE_INITIALIZING
+//    private var onReadyListener : ((Boolean) -> Unit)? = null // нам нужна одна лямбда, самая последняя
     private val onReadyListeners = mutableListOf<(Boolean) -> Unit>()
 
     // Параметр state с setter для того, чтобы можно было привязать к этому параметру определенную логику
-    private var state: State = State.STATE_CREATED // State on default
+    private var state: State = STATE_CREATED // State on default
         set(value) {
-            if (value == State.STATE_INITIALIZED || value == State.STATE_ERROR) {
+            if (value == STATE_INITIALIZED || value == STATE_ERROR) {
                 synchronized(onReadyListeners) { // synchronized for save change
                     field = value // sign a new value to the field
+//                        it(state == STATE_INITIALIZED)
                     onReadyListeners.forEach { listener ->
-                        listener(state == State.STATE_INITIALIZED) // go through list and call needed lambda function. If there will be STATE_ERROR instead STATE_INITIALIZED, we will get "false". So we can check, if it was successful or not
+                        listener(state == STATE_INITIALIZED) // go through list and call needed lambda function. If there will be STATE_ERROR instead STATE_INITIALIZED, we will get "false". So we can check, if it was successful or not
                     }
                 }
             } else {
@@ -45,11 +44,11 @@ class MusicPlaybackPreparer(
 
     // A function which will add actions to our list of actions (returns boolean - if it is ready or not)
     private fun whenReady(action: (Boolean) -> Unit): Boolean {
-        return if (state == State.STATE_CREATED || state == State.STATE_INITIALIZING) {
+        return if (state == STATE_CREATED || state == STATE_INITIALIZING) {
             onReadyListeners += action // We are not ready, so just add action to list (we will do it later, when we will be ready)
             false // not ready
         } else {
-            action(state == State.STATE_INITIALIZED) // we are ready, so we can call action
+            action(state == STATE_INITIALIZED) // we are ready, so we can call action
             true
         }
     }
@@ -77,11 +76,19 @@ class MusicPlaybackPreparer(
             "Add Songs" -> {
 
                 serviceScope.launch {
-                    state = State.STATE_INITIALIZING
+                    state = STATE_INITIALIZING
 
-                    val countryCode = extras?.get("nRecNo")
+                    val countryCode =
+                        extras?.get("nRecNo") // Достаём country code и далее сравниваем его. Если коды разные, скачиваем новый плейлист
 
-                    if (lastCountryCode != null && lastCountryCode != countryCode) {
+                    // Чтобы проверить, может быть такой плейлист уже скачан и сейчас используется, обновим переменную
+                    lastCountryCode = firebaseMusicSource.radioStations[0].description.subtitle.toString()
+
+                    // if (lastCountryCode != null && lastCountryCode != countryCode) {
+                    // Если оставлять lastCountryCode != null, сюда не заходит, если программу включили и выбрали станцию из другого плейлиста, не включая перед этим плейер ни разу
+                    // Вместо этого проверим (выше), скачан ли уже такой плей лист и сравнивать будем с такой переменной:
+
+                    if (lastCountryCode != countryCode) {
                         val job = serviceScope.launch {
                             try {
                                 firebaseMusicSource.fetchMediaData(
@@ -94,10 +101,11 @@ class MusicPlaybackPreparer(
                                 // Когда сохранён не верный CountryCode, по запросу такого не найдёт и выдаст ошибку retrofit2.HttpException: HTTP 404
                                 e.printStackTrace()
                                 firebaseMusicSource.fetchMediaData("AD")
+                                // TODO Была такая ошибка из-за проблемы с интернетом. Сделать высвечивание сообщения об ошибке, чтобы понимали, почему скачался и включился не тот плейлист
                             }
                         }
                         job.join()
-                        state = State.STATE_INITIALIZED
+                        state = STATE_INITIALIZED
                     }
                 }
 
@@ -166,8 +174,13 @@ class MusicPlaybackPreparer(
             }
 
 
-            lastCountryCode =
-                itemToPlay?.description?.subtitle.toString() // Обновляем переменную класса после поиска
+//            lastCountryCode =
+//                itemToPlay?.description?.subtitle.toString() // Обновляем переменную класса после поиска TODO let?. чтобы обновлять lastCountryCode на не null ????
+
+            itemToPlay?.let {
+                lastCountryCode =
+                    it.description.subtitle.toString() // Обновляем переменную класса после поиска
+            }
 
             playerPrepared(itemToPlay)
         }

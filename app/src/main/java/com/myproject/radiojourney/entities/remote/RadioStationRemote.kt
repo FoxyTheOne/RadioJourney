@@ -1,6 +1,8 @@
 package com.myproject.radiojourney.entities.remote
 
+import android.util.Log
 import com.google.gson.annotations.SerializedName
+import com.myproject.radiojourney.data.dataSource.network.NetworkRadioDataSource
 
 /*
 Copyright (c) 2022 Kotlin Data Classes Generated from JSON powered by http://www.json2kotlin.com
@@ -19,7 +21,7 @@ data class RadioStationRemote(
     @SerializedName("serveruuid") val serveruuid: String,
     @SerializedName("name") val name: String,
     @SerializedName("url") val url: String,
-    @SerializedName("url_resolved") val url_resolved: String,
+    @SerializedName("url_resolved") var url_resolved: String = "",
     @SerializedName("homepage") val homepage: String,
     @SerializedName("favicon") val favicon: String,
     @SerializedName("tags") val tags: String,

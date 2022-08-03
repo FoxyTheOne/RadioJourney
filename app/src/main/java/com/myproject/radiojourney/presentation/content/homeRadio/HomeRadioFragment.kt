@@ -202,6 +202,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
                     mainViewModel.saveNewMediaId(radioStation.url)
                     mainViewModel.fetchSongs(radioStation.countryCode)
                     mainViewModel.playOrToggleSong(radioStation, false)
+                    mainViewModel.notJustLaunchedEnableAutoplay()
                 }
             arguments?.getParcelable<RadioStationPresentation>("radio_station_favourite")
                 ?.let { radioStationFavourite ->
@@ -223,6 +224,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
                     mainViewModel.saveNewMediaId(radioStationFavourite.url)
                     mainViewModel.fetchSongs(radioStationFavourite.countryCode)
                     mainViewModel.playOrToggleSong(radioStationFavourite, false)
+                    mainViewModel.notJustLaunchedEnableAutoplay()
                 }
         } else {
             viewModel.getStoredRadioStation() // 1. Подгрузить радиостанцию из Shared Preference, если она там сохранена. Если нет - текст "выберите радиостанцию"

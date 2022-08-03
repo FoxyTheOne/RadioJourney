@@ -106,13 +106,13 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                 if (position == 0) {
 //                    mainViewModel.newMediaIdLiveData.observe(this@MainActivity) { так не работает
 
-                        val radioStationList = swipeRadioStationAdapter.radioStationList
+                    val radioStationList = swipeRadioStationAdapter.radioStationList
 
-                        mainViewModel.checkThePosition(position, radioStationList)
+                    mainViewModel.checkThePosition(position, radioStationList)
 
-                        mainViewModel.newPositionLiveData.observe(this@MainActivity) {
-                            namePosition(it)
-                        }
+                    mainViewModel.newPositionLiveData.observe(this@MainActivity) {
+                        namePosition(it)
+                    }
 
 //                    }
 
@@ -382,9 +382,21 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         if (playbackState?.isPlaying == true) {
             mainViewModel.playOrToggleSong(swipeRadioStationAdapter.radioStationList[position])
         } else {
+            // При включении программы и загрузке контента, попадаем сюда
+
             curPlayingRadioStation =
                 swipeRadioStationAdapter.radioStationList[position]
 //            binding?.vpSong?.currentItem = position /// ??? убрать
+
+            // TODO Нам нужно вернуться в onPrepareFromMediaId, если мы выбрали песню из другого плейлиста и включить её. НО! Нам не нужно включать станцию сразу при включении программы
+            val isNotJustLaunched = mainViewModel.isNotJustLaunchedLiveData.value
+            isNotJustLaunched?.let {
+                if (isNotJustLaunched) {
+                    // Здесь мы точно перешли из списка в HomeRadioFragment и хотим включить радио
+                    mainViewModel.playOrToggleSong(swipeRadioStationAdapter.radioStationList[position], true)
+                }
+            }
+
         }
     }
 

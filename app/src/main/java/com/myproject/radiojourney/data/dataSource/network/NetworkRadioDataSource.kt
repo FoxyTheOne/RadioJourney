@@ -97,6 +97,26 @@ class NetworkRadioDataSource @Inject constructor(
             radioStationRemoteList = radioService.getRadioStationList(searchTerm = countryCode)
 
             if (radioStationRemoteList != emptyList<String>()) {
+
+                // Исправим http на https
+                radioStationRemoteList.forEach {
+                    val urlResolved = it.url_resolved
+//                    Log.d(TAG, "url_resolved станции: $urlResolved")
+
+                    val indexOfHttp = urlResolved.indexOf("http:")
+//                    Log.d(TAG, "Индекс искомого сочетания http: $indexOfHttp")
+
+                    if (indexOfHttp != -1) {
+                        Log.d(TAG, "Индекс не -1, заменяем http: на https:")
+
+                        val newUrlResolved = urlResolved.replace("http:","https:")
+                        it.url_resolved = newUrlResolved
+//                        println(it)
+
+                        Log.d(TAG, "Новый url_resolved станции: $newUrlResolved, записался как: ${it.url_resolved}")
+                    }
+                }
+
                 Log.d(
                     TAG,
                     "Успешный запрос. Получен результат radioStationRemoteList $radioStationRemoteList, элемент[0]: ${radioStationRemoteList[0]}"

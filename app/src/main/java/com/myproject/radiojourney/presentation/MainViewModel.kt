@@ -13,10 +13,7 @@ import com.myproject.radiojourney.other.Constants.ADD_SONGS
 import com.myproject.radiojourney.other.Constants.MEDIA_ROOT_ID
 import com.myproject.radiojourney.other.Resource
 import com.myproject.radiojourney.utils.exoplayer.MusicServiceConnection
-import com.myproject.radiojourney.utils.extension.call
-import com.myproject.radiojourney.utils.extension.isPlayEnabled
-import com.myproject.radiojourney.utils.extension.isPlaying
-import com.myproject.radiojourney.utils.extension.isPrepared
+import com.myproject.radiojourney.utils.extension.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -36,13 +33,16 @@ class MainViewModel @Inject constructor(
 
     // Saved to shared preference
     private val _dataSavedSuccessfulLiveData = MutableLiveData<Boolean>()
-    val dataSavedSuccessfulLiveData: MutableLiveData<Boolean> = _dataSavedSuccessfulLiveData
+    val dataSavedSuccessfulLiveData: LiveData<Boolean> = _dataSavedSuccessfulLiveData
 
     // New mediaId for opening new playlist on a specific (chosen) position
     private val _newMediaIdLiveData = MutableLiveData<String>()
-    val newMediaIdLiveData: MutableLiveData<String> = _newMediaIdLiveData
+    val newMediaIdLiveData: LiveData<String> = _newMediaIdLiveData
     private val _newPositionLiveData = MutableLiveData<Int>()
-    val newPositionLiveData: MutableLiveData<Int> = _newPositionLiveData
+    val newPositionLiveData: LiveData<Int> = _newPositionLiveData
+
+    private val _isNotJustLaunchedLiveData = MutableLiveData<Boolean>()
+    val isNotJustLaunchedLiveData: LiveData<Boolean> = _isNotJustLaunchedLiveData
 
     // LiveData from our ServiceConnection
     val isConnectedLiveData = musicServiceConnection.isConnectedLiveData
@@ -213,5 +213,10 @@ class MainViewModel @Inject constructor(
 
     fun saveNewMediaId(mediaId: String) {
         _newMediaIdLiveData.postValue(mediaId)
+    }
+
+    // TODO Test version Нужно вызывать метод playOrToggleSong, когда у нас новый плейлист а песня была на паузе. И в то же время не нужно autoplay стразу при запуске программы. Поставим флажок
+    fun notJustLaunchedEnableAutoplay() {
+        _isNotJustLaunchedLiveData.postValue(true)
     }
 }
