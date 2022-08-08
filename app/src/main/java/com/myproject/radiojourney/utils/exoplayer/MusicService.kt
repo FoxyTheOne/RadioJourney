@@ -7,12 +7,14 @@ import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
+import android.util.Log
 import androidx.media.MediaBrowserServiceCompat
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import com.google.android.exoplayer2.upstream.HttpDataSource
 import com.myproject.radiojourney.data.sharedPreference.IAppSharedPreference
 import com.myproject.radiojourney.other.Constants.MEDIA_ROOT_ID
 import com.myproject.radiojourney.other.Constants.NETWORK_ERROR
@@ -22,6 +24,8 @@ import com.myproject.radiojourney.utils.exoplayer.callback.MusicPlayerNotificati
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import java.io.IOException
+import java.net.SocketTimeoutException
+import java.util.concurrent.TimeoutException
 import javax.inject.Inject
 
 /**
@@ -68,6 +72,8 @@ class MusicService : MediaBrowserServiceCompat() {
     private lateinit var musicPlayerEventListener: MusicPlayerEventListener
 
     companion object {
+        private const val TAG = "MusicService"
+
         var curSongDuration = 0L
             private set // <- !!! means that we can set it only here, but we can read it elsewhere
     }
@@ -207,19 +213,51 @@ class MusicService : MediaBrowserServiceCompat() {
             }
         }
 
-        val curSongIndex =
-            if (curPlayingSong == null) lastItemIndex else radioStations.indexOf(itemToPlay) // если песня не выбрана - просто играем первую. Либо ищем конкретную по индексу
-        exoPlayer.prepare(firebaseMusicSource.asMediaSource(dataSourceFactory)) // Вызываем метод из firebaseMusicSource, чтобы сформировать данные для плейлист
-        exoPlayer.seekTo(
-            curSongIndex,
-            0L
-        ) // start curSongIndex song, that we choose. 0L = from the beginning
-        exoPlayer.playWhenReady =
-            playNow // play song, when it will be ready (it will be false, and after - true, when ready)
+        // E/ExoPlayerImplInternal: Source error
+        //      com.google.android.exoplayer2.upstream.HttpDataSource$HttpDataSourceException: Unable to connect
+        // TODO Ищем, где ловить эту ошибку
+        try {
+
+            val curSongIndex =
+                if (curPlayingSong == null) lastItemIndex else radioStations.indexOf(itemToPlay) // если песня не выбрана - просто играем первую. Либо ищем конкретную по индексу
+            exoPlayer.prepare(firebaseMusicSource.asMediaSource(dataSourceFactory)) // Вызываем метод из firebaseMusicSource, чтобы сформировать данные для плейлист
+            exoPlayer.seekTo(
+                curSongIndex,
+                0L
+            ) // start curSongIndex song, that we choose. 0L = from the beginning
+            exoPlayer.playWhenReady =
+                playNow // play song, when it will be ready (it will be false, and after - true, when ready)
+
+        } catch (e: HttpDataSource.HttpDataSourceException) {
+            Log.d(
+                TAG,
+                " !!!!!!!!! 0 - Ищу E/ExoPlayerImplInternal: Source error com.google.android.exoplayer2.upstream.HttpDataSource HttpDataSourceException: Unable to connect"
+            )
+            e.printStackTrace()
+        } catch (e3: SocketTimeoutException) {
+            Log.d(
+                TAG,
+                " !!!!!!!!! 3 - Ищу E/ExoPlayerImplInternal: Source error com.google.android.exoplayer2.upstream.HttpDataSource HttpDataSourceException: Unable to connect"
+            )
+            e3.printStackTrace()
+        } catch (e1: InternalError) {
+            Log.d(
+                TAG,
+                " !!!!!!!!! 1 - Ищу E/ExoPlayerImplInternal: Source error com.google.android.exoplayer2.upstream.HttpDataSource HttpDataSourceException: Unable to connect"
+            )
+            e1.printStackTrace()
+        } catch (e2: IOException) {
+            Log.d(
+                TAG,
+                " !!!!!!!!! 2 - Ищу E/ExoPlayerImplInternal: Source error com.google.android.exoplayer2.upstream.HttpDataSource HttpDataSourceException: Unable to connect"
+            )
+            e2.printStackTrace()
+        }
+
     }
 
     // media root id - is the id to the very first media item (what should be shown first)
-    // here we also can deny clients connect to a specific id
+// here we also can deny clients connect to a specific id
     override fun onGetRoot(
         clientPackageName: String,
         clientUid: Int,
@@ -229,9 +267,9 @@ class MusicService : MediaBrowserServiceCompat() {
     }
 
     // You can think of this music app as about some file manager - you can navigate through folders and you also have some files there.
-    // In our example files - are songs. Folders are albums, playlists and so on. (MediaBrowserCompat.MediaItem can be as playable song, so a browsable album)
-    // Open playlists on click, open related albums on album click and so on. This must be described here
-    // P.S. Each of our playlists has it's own id. Client's can subscribe on those ids (play the items on just specific playlists). In this method we can check this
+// In our example files - are songs. Folders are albums, playlists and so on. (MediaBrowserCompat.MediaItem can be as playable song, so a browsable album)
+// Open playlists on click, open related albums on album click and so on. This must be described here
+// P.S. Each of our playlists has it's own id. Client's can subscribe on those ids (play the items on just specific playlists). In this method we can check this
     override fun onLoadChildren(
         parentId: String,
         result: Result<MutableList<MediaBrowserCompat.MediaItem>>

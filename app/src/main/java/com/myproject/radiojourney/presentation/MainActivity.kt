@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.media.MediaMetadataCompat.*
 import android.support.v4.media.session.PlaybackStateCompat
+import android.util.Log
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.widget.Toolbar
@@ -24,6 +25,7 @@ import com.myproject.radiojourney.utils.extension.isPlaying
 import com.myproject.radiojourney.utils.musicPlayer.ForegroundNotificationService
 import com.myproject.radiojourney.utils.service.ProgressForegroundService
 import dagger.hilt.android.AndroidEntryPoint
+import java.io.IOException
 import java.util.*
 
 /**
@@ -73,6 +75,10 @@ import java.util.*
  */
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), IAppSettings {
+    companion object {
+        private const val TAG = "MainActivity"
+    }
+
     // VIEW BINDING -> 1. Объявляем переменную. This property is only valid between onCreateView and onDestroyView
     private var binding: ActivityMainBinding? = null
 
@@ -378,9 +384,23 @@ class MainActivity : AppCompatActivity(), IAppSettings {
     }
 
     private fun namePosition(position: Int) {
+
         // We must check, if player is playing
         if (playbackState?.isPlaying == true) {
-            mainViewModel.playOrToggleSong(swipeRadioStationAdapter.radioStationList[position])
+
+            // Если выбрать радиостанцию US (2000 Rock ...), а после неё первое Белорусское радио в списке (альфарадио) - вылетает IndexOutOfBoundsException, т.к. сначала ищет 300+ индекс в списке из 53х
+            try {
+                val maxIndex = swipeRadioStationAdapter.radioStationList.size + 1
+                Log.d(TAG, "Checking: maxIndex = $maxIndex, position = $position")
+                if (position <= maxIndex) {
+                    Log.d(TAG, "position <= maxIndex")
+                    mainViewModel.playOrToggleSong(swipeRadioStationAdapter.radioStationList[position])
+                }
+            } catch (e: IndexOutOfBoundsException) {
+                Log.d(TAG, "fun namePosition - CACHED IndexOutOfBoundsException!")
+                e.printStackTrace()
+            }
+
         } else {
             // При включении программы и загрузке контента, попадаем сюда
 
@@ -393,11 +413,14 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             isNotJustLaunched?.let {
                 if (isNotJustLaunched) {
                     // Здесь мы точно перешли из списка в HomeRadioFragment и хотим включить радио
-                    mainViewModel.playOrToggleSong(swipeRadioStationAdapter.radioStationList[position], true)
+                    mainViewModel.playOrToggleSong(
+                        swipeRadioStationAdapter.radioStationList[position],
+                        true
+                    )
                 }
             }
-
         }
+
     }
 
     // function for hiding our bottom bar

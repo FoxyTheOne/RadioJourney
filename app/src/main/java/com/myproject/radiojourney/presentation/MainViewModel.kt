@@ -3,6 +3,7 @@ package com.myproject.radiojourney.presentation
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat.METADATA_KEY_MEDIA_ID
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -25,6 +26,10 @@ class MainViewModel @Inject constructor(
     private val musicServiceConnection: MusicServiceConnection,
     private val mainRadioInteractor: IMainRadioUseCase
 ) : ViewModel() {
+    companion object {
+        private const val TAG = "MainViewModel"
+    }
+
     // LiveData contains the media data for our activity (our radioStationPresentationList)
     private val _mediaItemsListLiveData =
         MutableLiveData<Resource<List<RadioStationPresentation>>>()
@@ -107,6 +112,7 @@ class MainViewModel @Inject constructor(
     // isPrepared, isPlaying, isPlayEnabled <- it's our extensions
     // In our case, METADATA_KEY_MEDIA_ID = radioStationRemote.url
     fun playOrToggleSong(mediaItem: RadioStationPresentation, toggle: Boolean = false) {
+
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val isPrepared = playbackStateLiveData.value?.isPrepared
@@ -116,6 +122,7 @@ class MainViewModel @Inject constructor(
                 if (isPrepared && mediaItem.url ==
                     curPlayingSongLiveData.value?.getString(METADATA_KEY_MEDIA_ID)
                 ) { // curPlayingSong.value?.getString(METADATA_KEY_MEDIA_ID) <- it's how we get metadata of currently playing song
+
                     playbackStateLiveData.value?.let { playbackState ->
                         when {
                             playbackState.isPlaying -> if (toggle) musicServiceConnection.transportControls.pause()
@@ -127,7 +134,10 @@ class MainViewModel @Inject constructor(
 
                     // if we want to play another song
                 } else {
-                    musicServiceConnection.transportControls.playFromMediaId(mediaItem.url, null)
+                    musicServiceConnection.transportControls.playFromMediaId(
+                        mediaItem.url,
+                        null
+                    )
                     saveLastUsedRadioStationUrlAndCode(mediaItem.url, mediaItem.countryCode)
                 }
             } catch (e2: IOException) {
@@ -135,6 +145,7 @@ class MainViewModel @Inject constructor(
                 _failedLiveData.call() // TODO use Resource class and its message
             }
         }
+
     }
 
 //    fun mediaMetadataCompatToRadioStationPresentation(curPlayingRadioStation: MediaMetadataCompat?): RadioStationPresentation? {

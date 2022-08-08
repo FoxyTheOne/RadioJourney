@@ -2,11 +2,13 @@ package com.myproject.radiojourney.data.dataSource.network
 
 import com.myproject.radiojourney.entities.remote.CountryCodeRemote
 import android.util.Log
+import com.google.android.exoplayer2.upstream.HttpDataSource
 import com.myproject.radiojourney.data.dataSource.network.service.IRadioServiceWrapper
 import com.myproject.radiojourney.entities.remote.RadioStationRemote
 import retrofit2.HttpException
 import java.io.IOException
 import java.net.InetAddress
+import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import java.util.*
 import javax.inject.Inject
@@ -91,10 +93,21 @@ class NetworkRadioDataSource @Inject constructor(
             val baseURL = "https://${resultDNSIterator.next()}"
             Log.d(TAG, "результат baseURL = $baseURL")
 
-            // radioServiceWrapper - обёртка. Инициализируем retrofit и получаем сервис:
-            val radioService = radioServiceWrapper.getRadioService(baseURL)
-            // И затем делаем запрос getCountryCodeList():
-            radioStationRemoteList = radioService.getRadioStationList(searchTerm = countryCode)
+
+            try {
+                // radioServiceWrapper - обёртка. Инициализируем retrofit и получаем сервис:
+                val radioService = radioServiceWrapper.getRadioService(baseURL)
+                // И затем делаем запрос getCountryCodeList():
+                radioStationRemoteList = radioService.getRadioStationList(searchTerm = countryCode)
+            } catch (e:SocketTimeoutException) {
+                // TODO Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out
+                Log.d(TAG, "e - Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out")
+                e.printStackTrace()
+            } catch (e1: HttpDataSource.HttpDataSourceException) {
+                Log.d(TAG, "e1 - Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out")
+                e1.printStackTrace()
+            }
+
 
             if (radioStationRemoteList != emptyList<String>()) {
 
