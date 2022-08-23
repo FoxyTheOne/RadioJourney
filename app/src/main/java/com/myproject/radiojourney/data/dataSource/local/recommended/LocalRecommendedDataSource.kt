@@ -9,7 +9,7 @@ import javax.inject.Inject
  */
 class LocalRecommendedDataSource @Inject constructor(
     private val radioStationDAO: IRadioStationDAO
-): ILocalRecommendedDataSource {
+) : ILocalRecommendedDataSource {
     override suspend fun getRecommendedRadioStationList(): List<RadioStationLocal> =
         radioStationDAO.getRecommendedRadioStationList(true)
 }

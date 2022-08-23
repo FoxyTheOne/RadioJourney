@@ -2,7 +2,6 @@ package com.myproject.radiojourney.di
 
 import android.content.Context
 import androidx.room.Room
-import com.myproject.radiojourney.IAppSettings
 import com.myproject.radiojourney.data.dataSource.local.auth.ILocalUserDataSource
 import com.myproject.radiojourney.data.dataSource.local.auth.LocalUserDataSource
 import com.myproject.radiojourney.data.dataSource.local.favorite.ILocalFavoriteDataSource
@@ -36,18 +35,16 @@ import com.myproject.radiojourney.domain.logOutUseCase.ILogOutUseCase
 import com.myproject.radiojourney.domain.logOutUseCase.LogOutUseCase
 import com.myproject.radiojourney.domain.mainRadioUseCase.IMainRadioUseCase
 import com.myproject.radiojourney.domain.mainRadioUseCase.MainRadioUseCase
-import com.myproject.radiojourney.domain.radioList.IRadioListUseCase
-import com.myproject.radiojourney.domain.radioList.RadioListUseCase
-import com.myproject.radiojourney.domain.recommendedList.IRecommendedListUseCase
-import com.myproject.radiojourney.domain.recommendedList.RecommendedListUseCase
+import com.myproject.radiojourney.domain.radioListUseCase.IRadioListUseCase
+import com.myproject.radiojourney.domain.radioListUseCase.RadioListUseCase
+import com.myproject.radiojourney.domain.recommendedListUseCase.IRecommendedListUseCase
+import com.myproject.radiojourney.domain.recommendedListUseCase.RecommendedListUseCase
 import com.myproject.radiojourney.utils.exoplayer.MusicServiceConnection
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ActivityComponent
 import dagger.hilt.android.components.ViewModelComponent
-import dagger.hilt.android.qualifiers.ActivityContext
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
@@ -84,7 +81,8 @@ abstract class SingletonModule {
         @Singleton
         fun providesMusicServiceConnection(
             @ApplicationContext context: Context
-        ) = MusicServiceConnection(context) // Создаём экземпляр нашего класса MusicServiceConnection, для создания которого нужен context
+        ) =
+            MusicServiceConnection(context) // Создаём экземпляр нашего класса MusicServiceConnection, для создания которого нужен context
     }
 
     @Binds
@@ -218,17 +216,5 @@ abstract class ViewModelModule {
 //    abstract fun bindRadioServiceWrapper(
 //        radioServiceWrapper: RadioServiceWrapper
 //    ): IRadioServiceWrapper
-
-}
-
-@Module
-@InstallIn(ActivityComponent::class)
-class ActivityModule {
-
-    // Приравняем наш context к IAppSettings. Мы можем так сделать, т.к. наш activity расширяет IAppSettings
-    @Provides
-    fun providesAppSettings(@ActivityContext context: Context): IAppSettings {
-        return (context as IAppSettings)
-    }
 
 }

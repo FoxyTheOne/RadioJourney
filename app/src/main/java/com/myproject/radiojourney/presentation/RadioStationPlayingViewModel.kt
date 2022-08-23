@@ -32,10 +32,10 @@ class RadioStationPlayingViewModel @Inject constructor(
     private fun updateCurrentPlayerPosition() {
         viewModelScope.launch {
             // the coroutine will be cleared when view model is cleared, so we can use such circle
-            while(true) {
+            while (true) {
                 // there is no function for getting value from exoplayer of player current position. So, we must calculate it on our oun (we'll write an extension)
                 val pos = playbackState.value?.currentPlaybackPosition
-                if(curPlayerPosition.value != pos) {
+                if (curPlayerPosition.value != pos) {
                     _curPlayerPosition.postValue(pos ?: continue)
                     _curSongDuration.postValue(MusicService.curSongDuration)
                 }

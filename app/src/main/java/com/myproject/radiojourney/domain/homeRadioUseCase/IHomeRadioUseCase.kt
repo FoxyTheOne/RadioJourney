@@ -13,6 +13,7 @@ interface IHomeRadioUseCase {
 
     // Поменять в Shared Preference setIsRadioStationStored на true. Сохранить в Shared Preference (url)
     suspend fun saveRadioStationUrl(isStored: Boolean, url: String)
+
     // И сохранить радиостанцию в Room
     suspend fun saveRadioStationInRoom(radioStation: RadioStationPresentation)
 

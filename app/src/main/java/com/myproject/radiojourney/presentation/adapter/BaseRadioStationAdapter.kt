@@ -18,12 +18,18 @@ abstract class BaseRadioStationAdapter(
     // 1. DiffUtil
     protected val diffCallback = object : DiffUtil.ItemCallback<RadioStationPresentation>() {
         // if Songs have the same media id
-        override fun areItemsTheSame(oldItem: RadioStationPresentation, newItem: RadioStationPresentation): Boolean {
+        override fun areItemsTheSame(
+            oldItem: RadioStationPresentation,
+            newItem: RadioStationPresentation
+        ): Boolean {
             return oldItem.url == newItem.url // In our case mediaId = url
         }
 
         // if songs are really the same - the image, the title and so on
-        override fun areContentsTheSame(oldItem: RadioStationPresentation, newItem: RadioStationPresentation): Boolean {
+        override fun areContentsTheSame(
+            oldItem: RadioStationPresentation,
+            newItem: RadioStationPresentation
+        ): Boolean {
             return oldItem.hashCode() == newItem.hashCode()
         }
     }

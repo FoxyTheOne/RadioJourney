@@ -1,4 +1,4 @@
-package com.myproject.radiojourney.domain.recommendedList
+package com.myproject.radiojourney.domain.recommendedListUseCase
 
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 

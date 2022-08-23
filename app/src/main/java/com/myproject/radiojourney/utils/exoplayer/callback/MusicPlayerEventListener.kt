@@ -12,7 +12,7 @@ class MusicPlayerEventListener(
     override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
         super.onPlayerStateChanged(playWhenReady, playbackState)
         // if everything is ready and prepared AND we shouldn't play it automatically
-        if(playbackState == Player.STATE_READY && !playWhenReady) {
+        if (playbackState == Player.STATE_READY && !playWhenReady) {
             musicService.stopForeground(false) // than we stop foreground but notification must stay
         }
     }

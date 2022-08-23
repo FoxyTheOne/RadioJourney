@@ -32,10 +32,11 @@
         android:theme="@style/Theme.RadioJourney"
         android:usesCleartextTraffic="true"
         tools:targetApi="m"> <!-- Added android:usesCleartextTraffic="true" because of HttpDataSource$HttpDataSourceException: Unable to connect -->
-        <service android:name=".utils.exoplayer.MusicService"
+        <service
+            android:name=".utils.exoplayer.MusicService"
             android:exported="false">
             <intent-filter>
-                <action android:name="android.media.browse.MediaBrowserService"/>
+                <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>
         </service>
         <activity
@@ -58,6 +59,7 @@
          И другие компоненты
           -->
         <receiver android:name=".utils.musicPlayer.NotificationActionBroadcast" />
+
         <service android:name=".utils.musicPlayer.MusicPlayerBoundService" />
         <service android:name=".utils.musicPlayer.ForegroundNotificationService" />
         <!--

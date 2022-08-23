@@ -1,8 +1,6 @@
 package com.myproject.radiojourney.entities.remote
 
-import android.util.Log
 import com.google.gson.annotations.SerializedName
-import com.myproject.radiojourney.data.dataSource.network.NetworkRadioDataSource
 
 /*
 Copyright (c) 2022 Kotlin Data Classes Generated from JSON powered by http://www.json2kotlin.com

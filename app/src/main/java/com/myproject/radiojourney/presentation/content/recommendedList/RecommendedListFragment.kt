@@ -7,7 +7,6 @@ import android.view.*
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
@@ -15,7 +14,6 @@ import com.myproject.radiojourney.IAppSettings
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.LayoutRadioStationListRecommendedBinding
 import com.myproject.radiojourney.presentation.content.base.BaseContentFragmentAbstract
-import com.myproject.radiojourney.presentation.content.favouriteList.FavouriteListFragment
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 

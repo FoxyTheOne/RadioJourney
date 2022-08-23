@@ -11,8 +11,6 @@ import com.google.android.exoplayer2.source.ConcatenatingMediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.myproject.radiojourney.data.dataSource.network.INetworkRadioDataSource
-import com.myproject.radiojourney.entities.local.RadioStationLocal
-import com.myproject.radiojourney.entities.remote.RadioStationRemote
 import com.myproject.radiojourney.utils.exoplayer.State.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -33,7 +31,7 @@ class FirebaseMusicSource @Inject constructor(
     // Параметр state с setter для того, чтобы можно было привязать к этому параметру определенную логику
     private var state: State = STATE_CREATED // State on default
         set(value) {
-            if(value == STATE_INITIALIZED || value == STATE_ERROR) {
+            if (value == STATE_INITIALIZED || value == STATE_ERROR) {
                 synchronized(onReadyListeners) { // synchronized for save change
                     field = value // sign a new value to the field
                     onReadyListeners.forEach { listener ->
@@ -47,7 +45,7 @@ class FirebaseMusicSource @Inject constructor(
 
     // A function which will add actions to our list of actions (returns boolean - if it is ready or not)
     fun whenReady(action: (Boolean) -> Unit): Boolean {
-        return if(state == STATE_CREATED || state == STATE_INITIALIZING) {
+        return if (state == STATE_CREATED || state == STATE_INITIALIZING) {
             onReadyListeners += action // We are not ready, so just add action to list (we will do it later, when we will be ready)
             false // not ready
         } else {
@@ -64,13 +62,22 @@ class FirebaseMusicSource @Inject constructor(
 
         radioStations = countryCodeRadioStations.map { radioStationRemote ->
             MediaMetadataCompat.Builder()
-                .putString(METADATA_KEY_MEDIA_ID, radioStationRemote.url) // media Id / url (Primary key)
+                .putString(
+                    METADATA_KEY_MEDIA_ID,
+                    radioStationRemote.url
+                ) // media Id / url (Primary key)
                 .putString(METADATA_KEY_MEDIA_URI, radioStationRemote.url_resolved) // url_resolved
                 .putString(METADATA_KEY_TITLE, radioStationRemote.name) // station name
                 .putString(METADATA_KEY_DISPLAY_TITLE, radioStationRemote.name) // station name
-                .putLong(METADATA_KEY_DOWNLOAD_STATUS, radioStationRemote.clickcount.toLong()) // click count
+                .putLong(
+                    METADATA_KEY_DOWNLOAD_STATUS,
+                    radioStationRemote.clickcount.toLong()
+                ) // click count
                 .putString(METADATA_KEY_ARTIST, radioStationRemote.country) // country
-                .putString(METADATA_KEY_DISPLAY_SUBTITLE, radioStationRemote.countrycode) // country code
+                .putString(
+                    METADATA_KEY_DISPLAY_SUBTITLE,
+                    radioStationRemote.countrycode
+                ) // country code
                 .build()
         }
         state = STATE_INITIALIZED
@@ -92,7 +99,8 @@ class FirebaseMusicSource @Inject constructor(
             .setExtras(extrasRadioStationInfo) // <- click count, country in extras
             .build()
         MediaBrowserCompat.MediaItem(desc, FLAG_PLAYABLE)
-    }.toMutableList() // Flag FLAG_PLAYABLE indicates that the item is playable, not the item that has children of its own.
+    }
+        .toMutableList() // Flag FLAG_PLAYABLE indicates that the item is playable, not the item that has children of its own.
 
     // Для формирования плейлиста из нескольких песен/радиостанций. Info for exoplayer to stream songs
     // TODO составлять список в плейлист из одной, выбранной страныю После того, как переделаем список с сервера в MAP

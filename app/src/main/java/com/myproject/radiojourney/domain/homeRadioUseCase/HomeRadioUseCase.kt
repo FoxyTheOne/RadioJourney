@@ -37,7 +37,8 @@ class HomeRadioUseCase @Inject constructor(
     override suspend fun isRadioStationStored(): Boolean =
         mainRadioStationRepository.isRadioStationStored()
 
-    override suspend fun getRadioStationUrl(): String? = mainRadioStationRepository.getRadioStationUrl()
+    override suspend fun getRadioStationUrl(): String? =
+        mainRadioStationRepository.getRadioStationUrl()
 
     override suspend fun getRadioStationSaved(radioStationUrl: String): RadioStationPresentation? {
         val radioStationLocalSaved: RadioStationLocal? =
@@ -89,7 +90,8 @@ class HomeRadioUseCase @Inject constructor(
                 mainRadioStationRepository.saveRadioStationInRoom(radioStation)
             } else {
                 // Если нет, скачиваем список радиостанций по нужной стране и в списке ищем нужную радиостанцию
-                val countryRadioStationsList = mainRadioStationRepository.getRadioStationList(it.value)
+                val countryRadioStationsList =
+                    mainRadioStationRepository.getRadioStationList(it.value)
                 countryRadioStationsList.forEach { radioStationLocal ->
                     if (radioStationLocal.url == it.key) {
                         radioStationLocal.isStationInRecommended = true

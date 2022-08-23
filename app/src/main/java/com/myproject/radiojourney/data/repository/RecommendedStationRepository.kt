@@ -14,7 +14,7 @@ import javax.inject.Inject
  */
 class RecommendedStationRepository @Inject constructor(
     private val localRecommendedDataSource: ILocalRecommendedDataSource,
-): IRecommendedStationRepository {
+) : IRecommendedStationRepository {
     override suspend fun getRecommendedRadioStationList(): List<RadioStationLocal> =
         localRecommendedDataSource.getRecommendedRadioStationList()
 }

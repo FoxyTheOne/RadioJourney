@@ -1,4 +1,4 @@
-package com.myproject.radiojourney.domain.recommendedList
+package com.myproject.radiojourney.domain.recommendedListUseCase
 
 import com.myproject.radiojourney.domain.iRepository.IMainRadioStationRepository
 import com.myproject.radiojourney.domain.iRepository.IRecommendedStationRepository

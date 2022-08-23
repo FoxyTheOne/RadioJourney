@@ -12,7 +12,6 @@ import com.myproject.radiojourney.utils.exoplayer.callback.State.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.io.IOException
-import javax.inject.Inject
 
 class MusicPlaybackPreparer(
     private val firebaseMusicSource: FirebaseMusicSource,
@@ -82,7 +81,8 @@ class MusicPlaybackPreparer(
                         extras?.get("nRecNo") // Достаём country code и далее сравниваем его. Если коды разные, скачиваем новый плейлист
 
                     // Чтобы проверить, может быть такой плейлист уже скачан и сейчас используется, обновим переменную
-                    lastCountryCode = firebaseMusicSource.radioStations[0].description.subtitle.toString()
+                    lastCountryCode =
+                        firebaseMusicSource.radioStations[0].description.subtitle.toString()
 
                     // if (lastCountryCode != null && lastCountryCode != countryCode) {
                     // Если оставлять lastCountryCode != null, сюда не заходит, если программу включили и выбрали станцию из другого плейлиста, не включая перед этим плейер ни разу

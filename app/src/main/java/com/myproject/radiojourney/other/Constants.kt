@@ -3,6 +3,7 @@ package com.myproject.radiojourney.other
 object Constants {
     // К каждой группе NOTIFICATION мы создаём свой CHANNEL_ID
     const val NOTIFICATION_MUSIC_CHANNEL_ID = "CHANNEL_ID"
+
     // Создаём необходимое количество Actions:
     const val NOTIFICATION_MUSIC_ACTION_PLAY = "CHANNEL_PLAY"
 
@@ -18,7 +19,8 @@ object Constants {
 
     const val NETWORK_ERROR = "NETWORK_ERROR"
 
-    const val UPDATE_PLAYER_POSITION_INTERVAL = 100L // we will update our seek bar 10 times a second
+    const val UPDATE_PLAYER_POSITION_INTERVAL =
+        100L // we will update our seek bar 10 times a second
 
     const val ADD_SONGS = "Add Songs"
 }

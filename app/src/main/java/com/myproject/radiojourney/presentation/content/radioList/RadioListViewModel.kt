@@ -5,7 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myproject.radiojourney.domain.logOutUseCase.ILogOutUseCase
-import com.myproject.radiojourney.domain.radioList.IRadioListUseCase
+import com.myproject.radiojourney.domain.radioListUseCase.IRadioListUseCase
 import com.myproject.radiojourney.utils.extension.call
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 import dagger.hilt.android.lifecycle.HiltViewModel
