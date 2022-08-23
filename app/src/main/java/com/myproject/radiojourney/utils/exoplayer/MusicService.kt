@@ -9,12 +9,14 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.media.MediaBrowserServiceCompat
+import com.google.android.exoplayer2.ExoPlaybackException
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.upstream.HttpDataSource
+import com.myproject.radiojourney.data.dataSource.network.NetworkRadioDataSource
 import com.myproject.radiojourney.data.sharedPreference.IAppSharedPreference
 import com.myproject.radiojourney.other.Constants.MEDIA_ROOT_ID
 import com.myproject.radiojourney.other.Constants.NETWORK_ERROR
@@ -27,6 +29,7 @@ import java.io.IOException
 import java.net.SocketTimeoutException
 import java.util.concurrent.TimeoutException
 import javax.inject.Inject
+import javax.net.ssl.SSLHandshakeException
 
 /**
  * Создадим наш Exoplayer и сервис для него.
@@ -125,26 +128,144 @@ class MusicService : MediaBrowserServiceCompat() {
             curSongDuration = exoPlayer.duration
         }
 
-        // lambda in this {} will be switched every time, when user chooses a new song
-        val musicPlaybackPreparer = MusicPlaybackPreparer(firebaseMusicSource, serviceScope) {
-            if (isPlayerInitialized && it == null) {
-                return@MusicPlaybackPreparer // Если isPlayerInitialized == true, значит это точно не первый запуск. Если isPlayerInitialized && it == null - значит сюда передан результат раньше, чем скачался плейлист (Было curPlayingSong != null && it == null, работает с нюансами)
+        try {
+            // lambda in this {} will be switched every time, when user chooses a new song
+            val musicPlaybackPreparer = MusicPlaybackPreparer(firebaseMusicSource, serviceScope) {
+                try {
+                    if (isPlayerInitialized && it == null) {
+                        return@MusicPlaybackPreparer // Если isPlayerInitialized == true, значит это точно не первый запуск. Если isPlayerInitialized && it == null - значит сюда передан результат раньше, чем скачался плейлист (Было curPlayingSong != null && it == null, работает с нюансами)
+                    }
+
+                    val test = it // it - всегда null
+
+                    curPlayingSong = it
+                    try {
+                        preparePlayer(
+                            firebaseMusicSource.radioStations,
+                            it,
+                            true
+                        )
+                    } catch (e5: SSLHandshakeException) {
+                        Log.d(
+                            TAG,
+                            "preparePlayer e5 - Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out"
+                        )
+                        e5.printStackTrace()
+                    } catch (e: SocketTimeoutException) {
+                        // TODO Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out
+                        Log.d(
+                            TAG,
+                            "preparePlayer e - Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out"
+                        )
+                        e.printStackTrace()
+                    } catch (e1: HttpDataSource.HttpDataSourceException) {
+                        Log.d(
+                            TAG,
+                            "preparePlayer e1 - Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out"
+                        )
+                        e1.printStackTrace()
+                    } catch (e3: ExoPlaybackException) {
+                        Log.d(
+                            TAG,
+                            "preparePlayer e1 - Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out"
+                        )
+                        e3.printStackTrace()
+                    } catch (e2: IOException) {
+                        Log.d(
+                            TAG,
+                            "preparePlayer e2 - Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out"
+                        )
+                        e2.printStackTrace()
+                    } catch (e4: InternalError) {
+                        Log.d(
+                            TAG,
+                            "preparePlayer e4 - Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out"
+                        )
+                        e4.printStackTrace()
+                    }
+
+                } catch (e5: SSLHandshakeException) {
+                    Log.d(
+                        TAG,
+                        "inside val musicPlaybackPreparer e5 - Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out"
+                    )
+                    e5.printStackTrace()
+                } catch (e: SocketTimeoutException) {
+                    // TODO Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out
+                    Log.d(
+                        TAG,
+                        "inside val musicPlaybackPreparer e - Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out"
+                    )
+                    e.printStackTrace()
+                } catch (e1: HttpDataSource.HttpDataSourceException) {
+                    Log.d(
+                        TAG,
+                        "inside val musicPlaybackPreparer e1 - Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out"
+                    )
+                    e1.printStackTrace()
+                } catch (e3: ExoPlaybackException) {
+                    Log.d(
+                        TAG,
+                        "inside val musicPlaybackPreparer e1 - Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out"
+                    )
+                    e3.printStackTrace()
+                } catch (e2: IOException) {
+                    Log.d(
+                        TAG,
+                        "inside val musicPlaybackPreparer e2 - Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out"
+                    )
+                    e2.printStackTrace()
+                } catch (e4: InternalError) {
+                    Log.d(
+                        TAG,
+                        "inside val musicPlaybackPreparer e4 - Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out"
+                    )
+                    e4.printStackTrace()
+                }
             }
 
-            val test = it // it - всегда null
-
-            curPlayingSong = it
-            preparePlayer(
-                firebaseMusicSource.radioStations,
-                it,
-                true
+            mediaSessionConnector = MediaSessionConnector(mediaSession)
+            mediaSessionConnector.setPlaybackPreparer(musicPlaybackPreparer) // 11.
+            mediaSessionConnector.setQueueNavigator(MusicQueueNavigator()) // 14.2
+            mediaSessionConnector.setPlayer(exoPlayer)
+        } catch (e5: SSLHandshakeException) {
+            Log.d(
+                TAG,
+                "val musicPlaybackPreparer e5 - Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out"
             )
+            e5.printStackTrace()
+        } catch (e: SocketTimeoutException) {
+            // TODO Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out
+            Log.d(
+                TAG,
+                "val musicPlaybackPreparer e - Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out"
+            )
+            e.printStackTrace()
+        } catch (e1: HttpDataSource.HttpDataSourceException) {
+            Log.d(
+                TAG,
+                "val musicPlaybackPreparer e1 - Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out"
+            )
+            e1.printStackTrace()
+        } catch (e3: ExoPlaybackException) {
+            Log.d(
+                TAG,
+                "val musicPlaybackPreparer e1 - Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out"
+            )
+            e3.printStackTrace()
+        } catch (e2: IOException) {
+            Log.d(
+                TAG,
+                "val musicPlaybackPreparer e2 - Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out"
+            )
+            e2.printStackTrace()
+        } catch (e4: InternalError) {
+            Log.d(
+                TAG,
+                "val musicPlaybackPreparer e4 - Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out"
+            )
+            e4.printStackTrace()
         }
-
-        mediaSessionConnector = MediaSessionConnector(mediaSession)
-        mediaSessionConnector.setPlaybackPreparer(musicPlaybackPreparer) // 11.
-        mediaSessionConnector.setQueueNavigator(MusicQueueNavigator()) // 14.2
-        mediaSessionConnector.setPlayer(exoPlayer)
 
         musicPlayerEventListener = MusicPlayerEventListener(this)
         exoPlayer.addListener(musicPlayerEventListener)
@@ -213,9 +334,7 @@ class MusicService : MediaBrowserServiceCompat() {
             }
         }
 
-        // E/ExoPlayerImplInternal: Source error
-        //      com.google.android.exoplayer2.upstream.HttpDataSource$HttpDataSourceException: Unable to connect
-        // TODO Ищем, где ловить эту ошибку
+        // TODO Ищем, где ловить эту ошибку: E/ExoPlayerImplInternal: Source error,  HttpDataSource$HttpDataSourceException: Unable to connect
         try {
 
             val curSongIndex =
@@ -228,6 +347,12 @@ class MusicService : MediaBrowserServiceCompat() {
             exoPlayer.playWhenReady =
                 playNow // play song, when it will be ready (it will be false, and after - true, when ready)
 
+        } catch (e5: SSLHandshakeException) {
+            Log.d(
+                TAG,
+                " !!!!!!!!! 5 - Ищу E/ExoPlayerImplInternal: Source error com.google.android.exoplayer2.upstream.HttpDataSource HttpDataSourceException: Unable to connect"
+            )
+            e5.printStackTrace()
         } catch (e: HttpDataSource.HttpDataSourceException) {
             Log.d(
                 TAG,
@@ -246,6 +371,12 @@ class MusicService : MediaBrowserServiceCompat() {
                 " !!!!!!!!! 1 - Ищу E/ExoPlayerImplInternal: Source error com.google.android.exoplayer2.upstream.HttpDataSource HttpDataSourceException: Unable to connect"
             )
             e1.printStackTrace()
+        } catch (e4: ExoPlaybackException) {
+            Log.d(
+                TAG,
+                "!!!!!!!!! 4 - Ищу E/ExoPlayerImplInternal: Source error com.google.android.exoplayer2.upstream.HttpDataSource HttpDataSourceException: Unable to connect"
+            )
+            e4.printStackTrace()
         } catch (e2: IOException) {
             Log.d(
                 TAG,

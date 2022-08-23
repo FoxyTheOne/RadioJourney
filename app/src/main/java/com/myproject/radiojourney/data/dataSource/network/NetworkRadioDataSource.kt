@@ -2,9 +2,11 @@ package com.myproject.radiojourney.data.dataSource.network
 
 import com.myproject.radiojourney.entities.remote.CountryCodeRemote
 import android.util.Log
+import com.google.android.exoplayer2.ExoPlaybackException
 import com.google.android.exoplayer2.upstream.HttpDataSource
 import com.myproject.radiojourney.data.dataSource.network.service.IRadioServiceWrapper
 import com.myproject.radiojourney.entities.remote.RadioStationRemote
+import com.myproject.radiojourney.utils.exoplayer.MusicService
 import retrofit2.HttpException
 import java.io.IOException
 import java.net.InetAddress
@@ -12,6 +14,7 @@ import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import java.util.*
 import javax.inject.Inject
+import javax.net.ssl.SSLHandshakeException
 
 class NetworkRadioDataSource @Inject constructor(
     private val radioServiceWrapper: IRadioServiceWrapper
@@ -99,6 +102,9 @@ class NetworkRadioDataSource @Inject constructor(
                 val radioService = radioServiceWrapper.getRadioService(baseURL)
                 // И затем делаем запрос getCountryCodeList():
                 radioStationRemoteList = radioService.getRadioStationList(searchTerm = countryCode)
+            } catch (e5: SSLHandshakeException) {
+                Log.d(TAG, "e5 - Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out")
+                e5.printStackTrace()
             } catch (e:SocketTimeoutException) {
                 // TODO Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out
                 Log.d(TAG, "e - Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out")
@@ -106,29 +112,38 @@ class NetworkRadioDataSource @Inject constructor(
             } catch (e1: HttpDataSource.HttpDataSourceException) {
                 Log.d(TAG, "e1 - Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out")
                 e1.printStackTrace()
+            } catch (e3: ExoPlaybackException) {
+                Log.d(TAG,"e3 - Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out")
+                e3.printStackTrace()
+            } catch (e2: IOException) {
+                Log.d(TAG, "e2 - Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out")
+                e2.printStackTrace()
+            } catch (e4: InternalError) {
+                Log.d(TAG,"e4 - Ищем HttpDataSource HttpDataSourceException: Unable to connect, Caused by: java.net.SocketTimeoutException: SSL handshake timed out")
+                e4.printStackTrace()
             }
 
 
             if (radioStationRemoteList != emptyList<String>()) {
 
-                // Исправим http на https
-                radioStationRemoteList.forEach {
-                    val urlResolved = it.url_resolved
-//                    Log.d(TAG, "url_resolved станции: $urlResolved")
-
-                    val indexOfHttp = urlResolved.indexOf("http:")
-//                    Log.d(TAG, "Индекс искомого сочетания http: $indexOfHttp")
-
-                    if (indexOfHttp != -1) {
-                        Log.d(TAG, "Индекс не -1, заменяем http: на https:")
-
-                        val newUrlResolved = urlResolved.replace("http:","https:")
-                        it.url_resolved = newUrlResolved
-//                        println(it)
-
-                        Log.d(TAG, "Новый url_resolved станции: $newUrlResolved, записался как: ${it.url_resolved}")
-                    }
-                }
+//                // Исправим http на https
+//                radioStationRemoteList.forEach {
+//                    val urlResolved = it.url_resolved
+////                    Log.d(TAG, "url_resolved станции: $urlResolved")
+//
+//                    val indexOfHttp = urlResolved.indexOf("http:")
+////                    Log.d(TAG, "Индекс искомого сочетания http: $indexOfHttp")
+//
+//                    if (indexOfHttp != -1) {
+//                        Log.d(TAG, "Индекс не -1, заменяем http: на https:")
+//
+//                        val newUrlResolved = urlResolved.replace("http:","https:")
+//                        it.url_resolved = newUrlResolved
+////                        println(it)
+//
+//                        Log.d(TAG, "Новый url_resolved станции: $newUrlResolved, записался как: ${it.url_resolved}")
+//                    }
+//                }
 
                 Log.d(
                     TAG,
