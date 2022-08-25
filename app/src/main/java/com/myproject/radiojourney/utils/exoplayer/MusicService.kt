@@ -211,56 +211,15 @@ class MusicService : MediaBrowserServiceCompat() {
             }
         }
 
-        // TODO Ищем, где ловить эту ошибку: E/ExoPlayerImplInternal: Source error,  HttpDataSource$HttpDataSourceException: Unable to connect
-        try {
-
-            val curSongIndex =
-                if (curPlayingSong == null) lastItemIndex else radioStations.indexOf(itemToPlay) // если песня не выбрана - просто играем первую. Либо ищем конкретную по индексу
-            exoPlayer.prepare(firebaseMusicSource.asMediaSource(dataSourceFactory)) // Вызываем метод из firebaseMusicSource, чтобы сформировать данные для плейлист
-            exoPlayer.seekTo(
-                curSongIndex,
-                0L
-            ) // start curSongIndex song, that we choose. 0L = from the beginning
-            exoPlayer.playWhenReady =
-                playNow // play song, when it will be ready (it will be false, and after - true, when ready)
-
-        } catch (e5: SSLHandshakeException) {
-            Log.d(
-                TAG,
-                " !!!!!!!!! 5 - Ищу E/ExoPlayerImplInternal: Source error com.google.android.exoplayer2.upstream.HttpDataSource HttpDataSourceException: Unable to connect"
-            )
-            e5.printStackTrace()
-        } catch (e: HttpDataSource.HttpDataSourceException) {
-            Log.d(
-                TAG,
-                " !!!!!!!!! 0 - Ищу E/ExoPlayerImplInternal: Source error com.google.android.exoplayer2.upstream.HttpDataSource HttpDataSourceException: Unable to connect"
-            )
-            e.printStackTrace()
-        } catch (e3: SocketTimeoutException) {
-            Log.d(
-                TAG,
-                " !!!!!!!!! 3 - Ищу E/ExoPlayerImplInternal: Source error com.google.android.exoplayer2.upstream.HttpDataSource HttpDataSourceException: Unable to connect"
-            )
-            e3.printStackTrace()
-        } catch (e1: InternalError) {
-            Log.d(
-                TAG,
-                " !!!!!!!!! 1 - Ищу E/ExoPlayerImplInternal: Source error com.google.android.exoplayer2.upstream.HttpDataSource HttpDataSourceException: Unable to connect"
-            )
-            e1.printStackTrace()
-        } catch (e4: ExoPlaybackException) {
-            Log.d(
-                TAG,
-                "!!!!!!!!! 4 - Ищу E/ExoPlayerImplInternal: Source error com.google.android.exoplayer2.upstream.HttpDataSource HttpDataSourceException: Unable to connect"
-            )
-            e4.printStackTrace()
-        } catch (e2: IOException) {
-            Log.d(
-                TAG,
-                " !!!!!!!!! 2 - Ищу E/ExoPlayerImplInternal: Source error com.google.android.exoplayer2.upstream.HttpDataSource HttpDataSourceException: Unable to connect"
-            )
-            e2.printStackTrace()
-        }
+        val curSongIndex =
+            if (curPlayingSong == null) lastItemIndex else radioStations.indexOf(itemToPlay) // если песня не выбрана - просто играем первую. Либо ищем конкретную по индексу
+        exoPlayer.prepare(firebaseMusicSource.asMediaSource(dataSourceFactory)) // Вызываем метод из firebaseMusicSource, чтобы сформировать данные для плейлист
+        exoPlayer.seekTo(
+            curSongIndex,
+            0L
+        ) // start curSongIndex song, that we choose. 0L = from the beginning
+        exoPlayer.playWhenReady =
+            playNow // play song, when it will be ready (it will be false, and after - true, when ready)
 
     }
 

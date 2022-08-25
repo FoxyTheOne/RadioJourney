@@ -223,6 +223,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
                     // TODO здесь мы получаем выбранную станцию из списка радиостанций по клику. Необходимо передать её в наш новый плейер
                     mainViewModel.saveNewMediaId(radioStationFavourite.url)
                     mainViewModel.fetchSongs(radioStationFavourite.countryCode)
+                    mainViewModel.fetchSongs(radioStationFavourite.countryCode)
                     mainViewModel.playOrToggleSong(radioStationFavourite, false)
                     mainViewModel.notJustLaunchedEnableAutoplay()
                 }
@@ -584,6 +585,11 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
                         this.findNavController().navigate(direction)
                     }
 //                    this.findNavController().navigate(direction) - при переходе на Канаду - ошибка. Помогла проверка (см. выше)
+
+                    if (country.countryCode != mainViewModel.curPlayingSongLiveData.value?.description?.subtitle){
+                        mainViewModel.fetchSongs(country.countryCode)
+                    }
+
                     Toast.makeText(
                         context,
                         "Asking server for the radio station list...",

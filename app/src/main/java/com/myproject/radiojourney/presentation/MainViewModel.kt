@@ -3,6 +3,7 @@ package com.myproject.radiojourney.presentation
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat.METADATA_KEY_MEDIA_ID
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -111,16 +112,20 @@ class MainViewModel @Inject constructor(
     // isPrepared, isPlaying, isPlayEnabled <- it's our extensions
     // In our case, METADATA_KEY_MEDIA_ID = radioStationRemote.url
     fun playOrToggleSong(mediaItem: RadioStationPresentation, toggle: Boolean = false) {
+        Log.d(TAG, "onPageSelected 7) playOrToggleSong() called, radioStation = ${mediaItem.stationName}")
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val isPrepared = playbackStateLiveData.value?.isPrepared
                     ?: false // Checking by our Extensions from playbackState. If it is not prepared - false
+                Log.d(TAG, "onPageSelected 8) isPrepared = true: $isPrepared")
 
                 // if we want to play the same song (pause and play it again)
                 if (isPrepared && mediaItem.url ==
                     curPlayingSongLiveData.value?.getString(METADATA_KEY_MEDIA_ID)
                 ) { // curPlayingSong.value?.getString(METADATA_KEY_MEDIA_ID) <- it's how we get metadata of currently playing song
+
+                    Log.d(TAG, "onPageSelected 9) Включаем/выключаем ту же самую песню ${mediaItem.stationName}")
 
                     playbackStateLiveData.value?.let { playbackState ->
                         when {
@@ -133,6 +138,8 @@ class MainViewModel @Inject constructor(
 
                     // if we want to play another song
                 } else {
+                    Log.d(TAG, "onPageSelected 9) Включаем другую песню ${mediaItem.stationName}")
+
                     musicServiceConnection.transportControls.playFromMediaId(
                         mediaItem.url,
                         null
@@ -210,9 +217,19 @@ class MainViewModel @Inject constructor(
                     // looking for the index of that song
                     val newItemIndex = radioStationList.indexOf(radioStationNeedToFind)
                     // That function will return -1 if the song doesn't exist, so we must check:
-                    if (newItemIndex != -1) newPosition = newItemIndex
+                    if (newItemIndex != -1) {
+                        if (newItemIndex >= radioStationList.size) {
+                            Log.d(TAG, "onPageSelected 2) checkThePosition -> radioStationList.indexOf(radioStationNeedToFind) >= radioStationList.size, found: $newItemIndex")
+                        } else {
+                            Log.d(TAG, "onPageSelected 2) checkThePosition -> radioStationList.indexOf(radioStationNeedToFind) != -1, position found: newPosition = $newItemIndex")
+                            newPosition = newItemIndex
+                        }
+                    } else {
+                        Log.d(TAG, "onPageSelected 2) checkThePosition -> radioStationList.indexOf(radioStationNeedToFind) = -1, found: $newItemIndex")
+                    }
                 }
 
+                Log.d(TAG, "onPageSelected 3) _newPositionLiveData.postValue(newPosition), position given: $newPosition, station need to play: $radioStationNeedToFind")
                 _newPositionLiveData.postValue(newPosition)
             } catch (e2: IOException) {
                 e2.printStackTrace()

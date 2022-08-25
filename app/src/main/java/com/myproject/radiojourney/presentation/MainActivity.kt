@@ -25,6 +25,9 @@ import com.myproject.radiojourney.utils.musicPlayer.ForegroundNotificationServic
 import com.myproject.radiojourney.utils.service.ProgressForegroundService
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.*
+import androidx.viewpager.widget.ViewPager
+import com.myproject.radiojourney.utils.exoplayer.callback.State
+
 
 /**
  * This source code is free for studying purposes but you are not allowed to copy and use it in other applications (projects).
@@ -101,58 +104,71 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         binding?.vpSong?.adapter = swipeRadioStationAdapter
 
         mOnPageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
+
             // function, that is called when the viewpager is swiped - onPageSelected()
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
 
-                // Если мы скачиваем новый плейлист, то здесь получаем position = 0
-                // Нужно проверить, действительно ли мы выбрали первую песню в плейлисте
-                if (position == 0) {
-//                    mainViewModel.newMediaIdLiveData.observe(this@MainActivity) { так не работает
+                namePosition(position)
 
-                    val radioStationList = swipeRadioStationAdapter.radioStationList
-
-                    mainViewModel.checkThePosition(position, radioStationList)
-
-                    mainViewModel.newPositionLiveData.observe(this@MainActivity) {
-                        namePosition(it)
-                    }
-
-//                    }
-
-//                    var newPosition = position
-//                    var radioStationNeedToFind: RadioStationPresentation? = null
-//                    val mediaId: String? = mainViewModel.newMediaIdLiveData.value
+//                // Если мы скачиваем новый плейлист, то здесь всегда сначала получаем position = 0
+//                // Нужно проверить, действительно ли мы выбрали первую песню в плейлисте
+//                if (position == 0) {
+//                    Log.d(TAG, "onPageSelected 1) position == 0, checking the position, countryCode = ${swipeRadioStationAdapter.radioStationList[0].countryCode}")
+////                    mainViewModel.newMediaIdLiveData.observe(this@MainActivity) { так не работает
 //
-//                    // For sure, calculating chosen position
-//                    if (swipeRadioStationAdapter.radioStationList.isNotEmpty() && !mediaId.isNullOrBlank()) {
-//                        swipeRadioStationAdapter.radioStationList.forEach {
-//                            if (it.url == mediaId) {
-//                                radioStationNeedToFind = it
-//                            }
-//                        }
+////                    val radioStationList = swipeRadioStationAdapter.radioStationList
+//                    val resource = mainViewModel.mediaItemsListLiveData.value
+//                    var radioStationList = resource?.data
+//
+//                    if (radioStationList == null) {
+//                        radioStationList = swipeRadioStationAdapter.radioStationList
 //                    }
 //
-//                    radioStationNeedToFind?.let {
-//                        val newItemIndex =
-//                            swipeRadioStationAdapter.radioStationList.indexOf(radioStationNeedToFind) // looking for the index of that song
-//                        // That function will return -1 if the song doesn't exist, so we must check:
-//                        if (newItemIndex != -1) newPosition = newItemIndex
+//                    Log.d(TAG, "!!!!!!! radioStationList countryCode = ${radioStationList[0].countryCode}")
+//
+//                    mainViewModel.checkThePosition(position, radioStationList)
+//
+//                    mainViewModel.newPositionLiveData.observe(this@MainActivity) {
+//                        Log.d(TAG, "onPageSelected 4) _newPositionLiveData.postValue(newPosition), position got: $it, countryCode = ${swipeRadioStationAdapter.radioStationList[0].countryCode}")
+//                        namePosition(it)
 //                    }
-
-                    // TODO Если будем повторять два раза, вынести в отдельный метод
-//                    // We must check, if player is playing
-//                    if (playbackState?.isPlaying == true) {
-//                        mainViewModel.playOrToggleSong(swipeRadioStationAdapter.radioStationList[newPosition])
-//                    } else {
-//                        curPlayingRadioStation =
-//                            swipeRadioStationAdapter.radioStationList[newPosition]
-////                        binding?.vpSong?.currentItem = newPosition
-//                    }
-
-                } else {
-                    namePosition(position)
-                }
+//
+////                    }
+//
+////                    var newPosition = position
+////                    var radioStationNeedToFind: RadioStationPresentation? = null
+////                    val mediaId: String? = mainViewModel.newMediaIdLiveData.value
+////
+////                    // For sure, calculating chosen position
+////                    if (swipeRadioStationAdapter.radioStationList.isNotEmpty() && !mediaId.isNullOrBlank()) {
+////                        swipeRadioStationAdapter.radioStationList.forEach {
+////                            if (it.url == mediaId) {
+////                                radioStationNeedToFind = it
+////                            }
+////                        }
+////                    }
+////
+////                    radioStationNeedToFind?.let {
+////                        val newItemIndex =
+////                            swipeRadioStationAdapter.radioStationList.indexOf(radioStationNeedToFind) // looking for the index of that song
+////                        // That function will return -1 if the song doesn't exist, so we must check:
+////                        if (newItemIndex != -1) newPosition = newItemIndex
+////                    }
+//
+//                    // TODO Если будем повторять два раза, вынести в отдельный метод
+////                    // We must check, if player is playing
+////                    if (playbackState?.isPlaying == true) {
+////                        mainViewModel.playOrToggleSong(swipeRadioStationAdapter.radioStationList[newPosition])
+////                    } else {
+////                        curPlayingRadioStation =
+////                            swipeRadioStationAdapter.radioStationList[newPosition]
+//////                        binding?.vpSong?.currentItem = newPosition
+////                    }
+//
+//                } else {
+//                    namePosition(position)
+//                }
 
             }
         }
@@ -300,6 +316,9 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 //                                glide.load((curPlayingSong ?: radioStations[0]).imageUrl).into(ivCurSongImage)
 //                            }
 
+                            Log.d(TAG, "2- !!!!!!!!!!!!! onPageSelected: radioStations countryCode before onPageSelected = ${swipeRadioStationAdapter.radioStationList[0].countryCode} = ${radioStations[0].countryCode}")
+//                            mOnPageChangeCallback?.onPageSelected(0)
+
                             // В этом месте данные в curPlayingRadioStation будут старые, т.е. данные о предыдущей радиостанции. Это нужно для сравнения предыдущей и текущей в дальнейшем в методе mainViewModel.playOrToggleSong()
 
                             switchViewPagerToCurrentSong(
@@ -328,6 +347,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
             val test =
                 it.description.subtitle.toString() // !!! Сюда прилетает уже не то. Проверить Music Service
+
 
             switchViewPagerToCurrentSong(
                 it.description.mediaId ?: return@observe,
@@ -383,16 +403,21 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
     private fun namePosition(position: Int) {
 
+        Log.d(TAG, "onPageSelected 5) namePosition() called")
+
         // We must check, if player is playing
         if (playbackState?.isPlaying == true) {
 
             // Если выбрать радиостанцию US (2000 Rock ...), а после неё первое Белорусское радио в списке (альфарадио) - вылетает IndexOutOfBoundsException, т.к. сначала ищет 300+ индекс в списке из 53х
             try {
                 val maxIndex = swipeRadioStationAdapter.radioStationList.size + 1
-                Log.d(TAG, "Checking: maxIndex = $maxIndex, position = $position")
+                Log.d(TAG, "Checking: maxIndex = $maxIndex, position = $position, country code = ${swipeRadioStationAdapter.radioStationList[0].countryCode}, looking for station: ${swipeRadioStationAdapter.radioStationList[position].stationName}")
                 if (position <= maxIndex) {
                     Log.d(TAG, "position <= maxIndex")
+
                     mainViewModel.playOrToggleSong(swipeRadioStationAdapter.radioStationList[position])
+                    Log.d(TAG, "onPageSelected 6) playbackState?.isPlaying == true mainViewModel.playOrToggleSong() called, position = $position, countryCode = ${swipeRadioStationAdapter.radioStationList[0].countryCode}")
+
                 }
             } catch (e: IndexOutOfBoundsException) {
                 Log.d(TAG, "fun namePosition - CACHED IndexOutOfBoundsException!")
@@ -402,9 +427,22 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         } else {
             // При включении программы и загрузке контента, попадаем сюда
 
-            curPlayingRadioStation =
-                swipeRadioStationAdapter.radioStationList[position]
-//            binding?.vpSong?.currentItem = position /// ??? убрать
+            try {
+                val maxIndex = swipeRadioStationAdapter.radioStationList.size + 1
+                Log.d(TAG, "Checking: maxIndex = $maxIndex, position = $position")
+                if (position <= maxIndex) {
+                    Log.d(TAG, "position <= maxIndex")
+
+                    curPlayingRadioStation =
+                        swipeRadioStationAdapter.radioStationList[position]
+                    // binding?.vpSong?.currentItem = position /// ??? убрать
+                    Log.d(TAG, "6) playbackState?.isPlaying != true curPlayingRadioStation = swipeRadioStationAdapter.radioStationList[position]")
+
+                }
+            } catch (e: IndexOutOfBoundsException) {
+                Log.d(TAG, "fun namePosition - CACHED IndexOutOfBoundsException!")
+                e.printStackTrace()
+            }
 
             // TODO Нам нужно вернуться в onPrepareFromMediaId, если мы выбрали песню из другого плейлиста и включить её. НО! Нам не нужно включать станцию сразу при включении программы
             val isNotJustLaunched = mainViewModel.isNotJustLaunchedLiveData.value
