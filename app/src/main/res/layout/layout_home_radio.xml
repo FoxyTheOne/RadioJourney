@@ -24,7 +24,7 @@
             android:background="?attr/colorPrimary"
             android:elevation="4dp"
             android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
-            app:layout_constraintBottom_toTopOf="@+id/linear_radioStationDescription"
+            app:layout_constraintBottom_toTopOf="@+id/linear_canTakeTime"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -33,6 +33,7 @@
             app:title="@string/app_name"
             tools:targetApi="lollipop" />
 
+        <!--
         <LinearLayout
             android:id="@+id/linear_radioStationDescription"
             android:layout_width="match_parent"
@@ -61,6 +62,7 @@
                 android:text="@string/homeRadio_selectRadioStation" />
 
         </LinearLayout>
+        -->
 
         <LinearLayout
             android:id="@+id/linear_canTakeTime"
@@ -69,11 +71,12 @@
             android:background="@color/background_transparent"
             android:gravity="start"
             android:orientation="vertical"
+            android:paddingTop="@dimen/space_beforeOrAfterElement"
             android:paddingBottom="@dimen/space_beforeOrAfterElement"
             app:layout_constraintBottom_toTopOf="@+id/linear_radioStationButtons"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linear_radioStationDescription">
+            app:layout_constraintTop_toBottomOf="@+id/home_toolbar">
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/text_canTakeTime"

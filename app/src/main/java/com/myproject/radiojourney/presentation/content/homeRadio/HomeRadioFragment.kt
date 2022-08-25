@@ -57,7 +57,7 @@ import com.myproject.radiojourney.presentation.MainViewModel
  * TODO повторить проверку разрешения определения местоположения
  */
 @AndroidEntryPoint
-class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPlayable {
+class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
     // MUSIC PLAYER ON NOTIFICATION -> 7. Implements IPlayable
     companion object {
         private const val TAG = "HomeRadioFragment"
@@ -79,7 +79,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
     private lateinit var dialogInternetTrouble: Dialog
 
     //    private lateinit var notificationManager: NotificationManager
-    private var isPaused = true
+//    private var isPaused = true
     private var isStationSelected = false
 
     // Переменная для нашего FusedLocationProviderClient
@@ -99,30 +99,30 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
     //    )
     private var countryList = listOf<CountryPresentation>()
 
-    // BOUND_SERVICE -> 8. Создадим наш Service connection (второй параметр при запуске сервиса с помощью Intent)
-    // BOUND_SERVICE -> 8.1. Создадим переменную, чтобы инициализировать её при создании Service connection
-    private var iMusicPlayerBinder: IMusicPlayerBinder? = null
+//    // BOUND_SERVICE -> 8. Создадим наш Service connection (второй параметр при запуске сервиса с помощью Intent)
+//    // BOUND_SERVICE -> 8.1. Создадим переменную, чтобы инициализировать её при создании Service connection
+//    private var iMusicPlayerBinder: IMusicPlayerBinder? = null
 
-    // BOUND_SERVICE -> 8.2. Создадим экземпляр Service connection
-    private val connection = object : ServiceConnection {
-        // Когда мы забандимся к нашему сервису, вызовется метод onServiceConnected() и мы получим экземпляр binder: IBinder?
-        override fun onServiceConnected(componentName: ComponentName?, binder: IBinder?) {
-            // Проверяем binder на null. Если он не null, приводим к типу нашего байндера и вызываем наш метод, который вернет интерфейс сервиса IAppBinder и мы сможем вызывать его методы
-            binder?.let {
-                iMusicPlayerBinder =
-                    (it as MusicPlayerBoundService.MusicPlayerBoundServiceBinder).getMusicPlayerBoundServiceInstance()
-                // В этом месте мы можем заново привязаться, если переводили Bound service в Foreground при закрытии приложения (вызвав наш метод из интерфейса):
-                // iAppBinder?.goToBound()
-            }
-            iMusicPlayerBinder?.stopMediaPlayerAudio() // Останавливаем радио здесь, а не при получении аргументов с предыдущих страниц, т.к. экземпляр binder мы получаем позже и там метод не сработает
-        }
-
-        // этот метод будет вызван, если связь с сервисом была прервана неожиданно
-        override fun onServiceDisconnected(name: ComponentName?) {
-            stopAudio()
-            iMusicPlayerBinder = null
-        }
-    }
+//    // BOUND_SERVICE -> 8.2. Создадим экземпляр Service connection
+//    private val connection = object : ServiceConnection {
+//        // Когда мы забандимся к нашему сервису, вызовется метод onServiceConnected() и мы получим экземпляр binder: IBinder?
+//        override fun onServiceConnected(componentName: ComponentName?, binder: IBinder?) {
+//            // Проверяем binder на null. Если он не null, приводим к типу нашего байндера и вызываем наш метод, который вернет интерфейс сервиса IAppBinder и мы сможем вызывать его методы
+//            binder?.let {
+//                iMusicPlayerBinder =
+//                    (it as MusicPlayerBoundService.MusicPlayerBoundServiceBinder).getMusicPlayerBoundServiceInstance()
+//                // В этом месте мы можем заново привязаться, если переводили Bound service в Foreground при закрытии приложения (вызвав наш метод из интерфейса):
+//                // iAppBinder?.goToBound()
+//            }
+//            iMusicPlayerBinder?.stopMediaPlayerAudio() // Останавливаем радио здесь, а не при получении аргументов с предыдущих страниц, т.к. экземпляр binder мы получаем позже и там метод не сработает
+//        }
+//
+//        // этот метод будет вызван, если связь с сервисом была прервана неожиданно
+//        override fun onServiceDisconnected(name: ComponentName?) {
+//            stopAudio()
+//            iMusicPlayerBinder = null
+//        }
+//    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -143,7 +143,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
     // BOUND_SERVICE -> 7. Подпишемся на сервис в нашем фрагменте. Если мы подписываемся на Bound Service в каком-то методе жизненного цикла, мы обязательно должны просчитать точку входа и точку выхода (н-р, если мы входим в методе onStart, то в методе onStop должны отписаться)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding?.imagePlay?.setImageResource(R.drawable.play_white)
+//        binding?.imagePlay?.setImageResource(R.drawable.play_white)
         binding?.imageStar?.setImageResource(R.drawable.star_transparent)
 
 
@@ -153,24 +153,24 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
 
 
         // Регистрируем бродкасты, запускаем сервисы
-        activity?.startService(Intent(context, MusicPlayerBoundService::class.java))
-        activity?.registerReceiver(
-            broadcastReceiver,
-            IntentFilter(NOTIFICATION_MUSIC_ACTION_BROADCAST)
-        )
-        activity?.registerReceiver(
-            broadcastReceiverFailures,
-            IntentFilter(MUSIC_PLAYER_SERVICE_FAILURE_PLAYING_BROADCAST)
-        )
+//        activity?.startService(Intent(context, MusicPlayerBoundService::class.java))
+//        activity?.registerReceiver(
+//            broadcastReceiver,
+//            IntentFilter(NOTIFICATION_MUSIC_ACTION_BROADCAST)
+//        )
+//        activity?.registerReceiver(
+//            broadcastReceiverFailures,
+//            IntentFilter(MUSIC_PLAYER_SERVICE_FAILURE_PLAYING_BROADCAST)
+//        )
 
-        // BOUND_SERVICE -> 7.1. Запускаем сервис с помощью Intent:
-        requireContext().bindService(
-            Intent(requireContext(), MusicPlayerBoundService::class.java),
-            connection,
-            Context.BIND_AUTO_CREATE
-        )
-        // BIND_AUTO_CREATE - каждый раз, когда мы бандимся, если сервис не был создан, он будет создаваться автоматически
-        // Второй параметр - Service connection. Это объект, внутри которого мы будем получать наш AppServiceBinder (байндер). Здесь не достаточно просто создать экземпляр класса
+//        // BOUND_SERVICE -> 7.1. Запускаем сервис с помощью Intent:
+//        requireContext().bindService(
+//            Intent(requireContext(), MusicPlayerBoundService::class.java),
+//            connection,
+//            Context.BIND_AUTO_CREATE
+//        )
+//        // BIND_AUTO_CREATE - каждый раз, когда мы бандимся, если сервис не был создан, он будет создаваться автоматически
+//        // Второй параметр - Service connection. Это объект, внутри которого мы будем получать наш AppServiceBinder (байндер). Здесь не достаточно просто создать экземпляр класса
 
         // Настройки диалогового окна
         dialogInternetTrouble = Dialog(requireContext())
@@ -295,26 +295,26 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
         binding?.buttonYouAreHere?.setOnClickListener {
             getCurrentOrLastLocation()
         }
-        binding?.textRadioStationTitle?.setOnClickListener {
-            if (isStationSelected) {
-                if (isPaused) {
-                    playAudio() // <- Нажали кнопку play
-                } else {
-                    stopAudio() // <- Нажали кнопку stop
-                    Toast.makeText(context, "Audio stopped", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-        binding?.imagePlay?.setOnClickListener {
-            if (isStationSelected) {
-                if (isPaused) {
-                    playAudio() // <- Нажали кнопку play
-                } else {
-                    stopAudio() // <- Нажали кнопку stop
-                    Toast.makeText(context, "Audio stopped", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
+//        binding?.textRadioStationTitle?.setOnClickListener {
+//            if (isStationSelected) {
+//                if (isPaused) {
+//                    playAudio() // <- Нажали кнопку play
+//                } else {
+//                    stopAudio() // <- Нажали кнопку stop
+//                    Toast.makeText(context, "Audio stopped", Toast.LENGTH_SHORT).show()
+//                }
+//            }
+//        }
+//        binding?.imagePlay?.setOnClickListener {
+//            if (isStationSelected) {
+//                if (isPaused) {
+//                    playAudio() // <- Нажали кнопку play
+//                } else {
+//                    stopAudio() // <- Нажали кнопку stop
+//                    Toast.makeText(context, "Audio stopped", Toast.LENGTH_SHORT).show()
+//                }
+//            }
+//        }
         binding?.imageStar?.setOnClickListener {
             val currentRadioStation = viewModel.radioStationSavedLiveData.value
             currentRadioStation?.let {
@@ -322,12 +322,12 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
             }
         }
         binding?.buttonGoToRecommended?.setOnClickListener {
-            stopAudio() // <- Если нажали, перед переходом нужно остановить музыку
+//            stopAudio() // <- Если нажали, перед переходом нужно остановить музыку
             this.findNavController()
                 .navigate(R.id.action_homeRadioFragment_to_recommendedListFragment)
         }
         binding?.buttonGoToFavourites?.setOnClickListener {
-            stopAudio() // <- Если нажали, перед переходом нужно остановить музыку
+//            stopAudio() // <- Если нажали, перед переходом нужно остановить музыку
             this.findNavController()
                 .navigate(R.id.action_homeRadioFragment_to_favouriteListFragment)
         }
@@ -356,7 +356,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
         viewModel.radioStationSavedLiveData.observe(
             viewLifecycleOwner,
             { radioStationPresentation ->
-                binding?.textRadioStationTitle?.text = radioStationPresentation.stationName
+//                binding?.textRadioStationTitle?.text = radioStationPresentation.stationName
                 isStationSelected = true
             })
         viewModel.stationSavedInFavouritesLiveData.observe(viewLifecycleOwner, {
@@ -409,28 +409,28 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
         }
     }
 
-    override fun playAudio() {
-        // Изменяем уведомление и включаем радио
-        val radioStationSaved = viewModel.radioStationSavedLiveData.value
-        radioStationSaved?.let {
-            iMusicPlayerBinder?.playMediaPlayerAudioAndShowNotification(it)
-        }
+//    override fun playAudio() {
+//        // Изменяем уведомление и включаем радио
+//        val radioStationSaved = viewModel.radioStationSavedLiveData.value
+//        radioStationSaved?.let {
+//            iMusicPlayerBinder?.playMediaPlayerAudioAndShowNotification(it)
+//        }
+//
+//        binding?.imagePlay?.setImageResource(R.drawable.pause_white)
+//        isPaused = false
+//    }
 
-        binding?.imagePlay?.setImageResource(R.drawable.pause_white)
-        isPaused = false
-    }
-
-    override fun stopAudio() {
-        // Останавливаем проигрывание
-        iMusicPlayerBinder?.stopMediaPlayerAudio()
-        // Изменяем уведомление
-        val radioStationSaved = viewModel.radioStationSavedLiveData.value
-        radioStationSaved?.let {
-            iMusicPlayerBinder?.stopMediaPlayerNotification(it)
-        }
-        binding?.imagePlay?.setImageResource(R.drawable.play_white)
-        isPaused = true
-    }
+//    override fun stopAudio() {
+//        // Останавливаем проигрывание
+//        iMusicPlayerBinder?.stopMediaPlayerAudio()
+//        // Изменяем уведомление
+//        val radioStationSaved = viewModel.radioStationSavedLiveData.value
+//        radioStationSaved?.let {
+//            iMusicPlayerBinder?.stopMediaPlayerNotification(it)
+//        }
+//        binding?.imagePlay?.setImageResource(R.drawable.play_white)
+//        isPaused = true
+//    }
 
     private fun showProgress() {
         binding?.frameLayout?.isVisible = true
@@ -570,8 +570,8 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
                 if (latLon == country.countryLocation) {
                     //match found!  Do something....
 
-                    // Если нажали на маркер, перед переходом на список нужно остановить музыку
-                    stopAudio()
+//                    // Если нажали на маркер, перед переходом на список нужно остановить музыку
+//                    stopAudio()
 
                     Log.d(
                         TAG,
@@ -623,7 +623,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
 
     // TOOLBAR - Описываем метод из интерфейса ILogOutListener для выхода из аккаунта приложения
     override fun onLogOut() {
-        stopAudio() // Если нажали, перед переходом нужно остановить музыку
+//        stopAudio() // Если нажали, перед переходом нужно остановить музыку
         viewModel.logout()
         activity?.finish()
     }
@@ -634,40 +634,40 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback, IPl
         binding = null
     }
 
-    override fun onDestroy() {
+//    override fun onDestroy() {
         // MUSIC PLAYER ON NOTIFICATION -> END. Запускали сервис - убираем уведомления. Регистрировали бродкаст - отписываемся
 //        notificationManager.cancelAll()
-        activity?.unregisterReceiver(broadcastReceiver)
-        activity?.unregisterReceiver(broadcastReceiverFailures)
+//        activity?.unregisterReceiver(broadcastReceiver)
+//        activity?.unregisterReceiver(broadcastReceiverFailures)
 
-        // BOUND_SERVICE -> 7.2. Заканчиваем соединение. Сюда также передаём наш Service connection. Создадим его (см. выше)
-        iMusicPlayerBinder?.let {
-            requireContext().unbindService(connection)
-        }
-        super.onDestroy()
-    }
+//        // BOUND_SERVICE -> 7.2. Заканчиваем соединение. Сюда также передаём наш Service connection. Создадим его (см. выше)
+//        iMusicPlayerBinder?.let {
+//            requireContext().unbindService(connection)
+//        }
+//        super.onDestroy()
+//    }
 
-    // MUSIC PLAYER ON NOTIFICATION -> 8. Receiving Broadcast
-    private var broadcastReceiver: BroadcastReceiver? = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent) {
+//    // MUSIC PLAYER ON NOTIFICATION -> 8. Receiving Broadcast
+//    private var broadcastReceiver: BroadcastReceiver? = object : BroadcastReceiver() {
+//        override fun onReceive(context: Context?, intent: Intent) {
+//
+//            // Describe different situations, such as prev track, play, next track
+//            when (intent.getStringExtra("action_name")) {
+//                Constants.NOTIFICATION_MUSIC_ACTION_PLAY -> if (isPaused) {
+//                    playAudio() // <- Нажали кнопку play
+//                } else {
+//                    stopAudio() // <- Нажали кнопку stop
+//                }
+//                else -> Log.d(TAG, "Wrong action")
+//            }
+//        }
+//    }
 
-            // Describe different situations, such as prev track, play, next track
-            when (intent.getStringExtra("action_name")) {
-                Constants.NOTIFICATION_MUSIC_ACTION_PLAY -> if (isPaused) {
-                    playAudio() // <- Нажали кнопку play
-                } else {
-                    stopAudio() // <- Нажали кнопку stop
-                }
-                else -> Log.d(TAG, "Wrong action")
-            }
-        }
-    }
-
-    // Если не получилось запустить радиостанцию методом playMediaPlayerAudioAndShowNotification(), нужно изменить кнопочку обратно на паузу. Получаем intent из MusicPlayerBoundService
-    private var broadcastReceiverFailures: BroadcastReceiver? = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent) {
-            binding?.imagePlay?.setImageResource(R.drawable.play_white)
-            isPaused = intent.getBooleanExtra("play_failure", true)
-        }
-    }
+//    // Если не получилось запустить радиостанцию методом playMediaPlayerAudioAndShowNotification(), нужно изменить кнопочку обратно на паузу. Получаем intent из MusicPlayerBoundService
+//    private var broadcastReceiverFailures: BroadcastReceiver? = object : BroadcastReceiver() {
+//        override fun onReceive(context: Context?, intent: Intent) {
+//            binding?.imagePlay?.setImageResource(R.drawable.play_white)
+//            isPaused = intent.getBooleanExtra("play_failure", true)
+//        }
+//    }
 }
