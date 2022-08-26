@@ -109,4 +109,14 @@ class FavouriteListViewModel @Inject constructor(
         }
     }
 
+    fun changeTheStar(mediaId: String?, isFavourite: Boolean) {
+        radioStationFavouriteListLiveData.value.apply {
+            this?.forEach {
+                if (it.url == mediaId) {
+                    it.isStationInFavourite = isFavourite
+                }
+            }
+        }
+    }
+
 }

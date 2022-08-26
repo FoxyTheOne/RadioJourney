@@ -34,6 +34,8 @@ class MainRadioUseCase @Inject constructor(
                 countryCode = it.description.subtitle.toString(),
                 country = it.description.extras?.getString("Country")
                     ?: "",
+                // Мы получили новые, скачанные из интернета файлы в FirebaseMusicSource.fetchMediaData(), преобразованные в asMediaItems(), переданные из MusicService: result.sendResult() в MainViewModel: musicServiceConnection.subscribe()
+                // Т.е. мы не знаем, есть они в Избранном/Рекомендуемом или нет. Нужно проверять и проставлять здесь
                 isStationInFavourite = radioStation?.isStationInFavourite
                     ?: false, // Если станция уже сохранена, узнаём её isStationInFavorite, если нет - false
                 isStationInRecommended = radioStation?.isStationInRecommended

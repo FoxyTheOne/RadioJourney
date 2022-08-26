@@ -140,11 +140,13 @@
         </LinearLayout>
 
         <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/image_star"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginStart="@dimen/space_beforeOrAfterElement"
-            android:layout_marginBottom="@dimen/space_beforeOrAfterElement"
+            android:id="@+id/image_radio"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_marginStart="@dimen/space_small"
+            android:layout_marginBottom="@dimen/space_small"
+            android:scaleType="centerCrop"
+            android:src="@drawable/radio_clker_free_vector_images_pixabay"
             app:layout_constraintBottom_toBottomOf="@+id/linear_radioStationButtons"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@+id/linear_radioStationButtons" />

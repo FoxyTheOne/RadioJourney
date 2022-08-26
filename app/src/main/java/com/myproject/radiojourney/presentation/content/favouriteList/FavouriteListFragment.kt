@@ -7,6 +7,7 @@ import android.view.*
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import com.myproject.radiojourney.IAppSettings
@@ -16,6 +17,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import androidx.recyclerview.widget.DefaultItemAnimator
 import com.myproject.radiojourney.databinding.LayoutRadioStationListFavouriteBinding
+import com.myproject.radiojourney.presentation.MainViewModel
 
 /**
  * Страница с избранным
@@ -36,6 +38,9 @@ class FavouriteListFragment : BaseContentFragmentAbstract() {
     private lateinit var dialogInternetTrouble: Dialog
     private lateinit var favouriteListAdapter: FavoriteListAdapter
 
+    // 1.1. ViewModel. We bind our viewModel to the cycle of our activity, not fragment. So, we need to do this way:
+    lateinit var mainViewModel: MainViewModel
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -54,6 +59,10 @@ class FavouriteListFragment : BaseContentFragmentAbstract() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // 1.2. ViewModel. We bind our viewModel to the lifecycle of our activity, not fragment. We pass our activity as an owner of the lifecycle.
+        // So, we need to do this way:
+        mainViewModel = ViewModelProvider(requireActivity())[MainViewModel::class.java]
 
         // Получаем список избранного для отображения
         viewModel.getRadioStationFavouriteListAndShow()
@@ -148,6 +157,16 @@ class FavouriteListFragment : BaseContentFragmentAbstract() {
         })
         viewModel.stationDeletedFromFavouritesLiveData.observe(viewLifecycleOwner, {
             binding?.recyclerViewRadioStationList?.adapter?.notifyDataSetChanged()
+        })
+
+        // Если изменение было в activity, и открыт этот фрагмент, здесь тоже нужно это отобразить:
+        mainViewModel.stationSavedInFavouritesLiveData.observe(viewLifecycleOwner, {
+            binding?.recyclerViewRadioStationList?.adapter?.notifyDataSetChanged()
+            viewModel.changeTheStar(mainViewModel.curPlayingSongLiveData.value?.description?.mediaId, true)
+        })
+        mainViewModel.stationDeletedFromFavouritesLiveData.observe(viewLifecycleOwner, {
+            binding?.recyclerViewRadioStationList?.adapter?.notifyDataSetChanged()
+            viewModel.changeTheStar(mainViewModel.curPlayingSongLiveData.value?.description?.mediaId, false)
         })
     }
 

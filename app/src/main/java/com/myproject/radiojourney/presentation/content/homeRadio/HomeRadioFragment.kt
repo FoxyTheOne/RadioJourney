@@ -7,7 +7,6 @@ import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.location.Location
 import android.os.Bundle
-import android.os.IBinder
 import android.util.Log
 import android.view.*
 import android.widget.*
@@ -35,11 +34,8 @@ import android.widget.Toast
 import com.myproject.radiojourney.databinding.LayoutHomeRadioBinding
 import com.myproject.radiojourney.utils.musicPlayer.*
 import kotlinx.coroutines.*
-import android.content.Intent
 import androidx.lifecycle.ViewModelProvider
-import com.myproject.radiojourney.other.Constants
-import com.myproject.radiojourney.other.Constants.MUSIC_PLAYER_SERVICE_FAILURE_PLAYING_BROADCAST
-import com.myproject.radiojourney.other.Constants.NOTIFICATION_MUSIC_ACTION_BROADCAST
+import androidx.viewpager2.widget.ViewPager2
 import com.myproject.radiojourney.other.Status
 import com.myproject.radiojourney.presentation.MainViewModel
 
@@ -80,7 +76,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 
     //    private lateinit var notificationManager: NotificationManager
 //    private var isPaused = true
-    private var isStationSelected = false
+//    private var isStationSelected = false
 
     // Переменная для нашего FusedLocationProviderClient
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
@@ -144,7 +140,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 //        binding?.imagePlay?.setImageResource(R.drawable.play_white)
-        binding?.imageStar?.setImageResource(R.drawable.star_transparent)
+//        binding?.imageStar?.setImageResource(R.drawable.star_transparent) перенесла в activity
 
 
         // 1.2. ViewModel. We bind our viewModel to the lifecycle of our activity, not fragment. We pass our activity as an owner of the lifecycle.
@@ -315,12 +311,23 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 //                }
 //            }
 //        }
-        binding?.imageStar?.setOnClickListener {
-            val currentRadioStation = viewModel.radioStationSavedLiveData.value
-            currentRadioStation?.let {
-                viewModel.checkIsStationInFavouritesAndChangeTheStar(it)
-            }
-        }
+//        binding?.imageStar?.setOnClickListener { перенесла в activity
+////            val currentRadioStation = viewModel.radioStationSavedLiveData.value
+////            currentRadioStation?.let {
+////                viewModel.checkIsStationInFavouritesAndChangeTheStar(it)
+////            }
+//
+//            val viewPagerFromActivity = activity?.findViewById<ViewPager2>(R.id.vpSong)
+//            val currentRadioStationPosition = viewPagerFromActivity?.currentItem
+//            currentRadioStationPosition?.let {
+//                val currentRadioStation = mainViewModel.mediaItemsListLiveData.value?.data?.get(
+//                    currentRadioStationPosition
+//                )
+//                currentRadioStation?.let {
+//                    viewModel.checkIsStationInFavouritesAndChangeTheStar(it)
+//                }
+//            }
+//        }
         binding?.buttonGoToRecommended?.setOnClickListener {
 //            stopAudio() // <- Если нажали, перед переходом нужно остановить музыку
             this.findNavController()
@@ -347,24 +354,29 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         viewModel.hideProgressLiveData.observe(viewLifecycleOwner, {
             hideProgress()
         })
-        viewModel.dialogInternetTroubleLiveData.observe(viewLifecycleOwner, {
+        mainViewModel.dialogInternetTroubleLiveData.observe(viewLifecycleOwner, {
             dialogInternetTrouble.show()
         })
         viewModel.failedLiveData.observe(viewLifecycleOwner, {
             Toast.makeText(context, "Failure. Something went wrong", Toast.LENGTH_LONG).show()
         })
-        viewModel.radioStationSavedLiveData.observe(
-            viewLifecycleOwner,
-            { radioStationPresentation ->
+//        viewModel.radioStationSavedLiveData.observe(
+//            viewLifecycleOwner,
+//            { radioStationPresentation ->
 //                binding?.textRadioStationTitle?.text = radioStationPresentation.stationName
-                isStationSelected = true
-            })
-        viewModel.stationSavedInFavouritesLiveData.observe(viewLifecycleOwner, {
-            binding?.imageStar?.setImageResource(R.drawable.star)
-        })
-        viewModel.stationDeletedFromFavouritesLiveData.observe(viewLifecycleOwner, {
-            binding?.imageStar?.setImageResource(R.drawable.star_transparent)
-        })
+//                isStationSelected = true
+//            })
+//        viewModel.stationSavedInFavouritesLiveData.observe(viewLifecycleOwner, {
+//            binding?.imageStar?.setImageResource(R.drawable.star)
+//        })
+//        viewModel.stationDeletedFromFavouritesLiveData.observe(viewLifecycleOwner, {
+//            binding?.imageStar?.setImageResource(R.drawable.star_transparent)
+//        })
+//        viewModel.setTheRightStateOfFavouriteLiveData.observe(viewLifecycleOwner, {
+//            val mediaId = it[0] as String
+//            val isFavourite = it[1] as Boolean
+//            mainViewModel.setTheRightStateOfFavourite(mediaId, isFavourite)
+//        })
 
 
         // Subscribe to mediaItems LiveData
@@ -381,6 +393,31 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                 }
                 Status.ERROR -> Unit // We never emitted here an error status, so we don't do anything here
                 Status.LOADING -> binding?.progressCircular?.isVisible = true
+            }
+
+            // Описываем внутри, чтобы среагировать точно после обновления mediaItemsListLiveData.observe
+            mainViewModel.curPlayingSongLiveData.observe(viewLifecycleOwner) {
+                // В данном формате мы знаем, что песня изменилась, но не знаем, есть ли она в избранном. Зато эта информация есть в списке mediaItemsListLiveData
+                var radioStationNeedToFind: RadioStationPresentation? = null
+                val radioStationList = mainViewModel.mediaItemsListLiveData.value?.data
+
+                // Проверка на случай, если логика запущена не вовремя и список mediaItemsListLiveData и curPlayingSongLiveData разнятся
+                if (radioStationList != null && it?.description?.subtitle == radioStationList[0].countryCode) {
+                    radioStationList.forEach { radioStation ->
+                        if (radioStation.url == it.description.mediaId) {
+                            radioStationNeedToFind = radioStation
+                        }
+                    }
+
+//                    // Здесь нам нужно выставить звезду, если радиостанция находится в избранном или убрать, если её там нет
+//                    radioStationNeedToFind?.let { currentStation ->
+//                        if (currentStation.isStationInFavourite) {
+//                            binding?.imageStar?.setImageResource(R.drawable.star)
+//                        } else {
+//                            binding?.imageStar?.setImageResource(R.drawable.star_transparent)
+//                        }
+//                    }
+                }
             }
         }
     }
@@ -570,6 +607,12 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                 if (latLon == country.countryLocation) {
                     //match found!  Do something....
 
+                    // TODO При выборе нового списка радиостанций всегда выбирается сначала первая радиостанция. Устала с этим бороться - одно лечишь, другое калечится. В итоге разрешила ей выбираться сразу при открытии списка страны.
+                    // После этого выбираешь нужную тебе. Не знаю, вроде работает, но нужно проверять на удобство в пользовании.
+                    if (country.countryCode != mainViewModel.curPlayingSongLiveData.value?.description?.subtitle) {
+                        mainViewModel.fetchSongs(country.countryCode)
+                    }
+
 //                    // Если нажали на маркер, перед переходом на список нужно остановить музыку
 //                    stopAudio()
 
@@ -585,10 +628,6 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                         this.findNavController().navigate(direction)
                     }
 //                    this.findNavController().navigate(direction) - при переходе на Канаду - ошибка. Помогла проверка (см. выше)
-
-                    if (country.countryCode != mainViewModel.curPlayingSongLiveData.value?.description?.subtitle){
-                        mainViewModel.fetchSongs(country.countryCode)
-                    }
 
                     Toast.makeText(
                         context,
@@ -635,7 +674,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
     }
 
 //    override fun onDestroy() {
-        // MUSIC PLAYER ON NOTIFICATION -> END. Запускали сервис - убираем уведомления. Регистрировали бродкаст - отписываемся
+    // MUSIC PLAYER ON NOTIFICATION -> END. Запускали сервис - убираем уведомления. Регистрировали бродкаст - отписываемся
 //        notificationManager.cancelAll()
 //        activity?.unregisterReceiver(broadcastReceiver)
 //        activity?.unregisterReceiver(broadcastReceiverFailures)

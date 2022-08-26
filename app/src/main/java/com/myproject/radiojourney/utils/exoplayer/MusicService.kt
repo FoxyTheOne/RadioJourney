@@ -188,6 +188,7 @@ class MusicService : MediaBrowserServiceCompat() {
         val testRadioStations = radioStations
 
         // Если мы только что запустили программу, то песня ещё не будет выбрана. Стоит отобразить в плейере ту, что была выбрана последней в предыдущем запуске
+        // TODO Если будет глючить, возможно стоит попробовать ориентироваться на isPlayerInitialized, а не curPlayingSong
         if (curPlayingSong == null) {
             // Находим её mediaId
             val lastUsedRadioStationUrl = preference.getLastUsedRadioStationUrl()

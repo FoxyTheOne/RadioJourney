@@ -2,6 +2,7 @@ package com.myproject.radiojourney.presentation.content.homeRadio
 
 import android.accounts.AccountsException
 import android.util.Log
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -31,7 +32,7 @@ class HomeRadioViewModel @Inject constructor(
     }
 
     val failedLiveData = MutableLiveData<Boolean>()
-    val radioStationSavedLiveData = MutableLiveData<RadioStationPresentation>()
+//    val radioStationSavedLiveData = MutableLiveData<RadioStationPresentation>()
 
     // Подписка на локальную БД
     val countryListFlow = homeRadioInteractor.subscribeOnCountryList()
@@ -46,6 +47,9 @@ class HomeRadioViewModel @Inject constructor(
     // Favourites
     val stationSavedInFavouritesLiveData = MutableLiveData<Boolean>()
     val stationDeletedFromFavouritesLiveData = MutableLiveData<Boolean>()
+    private val _setTheRightStateOfFavouriteLiveData = MutableLiveData<List<Any>>()
+    val setTheRightStateOfFavouriteLiveData: LiveData<List<Any>> =
+        _setTheRightStateOfFavouriteLiveData
 
     // Recommended - проверено работают
     private val eeRockFMEstonia = "https://edge02.cdn.bitflip.ee:8888/rck?_i=5f5ab186"// checked
@@ -103,7 +107,8 @@ class HomeRadioViewModel @Inject constructor(
                             TAG,
                             "Передаются значения в LiveData: nonNullRadioStation = $nonNullRadioStation"
                         )
-                        radioStationSavedLiveData.postValue(nonNullRadioStation)
+//                        radioStationSavedLiveData.postValue(nonNullRadioStation)
+                        // TODO Пересмотреть метод. Возможно, это всё нужно было для старого плейера.Но проставление звездочки favourites нужно и сейчас
                         // Favourites
                         if (nonNullRadioStation.isStationInFavourite) {
                             stationSavedInFavouritesLiveData.call()
@@ -120,34 +125,35 @@ class HomeRadioViewModel @Inject constructor(
         }
     }
 
-    // Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
-    fun saveRadioStationAndShow(
-        radioStation: RadioStationPresentation,
-        isNavigatedFromFavorite: Boolean
-    ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                // Поменять в Shared Preference setIsRadioStationStored на true. Сохранить в Shared Preference (url)
-                homeRadioInteractor.saveRadioStationUrl(true, radioStation.url)
-                // И сохранить радиостанцию в Room. Если перешли сюда из списка любимых радиостанций - они уже сохранены в Room
-                if (!isNavigatedFromFavorite) {
-                    homeRadioInteractor.saveRadioStationInRoom(radioStation)
-                }
-                // Отобразить
-                radioStationSavedLiveData.postValue(radioStation)
-                // Favourites
-                if (radioStation.isStationInFavourite) {
-                    stationSavedInFavouritesLiveData.call()
-                }
-            } catch (e1: AccountsException) {
-                e1.printStackTrace()
-                dialogInternetTroubleLiveData.call()
-            } catch (e: IOException) {
-                e.printStackTrace()
-                failedLiveData.call()
-            }
-        }
-    }
+//    // ДЛЯ СТАРОГО ПЛЕЙЕРА
+//    // Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
+//    fun saveRadioStationAndShow(
+//        radioStation: RadioStationPresentation,
+//        isNavigatedFromFavorite: Boolean
+//    ) {
+//        viewModelScope.launch(Dispatchers.IO) {
+//            try {
+//                // Поменять в Shared Preference setIsRadioStationStored на true. Сохранить в Shared Preference (url)
+//                homeRadioInteractor.saveRadioStationUrl(true, radioStation.url)
+//                // И сохранить радиостанцию в Room. Если перешли сюда из списка любимых радиостанций - они уже сохранены в Room
+//                if (!isNavigatedFromFavorite) {
+//                    homeRadioInteractor.saveRadioStationInRoom(radioStation)
+//                }
+//                // Отобразить
+//                radioStationSavedLiveData.postValue(radioStation)
+//                // Favourites
+//                if (radioStation.isStationInFavourite) {
+//                    stationSavedInFavouritesLiveData.call()
+//                }
+//            } catch (e1: AccountsException) {
+//                e1.printStackTrace()
+//                dialogInternetTroubleLiveData.call()
+//            } catch (e: IOException) {
+//                e.printStackTrace()
+//                failedLiveData.call()
+//            }
+//        }
+//    }
 
     fun checkIsStationInFavouritesAndChangeTheStar(currentRadioStation: RadioStationPresentation) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -158,17 +164,31 @@ class HomeRadioViewModel @Inject constructor(
                     homeRadioInteractor.deleteStationInRoomFromFavourite(currentRadioStation) // Меняем isStationInFavourite = false в Room для последующих обращений к БД
                     stationDeletedFromFavouritesLiveData.call()
                     // В случае успеха, так же ставим false в объекте текущей радиостанции
-                    radioStationSavedLiveData.value.apply {
-                        this?.isStationInFavourite = false
-                    }
+//                    radioStationSavedLiveData.value.apply {
+//                        this?.isStationInFavourite = false
+//                    }
+                    // Информацию нужно передать в Activity, т.к. список текущих радиостанций находится там, в SwipeAdapter
+                    _setTheRightStateOfFavouriteLiveData.postValue(
+                        listOf(
+                            currentRadioStation.url,
+                            false
+                        )
+                    )
                 } else {
                     // Если станции в избранном нет, нужно добавить её в избранное и поставить звезду
                     homeRadioInteractor.addStationInRoomToFavourites(currentRadioStation) // Меняем isStationInFavourite = true в Room для последующих обращений к БД
                     stationSavedInFavouritesLiveData.call()
                     // В случае успеха, так же ставим true в объекте текущей радиостанции
-                    radioStationSavedLiveData.value.apply {
-                        this?.isStationInFavourite = true
-                    }
+//                    radioStationSavedLiveData.value.apply {
+//                        this?.isStationInFavourite = true
+//                    }
+                    // Информацию нужно передать в Activity, т.к. список текущих радиостанций находится там, в SwipeAdapter
+                    _setTheRightStateOfFavouriteLiveData.postValue(
+                        listOf(
+                            currentRadioStation.url,
+                            true
+                        )
+                    )
                 }
             } catch (e1: AccountsException) {
                 e1.printStackTrace()

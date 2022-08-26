@@ -8,14 +8,19 @@
     tools:context=".presentation.MainActivity">
 
     <ImageView
-        android:id="@+id/ivCurSongImage"
+        android:id="@+id/image_star"
         android:layout_width="56dp"
         android:layout_height="56dp"
+        android:paddingTop="@dimen/space_small"
+        android:paddingEnd="@dimen/space_small"
+        android:paddingStart="@dimen/space_small"
+        android:paddingBottom="@dimen/space_small"
         android:background="@color/background_transparent"
         android:scaleType="centerCrop"
-        android:src="@drawable/radio_clker_free_vector_images_pixabay"
+        tools:src="@drawable/star_transparent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/vpSong" />
 
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/vpSong"
@@ -24,7 +29,7 @@
         android:background="@color/background_transparent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/ivPlayPause"
-        app:layout_constraintStart_toEndOf="@+id/ivCurSongImage" />
+        app:layout_constraintStart_toEndOf="@+id/image_star" />
 
     <ImageView
         android:id="@+id/ivPlayPause"

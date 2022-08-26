@@ -25,8 +25,6 @@ import com.myproject.radiojourney.utils.musicPlayer.ForegroundNotificationServic
 import com.myproject.radiojourney.utils.service.ProgressForegroundService
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.*
-import androidx.viewpager.widget.ViewPager
-import com.myproject.radiojourney.utils.exoplayer.callback.State
 
 
 /**
@@ -100,6 +98,8 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         binding = ActivityMainBinding.inflate(layoutInflater)
         val view: View = binding!!.root
         setContentView(view)
+
+        binding?.imageStar?.setImageResource(R.drawable.star_transparent)
 
         binding?.vpSong?.adapter = swipeRadioStationAdapter
 
@@ -234,6 +234,20 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                     else -> showBottomBar()
                 }
             }
+
+        binding?.imageStar?.setOnClickListener {
+            val radioStationList = swipeRadioStationAdapter.radioStationList
+            val radioStationPosition = binding?.vpSong?.currentItem ?: return@setOnClickListener
+            var currentRadioStation: RadioStationPresentation? = null
+
+            if (radioStationList.isNotEmpty()) {
+                currentRadioStation = radioStationList[radioStationPosition]
+            }
+
+            currentRadioStation?.let {
+                mainViewModel.checkIsStationInFavouritesAndChangeTheStar(it)
+            }
+        }
     }
 
     // ???
@@ -316,7 +330,10 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 //                                glide.load((curPlayingSong ?: radioStations[0]).imageUrl).into(ivCurSongImage)
 //                            }
 
-                            Log.d(TAG, "2- !!!!!!!!!!!!! onPageSelected: radioStations countryCode before onPageSelected = ${swipeRadioStationAdapter.radioStationList[0].countryCode} = ${radioStations[0].countryCode}")
+                            Log.d(
+                                TAG,
+                                "2- !!!!!!!!!!!!! onPageSelected: radioStations countryCode before onPageSelected = ${swipeRadioStationAdapter.radioStationList[0].countryCode} = ${radioStations[0].countryCode}"
+                            )
 //                            mOnPageChangeCallback?.onPageSelected(0)
 
                             // В этом месте данные в curPlayingRadioStation будут старые, т.е. данные о предыдущей радиостанции. Это нужно для сравнения предыдущей и текущей в дальнейшем в методе mainViewModel.playOrToggleSong()
@@ -348,11 +365,24 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             val test =
                 it.description.subtitle.toString() // !!! Сюда прилетает уже не то. Проверить Music Service
 
+            val mediaId = it.description.mediaId
 
             switchViewPagerToCurrentSong(
-                it.description.mediaId ?: return@observe,
+                mediaId ?: return@observe,
                 it.description.subtitle.toString()
             )
+
+            if (swipeRadioStationAdapter.radioStationList.isNotEmpty() && it.description?.subtitle == swipeRadioStationAdapter.radioStationList[0].countryCode) {
+                val currentRadioStationPosition = binding?.vpSong?.currentItem
+
+                currentRadioStationPosition?.let { position ->
+                    if (swipeRadioStationAdapter.radioStationList[position].isStationInFavourite) {
+                        binding?.imageStar?.setImageResource(R.drawable.star)
+                    } else {
+                        binding?.imageStar?.setImageResource(R.drawable.star_transparent)
+                    }
+                }
+            }
         }
 
         // LIVEDATA: Will be called everytime the playback changes (pause the player, play a song etc.) -> change our image
@@ -399,6 +429,29 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                 }
             }
         }
+
+        // Favourites
+        mainViewModel.stationSavedInFavouritesLiveData.observe(this) {
+            binding?.imageStar?.setImageResource(R.drawable.star)
+            // Так же ставим true в объекте текущей радиостанции
+            setTheRightStateOfFavourite(true)
+            // TODO stationSavedInFavouritesLiveData и stationDeletedFromFavouritesLiveData нужно слушать так же в странице избранного, чтобы менять звезду и там
+        }
+        mainViewModel.stationDeletedFromFavouritesLiveData.observe(this) {
+            binding?.imageStar?.setImageResource(R.drawable.star_transparent)
+            // Так же ставим false в объекте текущей радиостанции
+            setTheRightStateOfFavourite(false)
+        }
+    }
+
+    private fun setTheRightStateOfFavourite(isInFavourite: Boolean) {
+        if (swipeRadioStationAdapter.radioStationList.isNotEmpty()) {
+            val currentRadioStationPosition = binding?.vpSong?.currentItem
+
+            currentRadioStationPosition?.let {
+                swipeRadioStationAdapter.radioStationList[it].isStationInFavourite = isInFavourite
+            }
+        }
     }
 
     private fun namePosition(position: Int) {
@@ -411,12 +464,18 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             // Если выбрать радиостанцию US (2000 Rock ...), а после неё первое Белорусское радио в списке (альфарадио) - вылетает IndexOutOfBoundsException, т.к. сначала ищет 300+ индекс в списке из 53х
             try {
                 val maxIndex = swipeRadioStationAdapter.radioStationList.size + 1
-                Log.d(TAG, "Checking: maxIndex = $maxIndex, position = $position, country code = ${swipeRadioStationAdapter.radioStationList[0].countryCode}, looking for station: ${swipeRadioStationAdapter.radioStationList[position].stationName}")
+                Log.d(
+                    TAG,
+                    "Checking: maxIndex = $maxIndex, position = $position, country code = ${swipeRadioStationAdapter.radioStationList[0].countryCode}, looking for station: ${swipeRadioStationAdapter.radioStationList[position].stationName}"
+                )
                 if (position <= maxIndex) {
                     Log.d(TAG, "position <= maxIndex")
 
                     mainViewModel.playOrToggleSong(swipeRadioStationAdapter.radioStationList[position])
-                    Log.d(TAG, "onPageSelected 6) playbackState?.isPlaying == true mainViewModel.playOrToggleSong() called, position = $position, countryCode = ${swipeRadioStationAdapter.radioStationList[0].countryCode}")
+                    Log.d(
+                        TAG,
+                        "onPageSelected 6) playbackState?.isPlaying == true mainViewModel.playOrToggleSong() called, position = $position, countryCode = ${swipeRadioStationAdapter.radioStationList[0].countryCode}"
+                    )
 
                 }
             } catch (e: IndexOutOfBoundsException) {
@@ -436,7 +495,10 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                     curPlayingRadioStation =
                         swipeRadioStationAdapter.radioStationList[position]
                     // binding?.vpSong?.currentItem = position /// ??? убрать
-                    Log.d(TAG, "6) playbackState?.isPlaying != true curPlayingRadioStation = swipeRadioStationAdapter.radioStationList[position]")
+                    Log.d(
+                        TAG,
+                        "6) playbackState?.isPlaying != true curPlayingRadioStation = swipeRadioStationAdapter.radioStationList[position]"
+                    )
 
                 }
             } catch (e: IndexOutOfBoundsException) {
@@ -462,13 +524,13 @@ class MainActivity : AppCompatActivity(), IAppSettings {
     // function for hiding our bottom bar
     // TODO maybe use Group view?
     private fun hideBottomBar() {
-        binding?.ivCurSongImage?.isVisible = false
+        binding?.imageStar?.isVisible = false
         binding?.vpSong?.isVisible = false
         binding?.ivPlayPause?.isVisible = false
     }
 
     private fun showBottomBar() {
-        binding?.ivCurSongImage?.isVisible = true
+        binding?.imageStar?.isVisible = true
         binding?.vpSong?.isVisible = true
         binding?.ivPlayPause?.isVisible = true
     }

@@ -1,5 +1,6 @@
 package com.myproject.radiojourney.presentation
 
+import android.accounts.AccountsException
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat.METADATA_KEY_MEDIA_ID
@@ -8,6 +9,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.myproject.radiojourney.domain.homeRadioUseCase.IHomeRadioUseCase
 import com.myproject.radiojourney.domain.mainRadioUseCase.IMainRadioUseCase
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 import com.myproject.radiojourney.other.Constants.ADD_SONGS
@@ -24,7 +26,8 @@ import javax.inject.Inject
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val musicServiceConnection: MusicServiceConnection,
-    private val mainRadioInteractor: IMainRadioUseCase
+    private val mainRadioInteractor: IMainRadioUseCase,
+    private val homeRadioInteractor: IHomeRadioUseCase
 ) : ViewModel() {
     companion object {
         private const val TAG = "MainViewModel"
@@ -49,6 +52,13 @@ class MainViewModel @Inject constructor(
     private val _isNotJustLaunchedLiveData = MutableLiveData<Boolean>()
     val isNotJustLaunchedLiveData: LiveData<Boolean> = _isNotJustLaunchedLiveData
 
+    // Favourites
+    private val _stationSavedInFavouritesLiveData = MutableLiveData<Boolean>()
+    val stationSavedInFavouritesLiveData: LiveData<Boolean> = _stationSavedInFavouritesLiveData
+    private val _stationDeletedFromFavouritesLiveData = MutableLiveData<Boolean>()
+    val stationDeletedFromFavouritesLiveData: LiveData<Boolean> =
+        _stationDeletedFromFavouritesLiveData
+
     // LiveData from our ServiceConnection
     val isConnectedLiveData = musicServiceConnection.isConnectedLiveData
     val networkErrorLiveData = musicServiceConnection.networkErrorLiveData
@@ -58,6 +68,10 @@ class MainViewModel @Inject constructor(
     // If smth went wrong
     private val _failedLiveData = MutableLiveData<Boolean>()
     val failedLiveData: MutableLiveData<Boolean> = _failedLiveData
+
+    private val _dialogInternetTroubleLiveData = MutableLiveData<Boolean>()
+    val dialogInternetTroubleLiveData: LiveData<Boolean> =
+        _dialogInternetTroubleLiveData
 
     init {
         try {
@@ -112,7 +126,10 @@ class MainViewModel @Inject constructor(
     // isPrepared, isPlaying, isPlayEnabled <- it's our extensions
     // In our case, METADATA_KEY_MEDIA_ID = radioStationRemote.url
     fun playOrToggleSong(mediaItem: RadioStationPresentation, toggle: Boolean = false) {
-        Log.d(TAG, "onPageSelected 7) playOrToggleSong() called, radioStation = ${mediaItem.stationName}")
+        Log.d(
+            TAG,
+            "onPageSelected 7) playOrToggleSong() called, radioStation = ${mediaItem.stationName}"
+        )
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -125,7 +142,10 @@ class MainViewModel @Inject constructor(
                     curPlayingSongLiveData.value?.getString(METADATA_KEY_MEDIA_ID)
                 ) { // curPlayingSong.value?.getString(METADATA_KEY_MEDIA_ID) <- it's how we get metadata of currently playing song
 
-                    Log.d(TAG, "onPageSelected 9) Включаем/выключаем ту же самую песню ${mediaItem.stationName}")
+                    Log.d(
+                        TAG,
+                        "onPageSelected 9) Включаем/выключаем ту же самую песню ${mediaItem.stationName}"
+                    )
 
                     playbackStateLiveData.value?.let { playbackState ->
                         when {
@@ -219,17 +239,29 @@ class MainViewModel @Inject constructor(
                     // That function will return -1 if the song doesn't exist, so we must check:
                     if (newItemIndex != -1) {
                         if (newItemIndex >= radioStationList.size) {
-                            Log.d(TAG, "onPageSelected 2) checkThePosition -> radioStationList.indexOf(radioStationNeedToFind) >= radioStationList.size, found: $newItemIndex")
+                            Log.d(
+                                TAG,
+                                "onPageSelected 2) checkThePosition -> radioStationList.indexOf(radioStationNeedToFind) >= radioStationList.size, found: $newItemIndex"
+                            )
                         } else {
-                            Log.d(TAG, "onPageSelected 2) checkThePosition -> radioStationList.indexOf(radioStationNeedToFind) != -1, position found: newPosition = $newItemIndex")
+                            Log.d(
+                                TAG,
+                                "onPageSelected 2) checkThePosition -> radioStationList.indexOf(radioStationNeedToFind) != -1, position found: newPosition = $newItemIndex"
+                            )
                             newPosition = newItemIndex
                         }
                     } else {
-                        Log.d(TAG, "onPageSelected 2) checkThePosition -> radioStationList.indexOf(radioStationNeedToFind) = -1, found: $newItemIndex")
+                        Log.d(
+                            TAG,
+                            "onPageSelected 2) checkThePosition -> radioStationList.indexOf(radioStationNeedToFind) = -1, found: $newItemIndex"
+                        )
                     }
                 }
 
-                Log.d(TAG, "onPageSelected 3) _newPositionLiveData.postValue(newPosition), position given: $newPosition, station need to play: $radioStationNeedToFind")
+                Log.d(
+                    TAG,
+                    "onPageSelected 3) _newPositionLiveData.postValue(newPosition), position given: $newPosition, station need to play: $radioStationNeedToFind"
+                )
                 _newPositionLiveData.postValue(newPosition)
             } catch (e2: IOException) {
                 e2.printStackTrace()
@@ -246,4 +278,54 @@ class MainViewModel @Inject constructor(
     fun notJustLaunchedEnableAutoplay() {
         _isNotJustLaunchedLiveData.postValue(true)
     }
+
+    fun checkIsStationInFavouritesAndChangeTheStar(currentRadioStation: RadioStationPresentation) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                // Проверяем, есть ли станция в избранном
+                if (currentRadioStation.isStationInFavourite) {
+                    // Если станция есть в избранном и нажали на звезду, нужно из избранного удалить и убрать звезду
+                    // Меняем isStationInFavourite = false в Room для последующих обращений к БД
+                    homeRadioInteractor.deleteStationInRoomFromFavourite(currentRadioStation)
+                    _stationDeletedFromFavouritesLiveData.call()
+                } else {
+                    // Если станции в избранном нет, нужно добавить её в избранное и поставить звезду
+                    // Меняем isStationInFavourite = true в Room для последующих обращений к БД
+                    homeRadioInteractor.addStationInRoomToFavourites(currentRadioStation)
+                    _stationSavedInFavouritesLiveData.call()
+                }
+            } catch (e1: AccountsException) {
+                e1.printStackTrace()
+                _dialogInternetTroubleLiveData.call()
+            } catch (e: IOException) {
+                e.printStackTrace()
+                _failedLiveData.call()
+            }
+        }
+    }
+
+//    fun findRadioStationByMediaId(
+//        radioStationList: List<RadioStationPresentation>,
+//        mediaId: String
+//    ) {
+//        viewModelScope.launch(Dispatchers.Default) {
+//            try {
+//
+//                var radioStationNeedToFind: RadioStationPresentation? = null
+//
+//                radioStationList.forEach {
+//                    if (it.url == mediaId) {
+//                        radioStationNeedToFind = it
+//                    }
+//                }
+//
+//                radioStationNeedToFind?.let {
+//                    _radioStationNeedToFindLiveData.postValue(it)
+//                }
+//
+//            } catch (e: IOException) {
+//                e.printStackTrace()
+//            }
+//        }
+//    }
 }
