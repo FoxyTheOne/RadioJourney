@@ -10,6 +10,7 @@ import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.isVisible
+import androidx.fragment.app.viewModels
 import androidx.navigation.findNavController
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.snackbar.Snackbar
@@ -19,6 +20,7 @@ import com.myproject.radiojourney.databinding.ActivityMainBinding
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 import com.myproject.radiojourney.other.Status.*
 import com.myproject.radiojourney.presentation.adapter.SwipeRadioStationAdapter
+import com.myproject.radiojourney.presentation.content.favouriteList.FavouriteListViewModel
 import com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioFragmentDirections
 import com.myproject.radiojourney.utils.extension.isPlaying
 import com.myproject.radiojourney.utils.musicPlayer.ForegroundNotificationService
@@ -435,12 +437,20 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             binding?.imageStar?.setImageResource(R.drawable.star)
             // Так же ставим true в объекте текущей радиостанции
             setTheRightStateOfFavourite(true)
-            // TODO stationSavedInFavouritesLiveData и stationDeletedFromFavouritesLiveData нужно слушать так же в странице избранного, чтобы менять звезду и там
         }
         mainViewModel.stationDeletedFromFavouritesLiveData.observe(this) {
             binding?.imageStar?.setImageResource(R.drawable.star_transparent)
             // Так же ставим false в объекте текущей радиостанции
             setTheRightStateOfFavourite(false)
+        }
+
+        // Если изменение было в FavouriteListFragment, здесь тоже нужно это отобразить:
+        mainViewModel.changeTheStarLiveData.observe(this) {
+            if (it) {
+                binding?.imageStar?.setImageResource(R.drawable.star)
+            } else {
+                binding?.imageStar?.setImageResource(R.drawable.star_transparent)
+            }
         }
     }
 
@@ -450,6 +460,10 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
             currentRadioStationPosition?.let {
                 swipeRadioStationAdapter.radioStationList[it].isStationInFavourite = isInFavourite
+
+                if (isInFavourite) {
+                    mainViewModel.addAStationToFavouriteListIfItIsNotThere(swipeRadioStationAdapter.radioStationList[it])
+                }
             }
         }
     }

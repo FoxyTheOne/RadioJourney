@@ -1,6 +1,7 @@
 package com.myproject.radiojourney.presentation.content.favouriteList
 
 import android.accounts.AccountsException
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -109,6 +110,39 @@ class FavouriteListViewModel @Inject constructor(
         }
     }
 
+    fun addAStationToFavouriteListIfItIsNotThere(radioStation: RadioStationPresentation) {
+        viewModelScope.launch(Dispatchers.Default) {
+            try {
+
+                val radioStationList = radioStationFavouriteListLiveData.value?.toMutableList()
+                var newRadioStationList = radioStationList
+                var radioStationIsInList = false
+
+                radioStationList?.let { nonNullRadioStationList ->
+                    nonNullRadioStationList.forEach {
+                        if (it.url == radioStation.url) {
+                            radioStationIsInList = true
+                        }
+                    }
+
+                    // Если искомой радиостанции в списке нет, либо список пуст, её нужно добавить
+                    if (!radioStationIsInList) {
+                        nonNullRadioStationList.add(radioStation)
+                        newRadioStationList = nonNullRadioStationList
+                    }
+                }
+
+                newRadioStationList?.let {
+                    radioStationFavouriteListLiveData.postValue(it)
+                }
+
+            } catch (e: IOException) {
+                e.printStackTrace()
+                failedLiveData.call()
+            }
+        }
+    }
+
     fun changeTheStar(mediaId: String?, isFavourite: Boolean) {
         radioStationFavouriteListLiveData.value.apply {
             this?.forEach {
@@ -118,5 +152,4 @@ class FavouriteListViewModel @Inject constructor(
             }
         }
     }
-
 }

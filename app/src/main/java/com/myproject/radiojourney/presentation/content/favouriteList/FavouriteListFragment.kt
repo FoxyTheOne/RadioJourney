@@ -154,15 +154,23 @@ class FavouriteListFragment : BaseContentFragmentAbstract() {
             })
         viewModel.stationSavedInFavouritesLiveData.observe(viewLifecycleOwner, {
             binding?.recyclerViewRadioStationList?.adapter?.notifyDataSetChanged()
+            // Нужно так же сообщить это плейеру в activity
+            mainViewModel.changeTheStar(true)
         })
         viewModel.stationDeletedFromFavouritesLiveData.observe(viewLifecycleOwner, {
             binding?.recyclerViewRadioStationList?.adapter?.notifyDataSetChanged()
+            // Нужно так же сообщить это плейеру в activity
+            mainViewModel.changeTheStar(false)
         })
 
         // Если изменение было в activity, и открыт этот фрагмент, здесь тоже нужно это отобразить:
         mainViewModel.stationSavedInFavouritesLiveData.observe(viewLifecycleOwner, {
             binding?.recyclerViewRadioStationList?.adapter?.notifyDataSetChanged()
             viewModel.changeTheStar(mainViewModel.curPlayingSongLiveData.value?.description?.mediaId, true)
+        })
+        // Если мы добавили звезду в плейере, то в список в FavouriteListFragment нужно добавить не просто звезду, а всю позицию - на случай, если её там не было
+        mainViewModel.addAStationToFavouriteListIfItIsNotThereLiveData.observe(viewLifecycleOwner, {
+            viewModel.addAStationToFavouriteListIfItIsNotThere(it)
         })
         mainViewModel.stationDeletedFromFavouritesLiveData.observe(viewLifecycleOwner, {
             binding?.recyclerViewRadioStationList?.adapter?.notifyDataSetChanged()

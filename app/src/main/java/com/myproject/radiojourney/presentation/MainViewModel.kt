@@ -59,6 +59,13 @@ class MainViewModel @Inject constructor(
     val stationDeletedFromFavouritesLiveData: LiveData<Boolean> =
         _stationDeletedFromFavouritesLiveData
 
+    private val _changeTheStarLiveData = MutableLiveData<Boolean>()
+    val changeTheStarLiveData: LiveData<Boolean> =
+        _changeTheStarLiveData
+    private val _addAStationToFavouriteListIfItIsNotThereLiveData = MutableLiveData<RadioStationPresentation>()
+    val addAStationToFavouriteListIfItIsNotThereLiveData: LiveData<RadioStationPresentation> =
+        _addAStationToFavouriteListIfItIsNotThereLiveData
+
     // LiveData from our ServiceConnection
     val isConnectedLiveData = musicServiceConnection.isConnectedLiveData
     val networkErrorLiveData = musicServiceConnection.networkErrorLiveData
@@ -302,6 +309,14 @@ class MainViewModel @Inject constructor(
                 _failedLiveData.call()
             }
         }
+    }
+
+    fun changeTheStar(isFavourite: Boolean) {
+        _changeTheStarLiveData.postValue(isFavourite)
+    }
+
+    fun addAStationToFavouriteListIfItIsNotThere(radioStationFavourite: RadioStationPresentation) {
+        _addAStationToFavouriteListIfItIsNotThereLiveData.postValue(radioStationFavourite)
     }
 
 //    fun findRadioStationByMediaId(
