@@ -1,4 +1,4 @@
-# TMS_GRADUATE_WORK
+# RADIO_JOURNEY
 It is a repository for preparing graduate work. I will continue improving the project in private repository.
 
 This source code is free for studying purposes but you are not allowed to copy and use it in other applications (projects).
