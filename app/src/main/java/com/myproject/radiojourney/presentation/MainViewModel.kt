@@ -12,8 +12,13 @@ import androidx.lifecycle.viewModelScope
 import com.myproject.radiojourney.domain.homeRadioUseCase.IHomeRadioUseCase
 import com.myproject.radiojourney.domain.mainRadioUseCase.IMainRadioUseCase
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
+import com.myproject.radiojourney.other.Constants
 import com.myproject.radiojourney.other.Constants.ADD_SONGS
+import com.myproject.radiojourney.other.Constants.AUDIO_CONNECTING
+import com.myproject.radiojourney.other.Constants.AUDIO_PLAYING
+import com.myproject.radiojourney.other.Constants.AUDIO_STOPPED
 import com.myproject.radiojourney.other.Constants.MEDIA_ROOT_ID
+import com.myproject.radiojourney.other.Event
 import com.myproject.radiojourney.other.Resource
 import com.myproject.radiojourney.utils.exoplayer.MusicServiceConnection
 import com.myproject.radiojourney.utils.extension.*
@@ -32,6 +37,9 @@ class MainViewModel @Inject constructor(
     companion object {
         private const val TAG = "MainViewModel"
     }
+
+    private val _messageLiveData = MutableLiveData<String>()
+    val messageLiveData: LiveData<String> = _messageLiveData
 
     // LiveData contains the media data for our activity (our radioStationPresentationList)
     private val _mediaItemsListLiveData =
@@ -62,7 +70,8 @@ class MainViewModel @Inject constructor(
     private val _changeTheStarLiveData = MutableLiveData<Boolean>()
     val changeTheStarLiveData: LiveData<Boolean> =
         _changeTheStarLiveData
-    private val _addAStationToFavouriteListIfItIsNotThereLiveData = MutableLiveData<RadioStationPresentation>()
+    private val _addAStationToFavouriteListIfItIsNotThereLiveData =
+        MutableLiveData<RadioStationPresentation>()
     val addAStationToFavouriteListIfItIsNotThereLiveData: LiveData<RadioStationPresentation> =
         _addAStationToFavouriteListIfItIsNotThereLiveData
 
@@ -73,8 +82,10 @@ class MainViewModel @Inject constructor(
     val curPlayingSongLiveData = musicServiceConnection.curPlayingSongLiveData
 
     // If smth went wrong
-    private val _failedLiveData = MutableLiveData<Boolean>()
-    val failedLiveData: MutableLiveData<Boolean> = _failedLiveData
+    private val _errorMessageLiveData =
+        MutableLiveData<Event<Resource<Boolean>>>() // It must be private, so that other classes can't change it
+    val errorMessageLiveData: LiveData<Event<Resource<Boolean>>> =
+        _errorMessageLiveData // And another LiveData, that equals to previous, so that classes can't change it
 
     private val _dialogInternetTroubleLiveData = MutableLiveData<Boolean>()
     val dialogInternetTroubleLiveData: LiveData<Boolean> =
@@ -114,7 +125,14 @@ class MainViewModel @Inject constructor(
                 })
         } catch (e2: IOException) {
             e2.printStackTrace()
-            _failedLiveData.call() // TODO use Resource class and its message
+            _errorMessageLiveData.postValue(
+                Event(
+                    Resource.error(
+                        "Something went wrong while loading country stations playlist",
+                        null
+                    )
+                )
+            )
         }
     }
 
@@ -157,7 +175,11 @@ class MainViewModel @Inject constructor(
                     playbackStateLiveData.value?.let { playbackState ->
                         when {
                             playbackState.isPlaying -> if (toggle) musicServiceConnection.transportControls.pause()
-                            playbackState.isPlayEnabled -> musicServiceConnection.transportControls.play()
+                            playbackState.isPlayEnabled -> {
+                                // Создадим уведомление
+                                _messageLiveData.postValue(AUDIO_CONNECTING)
+                                musicServiceConnection.transportControls.play()
+                            }
                             else -> Unit
                         }
                         saveLastUsedRadioStationUrlAndCode(mediaItem.url, mediaItem.countryCode)
@@ -165,6 +187,7 @@ class MainViewModel @Inject constructor(
 
                     // if we want to play another song
                 } else {
+                    _messageLiveData.postValue(AUDIO_CONNECTING)
                     Log.d(TAG, "onPageSelected 9) Включаем другую песню ${mediaItem.stationName}")
 
                     musicServiceConnection.transportControls.playFromMediaId(
@@ -175,7 +198,14 @@ class MainViewModel @Inject constructor(
                 }
             } catch (e2: IOException) {
                 e2.printStackTrace()
-                _failedLiveData.call() // TODO use Resource class and its message
+                _errorMessageLiveData.postValue(
+                    Event(
+                        Resource.error(
+                            "Something went wrong while interacting with a radio station",
+                            null
+                        )
+                    )
+                )
             }
         }
 
@@ -203,7 +233,14 @@ class MainViewModel @Inject constructor(
                 _dataSavedSuccessfulLiveData.call()
             } catch (e2: IOException) {
                 e2.printStackTrace()
-                _failedLiveData.call() // TODO use Resource class and its message
+                _errorMessageLiveData.postValue(
+                    Event(
+                        Resource.error(
+                            "Failed to store the last used radio station URL in the local database",
+                            null
+                        )
+                    )
+                )
             }
         }
     }
@@ -272,7 +309,14 @@ class MainViewModel @Inject constructor(
                 _newPositionLiveData.postValue(newPosition)
             } catch (e2: IOException) {
                 e2.printStackTrace()
-                _failedLiveData.call() // TODO use Resource class and its message
+                _errorMessageLiveData.postValue(
+                    Event(
+                        Resource.error(
+                            "An unknown error occurred",
+                            null
+                        )
+                    )
+                )
             }
         }
     }
@@ -306,7 +350,14 @@ class MainViewModel @Inject constructor(
                 _dialogInternetTroubleLiveData.call()
             } catch (e: IOException) {
                 e.printStackTrace()
-                _failedLiveData.call()
+                _errorMessageLiveData.postValue(
+                    Event(
+                        Resource.error(
+                            "Failed connecting to the local database",
+                            null
+                        )
+                    )
+                )
             }
         }
     }

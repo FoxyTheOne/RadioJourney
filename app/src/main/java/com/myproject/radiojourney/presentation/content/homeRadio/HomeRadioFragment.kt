@@ -36,6 +36,7 @@ import com.myproject.radiojourney.utils.musicPlayer.*
 import kotlinx.coroutines.*
 import androidx.lifecycle.ViewModelProvider
 import androidx.viewpager2.widget.ViewPager2
+import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.other.Status
 import com.myproject.radiojourney.presentation.MainViewModel
 
@@ -357,9 +358,22 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         mainViewModel.dialogInternetTroubleLiveData.observe(viewLifecycleOwner, {
             dialogInternetTrouble.show()
         })
-        viewModel.failedLiveData.observe(viewLifecycleOwner, {
-            Toast.makeText(context, "Failure. Something went wrong", Toast.LENGTH_LONG).show()
-        })
+        viewModel.errorMessageLiveData.observe(this) {
+            it?.getContentIfNotHandled()?.let { result ->
+                when (result.status) {
+                    // If everything is ok, we don't want to show anything. Only if smth went wrong
+                    Status.ERROR ->
+                        binding?.let { nonNullBinding ->
+                            Snackbar.make(
+                                nonNullBinding.frameLayout.rootView,
+                                result.message ?: "An unknown error occurred",
+                                Snackbar.LENGTH_LONG
+                            ).show()
+                        }
+                    else -> Unit
+                }
+            }
+        }
 //        viewModel.radioStationSavedLiveData.observe(
 //            viewLifecycleOwner,
 //            { radioStationPresentation ->

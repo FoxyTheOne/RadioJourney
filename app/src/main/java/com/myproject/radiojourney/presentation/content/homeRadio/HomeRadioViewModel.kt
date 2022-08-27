@@ -10,6 +10,8 @@ import com.myproject.radiojourney.domain.homeRadioUseCase.IHomeRadioUseCase
 import com.myproject.radiojourney.domain.logOutUseCase.ILogOutUseCase
 import com.myproject.radiojourney.utils.extension.call
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
+import com.myproject.radiojourney.other.Event
+import com.myproject.radiojourney.other.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -31,7 +33,13 @@ class HomeRadioViewModel @Inject constructor(
         private const val TAG = "HomeRadioViewModel"
     }
 
-    val failedLiveData = MutableLiveData<Boolean>()
+    // If smth went wrong
+    private val _errorMessageLiveData =
+        MutableLiveData<Event<Resource<Boolean>>>() // It must be private, so that other classes can't change it
+    val errorMessageLiveData: LiveData<Event<Resource<Boolean>>> =
+        _errorMessageLiveData // And another LiveData, that equals to previous, so that classes can't change it
+
+//    val failedLiveData = MutableLiveData<Boolean>()
 //    val radioStationSavedLiveData = MutableLiveData<RadioStationPresentation>()
 
     // Подписка на локальную БД
@@ -120,7 +128,14 @@ class HomeRadioViewModel @Inject constructor(
                 dialogInternetTroubleLiveData.call()
             } catch (e2: IOException) {
                 e2.printStackTrace()
-                failedLiveData.call()
+                _errorMessageLiveData.postValue(
+                    Event(
+                        Resource.error(
+                            "Failed connecting to the local database",
+                            null
+                        )
+                    )
+                )
             }
         }
     }
@@ -195,7 +210,14 @@ class HomeRadioViewModel @Inject constructor(
                 dialogInternetTroubleLiveData.call()
             } catch (e: IOException) {
                 e.printStackTrace()
-                failedLiveData.call()
+                _errorMessageLiveData.postValue(
+                    Event(
+                        Resource.error(
+                            "Failed connecting to the local database",
+                            null
+                        )
+                    )
+                )
             }
         }
     }

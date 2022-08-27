@@ -23,4 +23,8 @@ object Constants {
         100L // we will update our seek bar 10 times a second
 
     const val ADD_SONGS = "Add Songs"
+
+    const val AUDIO_CONNECTING = "Connecting to radio station..."
+    const val AUDIO_PLAYING = "Audio started playing"
+    const val AUDIO_STOPPED = "Audio stopped"
 }

@@ -8,6 +8,8 @@ import androidx.lifecycle.viewModelScope
 import com.myproject.radiojourney.domain.favouriteListUseCase.IFavouriteListUseCase
 import com.myproject.radiojourney.domain.logOutUseCase.ILogOutUseCase
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
+import com.myproject.radiojourney.other.Event
+import com.myproject.radiojourney.other.Resource
 import com.myproject.radiojourney.utils.extension.call
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -27,7 +29,11 @@ class FavouriteListViewModel @Inject constructor(
     private val favouriteListInteractor: IFavouriteListUseCase
 ) : ViewModel() {
 
-    val failedLiveData = MutableLiveData<Boolean>()
+    // If smth went wrong
+    private val _errorMessageLiveData =
+        MutableLiveData<Event<Resource<Boolean>>>() // It must be private, so that other classes can't change it
+    val errorMessageLiveData: LiveData<Event<Resource<Boolean>>> =
+        _errorMessageLiveData // And another LiveData, that equals to previous, so that classes can't change it
 
     // LiveData для открытия диалогового окна
     val dialogInternetTroubleLiveData = MutableLiveData<Boolean>()
@@ -63,7 +69,14 @@ class FavouriteListViewModel @Inject constructor(
                 dialogInternetTroubleLiveData.call()
             } catch (e: IOException) {
                 e.printStackTrace()
-                failedLiveData.call()
+                _errorMessageLiveData.postValue(
+                    Event(
+                        Resource.error(
+                            "Failed connecting to the local database",
+                            null
+                        )
+                    )
+                )
             }
         }
     }
@@ -105,7 +118,14 @@ class FavouriteListViewModel @Inject constructor(
                 dialogInternetTroubleLiveData.call()
             } catch (e: IOException) {
                 e.printStackTrace()
-                failedLiveData.call()
+                _errorMessageLiveData.postValue(
+                    Event(
+                        Resource.error(
+                            "Failed connecting to the local database",
+                            null
+                        )
+                    )
+                )
             }
         }
     }
@@ -138,7 +158,14 @@ class FavouriteListViewModel @Inject constructor(
 
             } catch (e: IOException) {
                 e.printStackTrace()
-                failedLiveData.call()
+                _errorMessageLiveData.postValue(
+                    Event(
+                        Resource.error(
+                            "Failed connecting to the local database",
+                            null
+                        )
+                    )
+                )
             }
         }
     }

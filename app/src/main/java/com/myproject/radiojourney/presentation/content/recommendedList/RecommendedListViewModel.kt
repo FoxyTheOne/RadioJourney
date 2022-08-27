@@ -1,12 +1,15 @@
 package com.myproject.radiojourney.presentation.content.recommendedList
 
 import android.accounts.AccountsException
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myproject.radiojourney.domain.logOutUseCase.ILogOutUseCase
 import com.myproject.radiojourney.domain.recommendedListUseCase.IRecommendedListUseCase
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
+import com.myproject.radiojourney.other.Event
+import com.myproject.radiojourney.other.Resource
 import com.myproject.radiojourney.utils.extension.call
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -25,9 +28,12 @@ class RecommendedListViewModel @Inject constructor(
     private val logOutInteractor: ILogOutUseCase,
     private val recommendedListInteractor: IRecommendedListUseCase
 ) : ViewModel() {
+    private val _errorMessageLiveData =
+        MutableLiveData<Event<Resource<Boolean>>>() // It must be private, so that other classes can't change it
+    val errorMessageLiveData: LiveData<Event<Resource<Boolean>>> =
+        _errorMessageLiveData // And another LiveData, that equals to previous, so that classes can't change it
 
     val radioStationRecommendedListLiveData = MutableLiveData<List<RadioStationPresentation>>()
-    val failedLiveData = MutableLiveData<Boolean>()
 
     // LiveData для открытия диалогового окна
     val dialogInternetTroubleLiveData = MutableLiveData<Boolean>()
@@ -61,7 +67,14 @@ class RecommendedListViewModel @Inject constructor(
                 dialogInternetTroubleLiveData.call()
             } catch (e: IOException) {
                 e.printStackTrace()
-                failedLiveData.call()
+                _errorMessageLiveData.postValue(
+                    Event(
+                        Resource.error(
+                            "Failed connecting to the local database",
+                            null
+                        )
+                    )
+                )
             }
         }
     }
@@ -103,7 +116,14 @@ class RecommendedListViewModel @Inject constructor(
                 dialogInternetTroubleLiveData.call()
             } catch (e: IOException) {
                 e.printStackTrace()
-                failedLiveData.call()
+                _errorMessageLiveData.postValue(
+                    Event(
+                        Resource.error(
+                            "Failed connecting to the local database",
+                            null
+                        )
+                    )
+                )
             }
         }
     }

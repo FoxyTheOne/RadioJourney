@@ -21,7 +21,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.IntentFilter
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.entities.presentation.CountryPresentation
+import com.myproject.radiojourney.other.Status
 import kotlinx.coroutines.flow.collect
 
 /**
@@ -150,9 +152,22 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
         viewModel.dialogInternetTroubleLiveData.observe(viewLifecycleOwner, {
             dialogInternetTrouble.show()
         })
-        viewModel.failedLiveData.observe(viewLifecycleOwner, {
-            Toast.makeText(context, "Failure. Something went wrong", Toast.LENGTH_LONG).show()
-        })
+        viewModel.errorMessageLiveData.observe(this) {
+            it?.getContentIfNotHandled()?.let { result ->
+                when (result.status) {
+                    // If everything is ok, we don't want to show anything. Only if smth went wrong
+                    Status.ERROR ->
+                        binding?.let { nonNullBinding ->
+                            Snackbar.make(
+                                nonNullBinding.frameLayout.rootView,
+                                result.message ?: "An unknown error occurred",
+                                Snackbar.LENGTH_LONG
+                            ).show()
+                        }
+                    else -> Unit
+                }
+            }
+        }
     }
 
     private fun subscribeOnFlow() {

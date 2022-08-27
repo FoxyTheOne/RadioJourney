@@ -7,6 +7,7 @@ import android.support.v4.media.MediaMetadataCompat.*
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.isVisible
@@ -18,6 +19,9 @@ import com.myproject.radiojourney.IAppSettings
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.ActivityMainBinding
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
+import com.myproject.radiojourney.other.Constants.AUDIO_CONNECTING
+import com.myproject.radiojourney.other.Constants.AUDIO_PLAYING
+import com.myproject.radiojourney.other.Constants.AUDIO_STOPPED
 import com.myproject.radiojourney.other.Status.*
 import com.myproject.radiojourney.presentation.adapter.SwipeRadioStationAdapter
 import com.myproject.radiojourney.presentation.content.favouriteList.FavouriteListViewModel
@@ -423,12 +427,46 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                         binding?.let { nonNullBinding ->
                             Snackbar.make(
                                 nonNullBinding.rootLayout.rootView,
-                                result.message ?: "An unknown error occured",
+                                result.message ?: "An unknown error occurred",
                                 Snackbar.LENGTH_LONG
                             ).show()
                         }
                     else -> Unit
                 }
+            }
+        }
+
+        mainViewModel.errorMessageLiveData.observe(this) {
+            it?.getContentIfNotHandled()?.let { result ->
+                when (result.status) {
+                    // If everything is ok, we don't want to show anything. Only if smth went wrong
+                    ERROR ->
+                        binding?.let { nonNullBinding ->
+                            Snackbar.make(
+                                nonNullBinding.rootLayout.rootView,
+                                result.message ?: "An unknown error occurred",
+                                Snackbar.LENGTH_LONG
+                            ).show()
+                        }
+                    else -> Unit
+                }
+            }
+        }
+
+        mainViewModel.messageLiveData.observe(this) {
+            when (it) {
+                AUDIO_CONNECTING -> Toast.makeText(
+                    this,
+                    it,
+                    Toast.LENGTH_LONG
+                ).show()
+                AUDIO_STOPPED, AUDIO_PLAYING -> Toast.makeText(
+                    this,
+                    it,
+                    Toast.LENGTH_SHORT
+                ).show()
+                else -> {
+                } // Note the block
             }
         }
 

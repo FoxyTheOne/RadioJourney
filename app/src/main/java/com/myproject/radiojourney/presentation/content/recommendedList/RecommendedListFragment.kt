@@ -10,9 +10,11 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.IAppSettings
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.LayoutRadioStationListRecommendedBinding
+import com.myproject.radiojourney.other.Status
 import com.myproject.radiojourney.presentation.content.base.BaseContentFragmentAbstract
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -77,9 +79,22 @@ class RecommendedListFragment : BaseContentFragmentAbstract() {
         viewModel.dialogInternetTroubleLiveData.observe(viewLifecycleOwner, {
             dialogInternetTrouble.show()
         })
-        viewModel.failedLiveData.observe(viewLifecycleOwner, {
-            Toast.makeText(context, "Failure. Something went wrong", Toast.LENGTH_LONG).show()
-        })
+        viewModel.errorMessageLiveData.observe(this) {
+            it?.getContentIfNotHandled()?.let { result ->
+                when (result.status) {
+                    // If everything is ok, we don't want to show anything. Only if smth went wrong
+                    Status.ERROR ->
+                        binding?.let { nonNullBinding ->
+                            Snackbar.make(
+                                nonNullBinding.recyclerViewRecommendedRadioStationList.rootView,
+                                result.message ?: "An unknown error occurred",
+                                Snackbar.LENGTH_LONG
+                            ).show()
+                        }
+                    else -> Unit
+                }
+            }
+        }
         viewModel.radioStationRecommendedListLiveData.observe(
             viewLifecycleOwner,
             { radioStationPresentationList ->
