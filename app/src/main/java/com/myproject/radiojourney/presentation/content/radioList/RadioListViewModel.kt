@@ -1,6 +1,7 @@
 package com.myproject.radiojourney.presentation.content.radioList
 
-import android.util.Log
+import android.accounts.AccountsException
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,6 +9,8 @@ import com.myproject.radiojourney.domain.logOutUseCase.ILogOutUseCase
 import com.myproject.radiojourney.domain.radioListUseCase.IRadioListUseCase
 import com.myproject.radiojourney.utils.extension.call
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
+import com.myproject.radiojourney.other.Event
+import com.myproject.radiojourney.other.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -25,25 +28,37 @@ class RadioListViewModel @Inject constructor(
     private val logOutInteractor: ILogOutUseCase,
     private val radioListInteractor: IRadioListUseCase
 ) : ViewModel() {
+
     companion object {
         private const val TAG = "RadioListViewModel"
     }
 
     // Получение списка радиостанций
-    val radioStationListLiveData = MutableLiveData<List<RadioStationPresentation>>()
+    private val _radioStationListLiveData = MutableLiveData<List<RadioStationPresentation>>()
+    val radioStationListLiveData: MutableLiveData<List<RadioStationPresentation>> =
+        _radioStationListLiveData
 
     // LiveData, которые будут отвечать за отображение прогресса (кружок)
-    val showProgressLiveData = MutableLiveData<Boolean>()
-    val hideProgressLiveData = MutableLiveData<Boolean>()
+    private val _showProgressLiveData = MutableLiveData<Boolean>()
+    val showProgressLiveData: MutableLiveData<Boolean> = _showProgressLiveData
+    private val _hideProgressLiveData = MutableLiveData<Boolean>()
+    val hideProgressLiveData: MutableLiveData<Boolean> = _hideProgressLiveData
+
+    // If smth went wrong
+    private val _errorMessageLiveData =
+        MutableLiveData<Event<Resource<Boolean>>>() // It must be private, so that other classes can't change it
+    val errorMessageLiveData: LiveData<Event<Resource<Boolean>>> =
+        _errorMessageLiveData // And another LiveData, that equals to previous, so that classes can't change it
 
     // LiveData для открытия диалогового окна
-    val dialogInternetTroubleLiveData = MutableLiveData<Boolean>()
+    private val _dialogInternetTroubleLiveData = MutableLiveData<Boolean>()
+    val dialogInternetTroubleLiveData: MutableLiveData<Boolean> = _dialogInternetTroubleLiveData
 
     fun logout() {
         viewModelScope.launch(Dispatchers.IO) {
-            showProgressLiveData.call()
+            _showProgressLiveData.call()
             logOutInteractor.onLogout()
-            hideProgressLiveData.call()
+            _hideProgressLiveData.call()
         }
     }
 
@@ -52,12 +67,25 @@ class RadioListViewModel @Inject constructor(
             try {
                 val radioStationPresentation: List<RadioStationPresentation> =
                     radioListInteractor.getRadioStationList(countryCode)
-                radioStationListLiveData.postValue(radioStationPresentation)
+                _radioStationListLiveData.postValue(radioStationPresentation)
+            } catch (e1: AccountsException) {
+                // AccountsException -> Known direct subclasses: AuthenticatorException, NetworkErrorException, OperationCanceledException
+                e1.printStackTrace()
+                _dialogInternetTroubleLiveData.call()
+                _hideProgressLiveData.call()
             } catch (e: IOException) {
-                Log.d(TAG, "Exception: ${e.message}")
-                dialogInternetTroubleLiveData.call()
-                hideProgressLiveData.call()
+                e.printStackTrace()
+                _errorMessageLiveData.postValue(
+                    Event(
+                        Resource.error(
+                            "Failed connecting to the local database",
+                            null
+                        )
+                    )
+                )
+                _hideProgressLiveData.call()
             }
         }
     }
+
 }

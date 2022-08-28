@@ -34,6 +34,7 @@ class MainViewModel @Inject constructor(
     private val mainRadioInteractor: IMainRadioUseCase,
     private val homeRadioInteractor: IHomeRadioUseCase
 ) : ViewModel() {
+
     companion object {
         private const val TAG = "MainViewModel"
     }
@@ -160,6 +161,7 @@ class MainViewModel @Inject constructor(
             try {
                 val isPrepared = playbackStateLiveData.value?.isPrepared
                     ?: false // Checking by our Extensions from playbackState. If it is not prepared - false
+
                 Log.d(TAG, "onPageSelected 8) isPrepared = true: $isPrepared")
 
                 // if we want to play the same song (pause and play it again)
@@ -196,6 +198,10 @@ class MainViewModel @Inject constructor(
                     )
                     saveLastUsedRadioStationUrlAndCode(mediaItem.url, mediaItem.countryCode)
                 }
+            } catch (e1: AccountsException) {
+                // AccountsException -> Known direct subclasses: AuthenticatorException, NetworkErrorException, OperationCanceledException
+                e1.printStackTrace()
+                _dialogInternetTroubleLiveData.call()
             } catch (e2: IOException) {
                 e2.printStackTrace()
                 _errorMessageLiveData.postValue(
@@ -208,29 +214,17 @@ class MainViewModel @Inject constructor(
                 )
             }
         }
-
     }
-
-//    fun mediaMetadataCompatToRadioStationPresentation(curPlayingRadioStation: MediaMetadataCompat?): RadioStationPresentation? {
-//        try {
-//            viewModelScope.launch(Dispatchers.IO) {
-//                val curPlayingRadioStation =
-//                    mainRadioInteractor.mediaMetadataCompatToRadioStationPresentation(
-//                        curPlayingRadioStation
-//                    )
-//                )
-//            }
-//        } catch (e2: IOException) {
-//            e2.printStackTrace()
-//            _failedLiveData.call() // TODO use Resource class and its message
-//        }
-//    }
 
     private fun saveLastUsedRadioStationUrlAndCode(url: String, countryCode: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 mainRadioInteractor.saveLastUsedRadioStationUrlAndCode(url, countryCode)
                 _dataSavedSuccessfulLiveData.call()
+            } catch (e1: AccountsException) {
+                // AccountsException -> Known direct subclasses: AuthenticatorException, NetworkErrorException, OperationCanceledException
+                e1.printStackTrace()
+                _dialogInternetTroubleLiveData.call()
             } catch (e2: IOException) {
                 e2.printStackTrace()
                 _errorMessageLiveData.postValue(
@@ -245,10 +239,9 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    // !!! Попробуем изменять плейлист
+    // To change a playlist
     fun fetchSongs(countryCode: String) {
         val args = Bundle()
-//        args.putInt("nRecNo", 2)
         args.putString("nRecNo", countryCode)
         musicServiceConnection.sendCommand(ADD_SONGS, args)
     }
@@ -261,12 +254,62 @@ class MainViewModel @Inject constructor(
             object : MediaBrowserCompat.SubscriptionCallback() {})
     }
 
+    fun saveNewMediaId(mediaId: String) {
+        _newMediaIdLiveData.postValue(mediaId)
+    }
+
+    // TODO Test version Нужно вызывать метод playOrToggleSong, когда у нас новый плейлист а песня была на паузе. И в то же время не нужно autoplay стразу при запуске программы. Поставим флажок
+    fun notJustLaunchedEnableAutoplay() {
+        _isNotJustLaunchedLiveData.postValue(true)
+    }
+
+    fun checkIsStationInFavouritesAndChangeTheStar(currentRadioStation: RadioStationPresentation) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                // Проверяем, есть ли станция в избранном
+                if (currentRadioStation.isStationInFavourite) {
+                    // Если станция есть в избранном и нажали на звезду, нужно из избранного удалить и убрать звезду
+                    // Меняем isStationInFavourite = false в Room для последующих обращений к БД
+                    homeRadioInteractor.deleteStationInRoomFromFavourite(currentRadioStation)
+                    _stationDeletedFromFavouritesLiveData.call()
+                } else {
+                    // Если станции в избранном нет, нужно добавить её в избранное и поставить звезду
+                    // Меняем isStationInFavourite = true в Room для последующих обращений к БД
+                    homeRadioInteractor.addStationInRoomToFavourites(currentRadioStation)
+                    _stationSavedInFavouritesLiveData.call()
+                }
+            } catch (e1: AccountsException) {
+                // AccountsException -> Known direct subclasses: AuthenticatorException, NetworkErrorException, OperationCanceledException
+                e1.printStackTrace()
+                _dialogInternetTroubleLiveData.call()
+            } catch (e: IOException) {
+                e.printStackTrace()
+                _errorMessageLiveData.postValue(
+                    Event(
+                        Resource.error(
+                            "Failed connecting to the local database",
+                            null
+                        )
+                    )
+                )
+            }
+        }
+    }
+
+    fun changeTheStar(isFavourite: Boolean) {
+        _changeTheStarLiveData.postValue(isFavourite)
+    }
+
+    fun addAStationToFavouriteListIfItIsNotThere(radioStationFavourite: RadioStationPresentation) {
+        _addAStationToFavouriteListIfItIsNotThereLiveData.postValue(radioStationFavourite)
+    }
+
     fun checkThePosition(position: Int, radioStationList: List<RadioStationPresentation>) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 var newPosition = position
                 var radioStationNeedToFind: RadioStationPresentation? = null
-                val mediaId: String? = newMediaIdLiveData.value
+                val mediaId: String? = _newMediaIdLiveData.value
 
                 // For sure, calculating chosen position
                 if (radioStationList.isNotEmpty() && !mediaId.isNullOrBlank()) {
@@ -307,6 +350,10 @@ class MainViewModel @Inject constructor(
                     "onPageSelected 3) _newPositionLiveData.postValue(newPosition), position given: $newPosition, station need to play: $radioStationNeedToFind"
                 )
                 _newPositionLiveData.postValue(newPosition)
+            } catch (e1: AccountsException) {
+                // AccountsException -> Known direct subclasses: AuthenticatorException, NetworkErrorException, OperationCanceledException
+                e1.printStackTrace()
+                _dialogInternetTroubleLiveData.call()
             } catch (e2: IOException) {
                 e2.printStackTrace()
                 _errorMessageLiveData.postValue(
@@ -321,54 +368,20 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun saveNewMediaId(mediaId: String) {
-        _newMediaIdLiveData.postValue(mediaId)
-    }
-
-    // TODO Test version Нужно вызывать метод playOrToggleSong, когда у нас новый плейлист а песня была на паузе. И в то же время не нужно autoplay стразу при запуске программы. Поставим флажок
-    fun notJustLaunchedEnableAutoplay() {
-        _isNotJustLaunchedLiveData.postValue(true)
-    }
-
-    fun checkIsStationInFavouritesAndChangeTheStar(currentRadioStation: RadioStationPresentation) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                // Проверяем, есть ли станция в избранном
-                if (currentRadioStation.isStationInFavourite) {
-                    // Если станция есть в избранном и нажали на звезду, нужно из избранного удалить и убрать звезду
-                    // Меняем isStationInFavourite = false в Room для последующих обращений к БД
-                    homeRadioInteractor.deleteStationInRoomFromFavourite(currentRadioStation)
-                    _stationDeletedFromFavouritesLiveData.call()
-                } else {
-                    // Если станции в избранном нет, нужно добавить её в избранное и поставить звезду
-                    // Меняем isStationInFavourite = true в Room для последующих обращений к БД
-                    homeRadioInteractor.addStationInRoomToFavourites(currentRadioStation)
-                    _stationSavedInFavouritesLiveData.call()
-                }
-            } catch (e1: AccountsException) {
-                e1.printStackTrace()
-                _dialogInternetTroubleLiveData.call()
-            } catch (e: IOException) {
-                e.printStackTrace()
-                _errorMessageLiveData.postValue(
-                    Event(
-                        Resource.error(
-                            "Failed connecting to the local database",
-                            null
-                        )
-                    )
-                )
-            }
-        }
-    }
-
-    fun changeTheStar(isFavourite: Boolean) {
-        _changeTheStarLiveData.postValue(isFavourite)
-    }
-
-    fun addAStationToFavouriteListIfItIsNotThere(radioStationFavourite: RadioStationPresentation) {
-        _addAStationToFavouriteListIfItIsNotThereLiveData.postValue(radioStationFavourite)
-    }
+//    fun mediaMetadataCompatToRadioStationPresentation(curPlayingRadioStation: MediaMetadataCompat?): RadioStationPresentation? {
+//        try {
+//            viewModelScope.launch(Dispatchers.IO) {
+//                val curPlayingRadioStation =
+//                    mainRadioInteractor.mediaMetadataCompatToRadioStationPresentation(
+//                        curPlayingRadioStation
+//                    )
+//                )
+//            }
+//        } catch (e2: IOException) {
+//            e2.printStackTrace()
+//            _failedLiveData.call() // TODO use Resource class and its message
+//        }
+//    }
 
 //    fun findRadioStationByMediaId(
 //        radioStationList: List<RadioStationPresentation>,
@@ -394,4 +407,5 @@ class MainViewModel @Inject constructor(
 //            }
 //        }
 //    }
+
 }

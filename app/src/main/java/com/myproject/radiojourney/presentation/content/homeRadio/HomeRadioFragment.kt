@@ -621,8 +621,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                 if (latLon == country.countryLocation) {
                     //match found!  Do something....
 
-                    // TODO При выборе нового списка радиостанций всегда выбирается сначала первая радиостанция. Устала с этим бороться - одно лечишь, другое калечится. В итоге разрешила ей выбираться сразу при открытии списка страны.
-                    // После этого выбираешь нужную тебе. Не знаю, вроде работает, но нужно проверять на удобство в пользовании.
+                    // TODO !!!!!!!!!!! When you choose a new country playlist, begins to play the first radio station, no matter what you chose. Here I call the method myself, so that the first radio station is called automatically, byt it is not very convenient and not always helps
                     if (country.countryCode != mainViewModel.curPlayingSongLiveData.value?.description?.subtitle) {
                         mainViewModel.fetchSongs(country.countryCode)
                     }

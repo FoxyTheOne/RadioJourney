@@ -29,6 +29,24 @@ class FavouriteListViewModel @Inject constructor(
     private val favouriteListInteractor: IFavouriteListUseCase
 ) : ViewModel() {
 
+    // Favorite
+    private val _radioStationFavouriteListLiveData =
+        MutableLiveData<List<RadioStationPresentation>>()
+    val radioStationFavouriteListLiveData: MutableLiveData<List<RadioStationPresentation>> =
+        _radioStationFavouriteListLiveData
+    private val _stationSavedInFavouritesLiveData = MutableLiveData<Boolean>()
+    val stationSavedInFavouritesLiveData: MutableLiveData<Boolean> =
+        _stationSavedInFavouritesLiveData
+    private val _stationDeletedFromFavouritesLiveData = MutableLiveData<Boolean>()
+    val stationDeletedFromFavouritesLiveData: MutableLiveData<Boolean> =
+        _stationDeletedFromFavouritesLiveData
+
+    // LiveData, которые будут отвечать за отображение прогресса (кружок)
+    private val _showProgressLiveData = MutableLiveData<Boolean>()
+    val showProgressLiveData: MutableLiveData<Boolean> = _showProgressLiveData
+    private val _hideProgressLiveData = MutableLiveData<Boolean>()
+    val hideProgressLiveData: MutableLiveData<Boolean> = _hideProgressLiveData
+
     // If smth went wrong
     private val _errorMessageLiveData =
         MutableLiveData<Event<Resource<Boolean>>>() // It must be private, so that other classes can't change it
@@ -36,23 +54,14 @@ class FavouriteListViewModel @Inject constructor(
         _errorMessageLiveData // And another LiveData, that equals to previous, so that classes can't change it
 
     // LiveData для открытия диалогового окна
-    val dialogInternetTroubleLiveData = MutableLiveData<Boolean>()
-
-    // Favorite
-    val radioStationFavouriteListLiveData =
-        MutableLiveData<List<RadioStationPresentation>>()
-    val stationSavedInFavouritesLiveData = MutableLiveData<Boolean>()
-    val stationDeletedFromFavouritesLiveData = MutableLiveData<Boolean>()
-
-    // LiveData, которые будут отвечать за отображение прогресса (кружок)
-    val showProgressLiveData = MutableLiveData<Boolean>()
-    val hideProgressLiveData = MutableLiveData<Boolean>()
+    private val _dialogInternetTroubleLiveData = MutableLiveData<Boolean>()
+    val dialogInternetTroubleLiveData: MutableLiveData<Boolean> = _dialogInternetTroubleLiveData
 
     fun logout() {
         viewModelScope.launch(Dispatchers.IO) {
-            showProgressLiveData.call()
+            _showProgressLiveData.call()
             logOutInteractor.onLogout()
-            hideProgressLiveData.call()
+            _hideProgressLiveData.call()
         }
     }
 
@@ -61,12 +70,12 @@ class FavouriteListViewModel @Inject constructor(
             try {
                 val radioStationFavouritePresentationList =
                     favouriteListInteractor.getRadioStationFavouriteList(true)
-                radioStationFavouriteListLiveData.postValue(
+                _radioStationFavouriteListLiveData.postValue(
                     radioStationFavouritePresentationList
                 )
             } catch (e1: AccountsException) {
                 e1.printStackTrace()
-                dialogInternetTroubleLiveData.call()
+                _dialogInternetTroubleLiveData.call()
             } catch (e: IOException) {
                 e.printStackTrace()
                 _errorMessageLiveData.postValue(
@@ -84,14 +93,15 @@ class FavouriteListViewModel @Inject constructor(
     fun checkIsStationInFavouritesAndChangeTheStar(currentFavouriteRadioStation: RadioStationPresentation) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
+
                 if (currentFavouriteRadioStation.isStationInFavourite) {
                     // Если станция есть в избранном и нажали на звезду, нужно из избранного удалить и убрать звезду
                     favouriteListInteractor.deleteStationInRoomFromFavourite(
                         currentFavouriteRadioStation
                     )
-                    stationDeletedFromFavouritesLiveData.call()
+                    _stationDeletedFromFavouritesLiveData.call()
                     // В случае успеха, так же ставим false в объекте текущей радиостанции
-                    radioStationFavouriteListLiveData.value.apply {
+                    _radioStationFavouriteListLiveData.value.apply {
                         this?.forEach {
                             if (it.url == currentFavouriteRadioStation.url) {
                                 it.isStationInFavourite = false
@@ -103,9 +113,9 @@ class FavouriteListViewModel @Inject constructor(
                     favouriteListInteractor.addStationInRoomToFavourites(
                         currentFavouriteRadioStation
                     )
-                    stationSavedInFavouritesLiveData.call()
+                    _stationSavedInFavouritesLiveData.call()
                     // В случае успеха, так же ставим true в объекте текущей радиостанции
-                    radioStationFavouriteListLiveData.value.apply {
+                    _radioStationFavouriteListLiveData.value.apply {
                         this?.forEach {
                             if (it.url == currentFavouriteRadioStation.url) {
                                 it.isStationInFavourite = true
@@ -113,9 +123,10 @@ class FavouriteListViewModel @Inject constructor(
                         }
                     }
                 }
+
             } catch (e1: AccountsException) {
                 e1.printStackTrace()
-                dialogInternetTroubleLiveData.call()
+                _dialogInternetTroubleLiveData.call()
             } catch (e: IOException) {
                 e.printStackTrace()
                 _errorMessageLiveData.postValue(
@@ -134,7 +145,7 @@ class FavouriteListViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.Default) {
             try {
 
-                val radioStationList = radioStationFavouriteListLiveData.value?.toMutableList()
+                val radioStationList = _radioStationFavouriteListLiveData.value?.toMutableList()
                 var newRadioStationList = radioStationList
                 var radioStationIsInList = false
 
@@ -153,7 +164,7 @@ class FavouriteListViewModel @Inject constructor(
                 }
 
                 newRadioStationList?.let {
-                    radioStationFavouriteListLiveData.postValue(it)
+                    _radioStationFavouriteListLiveData.postValue(it)
                 }
 
             } catch (e: IOException) {
@@ -161,7 +172,7 @@ class FavouriteListViewModel @Inject constructor(
                 _errorMessageLiveData.postValue(
                     Event(
                         Resource.error(
-                            "Failed connecting to the local database",
+                            "An unknown error occurred",
                             null
                         )
                     )
@@ -171,12 +182,27 @@ class FavouriteListViewModel @Inject constructor(
     }
 
     fun changeTheStar(mediaId: String?, isFavourite: Boolean) {
-        radioStationFavouriteListLiveData.value.apply {
-            this?.forEach {
-                if (it.url == mediaId) {
-                    it.isStationInFavourite = isFavourite
+        viewModelScope.launch(Dispatchers.Default) {
+            try {
+                _radioStationFavouriteListLiveData.value.apply {
+                    this?.forEach {
+                        if (it.url == mediaId) {
+                            it.isStationInFavourite = isFavourite
+                        }
+                    }
                 }
+            } catch (e: IOException) {
+                e.printStackTrace()
+                _errorMessageLiveData.postValue(
+                    Event(
+                        Resource.error(
+                            "An unknown error occurred",
+                            null
+                        )
+                    )
+                )
             }
         }
     }
+
 }

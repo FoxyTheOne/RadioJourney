@@ -28,29 +28,41 @@ class RecommendedListViewModel @Inject constructor(
     private val logOutInteractor: ILogOutUseCase,
     private val recommendedListInteractor: IRecommendedListUseCase
 ) : ViewModel() {
+
+    private val _radioStationRecommendedListLiveData =
+        MutableLiveData<List<RadioStationPresentation>>()
+    val radioStationRecommendedListLiveData: MutableLiveData<List<RadioStationPresentation>> =
+        _radioStationRecommendedListLiveData
+
+    // Favorite
+    private val _stationSavedInFavouritesLiveData = MutableLiveData<Boolean>()
+    val stationSavedInFavouritesLiveData: MutableLiveData<Boolean> =
+        _stationSavedInFavouritesLiveData
+    private val _stationDeletedFromFavouritesLiveData = MutableLiveData<Boolean>()
+    val stationDeletedFromFavouritesLiveData: MutableLiveData<Boolean> =
+        _stationDeletedFromFavouritesLiveData
+
+    // LiveData, которые будут отвечать за отображение прогресса (кружок)
+    private val _showProgressLiveData = MutableLiveData<Boolean>()
+    val showProgressLiveData: MutableLiveData<Boolean> = _showProgressLiveData
+    private val _hideProgressLiveData = MutableLiveData<Boolean>()
+    val hideProgressLiveData: MutableLiveData<Boolean> = _hideProgressLiveData
+
+    // If smth went wrong
     private val _errorMessageLiveData =
         MutableLiveData<Event<Resource<Boolean>>>() // It must be private, so that other classes can't change it
     val errorMessageLiveData: LiveData<Event<Resource<Boolean>>> =
         _errorMessageLiveData // And another LiveData, that equals to previous, so that classes can't change it
 
-    val radioStationRecommendedListLiveData = MutableLiveData<List<RadioStationPresentation>>()
-
     // LiveData для открытия диалогового окна
-    val dialogInternetTroubleLiveData = MutableLiveData<Boolean>()
-
-    // Favorite
-    val stationSavedInFavouritesLiveData = MutableLiveData<Boolean>()
-    val stationDeletedFromFavouritesLiveData = MutableLiveData<Boolean>()
-
-    // LiveData, которые будут отвечать за отображение прогресса (кружок)
-    val showProgressLiveData = MutableLiveData<Boolean>()
-    val hideProgressLiveData = MutableLiveData<Boolean>()
+    private val _dialogInternetTroubleLiveData = MutableLiveData<Boolean>()
+    val dialogInternetTroubleLiveData: MutableLiveData<Boolean> = _dialogInternetTroubleLiveData
 
     fun logout() {
         viewModelScope.launch(Dispatchers.IO) {
-            showProgressLiveData.call()
+            _showProgressLiveData.call()
             logOutInteractor.onLogout()
-            hideProgressLiveData.call()
+            _hideProgressLiveData.call()
         }
     }
 
@@ -59,12 +71,13 @@ class RecommendedListViewModel @Inject constructor(
             try {
                 val radioStationRecommendedList =
                     recommendedListInteractor.getRadioStationRecommendedList()
-                radioStationRecommendedListLiveData.postValue(
+                _radioStationRecommendedListLiveData.postValue(
                     radioStationRecommendedList
                 )
             } catch (e1: AccountsException) {
+                // AccountsException -> Known direct subclasses: AuthenticatorException, NetworkErrorException, OperationCanceledException
                 e1.printStackTrace()
-                dialogInternetTroubleLiveData.call()
+                _dialogInternetTroubleLiveData.call()
             } catch (e: IOException) {
                 e.printStackTrace()
                 _errorMessageLiveData.postValue(
@@ -87,9 +100,9 @@ class RecommendedListViewModel @Inject constructor(
                     recommendedListInteractor.deleteStationInRoomFromFavourite(
                         radioStationOnStarClick
                     )
-                    stationDeletedFromFavouritesLiveData.call()
+                    _stationDeletedFromFavouritesLiveData.call()
                     // В случае успеха, так же ставим false в объекте текущей радиостанции
-                    radioStationRecommendedListLiveData.value.apply {
+                    _radioStationRecommendedListLiveData.value.apply {
                         this?.forEach {
                             if (it.url == radioStationOnStarClick.url) {
                                 it.isStationInFavourite = false
@@ -101,9 +114,9 @@ class RecommendedListViewModel @Inject constructor(
                     recommendedListInteractor.addStationInRoomToFavourites(
                         radioStationOnStarClick
                     )
-                    stationSavedInFavouritesLiveData.call()
+                    _stationSavedInFavouritesLiveData.call()
                     // В случае успеха, так же ставим true в объекте текущей радиостанции
-                    radioStationRecommendedListLiveData.value.apply {
+                    _radioStationRecommendedListLiveData.value.apply {
                         this?.forEach {
                             if (it.url == radioStationOnStarClick.url) {
                                 it.isStationInFavourite = true
@@ -112,8 +125,9 @@ class RecommendedListViewModel @Inject constructor(
                     }
                 }
             } catch (e1: AccountsException) {
+                // AccountsException -> Known direct subclasses: AuthenticatorException, NetworkErrorException, OperationCanceledException
                 e1.printStackTrace()
-                dialogInternetTroubleLiveData.call()
+                _dialogInternetTroubleLiveData.call()
             } catch (e: IOException) {
                 e.printStackTrace()
                 _errorMessageLiveData.postValue(

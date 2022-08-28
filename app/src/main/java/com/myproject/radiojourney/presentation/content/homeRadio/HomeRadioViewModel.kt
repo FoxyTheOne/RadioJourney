@@ -8,12 +8,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myproject.radiojourney.domain.homeRadioUseCase.IHomeRadioUseCase
 import com.myproject.radiojourney.domain.logOutUseCase.ILogOutUseCase
+import com.myproject.radiojourney.entities.presentation.CountryPresentation
 import com.myproject.radiojourney.utils.extension.call
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 import com.myproject.radiojourney.other.Event
 import com.myproject.radiojourney.other.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import java.io.IOException
 import javax.inject.Inject
@@ -29,9 +31,31 @@ class HomeRadioViewModel @Inject constructor(
     private val logOutInteractor: ILogOutUseCase,
     private val homeRadioInteractor: IHomeRadioUseCase
 ) : ViewModel() {
+
     companion object {
         private const val TAG = "HomeRadioViewModel"
     }
+
+    // Подписка на локальную БД
+    private val _countryListFlow = homeRadioInteractor.subscribeOnCountryList()
+    val countryListFlow: Flow<List<CountryPresentation>> = _countryListFlow
+
+    // LiveData, которые будут отвечать за отображение прогресса (кружок)
+    private val _showProgressLiveData = MutableLiveData<Boolean>()
+    val showProgressLiveData: MutableLiveData<Boolean> = _showProgressLiveData
+    private val _hideProgressLiveData = MutableLiveData<Boolean>()
+    val hideProgressLiveData: MutableLiveData<Boolean> = _hideProgressLiveData
+
+    // Favourites
+    private val _stationSavedInFavouritesLiveData = MutableLiveData<Boolean>()
+    val stationSavedInFavouritesLiveData: MutableLiveData<Boolean> =
+        _stationSavedInFavouritesLiveData
+    private val _stationDeletedFromFavouritesLiveData = MutableLiveData<Boolean>()
+    val stationDeletedFromFavouritesLiveData: MutableLiveData<Boolean> =
+        _stationDeletedFromFavouritesLiveData
+    private val _setTheRightStateOfFavouriteLiveData = MutableLiveData<List<Any>>()
+    val setTheRightStateOfFavouriteLiveData: LiveData<List<Any>> =
+        _setTheRightStateOfFavouriteLiveData
 
     // If smth went wrong
     private val _errorMessageLiveData =
@@ -39,38 +63,22 @@ class HomeRadioViewModel @Inject constructor(
     val errorMessageLiveData: LiveData<Event<Resource<Boolean>>> =
         _errorMessageLiveData // And another LiveData, that equals to previous, so that classes can't change it
 
-//    val failedLiveData = MutableLiveData<Boolean>()
-//    val radioStationSavedLiveData = MutableLiveData<RadioStationPresentation>()
-
-    // Подписка на локальную БД
-    val countryListFlow = homeRadioInteractor.subscribeOnCountryList()
-
-    // LiveData, которые будут отвечать за отображение прогресса (кружок)
-    val showProgressLiveData = MutableLiveData<Boolean>()
-    val hideProgressLiveData = MutableLiveData<Boolean>()
-
     // LiveData для открытия диалогового окна
-    val dialogInternetTroubleLiveData = MutableLiveData<Boolean>()
-
-    // Favourites
-    val stationSavedInFavouritesLiveData = MutableLiveData<Boolean>()
-    val stationDeletedFromFavouritesLiveData = MutableLiveData<Boolean>()
-    private val _setTheRightStateOfFavouriteLiveData = MutableLiveData<List<Any>>()
-    val setTheRightStateOfFavouriteLiveData: LiveData<List<Any>> =
-        _setTheRightStateOfFavouriteLiveData
+    private val _dialogInternetTroubleLiveData = MutableLiveData<Boolean>()
+    val dialogInternetTroubleLiveData: MutableLiveData<Boolean> = _dialogInternetTroubleLiveData
 
     // Recommended - проверено работают
-    private val eeRockFMEstonia = "https://edge02.cdn.bitflip.ee:8888/rck?_i=5f5ab186"// checked
-    private val eeRetroFMEstonia = "https://edge02.cdn.bitflip.ee:8888/RETRO?_i=258f436b"// checked
-    private val ltEasyFMURL = "https://netradio.ziniur.lt/easyfm.mp3" // checked
+    private val eeRockFMEstonia = "https://edge02.cdn.bitflip.ee:8888/rck?_i=5f5ab186"
+    private val eeRetroFMEstonia = "https://edge02.cdn.bitflip.ee:8888/RETRO?_i=258f436b"
+    private val ltEasyFMURL = "https://netradio.ziniur.lt/easyfm.mp3"
     private val plAntyradioURL =
-        "https://n-4-2.dcs.redcdn.pl/sc/o2/Eurozet/live/antyradio.livx?audio=5" // checked
-    private val plNnowySwiat = "https://stream.nowyswiat.online/mp3" // checking
+        "https://n-4-2.dcs.redcdn.pl/sc/o2/Eurozet/live/antyradio.livx?audio=5"
+    private val plNnowySwiat = "https://stream.nowyswiat.online/mp3"
     private val plMeloradioAcoustic = "https://ml.cdn.eurozet.pl/MELACO.mp3"
     private val mdVocalTranceRadioDeepVocalHouse = "http://176.9.36.203:8000/deep_320"
     private val roRo90s3NeRgYURL = "https://s11.ssl-stream.com/ssl/90s_energy?mp=/stream"
-    private val skBestFM = "http://stream.bestfm.sk/128.mp3" // checked
-    private val us2000FMHardRock = "http://bigrradio.cdnstream1.com/5104_128" // checking
+    private val skBestFM = "http://stream.bestfm.sk/128.mp3"
+    private val us2000FMHardRock = "http://bigrradio.cdnstream1.com/5104_128"
 
     private val recommendedList =
         mapOf(
@@ -85,9 +93,9 @@ class HomeRadioViewModel @Inject constructor(
 
     fun logout() {
         viewModelScope.launch(Dispatchers.IO) {
-            showProgressLiveData.call()
+            _showProgressLiveData.call()
             logOutInteractor.onLogout()
-            hideProgressLiveData.call()
+            _hideProgressLiveData.call()
         }
     }
 
@@ -119,97 +127,15 @@ class HomeRadioViewModel @Inject constructor(
                         // TODO Пересмотреть метод. Возможно, это всё нужно было для старого плейера.Но проставление звездочки favourites нужно и сейчас
                         // Favourites
                         if (nonNullRadioStation.isStationInFavourite) {
-                            stationSavedInFavouritesLiveData.call()
+                            _stationSavedInFavouritesLiveData.call()
                         }
                     }
                 }
             } catch (e1: AccountsException) {
                 e1.printStackTrace()
-                dialogInternetTroubleLiveData.call()
+                _dialogInternetTroubleLiveData.call()
             } catch (e2: IOException) {
                 e2.printStackTrace()
-                _errorMessageLiveData.postValue(
-                    Event(
-                        Resource.error(
-                            "Failed connecting to the local database",
-                            null
-                        )
-                    )
-                )
-            }
-        }
-    }
-
-//    // ДЛЯ СТАРОГО ПЛЕЙЕРА
-//    // Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
-//    fun saveRadioStationAndShow(
-//        radioStation: RadioStationPresentation,
-//        isNavigatedFromFavorite: Boolean
-//    ) {
-//        viewModelScope.launch(Dispatchers.IO) {
-//            try {
-//                // Поменять в Shared Preference setIsRadioStationStored на true. Сохранить в Shared Preference (url)
-//                homeRadioInteractor.saveRadioStationUrl(true, radioStation.url)
-//                // И сохранить радиостанцию в Room. Если перешли сюда из списка любимых радиостанций - они уже сохранены в Room
-//                if (!isNavigatedFromFavorite) {
-//                    homeRadioInteractor.saveRadioStationInRoom(radioStation)
-//                }
-//                // Отобразить
-//                radioStationSavedLiveData.postValue(radioStation)
-//                // Favourites
-//                if (radioStation.isStationInFavourite) {
-//                    stationSavedInFavouritesLiveData.call()
-//                }
-//            } catch (e1: AccountsException) {
-//                e1.printStackTrace()
-//                dialogInternetTroubleLiveData.call()
-//            } catch (e: IOException) {
-//                e.printStackTrace()
-//                failedLiveData.call()
-//            }
-//        }
-//    }
-
-    fun checkIsStationInFavouritesAndChangeTheStar(currentRadioStation: RadioStationPresentation) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                // Проверяем, есть ли станция в избранном
-                if (currentRadioStation.isStationInFavourite) {
-                    // Если станция есть в избранном и нажали на звезду, нужно из избранного удалить и убрать звезду
-                    homeRadioInteractor.deleteStationInRoomFromFavourite(currentRadioStation) // Меняем isStationInFavourite = false в Room для последующих обращений к БД
-                    stationDeletedFromFavouritesLiveData.call()
-                    // В случае успеха, так же ставим false в объекте текущей радиостанции
-//                    radioStationSavedLiveData.value.apply {
-//                        this?.isStationInFavourite = false
-//                    }
-                    // Информацию нужно передать в Activity, т.к. список текущих радиостанций находится там, в SwipeAdapter
-                    _setTheRightStateOfFavouriteLiveData.postValue(
-                        listOf(
-                            currentRadioStation.url,
-                            false
-                        )
-                    )
-                } else {
-                    // Если станции в избранном нет, нужно добавить её в избранное и поставить звезду
-                    homeRadioInteractor.addStationInRoomToFavourites(currentRadioStation) // Меняем isStationInFavourite = true в Room для последующих обращений к БД
-                    stationSavedInFavouritesLiveData.call()
-                    // В случае успеха, так же ставим true в объекте текущей радиостанции
-//                    radioStationSavedLiveData.value.apply {
-//                        this?.isStationInFavourite = true
-//                    }
-                    // Информацию нужно передать в Activity, т.к. список текущих радиостанций находится там, в SwipeAdapter
-                    _setTheRightStateOfFavouriteLiveData.postValue(
-                        listOf(
-                            currentRadioStation.url,
-                            true
-                        )
-                    )
-                }
-            } catch (e1: AccountsException) {
-                e1.printStackTrace()
-                dialogInternetTroubleLiveData.call()
-            } catch (e: IOException) {
-                e.printStackTrace()
                 _errorMessageLiveData.postValue(
                     Event(
                         Resource.error(
@@ -226,9 +152,74 @@ class HomeRadioViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 homeRadioInteractor.setRecommendedRadioStations(recommendedList)
+            } catch (e1: AccountsException) {
+                // AccountsException -> Known direct subclasses: AuthenticatorException, NetworkErrorException, OperationCanceledException
+                e1.printStackTrace()
+                _dialogInternetTroubleLiveData.call()
             } catch (e: IOException) {
                 e.printStackTrace()
+                _errorMessageLiveData.postValue(
+                    Event(
+                        Resource.error(
+                            "Failed connecting to the local database",
+                            null
+                        )
+                    )
+                )
             }
         }
     }
+
+//    fun checkIsStationInFavouritesAndChangeTheStar(currentRadioStation: RadioStationPresentation) {
+//        viewModelScope.launch(Dispatchers.IO) {
+//            try {
+//                // Проверяем, есть ли станция в избранном
+//                if (currentRadioStation.isStationInFavourite) {
+//                    // Если станция есть в избранном и нажали на звезду, нужно из избранного удалить и убрать звезду
+//                    homeRadioInteractor.deleteStationInRoomFromFavourite(currentRadioStation) // Меняем isStationInFavourite = false в Room для последующих обращений к БД
+//                    _stationDeletedFromFavouritesLiveData.call()
+//                    // В случае успеха, так же ставим false в объекте текущей радиостанции
+////                    radioStationSavedLiveData.value.apply {
+////                        this?.isStationInFavourite = false
+////                    }
+//                    // Информацию нужно передать в Activity, т.к. список текущих радиостанций находится там, в SwipeAdapter
+//                    _setTheRightStateOfFavouriteLiveData.postValue(
+//                        listOf(
+//                            currentRadioStation.url,
+//                            false
+//                        )
+//                    )
+//                } else {
+//                    // Если станции в избранном нет, нужно добавить её в избранное и поставить звезду
+//                    homeRadioInteractor.addStationInRoomToFavourites(currentRadioStation) // Меняем isStationInFavourite = true в Room для последующих обращений к БД
+//                    _stationSavedInFavouritesLiveData.call()
+//                    // В случае успеха, так же ставим true в объекте текущей радиостанции
+////                    radioStationSavedLiveData.value.apply {
+////                        this?.isStationInFavourite = true
+////                    }
+//                    // Информацию нужно передать в Activity, т.к. список текущих радиостанций находится там, в SwipeAdapter
+//                    _setTheRightStateOfFavouriteLiveData.postValue(
+//                        listOf(
+//                            currentRadioStation.url,
+//                            true
+//                        )
+//                    )
+//                }
+//            } catch (e1: AccountsException) {
+//                e1.printStackTrace()
+//                _dialogInternetTroubleLiveData.call()
+//            } catch (e: IOException) {
+//                e.printStackTrace()
+//                _errorMessageLiveData.postValue(
+//                    Event(
+//                        Resource.error(
+//                            "Failed connecting to the local database",
+//                            null
+//                        )
+//                    )
+//                )
+//            }
+//        }
+//    }
+
 }
