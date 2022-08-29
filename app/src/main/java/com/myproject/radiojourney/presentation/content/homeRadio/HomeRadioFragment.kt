@@ -35,7 +35,6 @@ import com.myproject.radiojourney.databinding.LayoutHomeRadioBinding
 import com.myproject.radiojourney.utils.musicPlayer.*
 import kotlinx.coroutines.*
 import androidx.lifecycle.ViewModelProvider
-import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.other.Status
 import com.myproject.radiojourney.presentation.MainViewModel
@@ -55,7 +54,7 @@ import com.myproject.radiojourney.presentation.MainViewModel
  */
 @AndroidEntryPoint
 class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
-    // MUSIC PLAYER ON NOTIFICATION -> 7. Implements IPlayable
+
     companion object {
         private const val TAG = "HomeRadioFragment"
     }
@@ -66,18 +65,12 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
     @Inject
     lateinit var appSettings: IAppSettings
 
-    private val viewModel by viewModels<HomeRadioViewModel>()
-
-
     // 1.1. ViewModel. We bind our viewModel to the cycle of our activity, not fragment. So, we need to do this way:
     lateinit var mainViewModel: MainViewModel
 
+    private val viewModel by viewModels<HomeRadioViewModel>()
 
     private lateinit var dialogInternetTrouble: Dialog
-
-    //    private lateinit var notificationManager: NotificationManager
-//    private var isPaused = true
-//    private var isStationSelected = false
 
     // Переменная для нашего FusedLocationProviderClient
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
@@ -96,31 +89,6 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
     //    )
     private var countryList = listOf<CountryPresentation>()
 
-//    // BOUND_SERVICE -> 8. Создадим наш Service connection (второй параметр при запуске сервиса с помощью Intent)
-//    // BOUND_SERVICE -> 8.1. Создадим переменную, чтобы инициализировать её при создании Service connection
-//    private var iMusicPlayerBinder: IMusicPlayerBinder? = null
-
-//    // BOUND_SERVICE -> 8.2. Создадим экземпляр Service connection
-//    private val connection = object : ServiceConnection {
-//        // Когда мы забандимся к нашему сервису, вызовется метод onServiceConnected() и мы получим экземпляр binder: IBinder?
-//        override fun onServiceConnected(componentName: ComponentName?, binder: IBinder?) {
-//            // Проверяем binder на null. Если он не null, приводим к типу нашего байндера и вызываем наш метод, который вернет интерфейс сервиса IAppBinder и мы сможем вызывать его методы
-//            binder?.let {
-//                iMusicPlayerBinder =
-//                    (it as MusicPlayerBoundService.MusicPlayerBoundServiceBinder).getMusicPlayerBoundServiceInstance()
-//                // В этом месте мы можем заново привязаться, если переводили Bound service в Foreground при закрытии приложения (вызвав наш метод из интерфейса):
-//                // iAppBinder?.goToBound()
-//            }
-//            iMusicPlayerBinder?.stopMediaPlayerAudio() // Останавливаем радио здесь, а не при получении аргументов с предыдущих страниц, т.к. экземпляр binder мы получаем позже и там метод не сработает
-//        }
-//
-//        // этот метод будет вызван, если связь с сервисом была прервана неожиданно
-//        override fun onServiceDisconnected(name: ComponentName?) {
-//            stopAudio()
-//            iMusicPlayerBinder = null
-//        }
-//    }
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -137,37 +105,12 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         return binding?.root
     }
 
-    // BOUND_SERVICE -> 7. Подпишемся на сервис в нашем фрагменте. Если мы подписываемся на Bound Service в каком-то методе жизненного цикла, мы обязательно должны просчитать точку входа и точку выхода (н-р, если мы входим в методе onStart, то в методе onStop должны отписаться)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-//        binding?.imagePlay?.setImageResource(R.drawable.play_white)
-//        binding?.imageStar?.setImageResource(R.drawable.star_transparent) перенесла в activity
-
 
         // 1.2. ViewModel. We bind our viewModel to the lifecycle of our activity, not fragment. We pass our activity as an owner of the lifecycle.
         // So, we need to do this way:
         mainViewModel = ViewModelProvider(requireActivity())[MainViewModel::class.java]
-
-
-        // Регистрируем бродкасты, запускаем сервисы
-//        activity?.startService(Intent(context, MusicPlayerBoundService::class.java))
-//        activity?.registerReceiver(
-//            broadcastReceiver,
-//            IntentFilter(NOTIFICATION_MUSIC_ACTION_BROADCAST)
-//        )
-//        activity?.registerReceiver(
-//            broadcastReceiverFailures,
-//            IntentFilter(MUSIC_PLAYER_SERVICE_FAILURE_PLAYING_BROADCAST)
-//        )
-
-//        // BOUND_SERVICE -> 7.1. Запускаем сервис с помощью Intent:
-//        requireContext().bindService(
-//            Intent(requireContext(), MusicPlayerBoundService::class.java),
-//            connection,
-//            Context.BIND_AUTO_CREATE
-//        )
-//        // BIND_AUTO_CREATE - каждый раз, когда мы бандимся, если сервис не был создан, он будет создаваться автоматически
-//        // Второй параметр - Service connection. Это объект, внутри которого мы будем получать наш AppServiceBinder (байндер). Здесь не достаточно просто создать экземпляр класса
 
         // Настройки диалогового окна
         dialogInternetTrouble = Dialog(requireContext())
@@ -183,50 +126,16 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                 ?.let { radioStation ->
                     Log.d(TAG, "Выбранный элемент списка: $radioStation")
 
-//                    // ДЛЯ СТАРОГО ПЛЕЙЕРА
-//                    viewModel.saveRadioStationAndShow(radioStation, false)
-//                    // Так же останавливаем проигрывание из уведомления и обновляем его (возможно, выбрали другую радиостанцию)
-//                    context?.let {
-//                        CreateNotification.updateNotification(
-//                            it,
-//                            radioStation,
-//                            R.drawable.ic_play_arrow_orange
-//                        )
-//                    }
-//                    // (Останавливаем радио в методе onServiceConnected, а не при получении аргументов с предыдущих страниц, т.к. экземпляр binder мы получаем позже, поэтому здесь метод не сработает)
-
-                    // TODO здесь мы получаем выбранную станцию из списка радиостанций по клику. Необходимо передать её в наш новый плейер
+                    // Здесь мы получаем выбранную станцию из списка радиостанций по клику. Необходимо передать её в наш новый плейер
                     mainViewModel.saveNewMediaId(radioStation.url)
                     mainViewModel.fetchSongs(radioStation.countryCode)
                     mainViewModel.playOrToggleSong(radioStation, false)
                     mainViewModel.notJustLaunchedEnableAutoplay()
                 }
-            arguments?.getParcelable<RadioStationPresentation>("radio_station_favourite")
-                ?.let { radioStationFavourite ->
-                    Log.d(TAG, "Выбранный элемент списка: $radioStationFavourite")
-
-//                    // ДЛЯ СТАРОГО ПЛЕЙЕРА
-//                    viewModel.saveRadioStationAndShow(radioStationFavourite, true)
-//                    // Так же останавливаем проигрывание из уведомления и обновляем его (возможно, выбрали другую радиостанцию)
-//                    context?.let {
-//                        CreateNotification.updateNotification(
-//                            it,
-//                            radioStationFavourite,
-//                            R.drawable.ic_play_arrow_orange
-//                        )
-//                    }
-//                    // (Останавливаем радио в методе onServiceConnected, а не при получении аргументов с предыдущих страниц, т.к. экземпляр binder мы получаем позже, поэтому здесь метод не сработает)
-
-                    // TODO здесь мы получаем выбранную станцию из списка радиостанций по клику. Необходимо передать её в наш новый плейер
-                    mainViewModel.saveNewMediaId(radioStationFavourite.url)
-                    mainViewModel.fetchSongs(radioStationFavourite.countryCode)
-                    mainViewModel.fetchSongs(radioStationFavourite.countryCode)
-                    mainViewModel.playOrToggleSong(radioStationFavourite, false)
-                    mainViewModel.notJustLaunchedEnableAutoplay()
-                }
-        } else {
-            viewModel.getStoredRadioStation() // 1. Подгрузить радиостанцию из Shared Preference, если она там сохранена. Если нет - текст "выберите радиостанцию"
         }
+//        else {
+//            viewModel.getStoredRadioStation() // 1. Подгрузить радиостанцию из Shared Preference, если она там сохранена. Если нет - текст "выберите радиостанцию"
+//        }
 
         // GOOGLE MAPS -> 2.2. Obtain the SupportMapFragment and get notified when the map is ready to be used.
         // Необходимо найти supportFragmentManager в списке всех фрагментов
@@ -270,7 +179,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         getCurrentOrLastLocation()
         // Получить локацию нужно разово, при открытии фрагмента. Обновлять не нужно.
 
-        viewModel.setRecommendedRadioStations()
+//        viewModel.setRecommendedRadioStations()
         initListeners()
         subscribeOnLiveData()
 
@@ -292,50 +201,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         binding?.buttonYouAreHere?.setOnClickListener {
             getCurrentOrLastLocation()
         }
-//        binding?.textRadioStationTitle?.setOnClickListener {
-//            if (isStationSelected) {
-//                if (isPaused) {
-//                    playAudio() // <- Нажали кнопку play
-//                } else {
-//                    stopAudio() // <- Нажали кнопку stop
-//                    Toast.makeText(context, "Audio stopped", Toast.LENGTH_SHORT).show()
-//                }
-//            }
-//        }
-//        binding?.imagePlay?.setOnClickListener {
-//            if (isStationSelected) {
-//                if (isPaused) {
-//                    playAudio() // <- Нажали кнопку play
-//                } else {
-//                    stopAudio() // <- Нажали кнопку stop
-//                    Toast.makeText(context, "Audio stopped", Toast.LENGTH_SHORT).show()
-//                }
-//            }
-//        }
-//        binding?.imageStar?.setOnClickListener { перенесла в activity
-////            val currentRadioStation = viewModel.radioStationSavedLiveData.value
-////            currentRadioStation?.let {
-////                viewModel.checkIsStationInFavouritesAndChangeTheStar(it)
-////            }
-//
-//            val viewPagerFromActivity = activity?.findViewById<ViewPager2>(R.id.vpSong)
-//            val currentRadioStationPosition = viewPagerFromActivity?.currentItem
-//            currentRadioStationPosition?.let {
-//                val currentRadioStation = mainViewModel.mediaItemsListLiveData.value?.data?.get(
-//                    currentRadioStationPosition
-//                )
-//                currentRadioStation?.let {
-//                    viewModel.checkIsStationInFavouritesAndChangeTheStar(it)
-//                }
-//            }
-//        }
-        binding?.buttonGoToRecommended?.setOnClickListener {
-//            stopAudio() // <- Если нажали, перед переходом нужно остановить музыку
-            this.findNavController()
-                .navigate(R.id.action_homeRadioFragment_to_recommendedListFragment)
-        }
         binding?.buttonGoToFavourites?.setOnClickListener {
-//            stopAudio() // <- Если нажали, перед переходом нужно остановить музыку
             this.findNavController()
                 .navigate(R.id.action_homeRadioFragment_to_favouriteListFragment)
         }
@@ -374,25 +240,6 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                 }
             }
         }
-//        viewModel.radioStationSavedLiveData.observe(
-//            viewLifecycleOwner,
-//            { radioStationPresentation ->
-//                binding?.textRadioStationTitle?.text = radioStationPresentation.stationName
-//                isStationSelected = true
-//            })
-//        viewModel.stationSavedInFavouritesLiveData.observe(viewLifecycleOwner, {
-//            binding?.imageStar?.setImageResource(R.drawable.star)
-//        })
-//        viewModel.stationDeletedFromFavouritesLiveData.observe(viewLifecycleOwner, {
-//            binding?.imageStar?.setImageResource(R.drawable.star_transparent)
-//        })
-//        viewModel.setTheRightStateOfFavouriteLiveData.observe(viewLifecycleOwner, {
-//            val mediaId = it[0] as String
-//            val isFavourite = it[1] as Boolean
-//            mainViewModel.setTheRightStateOfFavourite(mediaId, isFavourite)
-//        })
-
-
         // Subscribe to mediaItems LiveData
         // As result we have here List<RadioStationPresentation>, surrounded by Resource (Resource<List<RadioStationPresentation>>)
         // That's why we can easily check the state of our current list of stations
@@ -407,31 +254,6 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                 }
                 Status.ERROR -> Unit // We never emitted here an error status, so we don't do anything here
                 Status.LOADING -> binding?.progressCircular?.isVisible = true
-            }
-
-            // Описываем внутри, чтобы среагировать точно после обновления mediaItemsListLiveData.observe
-            mainViewModel.curPlayingSongLiveData.observe(viewLifecycleOwner) {
-                // В данном формате мы знаем, что песня изменилась, но не знаем, есть ли она в избранном. Зато эта информация есть в списке mediaItemsListLiveData
-                var radioStationNeedToFind: RadioStationPresentation? = null
-                val radioStationList = mainViewModel.mediaItemsListLiveData.value?.data
-
-                // Проверка на случай, если логика запущена не вовремя и список mediaItemsListLiveData и curPlayingSongLiveData разнятся
-                if (radioStationList != null && it?.description?.subtitle == radioStationList[0].countryCode) {
-                    radioStationList.forEach { radioStation ->
-                        if (radioStation.url == it.description.mediaId) {
-                            radioStationNeedToFind = radioStation
-                        }
-                    }
-
-//                    // Здесь нам нужно выставить звезду, если радиостанция находится в избранном или убрать, если её там нет
-//                    radioStationNeedToFind?.let { currentStation ->
-//                        if (currentStation.isStationInFavourite) {
-//                            binding?.imageStar?.setImageResource(R.drawable.star)
-//                        } else {
-//                            binding?.imageStar?.setImageResource(R.drawable.star_transparent)
-//                        }
-//                    }
-                }
             }
         }
     }
@@ -459,29 +281,6 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             }
         }
     }
-
-//    override fun playAudio() {
-//        // Изменяем уведомление и включаем радио
-//        val radioStationSaved = viewModel.radioStationSavedLiveData.value
-//        radioStationSaved?.let {
-//            iMusicPlayerBinder?.playMediaPlayerAudioAndShowNotification(it)
-//        }
-//
-//        binding?.imagePlay?.setImageResource(R.drawable.pause_white)
-//        isPaused = false
-//    }
-
-//    override fun stopAudio() {
-//        // Останавливаем проигрывание
-//        iMusicPlayerBinder?.stopMediaPlayerAudio()
-//        // Изменяем уведомление
-//        val radioStationSaved = viewModel.radioStationSavedLiveData.value
-//        radioStationSaved?.let {
-//            iMusicPlayerBinder?.stopMediaPlayerNotification(it)
-//        }
-//        binding?.imagePlay?.setImageResource(R.drawable.play_white)
-//        isPaused = true
-//    }
 
     private fun showProgress() {
         binding?.frameLayout?.isVisible = true
@@ -626,9 +425,6 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                         mainViewModel.fetchSongs(country.countryCode)
                     }
 
-//                    // Если нажали на маркер, перед переходом на список нужно остановить музыку
-//                    stopAudio()
-
                     Log.d(
                         TAG,
                         "Результат - выбран маркер: $latLon = ${country.countryLocation}, ${country.countryName}"
@@ -675,7 +471,6 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 
     // TOOLBAR - Описываем метод из интерфейса ILogOutListener для выхода из аккаунта приложения
     override fun onLogOut() {
-//        stopAudio() // Если нажали, перед переходом нужно остановить музыку
         viewModel.logout()
         activity?.finish()
     }
@@ -686,40 +481,4 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         binding = null
     }
 
-//    override fun onDestroy() {
-    // MUSIC PLAYER ON NOTIFICATION -> END. Запускали сервис - убираем уведомления. Регистрировали бродкаст - отписываемся
-//        notificationManager.cancelAll()
-//        activity?.unregisterReceiver(broadcastReceiver)
-//        activity?.unregisterReceiver(broadcastReceiverFailures)
-
-//        // BOUND_SERVICE -> 7.2. Заканчиваем соединение. Сюда также передаём наш Service connection. Создадим его (см. выше)
-//        iMusicPlayerBinder?.let {
-//            requireContext().unbindService(connection)
-//        }
-//        super.onDestroy()
-//    }
-
-//    // MUSIC PLAYER ON NOTIFICATION -> 8. Receiving Broadcast
-//    private var broadcastReceiver: BroadcastReceiver? = object : BroadcastReceiver() {
-//        override fun onReceive(context: Context?, intent: Intent) {
-//
-//            // Describe different situations, such as prev track, play, next track
-//            when (intent.getStringExtra("action_name")) {
-//                Constants.NOTIFICATION_MUSIC_ACTION_PLAY -> if (isPaused) {
-//                    playAudio() // <- Нажали кнопку play
-//                } else {
-//                    stopAudio() // <- Нажали кнопку stop
-//                }
-//                else -> Log.d(TAG, "Wrong action")
-//            }
-//        }
-//    }
-
-//    // Если не получилось запустить радиостанцию методом playMediaPlayerAudioAndShowNotification(), нужно изменить кнопочку обратно на паузу. Получаем intent из MusicPlayerBoundService
-//    private var broadcastReceiverFailures: BroadcastReceiver? = object : BroadcastReceiver() {
-//        override fun onReceive(context: Context?, intent: Intent) {
-//            binding?.imagePlay?.setImageResource(R.drawable.play_white)
-//            isPaused = intent.getBooleanExtra("play_failure", true)
-//        }
-//    }
 }

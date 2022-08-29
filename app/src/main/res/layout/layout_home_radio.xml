@@ -112,7 +112,8 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/linear_canTakeTime">
 
-            <androidx.appcompat.widget.AppCompatButton
+            <!-- Don't need Recommended any more, but need to do another button here later -->
+            <!-- androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/button_goToRecommended"
                 style="@style/Widget.AppCompat.ActionButton"
                 android:layout_width="wrap_content"
@@ -123,7 +124,7 @@
                 android:textColor="@color/white"
                 android:textSize="@dimen/button_text"
                 android:textStyle="bold"
-                app:backgroundTint="@null" />
+                app:backgroundTint="@null" / -->
 
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/button_goToFavourites"
@@ -206,8 +207,8 @@
             android:layout_height="wrap_content"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 

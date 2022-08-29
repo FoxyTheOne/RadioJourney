@@ -12,11 +12,8 @@ import androidx.lifecycle.viewModelScope
 import com.myproject.radiojourney.domain.homeRadioUseCase.IHomeRadioUseCase
 import com.myproject.radiojourney.domain.mainRadioUseCase.IMainRadioUseCase
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
-import com.myproject.radiojourney.other.Constants
 import com.myproject.radiojourney.other.Constants.ADD_SONGS
 import com.myproject.radiojourney.other.Constants.AUDIO_CONNECTING
-import com.myproject.radiojourney.other.Constants.AUDIO_PLAYING
-import com.myproject.radiojourney.other.Constants.AUDIO_STOPPED
 import com.myproject.radiojourney.other.Constants.MEDIA_ROOT_ID
 import com.myproject.radiojourney.other.Event
 import com.myproject.radiojourney.other.Resource
