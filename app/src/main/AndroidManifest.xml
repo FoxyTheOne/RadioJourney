@@ -58,10 +58,10 @@
         <!--
          И другие компоненты
           -->
-        <receiver android:name=".utils.musicPlayer.NotificationActionBroadcast" />
+        <receiver android:name=".utils.oldMusicPlayer.NotificationActionBroadcast" />
 
-        <service android:name=".utils.musicPlayer.MusicPlayerBoundService" />
-        <service android:name=".utils.musicPlayer.ForegroundNotificationService" />
+        <service android:name=".utils.oldMusicPlayer.MusicPlayerBoundService" />
+        <service android:name=".utils.oldMusicPlayer.ForegroundNotificationService" />
         <!--
         Google maps:
          -->

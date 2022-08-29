@@ -11,6 +11,7 @@ import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.other.Constants.NOTIFICATION_CHANNEL_ID
 import com.myproject.radiojourney.other.Constants.NOTIFICATION_ID
+import java.util.*
 
 class MusicNotificationManager(
     private val context: Context,
@@ -61,7 +62,13 @@ class MusicNotificationManager(
 
         // here we just return our subtitle
         override fun getCurrentContentText(player: Player): CharSequence? {
-            return mediaController.metadata.description.subtitle.toString()
+//            return mediaController.metadata.description.subtitle.toString()
+
+            val countryCode = mediaController.metadata.description.subtitle.toString()
+            // Don't know, how to reach MediaMetadataCompat key METADATA_KEY_ARTIST, so I'm converting country code to the country name
+            // But maybe it's better to do so. Because of this, the country name can be written in different languages, depending on the phone settings.
+            val loc = Locale("", countryCode)
+            return loc.displayName
         }
 
         // Our large icon for notification

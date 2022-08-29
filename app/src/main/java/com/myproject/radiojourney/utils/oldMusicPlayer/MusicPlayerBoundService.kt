@@ -1,4 +1,4 @@
-package com.myproject.radiojourney.utils.musicPlayer
+package com.myproject.radiojourney.utils.oldMusicPlayer
 
 import android.app.Service
 import android.content.Context

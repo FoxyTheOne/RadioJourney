@@ -32,7 +32,7 @@ import com.google.android.gms.maps.model.Marker
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 import android.widget.Toast
 import com.myproject.radiojourney.databinding.LayoutHomeRadioBinding
-import com.myproject.radiojourney.utils.musicPlayer.*
+import com.myproject.radiojourney.utils.oldMusicPlayer.*
 import kotlinx.coroutines.*
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.snackbar.Snackbar
