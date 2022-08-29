@@ -187,6 +187,10 @@ class FavouriteListFragment : BaseContentFragmentAbstract() {
         mainViewModel.addAStationToFavouriteListIfItIsNotThereLiveData.observe(viewLifecycleOwner, {
             viewModel.addAStationToFavouriteListIfItIsNotThere(it)
         })
+        // Если добавляем первую станцию в пустой список, нужно убрать надпись
+        viewModel.addingAStationToAnEmptyListLiveData.observe(viewLifecycleOwner, {
+            binding?.textFavouritesEmpty?.isVisible = false
+        })
         mainViewModel.stationDeletedFromFavouritesLiveData.observe(viewLifecycleOwner, {
             binding?.recyclerViewRadioStationList?.adapter?.notifyDataSetChanged()
             viewModel.changeTheStar(mainViewModel.curPlayingSongLiveData.value?.description?.mediaId, false)

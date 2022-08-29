@@ -40,6 +40,9 @@ class FavouriteListViewModel @Inject constructor(
     private val _stationDeletedFromFavouritesLiveData = MutableLiveData<Boolean>()
     val stationDeletedFromFavouritesLiveData: MutableLiveData<Boolean> =
         _stationDeletedFromFavouritesLiveData
+    private val _addingAStationToAnEmptyListLiveData = MutableLiveData<Boolean>()
+    val addingAStationToAnEmptyListLiveData: MutableLiveData<Boolean> =
+        _addingAStationToAnEmptyListLiveData
 
     // LiveData, которые будут отвечать за отображение прогресса (кружок)
     private val _showProgressLiveData = MutableLiveData<Boolean>()
@@ -154,6 +157,11 @@ class FavouriteListViewModel @Inject constructor(
                         if (it.url == radioStation.url) {
                             radioStationIsInList = true
                         }
+                    }
+
+                    // Если добавляем первую станцию в пустой список, нужно убрать надпись
+                    if (!radioStationIsInList && radioStationList.isEmpty()) {
+                        _addingAStationToAnEmptyListLiveData.call()
                     }
 
                     // Если искомой радиостанции в списке нет, либо список пуст, её нужно добавить
