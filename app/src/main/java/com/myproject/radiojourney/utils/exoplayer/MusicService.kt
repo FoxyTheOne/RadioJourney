@@ -7,15 +7,12 @@ import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
-import android.util.Log
 import androidx.media.MediaBrowserServiceCompat
-import com.google.android.exoplayer2.ExoPlaybackException
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import com.google.android.exoplayer2.upstream.HttpDataSource
 import com.myproject.radiojourney.data.sharedPreference.IAppSharedPreference
 import com.myproject.radiojourney.other.Constants.MEDIA_ROOT_ID
 import com.myproject.radiojourney.other.Constants.NETWORK_ERROR
@@ -25,9 +22,7 @@ import com.myproject.radiojourney.utils.exoplayer.callback.MusicPlayerNotificati
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import java.io.IOException
-import java.net.SocketTimeoutException
 import javax.inject.Inject
-import javax.net.ssl.SSLHandshakeException
 
 /**
  * Создадим наш Exoplayer и сервис для него.

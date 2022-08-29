@@ -37,6 +37,8 @@ class MusicNotificationManager(
         ).apply {
             setSmallIcon(R.drawable.ic_music_note_orange)
             setMediaSessionToken(sessionToken) // gives our notification manager access to our current media session in our music service. So, it will se changes in our music service
+            setFastForwardIncrementMs(0) // Hiding fast forward button
+            setRewindIncrementMs(0) // Hiding rewind button
         }
     }
 
