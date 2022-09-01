@@ -25,20 +25,44 @@ class MusicNotificationManager(
     init {
         val mediaController = MediaControllerCompat(context, sessionToken)
 
+//        // PlayerNotificationManager.createWithNotificationChannel is deprecated
+//        notificationManager = PlayerNotificationManager.createWithNotificationChannel(
+//            context,
+//            NOTIFICATION_CHANNEL_ID,
+//            R.string.notification_channel_name,
+//            R.string.notification_channel_description,
+//            NOTIFICATION_ID,
+//            DescriptionAdapter(mediaController),
+//            notificationListener
+//        ).apply {
+//            setSmallIcon(R.drawable.ic_music_note_orange)
+//            setMediaSessionToken(sessionToken) // gives our notification manager access to our current media session in our music service. So, it will se changes in our music service
+//            setFastForwardIncrementMs(0) // Hiding fast forward button
+//            setRewindIncrementMs(0) // Hiding rewind button
+//        }
+
         // createWithNotificationChannel() function creates a notification channel for us
-        notificationManager = PlayerNotificationManager.createWithNotificationChannel(
+        notificationManager = PlayerNotificationManager.Builder(
             context,
-            NOTIFICATION_CHANNEL_ID,
-            R.string.notification_channel_name,
-            R.string.notification_channel_description,
             NOTIFICATION_ID,
-            DescriptionAdapter(mediaController),
-            notificationListener
-        ).apply {
+            NOTIFICATION_CHANNEL_ID
+        )
+            .setChannelNameResourceId(R.string.notification_channel_name)
+            .setChannelDescriptionResourceId(R.string.notification_channel_description)
+            .setMediaDescriptionAdapter(DescriptionAdapter(mediaController))
+            .setNotificationListener(notificationListener)
+            .setSmallIconResourceId(R.drawable.ic_music_note_orange)
+            .build()
+
+        notificationManager.apply {
             setSmallIcon(R.drawable.ic_music_note_orange)
             setMediaSessionToken(sessionToken) // gives our notification manager access to our current media session in our music service. So, it will se changes in our music service
-            setFastForwardIncrementMs(0) // Hiding fast forward button
-            setRewindIncrementMs(0) // Hiding rewind button
+            // Hiding fast forward button
+            setUseFastForwardAction(false)
+            setUseFastForwardActionInCompactView(false)
+            // Hiding rewind button
+            setUseRewindAction(false)
+            setUseRewindActionInCompactView(false)
         }
     }
 

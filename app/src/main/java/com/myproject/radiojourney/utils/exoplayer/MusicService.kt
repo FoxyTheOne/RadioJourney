@@ -8,11 +8,12 @@ import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.media.MediaBrowserServiceCompat
+import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import com.google.android.exoplayer2.upstream.DefaultDataSource
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
 import com.myproject.radiojourney.data.sharedPreference.IAppSharedPreference
 import com.myproject.radiojourney.other.Constants.MEDIA_ROOT_ID
 import com.myproject.radiojourney.other.Constants.NETWORK_ERROR
@@ -40,10 +41,13 @@ class MusicService : MediaBrowserServiceCompat() {
 
     // Inject our data source factory
     @Inject
-    lateinit var dataSourceFactory: DefaultDataSourceFactory
+    lateinit var dataSourceFactory: DefaultDataSource.Factory
 
     @Inject
-    lateinit var exoPlayer: SimpleExoPlayer
+    lateinit var httpDataSourceFactory: DefaultHttpDataSource.Factory
+
+    @Inject
+    lateinit var exoPlayer: ExoPlayer // SimpleExoPlayer is deprecated
 
     @Inject
     lateinit var firebaseMusicSource: FirebaseMusicSource
@@ -123,6 +127,7 @@ class MusicService : MediaBrowserServiceCompat() {
 
         // lambda in this {} will be switched every time, when user chooses a new song
         val musicPlaybackPreparer = MusicPlaybackPreparer(firebaseMusicSource, serviceScope) {
+
             if (isPlayerInitialized && it == null) {
                 return@MusicPlaybackPreparer // Если isPlayerInitialized == true, значит это точно не первый запуск. Если isPlayerInitialized && it == null - значит сюда передан результат раньше, чем скачался плейлист (Было curPlayingSong != null && it == null, работает с нюансами)
             }
@@ -139,6 +144,7 @@ class MusicService : MediaBrowserServiceCompat() {
         mediaSessionConnector.setQueueNavigator(MusicQueueNavigator()) // 14.2
         mediaSessionConnector.setPlayer(exoPlayer)
 
+
         musicPlayerEventListener = MusicPlayerEventListener(this)
         exoPlayer.addListener(musicPlayerEventListener)
         musicNotificationManager.showNotification(exoPlayer)
@@ -147,29 +153,10 @@ class MusicService : MediaBrowserServiceCompat() {
     // Запущенный сервис будет работать пока у него не вызван stopSelf().
     // Передавать данные в сервис можно так же с помощью startService(intent),
     // новый сервис запускаться при этом не будет, а у запущенного сервиса будет вызван onStartCommand.
-//    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-//
-//        serviceScope.launch {
-//            try {
-//                // TODO узнать, какой country code был у последней радиостанции при последней запуске, если это не первый запуск
-//                // если первый запуск - запустить по умолчанию
-//                val lastPlayedCountryCode = preference.getLastUsedRadioStationCountryCode()
-//
-//                // Загрузаем метаданные всех радиостанций с определенным country code ПРИ ЗАПУСКЕ СЕРВИСА
-//                firebaseMusicSource.fetchMediaData(
-//                    if (lastPlayedCountryCode != "null" && lastPlayedCountryCode.isNotBlank()) lastPlayedCountryCode
-//                    else "AD")
-//
-//
-//            } catch (e: IOException) {
-//                // Когда сохранён не верный CountryCode, по запросу такого не найдёт и выдаст ошибку retrofit2.HttpException: HTTP 404
-//                e.printStackTrace()
-//                firebaseMusicSource.fetchMediaData("AD")
-//            }
-//        }
-//
-//        return super.onStartCommand(intent, flags, startId)
-//    }
+
+    fun testMethodForError() {
+
+    }
 
     // Let's prepare our exoplayer
     private fun preparePlayer(
@@ -209,7 +196,22 @@ class MusicService : MediaBrowserServiceCompat() {
 
         val curSongIndex =
             if (curPlayingSong == null) lastItemIndex else radioStations.indexOf(itemToPlay) // если песня не выбрана - просто играем первую. Либо ищем конкретную по индексу
-        exoPlayer.prepare(firebaseMusicSource.asMediaSource(dataSourceFactory)) // Вызываем метод из firebaseMusicSource, чтобы сформировать данные для плейлист
+
+
+        // Проверить, заканчивается ли ссылка на .m3u8
+        // Если да, нам нужно использовать HlsMediaSource
+        val mediaUri =
+            firebaseMusicSource.radioStations[curSongIndex].description.mediaUri.toString()
+        if (mediaUri.endsWith(".m3u8")
+        ) {
+            // TODO Player is accessed on the wrong thread.
+            exoPlayer.setMediaSource(firebaseMusicSource.asHlsMediaSource(httpDataSourceFactory)) // Вызываем метод из firebaseMusicSource, чтобы сформировать данные для плейлист
+        } else {
+            // TODO Player is accessed on the wrong thread.
+            // ExoPlayer.prepare(MediaSource mediaSource) is deprecated. Use setMediaSource(MediaSource) and ExoPlayer.prepare() instead
+            exoPlayer.setMediaSource(firebaseMusicSource.asMediaSource(dataSourceFactory)) // Вызываем метод из firebaseMusicSource, чтобы сформировать данные для плейлист
+        }
+
         exoPlayer.seekTo(
             curSongIndex,
             0L
@@ -217,6 +219,7 @@ class MusicService : MediaBrowserServiceCompat() {
         exoPlayer.playWhenReady =
             playNow // play song, when it will be ready (it will be false, and after - true, when ready)
 
+        exoPlayer.prepare()
     }
 
     // media root id - is the id to the very first media item (what should be shown first)

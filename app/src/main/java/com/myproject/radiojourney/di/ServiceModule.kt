@@ -2,10 +2,10 @@ package com.myproject.radiojourney.di
 
 import android.content.Context
 import com.google.android.exoplayer2.C
-import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.audio.AudioAttributes
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import com.google.android.exoplayer2.util.Util
+import com.google.android.exoplayer2.upstream.DefaultDataSource
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,7 +21,7 @@ object ServiceModule {
     @ServiceScoped // !!! ServiceScoped - это как синглтон внутри сервиса (не всего приложения)
     @Provides
     fun provideAudioAttributes() = AudioAttributes.Builder()
-        .setContentType(C.CONTENT_TYPE_MUSIC)
+        .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC) // CONTENT_TYPE_MUSIC is deprecated
         .setUsage(C.USAGE_MEDIA)
         .build()
 
@@ -31,15 +31,24 @@ object ServiceModule {
     fun provideExoPlayer(
         @ApplicationContext context: Context,
         audioAttributes: AudioAttributes // <- Инструкцию по созданию мы описали выше
-    ) = SimpleExoPlayer.Builder(context).build().apply {
+    ) = ExoPlayer.Builder(context).build().apply {
         setAudioAttributes(audioAttributes, true)
         setHandleAudioBecomingNoisy(true) // Stops music if user plugs in his headphones, for instance. It can be too noisy
     }
 
-    @ServiceScoped
+    // Deprecated
+//    @ServiceScoped
+//    @Provides
+//    fun provideDataSourceFactory(
+//        @ApplicationContext context: Context
+//    ) = DefaultDataSourceFactory(context, Util.getUserAgent(context, "RadioJourney"))@ServiceScoped
+
     @Provides
     fun provideDataSourceFactory(
         @ApplicationContext context: Context
-    ) = DefaultDataSourceFactory(context, Util.getUserAgent(context, "RadioJourney"))
+    ) = DefaultDataSource.Factory(context)
+
+    @Provides
+    fun provideHttpDataSource() = DefaultHttpDataSource.Factory()
 
 }

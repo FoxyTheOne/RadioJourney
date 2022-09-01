@@ -395,6 +395,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             binding?.ivPlayPause?.setImageResource(
                 if (playbackState?.isPlaying == true) R.drawable.ic_pause_orange else R.drawable.ic_play_arrow_orange
             )
+
         }
 
         // LIVEDATA: This event can be emitted once. We handled it in the class Event
@@ -529,7 +530,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
                 }
             } catch (e: IndexOutOfBoundsException) {
-                Log.d(TAG, "fun namePosition - CACHED IndexOutOfBoundsException!")
+                Log.d(TAG, "CAUGHT IndexOutOfBoundsException!")
                 e.printStackTrace()
             }
 

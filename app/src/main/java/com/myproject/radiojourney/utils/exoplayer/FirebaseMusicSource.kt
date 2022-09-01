@@ -7,9 +7,12 @@ import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.MediaMetadataCompat.*
 import androidx.core.net.toUri
+import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import com.google.android.exoplayer2.source.hls.HlsMediaSource
+import com.google.android.exoplayer2.upstream.DefaultDataSource
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
 import com.myproject.radiojourney.data.dataSource.network.INetworkRadioDataSource
 import com.myproject.radiojourney.utils.exoplayer.State.*
 import kotlinx.coroutines.Dispatchers
@@ -102,13 +105,38 @@ class FirebaseMusicSource @Inject constructor(
     }
         .toMutableList() // Flag FLAG_PLAYABLE indicates that the item is playable, not the item that has children of its own.
 
+    // DefaultDataSourceFactory is deprecated
+//    fun asMediaSource(dataSourceFactory: DefaultDataSourceFactory): ConcatenatingMediaSource {
+//        val concatenatingMediaSource = ConcatenatingMediaSource() // empty by default
+//        radioStations.forEach { radioStation ->
+//            val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
+//                .createMediaSource(radioStation.getString(METADATA_KEY_MEDIA_URI).toUri())
+//            concatenatingMediaSource.addMediaSource(mediaSource) // Add one by one to our concatenatingMediaSource
+//        }
+//        return concatenatingMediaSource
+//    }
+
     // Для формирования плейлиста из нескольких песен/радиостанций. Info for exoplayer to stream songs
     // TODO составлять список в плейлист из одной, выбранной страныю После того, как переделаем список с сервера в MAP
-    fun asMediaSource(dataSourceFactory: DefaultDataSourceFactory): ConcatenatingMediaSource {
+    fun asMediaSource(dataSourceFactory: DefaultDataSource.Factory): ConcatenatingMediaSource {
         val concatenatingMediaSource = ConcatenatingMediaSource() // empty by default
         radioStations.forEach { radioStation ->
+            val mediaItem =
+                MediaItem.fromUri(radioStation.getString(METADATA_KEY_MEDIA_URI).toUri())
             val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
-                .createMediaSource(radioStation.getString(METADATA_KEY_MEDIA_URI).toUri())
+                .createMediaSource(mediaItem)
+            concatenatingMediaSource.addMediaSource(mediaSource) // Add one by one to our concatenatingMediaSource
+        }
+        return concatenatingMediaSource
+    }
+
+    fun asHlsMediaSource(httpDataSourceFactory: DefaultHttpDataSource.Factory): ConcatenatingMediaSource {
+        val concatenatingMediaSource = ConcatenatingMediaSource() // empty by default
+        radioStations.forEach { radioStation ->
+            val mediaItem =
+                MediaItem.fromUri(radioStation.getString(METADATA_KEY_MEDIA_URI).toUri())
+            val mediaSource = HlsMediaSource.Factory(httpDataSourceFactory)
+                .createMediaSource(mediaItem)
             concatenatingMediaSource.addMediaSource(mediaSource) // Add one by one to our concatenatingMediaSource
         }
         return concatenatingMediaSource

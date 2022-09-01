@@ -4,7 +4,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import com.google.android.exoplayer2.ControlDispatcher
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.myproject.radiojourney.utils.exoplayer.FirebaseMusicSource
@@ -18,6 +17,10 @@ class MusicPlaybackPreparer(
     private val serviceScope: CoroutineScope,
     private val playerPrepared: (MediaMetadataCompat?) -> Unit // lambda, that can be called when our player is prepared
 ) : MediaSessionConnector.PlaybackPreparer {
+
+    companion object {
+        private const val TAG = "MusicPlaybackPreparer"
+    }
 
     private var lastCountryCode: String? = null
 
@@ -64,7 +67,6 @@ class MusicPlaybackPreparer(
     // !!! Попробуем изменять плейлист
     override fun onCommand(
         player: Player,
-        controlDispatcher: ControlDispatcher,
         command: String,
         extras: Bundle?,
         cb: android.os.ResultReceiver?
