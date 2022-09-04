@@ -14,6 +14,7 @@ import com.google.android.exoplayer2.source.hls.HlsMediaSource
 import com.google.android.exoplayer2.upstream.DefaultDataSource
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
 import com.myproject.radiojourney.data.dataSource.network.INetworkRadioDataSource
+import com.myproject.radiojourney.data.localDatabaseRoom.IRadioStationDAO
 import com.myproject.radiojourney.utils.exoplayer.State.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -23,13 +24,17 @@ import javax.inject.Inject
 
 // We need time to upload music from firebase or other data
 class FirebaseMusicSource @Inject constructor(
-    private val networkRadioDataSource: INetworkRadioDataSource
+    private val networkRadioDataSource: INetworkRadioDataSource,
+    private val radioStationDAO: IRadioStationDAO
 ) {
     // Список, куда будут сохраняться метаданные по каждой радиостанции с помощью метода fetchMediaData()
     var radioStations = emptyList<MediaMetadataCompat>() // meta info about radioStations
 
     // Список лямбд action, которые будут передаваться в метод whenReady(), пока state == STATE_CREATED или state == STATE_INITIALIZING
     private val onReadyListeners = mutableListOf<(Boolean) -> Unit>()
+
+    var isFavoriteEmpty = true // Initializer required, not a nullable type
+        private set // the setter is private and has the default implementation
 
     // Параметр state с setter для того, чтобы можно было привязать к этому параметру определенную логику
     private var state: State = STATE_CREATED // State on default
@@ -80,6 +85,71 @@ class FirebaseMusicSource @Inject constructor(
                 .putString(
                     METADATA_KEY_DISPLAY_SUBTITLE,
                     radioStationRemote.countrycode
+                ) // country code
+                .build()
+        }
+        state = STATE_INITIALIZED
+    }
+
+    // Метод для СОХРАНЕНИЯ МЕТАДАННЫХ по каждой радиостанции. Создаём список MediaMetadataCompat
+    suspend fun fetchFavouriteMediaData() = withContext(Dispatchers.IO) {
+        state = STATE_INITIALIZING
+        val favouriteRadioStations = radioStationDAO.getFavoriteRadioStationList(true)
+
+        if (favouriteRadioStations.isNotEmpty()) {
+            isFavoriteEmpty = false
+
+            radioStations = favouriteRadioStations.map { radioStationLocal ->
+                MediaMetadataCompat.Builder()
+                    .putString(
+                        METADATA_KEY_MEDIA_ID,
+                        radioStationLocal.url
+                    ) // media Id / url (Primary key)
+                    .putString(
+                        METADATA_KEY_MEDIA_URI,
+                        radioStationLocal.urlResolved
+                    ) // url_resolved
+                    .putString(METADATA_KEY_TITLE, radioStationLocal.stationName) // station name
+                    .putString(
+                        METADATA_KEY_DISPLAY_TITLE,
+                        radioStationLocal.stationName
+                    ) // station name
+                    .putLong(
+                        METADATA_KEY_DOWNLOAD_STATUS,
+                        radioStationLocal.clickCount.toLong()
+                    ) // click count
+                    .putString(METADATA_KEY_ARTIST, radioStationLocal.country) // country
+                    .putString(
+                        METADATA_KEY_DISPLAY_SUBTITLE,
+                        radioStationLocal.countryCode
+                    ) // country code
+                    .build()
+            }
+            state = STATE_INITIALIZED
+        } else {
+            isFavoriteEmpty = true
+        }
+
+        radioStations = favouriteRadioStations.map { radioStationLocal ->
+            MediaMetadataCompat.Builder()
+                .putString(
+                    METADATA_KEY_MEDIA_ID,
+                    radioStationLocal.url
+                ) // media Id / url (Primary key)
+                .putString(METADATA_KEY_MEDIA_URI, radioStationLocal.urlResolved) // url_resolved
+                .putString(METADATA_KEY_TITLE, radioStationLocal.stationName) // station name
+                .putString(
+                    METADATA_KEY_DISPLAY_TITLE,
+                    radioStationLocal.stationName
+                ) // station name
+                .putLong(
+                    METADATA_KEY_DOWNLOAD_STATUS,
+                    radioStationLocal.clickCount.toLong()
+                ) // click count
+                .putString(METADATA_KEY_ARTIST, radioStationLocal.country) // country
+                .putString(
+                    METADATA_KEY_DISPLAY_SUBTITLE,
+                    radioStationLocal.countryCode
                 ) // country code
                 .build()
         }

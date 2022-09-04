@@ -334,10 +334,6 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 //                                glide.load((curPlayingSong ?: radioStations[0]).imageUrl).into(ivCurSongImage)
 //                            }
 
-                            Log.d(
-                                TAG,
-                                "2- !!!!!!!!!!!!! onPageSelected: radioStations countryCode before onPageSelected = ${swipeRadioStationAdapter.radioStationList[0].countryCode} = ${radioStations[0].countryCode}"
-                            )
 //                            mOnPageChangeCallback?.onPageSelected(0)
 
                             // В этом месте данные в curPlayingRadioStation будут старые, т.е. данные о предыдущей радиостанции. Это нужно для сравнения предыдущей и текущей в дальнейшем в методе mainViewModel.playOrToggleSong()
@@ -562,10 +558,12 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             isNotJustLaunched?.let {
                 if (isNotJustLaunched) {
                     // Здесь мы точно перешли из списка в HomeRadioFragment и хотим включить радио
-                    mainViewModel.playOrToggleSong(
-                        swipeRadioStationAdapter.radioStationList[position],
-                        true
-                    )
+                    if (swipeRadioStationAdapter.radioStationList.isNotEmpty()) {
+                        mainViewModel.playOrToggleSong(
+                            swipeRadioStationAdapter.radioStationList[position],
+                            true
+                        )
+                    } // Если список пуст, значит это список избранного, который не заполнен
                 }
             }
         }

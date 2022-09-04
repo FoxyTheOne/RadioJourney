@@ -82,33 +82,53 @@ class MusicPlaybackPreparer(
                     val countryCode =
                         extras?.get("nRecNo") // Достаём country code и далее сравниваем его. Если коды разные, скачиваем новый плейлист
 
-                    // Чтобы проверить, может быть такой плейлист уже скачан и сейчас используется, обновим переменную
-                    lastCountryCode =
-                        firebaseMusicSource.radioStations[0].description.subtitle.toString()
+                    if (countryCode == "FAV") {
 
-                    // if (lastCountryCode != null && lastCountryCode != countryCode) {
-                    // Если оставлять lastCountryCode != null, сюда не заходит, если программу включили и выбрали станцию из другого плейлиста, не включая перед этим плейер ни разу
-                    // Вместо этого проверим (выше), скачан ли уже такой плей лист и сравнивать будем с такой переменной:
-
-                    if (lastCountryCode != countryCode) {
                         val job = serviceScope.launch {
                             try {
-                                firebaseMusicSource.fetchMediaData(
-                                    if (countryCode.toString() != "null" && countryCode.toString()
-                                            .isNotBlank()
-                                    ) countryCode.toString()
-                                    else "AD"
-                                )
+                                // Скачиваем список избранного
+                                firebaseMusicSource.fetchFavouriteMediaData()
                             } catch (e: IOException) {
-                                // Когда сохранён не верный CountryCode, по запросу такого не найдёт и выдаст ошибку retrofit2.HttpException: HTTP 404
                                 e.printStackTrace()
-                                firebaseMusicSource.fetchMediaData("AD")
-                                // TODO Была такая ошибка из-за проблемы с интернетом. Сделать высвечивание сообщения об ошибке, чтобы понимали, почему скачался и включился не тот плейлист
+                                // TODO Fill error message to LiveData
                             }
                         }
                         job.join()
-                        state = STATE_INITIALIZED
+                        if (!firebaseMusicSource.isFavoriteEmpty) state = STATE_INITIALIZED
+
+                    } else {
+
+                        // Чтобы проверить, может быть такой плейлист уже скачан и сейчас используется, обновим переменную
+                        if (firebaseMusicSource.radioStations.isNotEmpty()) {
+                            lastCountryCode =
+                                firebaseMusicSource.radioStations[0].description.subtitle.toString()
+                        }
+
+                        // if (lastCountryCode != null && lastCountryCode != countryCode) {
+                        // Если оставлять lastCountryCode != null, сюда не заходит, если программу включили и выбрали станцию из другого плейлиста, не включая перед этим плейер ни разу
+                        // Вместо этого проверим (выше), скачан ли уже такой плей лист и сравнивать будем с такой переменной:
+
+                        if (lastCountryCode != countryCode) {
+                            val job = serviceScope.launch {
+                                try {
+                                    firebaseMusicSource.fetchMediaData(
+                                        if (countryCode.toString() != "null" && countryCode.toString()
+                                                .isNotBlank()
+                                        ) countryCode.toString()
+                                        else "AD"
+                                    )
+                                } catch (e: IOException) {
+                                    // Когда сохранён не верный CountryCode, по запросу такого не найдёт и выдаст ошибку retrofit2.HttpException: HTTP 404
+                                    e.printStackTrace()
+                                    firebaseMusicSource.fetchMediaData("AD")
+                                    // TODO Была такая ошибка из-за проблемы с интернетом. Сделать высвечивание сообщения об ошибке, чтобы понимали, почему скачался и включился не тот плейлист
+                                }
+                            }
+                            job.join()
+                            state = STATE_INITIALIZED
+                        }
                     }
+
                 }
 
             }

@@ -132,6 +132,16 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                     mainViewModel.playOrToggleSong(radioStation, false)
                     mainViewModel.notJustLaunchedEnableAutoplay()
                 }
+            arguments?.getParcelable<RadioStationPresentation>("radio_station_favourite") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
+                ?.let { radioStationFavourite ->
+                    Log.d(TAG, "Выбранный элемент списка: $radioStationFavourite")
+
+                    // Здесь мы переходим из фрагмента "Избранное". Стоит загрузить в плейер плейлист избранного.
+                    mainViewModel.saveNewMediaId(radioStationFavourite.url)
+                    mainViewModel.fetchSongs("FAV")
+                    mainViewModel.playOrToggleSong(radioStationFavourite, false)
+                    mainViewModel.notJustLaunchedEnableAutoplay()
+                }
         }
 //        else {
 //            viewModel.getStoredRadioStation() // 1. Подгрузить радиостанцию из Shared Preference, если она там сохранена. Если нет - текст "выберите радиостанцию"
@@ -202,6 +212,9 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             getCurrentOrLastLocation()
         }
         binding?.buttonGoToFavourites?.setOnClickListener {
+//            // TODO !!!!!!!!!!! When you choose a new country playlist, begins to play the first radio station, no matter what you chose. Here I call the method myself, so that the first radio station is called automatically, byt it is not very convenient and not always helps
+//            mainViewModel.fetchSongs("FAV")
+
             this.findNavController()
                 .navigate(R.id.action_homeRadioFragment_to_favouriteListFragment)
         }
@@ -420,7 +433,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                 if (latLon == country.countryLocation) {
                     //match found!  Do something....
 
-                    // TODO !!!!!!!!!!! When you choose a new country playlist, begins to play the first radio station, no matter what you chose. Here I call the method myself, so that the first radio station is called automatically, byt it is not very convenient and not always helps
+                    // TODO !!!!!!!!!!! When you choose a new country playlist, begins to play the first radio station, no matter what you chose. Here I call the method myself, so that the first radio station is called automatically, but it is not very convenient and not always helps
                     if (country.countryCode != mainViewModel.curPlayingSongLiveData.value?.description?.subtitle) {
                         mainViewModel.fetchSongs(country.countryCode)
                     }

@@ -71,6 +71,10 @@ class MusicNotificationManager(
         notificationManager.setPlayer(player)
     }
 
+//    fun invalidate() {
+//        notificationManager.invalidate()
+//    }
+
     private inner class DescriptionAdapter(
         private val mediaController: MediaControllerCompat
     ) : PlayerNotificationManager.MediaDescriptionAdapter {

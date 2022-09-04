@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
+import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.media.MediaBrowserServiceCompat
 import com.google.android.exoplayer2.ExoPlayer
@@ -206,6 +207,7 @@ class MusicService : MediaBrowserServiceCompat() {
         ) {
             // TODO Player is accessed on the wrong thread.
             exoPlayer.setMediaSource(firebaseMusicSource.asHlsMediaSource(httpDataSourceFactory)) // Вызываем метод из firebaseMusicSource, чтобы сформировать данные для плейлист
+            // TODO Так мы исправили ошибку UnrecognizedInputFormatException, но только если станция запущена из viewpager. Если до такой станции дошли через кнопки в уведомлении, станция играть не будет.
         } else {
             // TODO Player is accessed on the wrong thread.
             // ExoPlayer.prepare(MediaSource mediaSource) is deprecated. Use setMediaSource(MediaSource) and ExoPlayer.prepare() instead
