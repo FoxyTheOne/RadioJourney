@@ -173,7 +173,17 @@ class MainViewModel @Inject constructor(
 
                     playbackStateLiveData.value?.let { playbackState ->
                         when {
-                            playbackState.isPlaying -> if (toggle) musicServiceConnection.transportControls.pause()
+                            playbackState.isPlaying -> {
+                                // Если у нас загружен список Польских радиостанций и мы слушаем станцию, которую добавили в избранное, то в случае, если мы откроем список избранного, плейлист не обновится (т.к. станция играет та же самая)
+                                // В таком случае получится, что в FirebaseMusicSource список избранного, а в уведомлении - список польских радиостанций. В таком случае если мы нажмем в уведомлении кнопку "след." получим ошибку, т.к. будет запрошено описание станции у FirebaseMusicSource, а у FirebaseMusicSource уже другой плейлист и это станции там нет
+                                // Поэтому на всякий случай будем заново включать станцию, даже если выбрали ту же самую, если она добавлена в изранное
+                                if (mediaItem.isStationInFavourite) musicServiceConnection.transportControls.playFromMediaId(
+                                    mediaItem.url,
+                                    null
+                                )
+
+                                if (toggle) musicServiceConnection.transportControls.pause()
+                            }
                             playbackState.isPlayEnabled -> {
                                 // Создадим уведомление
                                 _messageLiveData.postValue(AUDIO_CONNECTING)

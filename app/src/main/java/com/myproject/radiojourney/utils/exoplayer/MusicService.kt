@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
-import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.media.MediaBrowserServiceCompat
 import com.google.android.exoplayer2.ExoPlayer

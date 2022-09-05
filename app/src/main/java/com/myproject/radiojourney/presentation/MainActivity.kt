@@ -29,7 +29,11 @@ import com.myproject.radiojourney.utils.oldMusicPlayer.ForegroundNotificationSer
 import com.myproject.radiojourney.utils.service.ProgressForegroundService
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.*
-
+import android.content.DialogInterface
+import androidx.activity.OnBackPressedCallback
+import androidx.navigation.fragment.findNavController
+import com.myproject.radiojourney.presentation.content.favouriteList.FavouriteListFragmentDirections
+import com.myproject.radiojourney.presentation.content.radioList.RadioListFragmentDirections
 
 /**
  * This source code is free for studying purposes but you are not allowed to copy and use it in other applications (projects).
@@ -196,7 +200,23 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                 ForegroundNotificationService::class.java
             )
         )
+
+//        onBackPressedDispatcher.addCallback(this, onBackPressedCallback);
     }
+
+//    private val onBackPressedCallback: OnBackPressedCallback =
+//        object : OnBackPressedCallback(true /* Enabled by default */) {
+//            override fun handleOnBackPressed() {
+//                when (findNavController(R.id.navHostFragment).currentDestination?.id) {
+//                    R.id.favouriteListFragment -> findNavController(R.id.navHostFragment).navigate(
+//                        FavouriteListFragmentDirections.actionGlobalHomeRadioFragment()
+//                    )
+//                    R.id.radioListFragment -> findNavController(R.id.navHostFragment).navigate(
+//                        RadioListFragmentDirections.actionGlobalHomeRadioFragment()
+//                    )
+//                }
+//            }
+//        }
 
     private fun initListeners() {
         // To detect if it is swiped
@@ -582,6 +602,10 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         binding?.imageStar?.isVisible = true
         binding?.vpSong?.isVisible = true
         binding?.ivPlayPause?.isVisible = true
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
     }
 
     override fun onDestroy() {
