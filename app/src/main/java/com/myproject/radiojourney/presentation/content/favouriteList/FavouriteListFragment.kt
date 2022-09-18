@@ -79,9 +79,15 @@ class FavouriteListFragment : BaseContentFragmentAbstract() {
     }
 
     private fun initListeners() {
+        binding?.imageArrowBack?.setOnClickListener {
+            if (this.findNavController().currentDestination?.id == R.id.favouriteListFragment) {
+                this.findNavController().navigate(R.id.action_favouriteListFragment_to_homeRadioFragment)
+            }
+        }
         binding?.textFavouritesEmpty?.setOnClickListener {
-            this.findNavController()
-                .navigate(R.id.action_favouriteListFragment_to_homeRadioFragment)
+            if (this.findNavController().currentDestination?.id == R.id.favouriteListFragment) {
+                this.findNavController().navigate(R.id.action_favouriteListFragment_to_homeRadioFragment)
+            }
         }
     }
 

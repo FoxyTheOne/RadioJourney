@@ -26,7 +26,7 @@
             app:title="@string/app_name"
             tools:targetApi="lollipop" />
 
-        <androidx.appcompat.widget.AppCompatTextView
+        <!-- androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/text_myFavorites_title"
             style="@style/login_title"
             android:layout_width="match_parent"
@@ -38,7 +38,45 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/home_toolbar"
             app:layout_constraintVertical_chainStyle="packed"
-            tools:text="City" />
+            tools:text="City" / -->
+
+        <LinearLayout
+            android:id="@+id/linear_radioStationsTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/background_transparent"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toTopOf="@+id/text_radioStationDialogTitle"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/home_toolbar"
+            app:layout_constraintVertical_chainStyle="packed">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/image_arrowBack"
+                android:layout_width="48dp"
+                android:layout_height="match_parent"
+                android:paddingTop="@dimen/space_small"
+                android:paddingBottom="@dimen/space_small"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_baseline_navigate_before_24_white" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/text_myFavorites_title"
+                style="@style/login_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:padding="@dimen/space_beforeOrAfterElement"
+                tools:text="City" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:layout_width="48dp"
+                android:layout_height="match_parent"
+                android:paddingTop="@dimen/space_small"
+                android:paddingBottom="@dimen/space_small"/>
+        </LinearLayout>
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/text_radioStationDialogTitle"
@@ -53,7 +91,7 @@
             app:layout_constraintBottom_toTopOf="@+id/recyclerView_radioStationList"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/text_myFavorites_title"
+            app:layout_constraintTop_toBottomOf="@+id/linear_radioStationsTitle"
             app:layout_constraintVertical_chainStyle="packed" />
 
         <androidx.recyclerview.widget.RecyclerView

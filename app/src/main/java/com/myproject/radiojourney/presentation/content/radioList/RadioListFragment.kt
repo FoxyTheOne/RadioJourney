@@ -80,7 +80,16 @@ class RadioListFragment : BaseContentFragmentAbstract() {
         // Передайте ссылку на разметку
         dialogInternetTrouble.setContentView(R.layout.layout_internet_trouble_dialog)
 
+        initListeners()
         subscribeOnLiveData()
+    }
+
+    private fun initListeners() {
+        binding?.imageArrowBack?.setOnClickListener {
+            if (this.findNavController().currentDestination?.id == R.id.radioListFragment) {
+                this.findNavController().navigate(R.id.action_radioListFragment_to_homeRadioFragment)
+            }
+        }
     }
 
     private fun subscribeOnLiveData() {
