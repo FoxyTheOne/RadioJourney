@@ -1,8 +1,10 @@
 package com.myproject.radiojourney.presentation.content.homeRadio
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.*
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.location.Location
@@ -31,6 +33,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import com.myproject.radiojourney.databinding.LayoutHomeRadioBinding
 import com.myproject.radiojourney.utils.oldMusicPlayer.*
 import kotlinx.coroutines.*
@@ -107,6 +110,42 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // Если каким-то образом мы попали на этот фрагмент минуя первый, загрузочный фрагмент - стоит ещё раз проверить разрешения
+        // Если разрешения нет - или запросить их, или перекинуть на загрузочный фрагмент и там запросить
+        val requestPermissionLauncher =
+            registerForActivityResult(
+                ActivityResultContracts.RequestMultiplePermissions()
+            ) { permissionsMap ->
+                if (permissionsMap[Manifest.permission.ACCESS_COARSE_LOCATION] != true
+                    &&
+                    permissionsMap[Manifest.permission.ACCESS_FINE_LOCATION] != true
+                ) {
+                    Toast.makeText(
+                        requireContext(),
+                        "We can't show your location without an access to it",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+
+        if (ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+            &&
+            ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                )
+            )
+        }
 
         // 1.2. ViewModel. We bind our viewModel to the lifecycle of our activity, not fragment. We pass our activity as an owner of the lifecycle.
         // So, we need to do this way:
