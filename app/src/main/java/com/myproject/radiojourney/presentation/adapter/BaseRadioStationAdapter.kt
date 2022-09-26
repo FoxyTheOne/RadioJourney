@@ -22,7 +22,7 @@ abstract class BaseRadioStationAdapter(
             oldItem: RadioStationPresentation,
             newItem: RadioStationPresentation
         ): Boolean {
-            return oldItem.url == newItem.url // In our case mediaId = url
+            return oldItem.urlResolved == newItem.urlResolved // In our case mediaId = url
         }
 
         // if songs are really the same - the image, the title and so on

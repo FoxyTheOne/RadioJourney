@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 9,
-    "identityHash": "35e79dbb02e883f7ed50943d4fcbdc0c",
+    "version": 11,
+    "identityHash": "20f8c8c023854f9f1ef6031b7a33b37c",
     "entities": [
       {
         "tableName": "UserEntity",
@@ -76,17 +76,11 @@
       },
       {
         "tableName": "RadioStationLocal",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`url_resolved` TEXT NOT NULL, `url` TEXT NOT NULL, `stationName` TEXT NOT NULL, `clickCount` INTEGER NOT NULL, `country` TEXT NOT NULL, `countryCode` TEXT NOT NULL, `isStationInFavourite` INTEGER NOT NULL, `isStationInRecommended` INTEGER NOT NULL, PRIMARY KEY(`url_resolved`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`url_resolved` TEXT NOT NULL, `stationName` TEXT NOT NULL, `clickCount` INTEGER NOT NULL, `country` TEXT NOT NULL, `countryCode` TEXT NOT NULL, `isStationInFavourite` INTEGER NOT NULL, `isStationInRecommended` INTEGER NOT NULL, PRIMARY KEY(`url_resolved`))",
         "fields": [
           {
             "fieldPath": "urlResolved",
             "columnName": "url_resolved",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "url",
-            "columnName": "url",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -140,7 +134,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '35e79dbb02e883f7ed50943d4fcbdc0c')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '20f8c8c023854f9f1ef6031b7a33b37c')"
     ]
   }
 }

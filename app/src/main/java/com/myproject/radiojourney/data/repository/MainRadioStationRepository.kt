@@ -39,12 +39,12 @@ class MainRadioStationRepository @Inject constructor(
 
     override suspend fun getRadioStationUrl(): String? = localRadioDataSource.getRadioStationUrl()
 
-    override suspend fun getRadioStationSaved(radioStationUrl: String): RadioStationLocal? =
-        localRadioDataSource.getRadioStationSaved(radioStationUrl)
+    override suspend fun getRadioStationSaved(radioStationUrlResolved: String): RadioStationLocal? =
+        localRadioDataSource.getRadioStationSaved(radioStationUrlResolved)
 
     // Поменять в Shared Preference setIsRadioStationStored на true. Сохранить в Shared Preference (url)
-    override suspend fun saveRadioStationUrl(isStored: Boolean, url: String) =
-        localFavoriteDataSource.saveFavouriteRadioStationUrl(isStored, url)
+    override suspend fun saveRadioStationUrl(isStored: Boolean, urlResolved: String) =
+        localFavoriteDataSource.saveFavouriteRadioStationUrl(isStored, urlResolved)
 
     // И сохранить радиостанцию в Room
     override suspend fun saveRadioStationInRoom(radioStationLocal: RadioStationLocal) {
@@ -65,13 +65,13 @@ class MainRadioStationRepository @Inject constructor(
 
         Log.d(
             TAG,
-            "Успешный запрос; результат запроса радиостанций $radioStationRemoteList, элемент[0]: ${radioStationLocalList[0]}"
+            "Успешный запрос; результат запроса радиостанций $radioStationRemoteList"
         )
 
         return radioStationLocalList.toList()
     }
 
-    override suspend fun saveLastUsedRadioStationUrlAndCode(url: String, countryCode: String) {
-        localRadioDataSource.saveLastUsedRadioStationUrlAndCode(url, countryCode)
+    override suspend fun saveLastUsedRadioStationUrlAndCode(urlResolved: String, countryCode: String) {
+        localRadioDataSource.saveLastUsedRadioStationUrlAndCode(urlResolved, countryCode)
     }
 }

@@ -13,11 +13,11 @@ class LocalFavoriteDataSource @Inject constructor(
     private val radioStationDAO: IRadioStationDAO
 ) : ILocalFavoriteDataSource {
     // Поменять в Shared Preference setIsRadioStationStored на true. Сохранить в Shared Preference (url)
-    override suspend fun saveFavouriteRadioStationUrl(isStored: Boolean, url: String) {
+    override suspend fun saveFavouriteRadioStationUrl(isStored: Boolean, urlResolved: String) {
         // Поменять в Shared Preference setIsRadioStationStored на true
         preference.setIsRadioStationStored(isStored)
         // Сохранить в Shared Preference (url)
-        preference.saveRadioStationUrl(url)
+        preference.saveRadioStationUrl(urlResolved)
     }
 
     override suspend fun getFavoriteRadioStationList(isStationInFavorite: Boolean): List<RadioStationLocal> =

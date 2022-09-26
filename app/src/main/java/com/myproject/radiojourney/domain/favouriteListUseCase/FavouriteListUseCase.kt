@@ -4,6 +4,7 @@ import com.myproject.radiojourney.domain.iRepository.IFavoriteStationRepository
 import com.myproject.radiojourney.domain.iRepository.IMainRadioStationRepository
 import com.myproject.radiojourney.entities.local.RadioStationLocal
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
+import com.myproject.radiojourney.utils.extension.removeLastNchars
 import javax.inject.Inject
 
 /**
@@ -33,6 +34,15 @@ class FavouriteListUseCase @Inject constructor(
     }
 
     override suspend fun addStationInRoomToFavourites(currentRadioStation: RadioStationPresentation) {
+        if (currentRadioStation.countryCode.endsWith("_FAV")) {
+            val str: String = currentRadioStation.countryCode
+            val n = 4 // "_FAV" -> 4 chars
+
+            val newCountryCode = str.removeLastNchars(str, n)
+
+            currentRadioStation.countryCode = newCountryCode.toString()
+        }
+
         val currentRadioStationLocal = RadioStationLocal.fromPresentationToLocal(
             currentRadioStation,
             isStationInFavourite = true
@@ -41,6 +51,15 @@ class FavouriteListUseCase @Inject constructor(
     }
 
     override suspend fun deleteStationInRoomFromFavourite(currentRadioStation: RadioStationPresentation) {
+        if (currentRadioStation.countryCode.endsWith("_FAV")) {
+            val str: String = currentRadioStation.countryCode
+            val n = 4 // "_FAV" -> 4 chars
+
+            val newCountryCode = str.removeLastNchars(str, n)
+
+            currentRadioStation.countryCode = newCountryCode.toString()
+        }
+
         val currentRadioStationLocal = RadioStationLocal.fromPresentationToLocal(
             currentRadioStation,
             isStationInFavourite = false

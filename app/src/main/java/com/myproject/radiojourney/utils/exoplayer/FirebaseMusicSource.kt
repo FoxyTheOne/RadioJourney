@@ -6,6 +6,7 @@ import android.support.v4.media.MediaBrowserCompat.MediaItem.FLAG_PLAYABLE
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.MediaMetadataCompat.*
+import android.util.Log
 import androidx.core.net.toUri
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
@@ -18,6 +19,7 @@ import com.myproject.radiojourney.data.localDatabaseRoom.IRadioStationDAO
 import com.myproject.radiojourney.utils.exoplayer.State.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.IOException
 import javax.inject.Inject
 
 // TODO RENAME
@@ -27,6 +29,10 @@ class FirebaseMusicSource @Inject constructor(
     private val networkRadioDataSource: INetworkRadioDataSource,
     private val radioStationDAO: IRadioStationDAO
 ) {
+    companion object {
+        private const val TAG = "FirebaseMusicSource"
+    }
+
     // Список, куда будут сохраняться метаданные по каждой радиостанции с помощью метода fetchMediaData()
     var radioStations = emptyList<MediaMetadataCompat>() // meta info about radioStations
 
@@ -69,11 +75,21 @@ class FirebaseMusicSource @Inject constructor(
         val countryCodeRadioStations = networkRadioDataSource.getRadioStationList(countryCode)
 
         radioStations = countryCodeRadioStations.map { radioStationRemote ->
+
+            if (radioStationRemote.url_resolved.isNullOrEmpty()) {
+                Log.d(
+                    TAG,
+                    "Found nullable urlResolved: name = ${radioStationRemote.name}, url = ${radioStationRemote.url}, urlResolved = ${radioStationRemote.url_resolved}"
+                )
+                // Если у станции нет url_resolved, можно пойти двумя путями. Или мы вместо него сохраняем себе url, либо же пропускаем эту станцию и не сохраняем себе. Иначе возникнет ошибка в методе ниже (asMediaItems()), т.к. mediaId будет пустой
+                // Попробую убрать такие станции с помощью .filter { !it.description.mediaId.isNullOrEmpty() }
+            }
+
             MediaMetadataCompat.Builder()
                 .putString(
                     METADATA_KEY_MEDIA_ID,
-                    radioStationRemote.url
-                ) // media Id / url (Primary key)
+                    radioStationRemote.url_resolved
+                ) // media Id / url (Primary key) / Пробую поменять здесь url на urlResolved, т.к. обнаружились нестыковки у первых станций в плейлистах
                 .putString(METADATA_KEY_MEDIA_URI, radioStationRemote.url_resolved) // url_resolved
                 .putString(METADATA_KEY_TITLE, radioStationRemote.name) // station name
                 .putString(METADATA_KEY_DISPLAY_TITLE, radioStationRemote.name) // station name
@@ -87,7 +103,10 @@ class FirebaseMusicSource @Inject constructor(
                     radioStationRemote.countrycode
                 ) // country code
                 .build()
+        }.filter {
+            !it.description.mediaId.isNullOrEmpty()
         }
+
         state = STATE_INITIALIZED
     }
 
@@ -100,11 +119,21 @@ class FirebaseMusicSource @Inject constructor(
             isFavoriteEmpty = false
 
             radioStations = favouriteRadioStations.map { radioStationLocal ->
+
+                if (radioStationLocal.urlResolved.isNullOrEmpty()) {
+                    Log.d(
+                        TAG,
+                        "Found nullable urlResolved: name = ${radioStationLocal.stationName}, urlResolved = ${radioStationLocal.urlResolved}"
+                    )
+                    // Если у станции нет url_resolved, можно пойти двумя путями. Или мы вместо него сохраняем себе url, либо же пропускаем эту станцию и не сохраняем себе. Иначе возникнет ошибка в методе ниже (asMediaItems()), т.к. mediaId будет пустой
+                    // Попробую убрать такие станции с помощью .filter { !it.description.mediaId.isNullOrEmpty() }
+                }
+
                 MediaMetadataCompat.Builder()
                     .putString(
                         METADATA_KEY_MEDIA_ID,
-                        radioStationLocal.url
-                    ) // media Id / url (Primary key)
+                        radioStationLocal.urlResolved
+                    ) // media Id / url (Primary key) / Пробую поменять здесь url на urlResolved, т.к. обнаружились нестыковки у первых станций в плейлистах
                     .putString(
                         METADATA_KEY_MEDIA_URI,
                         radioStationLocal.urlResolved
@@ -121,38 +150,41 @@ class FirebaseMusicSource @Inject constructor(
                     .putString(METADATA_KEY_ARTIST, radioStationLocal.country) // country
                     .putString(
                         METADATA_KEY_DISPLAY_SUBTITLE,
-                        radioStationLocal.countryCode
+                        radioStationLocal.countryCode + "_FAV"
                     ) // country code
                     .build()
+            }.filter {
+                !it.description.mediaId.isNullOrEmpty()
             }
-            state = STATE_INITIALIZED
+
+//            state = STATE_INITIALIZED
         } else {
             isFavoriteEmpty = true
         }
 
-        radioStations = favouriteRadioStations.map { radioStationLocal ->
-            MediaMetadataCompat.Builder()
-                .putString(
-                    METADATA_KEY_MEDIA_ID,
-                    radioStationLocal.url
-                ) // media Id / url (Primary key)
-                .putString(METADATA_KEY_MEDIA_URI, radioStationLocal.urlResolved) // url_resolved
-                .putString(METADATA_KEY_TITLE, radioStationLocal.stationName) // station name
-                .putString(
-                    METADATA_KEY_DISPLAY_TITLE,
-                    radioStationLocal.stationName
-                ) // station name
-                .putLong(
-                    METADATA_KEY_DOWNLOAD_STATUS,
-                    radioStationLocal.clickCount.toLong()
-                ) // click count
-                .putString(METADATA_KEY_ARTIST, radioStationLocal.country) // country
-                .putString(
-                    METADATA_KEY_DISPLAY_SUBTITLE,
-                    radioStationLocal.countryCode
-                ) // country code
-                .build()
-        }
+//        radioStations = favouriteRadioStations.map { radioStationLocal ->
+//            MediaMetadataCompat.Builder()
+//                .putString(
+//                    METADATA_KEY_MEDIA_ID,
+//                    radioStationLocal.url
+//                ) // media Id / url (Primary key)
+//                .putString(METADATA_KEY_MEDIA_URI, radioStationLocal.urlResolved) // url_resolved
+//                .putString(METADATA_KEY_TITLE, radioStationLocal.stationName) // station name
+//                .putString(
+//                    METADATA_KEY_DISPLAY_TITLE,
+//                    radioStationLocal.stationName
+//                ) // station name
+//                .putLong(
+//                    METADATA_KEY_DOWNLOAD_STATUS,
+//                    radioStationLocal.clickCount.toLong()
+//                ) // click count
+//                .putString(METADATA_KEY_ARTIST, radioStationLocal.country) // country
+//                .putString(
+//                    METADATA_KEY_DISPLAY_SUBTITLE,
+//                    radioStationLocal.countryCode + "_FAV"
+//                ) // country code
+//                .build()
+//        }
         state = STATE_INITIALIZED
     }
 
@@ -164,9 +196,18 @@ class FirebaseMusicSource @Inject constructor(
             putString("Country", radioStation.getString(METADATA_KEY_ARTIST))
         }
 
+        if (radioStation.description.mediaId.isNullOrEmpty()) {
+            Log.d(
+                TAG,
+                "name = ${radioStation.description.title}, url = ${radioStation.description.mediaUri}, mediaId = ${radioStation.description.mediaUri}"
+            )
+        }
+
         val desc = MediaDescriptionCompat.Builder()
             .setMediaId(radioStation.description.mediaId) // media Id / url (Primary key)
-            .setMediaUri(radioStation.getString(METADATA_KEY_MEDIA_URI).toUri()) // url_resolved
+            .setMediaUri(
+                radioStation.getString(METADATA_KEY_MEDIA_URI).toUri()
+            ) // url_resolved
             .setTitle(radioStation.description.title) // station name
             .setSubtitle(radioStation.description.subtitle) // country code
             .setExtras(extrasRadioStationInfo) // <- click count, country in extras

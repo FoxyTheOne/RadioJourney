@@ -17,3 +17,9 @@ fun String?.isPasswordValid(): Boolean {
         false
     }
 }
+
+fun String?.removeLastNchars(str: String?, n: Int): String? {
+    return if (str == null || str.length < n) {
+        str
+    } else str.substring(0, str.length - n)
+}

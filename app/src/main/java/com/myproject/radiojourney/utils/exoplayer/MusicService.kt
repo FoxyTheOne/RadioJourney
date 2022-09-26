@@ -7,6 +7,7 @@ import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
+import android.util.Log
 import androidx.media.MediaBrowserServiceCompat
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.Player
@@ -198,29 +199,33 @@ class MusicService : MediaBrowserServiceCompat() {
             if (curPlayingSong == null) lastItemIndex else radioStations.indexOf(itemToPlay) // если песня не выбрана - просто играем первую. Либо ищем конкретную по индексу
 
 
-        // Проверить, заканчивается ли ссылка на .m3u8
-        // Если да, нам нужно использовать HlsMediaSource
-        val mediaUri =
-            firebaseMusicSource.radioStations[curSongIndex].description.mediaUri.toString()
-        if (mediaUri.endsWith(".m3u8")
-        ) {
-            // TODO Player is accessed on the wrong thread.
-            exoPlayer.setMediaSource(firebaseMusicSource.asHlsMediaSource(httpDataSourceFactory)) // Вызываем метод из firebaseMusicSource, чтобы сформировать данные для плейлист
-            // TODO Так мы исправили ошибку UnrecognizedInputFormatException, но только если станция запущена из viewpager. Если до такой станции дошли через кнопки в уведомлении, станция играть не будет.
-        } else {
-            // TODO Player is accessed on the wrong thread.
-            // ExoPlayer.prepare(MediaSource mediaSource) is deprecated. Use setMediaSource(MediaSource) and ExoPlayer.prepare() instead
-            exoPlayer.setMediaSource(firebaseMusicSource.asMediaSource(dataSourceFactory)) // Вызываем метод из firebaseMusicSource, чтобы сформировать данные для плейлист
+        serviceScope.launch {
+
+            // Проверить, заканчивается ли ссылка на .m3u8
+            // Если да, нам нужно использовать HlsMediaSource
+            val mediaUri =
+                firebaseMusicSource.radioStations[curSongIndex].description.mediaUri.toString()
+            if (mediaUri.endsWith(".m3u8")
+            ) {
+                // TODO Player is accessed on the wrong thread.
+                exoPlayer.setMediaSource(firebaseMusicSource.asHlsMediaSource(httpDataSourceFactory)) // Вызываем метод из firebaseMusicSource, чтобы сформировать данные для плейлист
+                // TODO Так мы исправили ошибку UnrecognizedInputFormatException, но только если станция запущена из viewpager. Если до такой станции дошли через кнопки в уведомлении, станция играть не будет.
+            } else {
+                // TODO Player is accessed on the wrong thread.
+                // ExoPlayer.prepare(MediaSource mediaSource) is deprecated. Use setMediaSource(MediaSource) and ExoPlayer.prepare() instead
+                exoPlayer.setMediaSource(firebaseMusicSource.asMediaSource(dataSourceFactory)) // Вызываем метод из firebaseMusicSource, чтобы сформировать данные для плейлист
+            }
+
+            exoPlayer.seekTo(
+                curSongIndex,
+                0L
+            ) // start curSongIndex song, that we choose. 0L = from the beginning
+            exoPlayer.playWhenReady =
+                playNow // play song, when it will be ready (it will be false, and after - true, when ready)
+
+            exoPlayer.prepare()
+
         }
-
-        exoPlayer.seekTo(
-            curSongIndex,
-            0L
-        ) // start curSongIndex song, that we choose. 0L = from the beginning
-        exoPlayer.playWhenReady =
-            playNow // play song, when it will be ready (it will be false, and after - true, when ready)
-
-        exoPlayer.prepare()
     }
 
     // media root id - is the id to the very first media item (what should be shown first)
@@ -267,6 +272,9 @@ class MusicService : MediaBrowserServiceCompat() {
                             // not recommend to notify here , instead notify when you
                             // change existing list in MusicPlaybackPreparer onCommand()
                             notifyChildrenChanged(MEDIA_ROOT_ID)
+
+                            Log.d(TAG, "Exception in fun onLoadChildren(), MEDIA_ROOT_ID")
+                            exception.printStackTrace()
                         }
 
                         // if it is ready, but not initialized:

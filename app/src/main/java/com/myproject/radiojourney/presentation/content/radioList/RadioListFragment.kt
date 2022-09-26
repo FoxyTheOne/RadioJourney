@@ -38,7 +38,7 @@ class RadioListFragment : BaseContentFragmentAbstract() {
     private lateinit var countryName: String
     private var radioStationList = listOf(
         RadioStationPresentation(
-            "Test", "test", "test", 2, "test", "test",
+            "Test", "test",  2, "test", "test",
             isStationInFavourite = false,
             isStationInRecommended = false
         )
@@ -140,7 +140,7 @@ class RadioListFragment : BaseContentFragmentAbstract() {
 
                 Log.d(
                     TAG,
-                    "Успешный запрос в локальную БД (радиостанции). Получен результат: массив size = ${radioStationPresentationList.size}, элемент[0] = ${radioStationPresentationList[0].countryCode}, ${radioStationPresentationList[0].url}"
+                    "Успешный запрос в локальную БД (радиостанции). Получен результат: массив size = ${radioStationPresentationList.size}, элемент[0] = ${radioStationPresentationList[0].countryCode}, ${radioStationPresentationList[0].urlResolved}"
                 )
 
                 hideProgress()

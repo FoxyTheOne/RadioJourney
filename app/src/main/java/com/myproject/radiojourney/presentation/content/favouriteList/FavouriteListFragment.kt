@@ -172,7 +172,7 @@ class FavouriteListFragment : BaseContentFragmentAbstract() {
 
                 Log.d(
                     TAG,
-                    "Успешный запрос в локальную БД (радиостанции). Получен результат: массив size = ${radioStationFavouritePresentationList.size}, элемент[0] = ${radioStationFavouritePresentationList[0].countryCode}, ${radioStationFavouritePresentationList[0].url}"
+                    "Успешный запрос в локальную БД (радиостанции). Получен результат: массив size = ${radioStationFavouritePresentationList.size}, элемент[0] = ${radioStationFavouritePresentationList[0].countryCode}, ${radioStationFavouritePresentationList[0].urlResolved}"
                 )
 
                 hideProgress()

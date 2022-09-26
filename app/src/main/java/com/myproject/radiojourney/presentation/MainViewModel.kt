@@ -162,7 +162,7 @@ class MainViewModel @Inject constructor(
                 Log.d(TAG, "onPageSelected 8) isPrepared = true: $isPrepared")
 
                 // if we want to play the same song (pause and play it again)
-                if (isPrepared && mediaItem.url ==
+                if (isPrepared && mediaItem.urlResolved ==
                     curPlayingSongLiveData.value?.getString(METADATA_KEY_MEDIA_ID)
                 ) { // curPlayingSong.value?.getString(METADATA_KEY_MEDIA_ID) <- it's how we get metadata of currently playing song
 
@@ -177,10 +177,13 @@ class MainViewModel @Inject constructor(
                                 // Если у нас загружен список Польских радиостанций и мы слушаем станцию, которую добавили в избранное, то в случае, если мы откроем список избранного, плейлист не обновится (т.к. станция играет та же самая)
                                 // В таком случае получится, что в FirebaseMusicSource список избранного, а в уведомлении - список польских радиостанций. В таком случае если мы нажмем в уведомлении кнопку "след." получим ошибку, т.к. будет запрошено описание станции у FirebaseMusicSource, а у FirebaseMusicSource уже другой плейлист и это станции там нет
                                 // Поэтому на всякий случай будем заново включать станцию, даже если выбрали ту же самую, если она добавлена в изранное
-                                if (mediaItem.isStationInFavourite) musicServiceConnection.transportControls.playFromMediaId(
-                                    mediaItem.url,
-                                    null
-                                )
+                                if (mediaItem.isStationInFavourite || mediaItem.countryCode.endsWith("_FAV")) {
+                                    musicServiceConnection.transportControls.playFromMediaId(
+                                        mediaItem.urlResolved,
+                                        null
+                                    )
+                                    if (toggle) musicServiceConnection.transportControls.pause()
+                                }
 
                                 if (toggle) musicServiceConnection.transportControls.pause()
                             }
@@ -191,7 +194,7 @@ class MainViewModel @Inject constructor(
                             }
                             else -> Unit
                         }
-                        saveLastUsedRadioStationUrlAndCode(mediaItem.url, mediaItem.countryCode)
+                        saveLastUsedRadioStationUrlAndCode(mediaItem.urlResolved, mediaItem.countryCode)
                     }
 
                     // if we want to play another song
@@ -200,10 +203,10 @@ class MainViewModel @Inject constructor(
                     Log.d(TAG, "onPageSelected 9) Включаем другую песню ${mediaItem.stationName}")
 
                     musicServiceConnection.transportControls.playFromMediaId(
-                        mediaItem.url,
+                        mediaItem.urlResolved,
                         null
                     )
-                    saveLastUsedRadioStationUrlAndCode(mediaItem.url, mediaItem.countryCode)
+                    saveLastUsedRadioStationUrlAndCode(mediaItem.urlResolved, mediaItem.countryCode)
                 }
             } catch (e1: AccountsException) {
                 // AccountsException -> Known direct subclasses: AuthenticatorException, NetworkErrorException, OperationCanceledException
@@ -223,10 +226,10 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private fun saveLastUsedRadioStationUrlAndCode(url: String, countryCode: String) {
+    private fun saveLastUsedRadioStationUrlAndCode(urlResolved: String, countryCode: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                mainRadioInteractor.saveLastUsedRadioStationUrlAndCode(url, countryCode)
+                mainRadioInteractor.saveLastUsedRadioStationUrlAndCode(urlResolved, countryCode)
                 _dataSavedSuccessfulLiveData.call()
             } catch (e1: AccountsException) {
                 // AccountsException -> Known direct subclasses: AuthenticatorException, NetworkErrorException, OperationCanceledException
@@ -321,7 +324,7 @@ class MainViewModel @Inject constructor(
                 // For sure, calculating chosen position
                 if (radioStationList.isNotEmpty() && !mediaId.isNullOrBlank()) {
                     radioStationList.forEach {
-                        if (it.url == mediaId) {
+                        if (it.urlResolved == mediaId) {
                             radioStationNeedToFind = it
                         }
                     }

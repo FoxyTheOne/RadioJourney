@@ -113,10 +113,10 @@ class AppSharedPreference @Inject constructor(@ApplicationContext context: Conte
         ) ?: false
     }
 
-    override fun saveRadioStationUrl(url: String) {
+    override fun saveRadioStationUrl(urlResolved: String) {
         sharedPreference?.edit()?.putString(
             PREFERENCE_RADIO_STATION_URL,
-            url
+            urlResolved
         )?.apply()
     }
 
@@ -127,10 +127,10 @@ class AppSharedPreference @Inject constructor(@ApplicationContext context: Conte
         ) ?: ""
     }
 
-    override fun saveLastUsedRadioStationUrl(url: String) {
+    override fun saveLastUsedRadioStationUrl(urlResolved: String) {
         sharedPreference?.edit()?.putString(
             PREFERENCE_LAST_LISTENED_URL,
-            url
+            urlResolved
         )?.apply()
     }
 

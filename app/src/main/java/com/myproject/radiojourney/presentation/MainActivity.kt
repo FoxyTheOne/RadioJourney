@@ -305,7 +305,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
         if (swipeRadioStationAdapter.radioStationList.isNotEmpty()) {
             swipeRadioStationAdapter.radioStationList.forEach {
-                if (it.url == mediaId) {
+                if (it.urlResolved == mediaId) {
                     radioStationNeedToFind = it
                 }
             }
@@ -359,7 +359,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                             // В этом месте данные в curPlayingRadioStation будут старые, т.е. данные о предыдущей радиостанции. Это нужно для сравнения предыдущей и текущей в дальнейшем в методе mainViewModel.playOrToggleSong()
 
                             switchViewPagerToCurrentSong(
-                                curPlayingRadioStation?.url ?: return@observe,
+                                curPlayingRadioStation?.urlResolved ?: return@observe,
                                 curPlayingRadioStation?.countryCode ?: return@observe
                             )
                         }
@@ -514,6 +514,8 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             currentRadioStationPosition?.let {
                 swipeRadioStationAdapter.radioStationList[it].isStationInFavourite = isInFavourite
 
+                val testIsInFavourite = swipeRadioStationAdapter.radioStationList[it].isStationInFavourite
+
                 if (isInFavourite) {
                     mainViewModel.addAStationToFavouriteListIfItIsNotThere(swipeRadioStationAdapter.radioStationList[it])
                 }
@@ -537,6 +539,10 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                 )
                 if (position <= maxIndex) {
                     Log.d(TAG, "position <= maxIndex")
+
+                    val testRadioStationName = swipeRadioStationAdapter.radioStationList[position].stationName
+                    val testRadioStationCode = swipeRadioStationAdapter.radioStationList[position].countryCode
+                    val testIsInFavourite = swipeRadioStationAdapter.radioStationList[position].isStationInFavourite
 
                     mainViewModel.playOrToggleSong(swipeRadioStationAdapter.radioStationList[position])
                     Log.d(

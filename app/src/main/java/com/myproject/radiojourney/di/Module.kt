@@ -62,7 +62,7 @@ abstract class SingletonModule {
                 appContext,
                 AppRoomDBAbstract::class.java,
                 "AppRoomDatabase"
-            ).build()
+            ).fallbackToDestructiveMigration().build()
 
             return roomDatabase
         }

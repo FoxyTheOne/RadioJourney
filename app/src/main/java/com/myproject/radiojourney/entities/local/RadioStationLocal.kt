@@ -9,8 +9,7 @@ import com.myproject.radiojourney.entities.remote.RadioStationRemote
 @Entity
 data class RadioStationLocal(
     @PrimaryKey
-    @ColumnInfo(name = "url") val url: String,
-    @ColumnInfo(name = "url_resolved") val urlResolved: String,
+    @ColumnInfo(name = "url_resolved") val urlResolved: String, // Пробую поменять PrimaryKey с url на urlResolved, т.к. обнаружились нестыковки у первых станций в плейлистах
     @ColumnInfo(name = "stationName") val stationName: String,
     @ColumnInfo(name = "clickCount") val clickCount: Int,
     @ColumnInfo(name = "country") val country: String,
@@ -26,7 +25,6 @@ data class RadioStationLocal(
             isStationInRecommended: Boolean = false
         ): RadioStationLocal = RadioStationLocal(
             stationName = remote.name,
-            url = remote.url,
             urlResolved = remote.url_resolved,
             clickCount = remote.clickcount,
             country = remote.country,
@@ -42,7 +40,6 @@ data class RadioStationLocal(
         ): RadioStationLocal =
             RadioStationLocal(
                 stationName = presentation.stationName,
-                url = presentation.url,
                 urlResolved = presentation.urlResolved,
                 clickCount = presentation.clickCount,
                 country = presentation.country,

@@ -42,6 +42,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.other.Status
 import com.myproject.radiojourney.presentation.MainViewModel
 
+
 /**
  * Главная страница.
  * Содержит карту с метками, описание выбранной радиостанции и кнопки "добавить в избранное", "перейти в мой список".
@@ -166,7 +167,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                     Log.d(TAG, "Выбранный элемент списка: $radioStation")
 
                     // Здесь мы получаем выбранную станцию из списка радиостанций по клику. Необходимо передать её в наш новый плейер
-                    mainViewModel.saveNewMediaId(radioStation.url)
+                    mainViewModel.saveNewMediaId(radioStation.urlResolved)
                     mainViewModel.fetchSongs(radioStation.countryCode)
                     mainViewModel.playOrToggleSong(radioStation, false)
                     mainViewModel.notJustLaunchedEnableAutoplay()
@@ -176,7 +177,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                     Log.d(TAG, "Выбранный элемент списка: $radioStationFavourite")
 
                     // Здесь мы переходим из фрагмента "Избранное". Стоит загрузить в плейер плейлист избранного.
-                    mainViewModel.saveNewMediaId(radioStationFavourite.url)
+                    mainViewModel.saveNewMediaId(radioStationFavourite.urlResolved)
                     mainViewModel.fetchSongs("FAV")
                     mainViewModel.playOrToggleSong(radioStationFavourite, false)
                     mainViewModel.notJustLaunchedEnableAutoplay()
@@ -471,6 +472,14 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             for (country in countryList) {
                 if (latLon == country.countryLocation) {
                     //match found!  Do something....
+
+// Comparing image views:
+//                    val starId = activity?.findViewById(R.id.image_star) as ImageView
+//                    val bmapStar = (starId.drawable as BitmapDrawable).bitmap
+//                    val myDrawableForComparing = resources.getDrawable(R.drawable.star)
+//                    val bmapDrawableForComparing = (myDrawableForComparing as BitmapDrawable).bitmap
+//
+//                    val isSame = bmapStar.sameAs(bmapDrawableForComparing)
 
                     // TODO !!!!!!!!!!! When you choose a new country playlist, begins to play the first radio station, no matter what you chose. Here I call the method myself, so that the first radio station is called automatically, but it is not very convenient and not always helps
                     if (country.countryCode != mainViewModel.curPlayingSongLiveData.value?.description?.subtitle) {

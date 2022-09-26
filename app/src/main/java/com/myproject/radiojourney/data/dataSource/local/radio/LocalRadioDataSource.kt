@@ -41,8 +41,8 @@ class LocalRadioDataSource @Inject constructor(
         Log.d(TAG, "результат Метод для сохранения стран в Room завершён")
     }
 
-    override suspend fun saveLastUsedRadioStationUrlAndCode(url: String, countryCode: String) {
-        preference.saveLastUsedRadioStationUrl(url)
+    override suspend fun saveLastUsedRadioStationUrlAndCode(urlResolved: String, countryCode: String) {
+        preference.saveLastUsedRadioStationUrl(urlResolved)
         preference.saveLastUsedRadioStationCountryCode(countryCode)
     }
 }

@@ -16,8 +16,8 @@ import javax.inject.Inject
 class MainRadioUseCase @Inject constructor(
     private val mainRadioStationRepository: IMainRadioStationRepository
 ) : IMainRadioUseCase {
-    private suspend fun getRadioStationSaved(radioStationUrl: String): RadioStationLocal? =
-        mainRadioStationRepository.getRadioStationSaved(radioStationUrl)
+    private suspend fun getRadioStationSaved(radioStationUrlResolved: String): RadioStationLocal? =
+        mainRadioStationRepository.getRadioStationSaved(radioStationUrlResolved)
 
     override suspend fun mediaItemChildrenToRadioStationPresentation(children: MutableList<MediaBrowserCompat.MediaItem>) =
         children.map {
@@ -26,8 +26,8 @@ class MainRadioUseCase @Inject constructor(
 
             RadioStationPresentation(
                 stationName = it.description.title.toString(),
-                url = it.mediaId!!,
-                urlResolved = it.description.mediaUri.toString(),
+                urlResolved = it.mediaId ?: "",
+//                urlResolved = it.description.mediaUri.toString(),
                 clickCount = it.description.extras?.getLong("ClickCount")
                     ?.toInt()
                     ?: 0,
@@ -43,7 +43,7 @@ class MainRadioUseCase @Inject constructor(
             )
         }
 
-    override suspend fun saveLastUsedRadioStationUrlAndCode(url: String, countryCode: String) {
-        mainRadioStationRepository.saveLastUsedRadioStationUrlAndCode(url, countryCode)
+    override suspend fun saveLastUsedRadioStationUrlAndCode(urlResolved: String, countryCode: String) {
+        mainRadioStationRepository.saveLastUsedRadioStationUrlAndCode(urlResolved, countryCode)
     }
 }

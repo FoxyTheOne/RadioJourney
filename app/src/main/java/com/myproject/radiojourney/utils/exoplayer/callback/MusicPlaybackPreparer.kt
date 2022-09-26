@@ -8,6 +8,7 @@ import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.myproject.radiojourney.utils.exoplayer.FirebaseMusicSource
 import com.myproject.radiojourney.utils.exoplayer.callback.State.*
+import com.myproject.radiojourney.utils.extension.removeLastNchars
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.io.IOException
@@ -79,7 +80,7 @@ class MusicPlaybackPreparer(
                 serviceScope.launch {
                     state = STATE_INITIALIZING
 
-                    val countryCode =
+                    var countryCode =
                         extras?.get("nRecNo") // Достаём country code и далее сравниваем его. Если коды разные, скачиваем новый плейлист
 
                     if (countryCode == "FAV") {
@@ -109,6 +110,15 @@ class MusicPlaybackPreparer(
                         // Вместо этого проверим (выше), скачан ли уже такой плей лист и сравнивать будем с такой переменной:
 
                         if (lastCountryCode != countryCode) {
+//                            if (countryCode.toString().endsWith("_anyway")) {
+//                                val str: String = countryCode.toString()
+//                                val n = 7 // "_anyway" -> 7 chars
+//
+//                                val newCountryCode = str.removeLastNchars(str,n)
+//
+//                                countryCode = newCountryCode
+//                            }
+
                             val job = serviceScope.launch {
                                 try {
                                     firebaseMusicSource.fetchMediaData(

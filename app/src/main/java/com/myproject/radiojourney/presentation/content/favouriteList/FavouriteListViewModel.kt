@@ -106,7 +106,7 @@ class FavouriteListViewModel @Inject constructor(
                     // В случае успеха, так же ставим false в объекте текущей радиостанции
                     _radioStationFavouriteListLiveData.value.apply {
                         this?.forEach {
-                            if (it.url == currentFavouriteRadioStation.url) {
+                            if (it.urlResolved == currentFavouriteRadioStation.urlResolved) {
                                 it.isStationInFavourite = false
                             }
                         }
@@ -120,7 +120,7 @@ class FavouriteListViewModel @Inject constructor(
                     // В случае успеха, так же ставим true в объекте текущей радиостанции
                     _radioStationFavouriteListLiveData.value.apply {
                         this?.forEach {
-                            if (it.url == currentFavouriteRadioStation.url) {
+                            if (it.urlResolved == currentFavouriteRadioStation.urlResolved) {
                                 it.isStationInFavourite = true
                             }
                         }
@@ -154,7 +154,7 @@ class FavouriteListViewModel @Inject constructor(
 
                 radioStationList?.let { nonNullRadioStationList ->
                     nonNullRadioStationList.forEach {
-                        if (it.url == radioStation.url) {
+                        if (it.urlResolved == radioStation.urlResolved) {
                             radioStationIsInList = true
                         }
                     }
@@ -194,7 +194,7 @@ class FavouriteListViewModel @Inject constructor(
             try {
                 _radioStationFavouriteListLiveData.value.apply {
                     this?.forEach {
-                        if (it.url == mediaId) {
+                        if (it.urlResolved == mediaId) {
                             it.isStationInFavourite = isFavourite
                         }
                     }

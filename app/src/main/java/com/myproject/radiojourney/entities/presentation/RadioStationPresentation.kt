@@ -7,10 +7,9 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 data class RadioStationPresentation(
     val stationName: String,
-    val url: String,
     val urlResolved: String,
     val clickCount: Int,
-    val countryCode: String,
+    var countryCode: String,
     val country: String,
     var isStationInFavourite: Boolean,
     var isStationInRecommended: Boolean
@@ -25,7 +24,6 @@ data class RadioStationPresentation(
         ): RadioStationPresentation =
             RadioStationPresentation(
                 stationName = radioStationLocal.stationName,
-                url = radioStationLocal.url,
                 urlResolved = radioStationLocal.urlResolved,
                 clickCount = radioStationLocal.clickCount,
                 country = radioStationLocal.country,

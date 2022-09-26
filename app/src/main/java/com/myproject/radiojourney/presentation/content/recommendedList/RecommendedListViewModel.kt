@@ -104,7 +104,7 @@ class RecommendedListViewModel @Inject constructor(
                     // В случае успеха, так же ставим false в объекте текущей радиостанции
                     _radioStationRecommendedListLiveData.value.apply {
                         this?.forEach {
-                            if (it.url == radioStationOnStarClick.url) {
+                            if (it.urlResolved == radioStationOnStarClick.urlResolved) {
                                 it.isStationInFavourite = false
                             }
                         }
@@ -118,7 +118,7 @@ class RecommendedListViewModel @Inject constructor(
                     // В случае успеха, так же ставим true в объекте текущей радиостанции
                     _radioStationRecommendedListLiveData.value.apply {
                         this?.forEach {
-                            if (it.url == radioStationOnStarClick.url) {
+                            if (it.urlResolved == radioStationOnStarClick.urlResolved) {
                                 it.isStationInFavourite = true
                             }
                         }

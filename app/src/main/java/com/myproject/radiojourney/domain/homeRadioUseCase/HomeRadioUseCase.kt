@@ -5,6 +5,7 @@ import com.myproject.radiojourney.domain.iRepository.IMainRadioStationRepository
 import com.myproject.radiojourney.entities.local.RadioStationLocal
 import com.myproject.radiojourney.entities.presentation.CountryPresentation
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
+import com.myproject.radiojourney.utils.extension.removeLastNchars
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
@@ -40,9 +41,9 @@ class HomeRadioUseCase @Inject constructor(
     override suspend fun getRadioStationUrl(): String? =
         mainRadioStationRepository.getRadioStationUrl()
 
-    override suspend fun getRadioStationSaved(radioStationUrl: String): RadioStationPresentation? {
+    override suspend fun getRadioStationSaved(radioStationUrlResolved: String): RadioStationPresentation? {
         val radioStationLocalSaved: RadioStationLocal? =
-            mainRadioStationRepository.getRadioStationSaved(radioStationUrl)
+            mainRadioStationRepository.getRadioStationSaved(radioStationUrlResolved)
 
         // local -> presentation
         var radioStationPresentationSaved: RadioStationPresentation? = null
@@ -55,8 +56,8 @@ class HomeRadioUseCase @Inject constructor(
     }
 
     // Поменять в Shared Preference setIsRadioStationStored на true. Сохранить в Shared Preference (url)
-    override suspend fun saveRadioStationUrl(isStored: Boolean, url: String) =
-        mainRadioStationRepository.saveRadioStationUrl(isStored, url)
+    override suspend fun saveRadioStationUrl(isStored: Boolean, urlResolved: String) =
+        mainRadioStationRepository.saveRadioStationUrl(isStored, urlResolved)
 
     // И сохранить радиостанцию в Room
     override suspend fun saveRadioStationInRoom(radioStation: RadioStationPresentation) {
@@ -65,6 +66,15 @@ class HomeRadioUseCase @Inject constructor(
     }
 
     override suspend fun addStationInRoomToFavourites(currentRadioStation: RadioStationPresentation) {
+        if (currentRadioStation.countryCode.endsWith("_FAV")) {
+            val str: String = currentRadioStation.countryCode
+            val n = 4 // "_FAV" -> 4 chars
+
+            val newCountryCode = str.removeLastNchars(str, n)
+
+            currentRadioStation.countryCode = newCountryCode.toString()
+        }
+
         val currentRadioStationLocal = RadioStationLocal.fromPresentationToLocal(
             currentRadioStation,
             isStationInFavourite = true
@@ -73,6 +83,15 @@ class HomeRadioUseCase @Inject constructor(
     }
 
     override suspend fun deleteStationInRoomFromFavourite(currentRadioStation: RadioStationPresentation) {
+        if (currentRadioStation.countryCode.endsWith("_FAV")) {
+            val str: String = currentRadioStation.countryCode
+            val n = 4 // "_FAV" -> 4 chars
+
+            val newCountryCode = str.removeLastNchars(str, n)
+
+            currentRadioStation.countryCode = newCountryCode.toString()
+        }
+
         val currentRadioStationLocal = RadioStationLocal.fromPresentationToLocal(
             currentRadioStation,
             isStationInFavourite = false
@@ -93,7 +112,7 @@ class HomeRadioUseCase @Inject constructor(
                 val countryRadioStationsList =
                     mainRadioStationRepository.getRadioStationList(it.value)
                 countryRadioStationsList.forEach { radioStationLocal ->
-                    if (radioStationLocal.url == it.key) {
+                    if (radioStationLocal.urlResolved == it.key) {
                         radioStationLocal.isStationInRecommended = true
                         mainRadioStationRepository.saveRadioStationInRoom(radioStationLocal)
                     }
