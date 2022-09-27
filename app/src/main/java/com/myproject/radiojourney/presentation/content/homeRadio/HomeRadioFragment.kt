@@ -229,6 +229,29 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         getCurrentOrLastLocation()
         // Получить локацию нужно разово, при открытии фрагмента. Обновлять не нужно.
 
+        binding?.buttonYouAreHere?.setOnClickListener {
+            if (ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+                ||
+                ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                getCurrentOrLastLocation()
+            } else {
+                // Если нет - вызываем requestPermissionLauncher
+                requestPermissionLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    )
+                )
+            }
+        }
+
 //        viewModel.setRecommendedRadioStations()
         initListeners()
         subscribeOnLiveData()
@@ -247,9 +270,6 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         }
         binding?.buttonZoomMinus?.setOnClickListener {
             mMap.animateCamera(CameraUpdateFactory.zoomOut())
-        }
-        binding?.buttonYouAreHere?.setOnClickListener {
-            getCurrentOrLastLocation()
         }
         binding?.buttonGoToFavourites?.setOnClickListener {
 //            // TODO !!!!!!!!!!! When you choose a new country playlist, begins to play the first radio station, no matter what you chose. Here I call the method myself, so that the first radio station is called automatically, byt it is not very convenient and not always helps

@@ -113,6 +113,24 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
         mOnPageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
 
+            override fun onPageScrolled(
+                position: Int,
+                positionOffset: Float,
+                positionOffsetPixels: Int
+            ) {
+                if (swipeRadioStationAdapter.radioStationList.isNotEmpty()) {
+
+                    if (swipeRadioStationAdapter.radioStationList[position].isStationInFavourite) {
+                        binding?.imageStar?.setImageResource(R.drawable.star)
+                    } else {
+                        binding?.imageStar?.setImageResource(R.drawable.star_transparent)
+                    }
+
+                }
+
+                super.onPageScrolled(position, positionOffset, positionOffsetPixels)
+            }
+
             // function, that is called when the viewpager is swiped - onPageSelected()
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
@@ -362,6 +380,9 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                                 curPlayingRadioStation?.urlResolved ?: return@observe,
                                 curPlayingRadioStation?.countryCode ?: return@observe
                             )
+
+                            mOnPageChangeCallback?.onPageScrolled(0, 0.0f, 0)
+                            // TODO Если не включать плейер, а просто листать от списка к списку, этот метод перестаёт вызываться на четвертый раз и звезда перестаёт меняться (избранное/не избранное). Поэтому на всякий случай вызываю его дополнительно. Не самый лучший вариант, думаю. Поэтому помечаю на проверку в дальнейшем.
                         }
                     }
                     ERROR -> Unit // we don't need this
@@ -514,7 +535,8 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             currentRadioStationPosition?.let {
                 swipeRadioStationAdapter.radioStationList[it].isStationInFavourite = isInFavourite
 
-                val testIsInFavourite = swipeRadioStationAdapter.radioStationList[it].isStationInFavourite
+                val testIsInFavourite =
+                    swipeRadioStationAdapter.radioStationList[it].isStationInFavourite
 
                 if (isInFavourite) {
                     mainViewModel.addAStationToFavouriteListIfItIsNotThere(swipeRadioStationAdapter.radioStationList[it])
@@ -540,9 +562,12 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                 if (position <= maxIndex) {
                     Log.d(TAG, "position <= maxIndex")
 
-                    val testRadioStationName = swipeRadioStationAdapter.radioStationList[position].stationName
-                    val testRadioStationCode = swipeRadioStationAdapter.radioStationList[position].countryCode
-                    val testIsInFavourite = swipeRadioStationAdapter.radioStationList[position].isStationInFavourite
+                    val testRadioStationName =
+                        swipeRadioStationAdapter.radioStationList[position].stationName
+                    val testRadioStationCode =
+                        swipeRadioStationAdapter.radioStationList[position].countryCode
+                    val testIsInFavourite =
+                        swipeRadioStationAdapter.radioStationList[position].isStationInFavourite
 
                     mainViewModel.playOrToggleSong(swipeRadioStationAdapter.radioStationList[position])
                     Log.d(
