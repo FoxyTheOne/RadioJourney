@@ -1,64 +1,50 @@
-package com.myproject.radiojourney.presentation.content.radioList
+package com.myproject.radiojourney.presentation.content.radioStationList
 
 import android.app.Dialog
 import android.os.Bundle
 import android.util.Log
 import android.view.*
+import android.widget.FrameLayout
+import android.widget.ProgressBar
+import androidx.appcompat.widget.AppCompatImageView
+import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
-import com.myproject.radiojourney.IAppSettings
 import com.myproject.radiojourney.R
-import com.myproject.radiojourney.databinding.LayoutRadioStationListBinding
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 import com.myproject.radiojourney.other.Status
-import com.myproject.radiojourney.presentation.content.base.BaseContentFragmentAbstract
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 /**
  * Страница со списком радиостанций по конкретной стране
  */
 @AndroidEntryPoint
-class RadioListFragment : BaseContentFragmentAbstract() {
+class RadioListFragment : BaseRadioListFragmentAbstract() {
     companion object {
         private const val TAG = "RadioListFragment"
     }
 
-    @Inject
-    lateinit var appSettings: IAppSettings
-
-    // VIEW BINDING -> 1. Объявляем переменную. This property is only valid between onCreateView and onDestroyView
-    private var binding: LayoutRadioStationListBinding? = null
-
     private val viewModel by viewModels<RadioListViewModel>()
-    private lateinit var dialogInternetTrouble: Dialog
-    private lateinit var countryCode: String
-    private lateinit var countryName: String
+
     private var radioStationList = listOf(
         RadioStationPresentation(
-            "Test", "test",  2, "test", "test",
+            "Test", "test", 2, "test", "test",
             isStationInFavourite = false,
             isStationInRecommended = false
         )
     )
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // VIEW BINDING -> 2. Инициализация
-        binding = LayoutRadioStationListBinding.inflate(inflater, container, false)
-        // TOOLBAR
-        setHasOptionsMenu(true)
-        // TOOLBAR - где будет находиться в нашем layout
-        binding?.let {
-            appSettings.setToolbar(it.homeToolbar)
-        }
-        return binding?.root
-    }
+    private lateinit var dialogInternetTrouble: Dialog
+    private lateinit var countryCode: String
+    private lateinit var countryName: String
+    private lateinit var textRadioListTitle: AppCompatTextView
+    private lateinit var imageArrowBack: AppCompatImageView
+    private lateinit var recyclerViewRadioStationList: RecyclerView
+    private lateinit var frameLayout: FrameLayout
+    private lateinit var progressCircular: ProgressBar
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -69,7 +55,14 @@ class RadioListFragment : BaseContentFragmentAbstract() {
             countryCode = resultArray[0]
             countryName = resultArray[1]
         }
-        binding?.textMyFavoritesTitle?.text = countryName
+
+        textRadioListTitle = view.findViewById(R.id.text_myFavorites_title)
+        textRadioListTitle.text = countryName
+
+        imageArrowBack = view.findViewById(R.id.image_arrowBack)
+        recyclerViewRadioStationList = view.findViewById(R.id.recyclerView_radioStationList)
+        frameLayout = view.findViewById(R.id.frameLayout)
+        progressCircular = view.findViewById(R.id.progressCircular)
 
         // Получаем список радиостанций, преобразуем. Сохранять в Room не будем. Радиостанций очень много, будет занимать много места на телефоне.
         // Кроме того, списки на сервере постоянно обновляются. Возможно какой-то радиостанции в списке уже не будет, а в локальной БД она ещё осталась. Пользователь выберет её и будет ошибка.
@@ -85,9 +78,10 @@ class RadioListFragment : BaseContentFragmentAbstract() {
     }
 
     private fun initListeners() {
-        binding?.imageArrowBack?.setOnClickListener {
+        imageArrowBack.setOnClickListener {
             if (this.findNavController().currentDestination?.id == R.id.radioListFragment) {
-                this.findNavController().navigate(R.id.action_radioListFragment_to_homeRadioFragment)
+                this.findNavController()
+                    .navigate(R.id.action_radioListFragment_to_homeRadioFragment)
             }
         }
     }
@@ -108,9 +102,9 @@ class RadioListFragment : BaseContentFragmentAbstract() {
                 when (result.status) {
                     // If everything is ok, we don't want to show anything. Only if smth went wrong
                     Status.ERROR ->
-                        binding?.let { nonNullBinding ->
+                        view?.let { nonNullBinding ->
                             Snackbar.make(
-                                nonNullBinding.recyclerViewRadioStationList.rootView,
+                                nonNullBinding.rootView,
                                 result.message ?: "An unknown error occurred",
                                 Snackbar.LENGTH_LONG
                             ).show()
@@ -126,7 +120,7 @@ class RadioListFragment : BaseContentFragmentAbstract() {
                 showProgress()
 
                 // 1.5. ОБРАБОТКА КЛИКА -> Получаем результат клика во фрагменте (описываем нашу анонимную функцию из RecyclerView)
-                binding?.recyclerViewRadioStationList?.adapter =
+                recyclerViewRadioStationList.adapter =
                     RadioListAdapter(radioStationList) { radioStationPresentationOnClick ->
                         Log.d(TAG, "Выбранный элемент списка: $radioStationPresentationOnClick")
 
@@ -148,46 +142,12 @@ class RadioListFragment : BaseContentFragmentAbstract() {
     }
 
     private fun showProgress() {
-        binding?.frameLayout?.isVisible = true
-        binding?.progressCircular?.isVisible = true
+        frameLayout.isVisible = true
+        progressCircular.isVisible = true
     }
 
     private fun hideProgress() {
-        binding?.frameLayout?.isVisible = false
-        binding?.progressCircular?.isVisible = false
-    }
-
-    // TOOLBAR
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        super.onCreateOptionsMenu(menu, inflater)
-        inflater.inflate(R.menu.home_toolbar_menu, menu)
-    }
-
-    // TOOLBAR - обработка клика
-    override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
-        R.id.log_out -> {
-            showLogoutDialog()
-            Log.d(TAG, "showLogoutDialog() was called")
-            true
-        }
-        else -> {
-            // If we got here, the user's action was not recognized.
-            // Invoke the superclass to handle it.
-            Log.d(TAG, "else result")
-            super.onOptionsItemSelected(item)
-        }
-    }
-
-    // TOOLBAR - Описываем метод из интерфейса ILogOutListener для выхода из аккаунта приложения
-    override fun onLogOut() {
-        viewModel.logout()
-//        this.findNavController().navigate(R.id.action_radioListFragment_to_auth_nav_graph)
-        activity?.finish()
-    }
-
-    // VIEW BINDING -> 3. onDestroyView()
-    override fun onDestroyView() {
-        super.onDestroyView()
-        binding = null
+        frameLayout.isVisible = false
+        progressCircular.isVisible = false
     }
 }

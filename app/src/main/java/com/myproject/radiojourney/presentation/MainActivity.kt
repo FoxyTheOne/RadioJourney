@@ -29,11 +29,6 @@ import com.myproject.radiojourney.utils.oldMusicPlayer.ForegroundNotificationSer
 import com.myproject.radiojourney.utils.service.ProgressForegroundService
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.*
-import android.content.DialogInterface
-import androidx.activity.OnBackPressedCallback
-import androidx.navigation.fragment.findNavController
-import com.myproject.radiojourney.presentation.content.favouriteList.FavouriteListFragmentDirections
-import com.myproject.radiojourney.presentation.content.radioList.RadioListFragmentDirections
 
 /**
  * This source code is free for studying purposes but you are not allowed to copy and use it in other applications (projects).

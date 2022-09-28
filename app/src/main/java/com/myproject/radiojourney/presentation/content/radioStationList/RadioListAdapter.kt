@@ -1,4 +1,4 @@
-package com.myproject.radiojourney.presentation.content.radioList
+package com.myproject.radiojourney.presentation.content.radioStationList
 
 import android.view.LayoutInflater
 import android.view.View

@@ -2,6 +2,7 @@ package com.myproject.radiojourney.presentation.firstScreen
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.myproject.radiojourney.R
@@ -30,7 +31,18 @@ abstract class BaseAuthFragmentAbstract : Fragment() {
         Log.d(TAG, "tokenForCheck = $tokenForCheck")
 
         if (tokenForCheck.isNotBlank()) {
+            Toast.makeText(
+                context,
+                "Your token: $tokenForCheck, it's not a first start",
+                Toast.LENGTH_LONG
+            ).show()
             findNavController().navigate(R.id.action_global_home_radio_fragment)
+        } else {
+            Toast.makeText(
+                context,
+                "Your token: $tokenForCheck, it's a first start",
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 }

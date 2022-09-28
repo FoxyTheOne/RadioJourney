@@ -1,4 +1,4 @@
-package com.myproject.radiojourney.presentation.content.favouriteList
+package com.myproject.radiojourney.presentation.content.radioStationList
 
 import android.accounts.AccountsException
 import androidx.lifecycle.LiveData
@@ -6,7 +6,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myproject.radiojourney.domain.favouriteListUseCase.IFavouriteListUseCase
-import com.myproject.radiojourney.domain.logOutUseCase.ILogOutUseCase
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 import com.myproject.radiojourney.other.Event
 import com.myproject.radiojourney.other.Resource
@@ -25,7 +24,6 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class FavouriteListViewModel @Inject constructor(
-    private val logOutInteractor: ILogOutUseCase,
     private val favouriteListInteractor: IFavouriteListUseCase
 ) : ViewModel() {
 
@@ -59,14 +57,6 @@ class FavouriteListViewModel @Inject constructor(
     // LiveData для открытия диалогового окна
     private val _dialogInternetTroubleLiveData = MutableLiveData<Boolean>()
     val dialogInternetTroubleLiveData: MutableLiveData<Boolean> = _dialogInternetTroubleLiveData
-
-    fun logout() {
-        viewModelScope.launch(Dispatchers.IO) {
-            _showProgressLiveData.call()
-            logOutInteractor.onLogout()
-            _hideProgressLiveData.call()
-        }
-    }
 
     fun getRadioStationFavouriteListAndShow() {
         viewModelScope.launch(Dispatchers.IO) {

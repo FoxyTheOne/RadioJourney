@@ -81,6 +81,7 @@ class AppSharedPreference @Inject constructor(@ApplicationContext context: Conte
         ) ?: ""
     }
 
+    @Synchronized
     override fun saveToken(token: Int?) {
         sharedPreference?.edit()?.putString(
             PREFERENCE_USER_TOKEN,
@@ -88,6 +89,7 @@ class AppSharedPreference @Inject constructor(@ApplicationContext context: Conte
         )?.apply()
     }
 
+    @Synchronized
     override fun getToken(): String {
         return sharedPreference?.getString(
             PREFERENCE_USER_TOKEN,

@@ -1,11 +1,10 @@
-package com.myproject.radiojourney.presentation.content.radioList
+package com.myproject.radiojourney.presentation.content.radioStationList
 
 import android.accounts.AccountsException
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.myproject.radiojourney.domain.logOutUseCase.ILogOutUseCase
 import com.myproject.radiojourney.domain.radioListUseCase.IRadioListUseCase
 import com.myproject.radiojourney.utils.extension.call
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
@@ -25,7 +24,6 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class RadioListViewModel @Inject constructor(
-    private val logOutInteractor: ILogOutUseCase,
     private val radioListInteractor: IRadioListUseCase
 ) : ViewModel() {
 
@@ -53,14 +51,6 @@ class RadioListViewModel @Inject constructor(
     // LiveData для открытия диалогового окна
     private val _dialogInternetTroubleLiveData = MutableLiveData<Boolean>()
     val dialogInternetTroubleLiveData: MutableLiveData<Boolean> = _dialogInternetTroubleLiveData
-
-    fun logout() {
-        viewModelScope.launch(Dispatchers.IO) {
-            _showProgressLiveData.call()
-            logOutInteractor.onLogout()
-            _hideProgressLiveData.call()
-        }
-    }
 
     fun getRadioStationList(countryCode: String) {
         viewModelScope.launch(Dispatchers.IO) {
