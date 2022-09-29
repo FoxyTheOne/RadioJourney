@@ -39,6 +39,9 @@
 
     <string name="recommendedRadioStationList_title">Recommended radio stations:</string>
 
+    <string name="currentPlaylist_title">Current playlist</string>
+    <string name="currentPlaylist_empty">Playlist is empty</string>
+
     <!-- exoplayer -->
     <string name="notification_channel_name">Radio station channel</string>
     <string name="notification_channel_description">Shows the currently playing radio station</string>

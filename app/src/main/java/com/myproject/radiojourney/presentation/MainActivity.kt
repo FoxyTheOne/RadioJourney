@@ -12,6 +12,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.isVisible
 import androidx.navigation.findNavController
+import androidx.navigation.fragment.findNavController
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.IAppSettings
@@ -24,6 +25,7 @@ import com.myproject.radiojourney.other.Constants.AUDIO_STOPPED
 import com.myproject.radiojourney.other.Status.*
 import com.myproject.radiojourney.presentation.adapter.SwipeRadioStationAdapter
 import com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioFragmentDirections
+import com.myproject.radiojourney.presentation.content.radioStationList.CurrentPlaylistFragmentDirections
 import com.myproject.radiojourney.utils.extension.isPlaying
 import com.myproject.radiojourney.utils.oldMusicPlayer.ForegroundNotificationService
 import com.myproject.radiojourney.utils.service.ProgressForegroundService
@@ -245,20 +247,26 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             }
         }
 
-        // Navigate to the RadioListFragment if a song in player was clicked
+//        // Navigate to the RadioListFragment if a song in player was clicked
+//        swipeRadioStationAdapter.setItemClickListener {
+//            // Узнаем название страны
+//            val loc = Locale("", it.countryCode)
+//            val countryName = loc.displayName // Название страны на используемом в настройках языке
+////            val countryName2 = it.country // Здесь строка всегда на английском
+//
+//            // Перенесём countryCode на RadioListFragment для запроса списка станций
+//            if (it.countryCode != "null") {
+//                val direction =
+//                    HomeRadioFragmentDirections.actionHomeRadioFragmentToRadioListFragment("${it.countryCode}||${countryName}")
+//                if (this.findNavController(R.id.navHostFragment).currentDestination?.id == R.id.homeRadioFragment) {
+//                    this.findNavController(R.id.navHostFragment).navigate(direction)
+//                }
+//            }
+//        }
         swipeRadioStationAdapter.setItemClickListener {
-            // Узнаем название страны
-            val loc = Locale("", it.countryCode)
-            val countryName = loc.displayName // Название страны на используемом в настройках языке
-//            val countryName2 = it.country // Здесь строка всегда на английском
-
-            // Перенесём countryCode на RadioListFragment для запроса списка станций
-            if (it.countryCode != "null") {
-                val direction =
-                    HomeRadioFragmentDirections.actionHomeRadioFragmentToRadioListFragment("${it.countryCode}||${countryName}")
-                if (this.findNavController(R.id.navHostFragment).currentDestination?.id == R.id.homeRadioFragment) {
-                    this.findNavController(R.id.navHostFragment).navigate(direction)
-                }
+            val direction = HomeRadioFragmentDirections.actionHomeRadioFragmentToCurrentPlaylistFragment()
+            if (this.findNavController(R.id.navHostFragment).currentDestination?.id == R.id.homeRadioFragment) {
+                this.findNavController(R.id.navHostFragment).navigate(direction)
             }
         }
 

@@ -92,7 +92,7 @@
             app:layout_constraintTop_toBottomOf="@+id/text_radioStationDialogTitle"
             app:layout_constraintVertical_chainStyle="packed" />
 
-        <!-- View если My favourites пустые -->
+        <!-- View если My favourites или Playlist пустые -->
         <TextView
             android:id="@+id/text_favouritesEmpty"
             style="@style/login_bottom"

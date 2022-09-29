@@ -23,6 +23,9 @@
         <action
             android:id="@+id/action_homeRadioFragment_to_recommendedListFragment"
             app:destination="@id/recommendedListFragment" />
+        <action
+            android:id="@+id/action_homeRadioFragment_to_currentPlaylistFragment"
+            app:destination="@id/currentPlaylistFragment" />
     </fragment>
 
     <fragment
@@ -82,5 +85,18 @@
     <action
         android:id="@+id/action_global_home_radio_fragment"
         app:destination="@id/homeRadioFragment" />
+    <fragment
+        android:id="@+id/currentPlaylistFragment"
+        android:name="com.myproject.radiojourney.presentation.content.radioStationList.CurrentPlaylistFragment"
+        android:label="CurrentPlaylistFragment" >
+        <action
+            android:id="@+id/action_currentPlaylistFragment_to_homeRadioFragment"
+            app:destination="@id/homeRadioFragment">
+
+            <argument
+                android:name="radio_station"
+                app:argType="com.myproject.radiojourney.entities.presentation.RadioStationPresentation" />
+        </action>
+    </fragment>
 
 </navigation>
