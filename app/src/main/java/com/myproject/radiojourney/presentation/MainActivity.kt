@@ -12,7 +12,6 @@ import androidx.activity.viewModels
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.isVisible
 import androidx.navigation.findNavController
-import androidx.navigation.fragment.findNavController
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.IAppSettings
@@ -25,7 +24,6 @@ import com.myproject.radiojourney.other.Constants.AUDIO_STOPPED
 import com.myproject.radiojourney.other.Status.*
 import com.myproject.radiojourney.presentation.adapter.SwipeRadioStationAdapter
 import com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioFragmentDirections
-import com.myproject.radiojourney.presentation.content.radioStationList.CurrentPlaylistFragmentDirections
 import com.myproject.radiojourney.utils.extension.isPlaying
 import com.myproject.radiojourney.utils.oldMusicPlayer.ForegroundNotificationService
 import com.myproject.radiojourney.utils.service.ProgressForegroundService
@@ -132,12 +130,24 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
 
-                namePosition(position)
+                // TODO всё в один synchronized метод
+                mainViewModel.synchronizedCheckThePosition(
+                    position,
+                    mainViewModel.mediaItemsListLiveData.value?.data,
+                    swipeRadioStationAdapter.radioStationList
+                )
 
+////                namePosition(position)
+//
 //                // Если мы скачиваем новый плейлист, то здесь всегда сначала получаем position = 0
 //                // Нужно проверить, действительно ли мы выбрали первую песню в плейлисте
 //                if (position == 0) {
-//                    Log.d(TAG, "onPageSelected 1) position == 0, checking the position, countryCode = ${swipeRadioStationAdapter.radioStationList[0].countryCode}")
+//                    if (!swipeRadioStationAdapter.radioStationList.isNullOrEmpty()) {
+//                        Log.d(
+//                            TAG,
+//                            "onPageSelected 1) position == 0, checking the position, countryCode = ${swipeRadioStationAdapter.radioStationList[0].countryCode}"
+//                        )
+//                    }
 ////                    mainViewModel.newMediaIdLiveData.observe(this@MainActivity) { так не работает
 //
 ////                    val radioStationList = swipeRadioStationAdapter.radioStationList
@@ -148,12 +158,22 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 //                        radioStationList = swipeRadioStationAdapter.radioStationList
 //                    }
 //
-//                    Log.d(TAG, "!!!!!!! radioStationList countryCode = ${radioStationList[0].countryCode}")
+//                    if (!radioStationList.isNullOrEmpty()) {
+//                        Log.d(
+//                            TAG,
+//                            "!!!!!!! radioStationList countryCode = ${radioStationList[0].countryCode}"
+//                        )
+//                    }
 //
 //                    mainViewModel.checkThePosition(position, radioStationList)
 //
 //                    mainViewModel.newPositionLiveData.observe(this@MainActivity) {
-//                        Log.d(TAG, "onPageSelected 4) _newPositionLiveData.postValue(newPosition), position got: $it, countryCode = ${swipeRadioStationAdapter.radioStationList[0].countryCode}")
+//                        if (!swipeRadioStationAdapter.radioStationList.isNullOrEmpty()) {
+//                            Log.d(
+//                                TAG,
+//                                "onPageSelected 4) _newPositionLiveData.postValue(newPosition), position got: $it, countryCode = ${swipeRadioStationAdapter.radioStationList[0].countryCode}"
+//                            )
+//                        }
 //                        namePosition(it)
 //                    }
 //
@@ -264,7 +284,8 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 //            }
 //        }
         swipeRadioStationAdapter.setItemClickListener {
-            val direction = HomeRadioFragmentDirections.actionHomeRadioFragmentToCurrentPlaylistFragment()
+            val direction =
+                HomeRadioFragmentDirections.actionHomeRadioFragmentToCurrentPlaylistFragment()
             if (this.findNavController(R.id.navHostFragment).currentDestination?.id == R.id.homeRadioFragment) {
                 this.findNavController(R.id.navHostFragment).navigate(direction)
             }
@@ -375,7 +396,8 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 //                                glide.load((curPlayingSong ?: radioStations[0]).imageUrl).into(ivCurSongImage)
 //                            }
 
-//                            mOnPageChangeCallback?.onPageSelected(0)
+                            mOnPageChangeCallback?.onPageSelected(0)
+                            // TODO почему-то этот метод изредка не вызывается, хотя должен
 
                             // В этом месте данные в curPlayingRadioStation будут старые, т.е. данные о предыдущей радиостанции. Это нужно для сравнения предыдущей и текущей в дальнейшем в методе mainViewModel.playOrToggleSong()
 
@@ -427,6 +449,10 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                     }
                 }
             }
+        }
+
+        mainViewModel.updateCurPlayingRadioStationLiveData.observe(this) {
+            curPlayingRadioStation = it
         }
 
         // LIVEDATA: Will be called everytime the playback changes (pause the player, play a song etc.) -> change our image
@@ -538,9 +564,6 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             currentRadioStationPosition?.let {
                 swipeRadioStationAdapter.radioStationList[it].isStationInFavourite = isInFavourite
 
-                val testIsInFavourite =
-                    swipeRadioStationAdapter.radioStationList[it].isStationInFavourite
-
                 if (isInFavourite) {
                     mainViewModel.addAStationToFavouriteListIfItIsNotThere(swipeRadioStationAdapter.radioStationList[it])
                 }
@@ -564,13 +587,6 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                 )
                 if (position <= maxIndex) {
                     Log.d(TAG, "position <= maxIndex")
-
-                    val testRadioStationName =
-                        swipeRadioStationAdapter.radioStationList[position].stationName
-                    val testRadioStationCode =
-                        swipeRadioStationAdapter.radioStationList[position].countryCode
-                    val testIsInFavourite =
-                        swipeRadioStationAdapter.radioStationList[position].isStationInFavourite
 
                     mainViewModel.playOrToggleSong(swipeRadioStationAdapter.radioStationList[position])
                     Log.d(

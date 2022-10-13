@@ -24,6 +24,7 @@ import com.myproject.radiojourney.utils.exoplayer.callback.MusicPlayerNotificati
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import java.io.IOException
+import java.net.SocketTimeoutException
 import javax.inject.Inject
 
 /**
@@ -95,10 +96,16 @@ class MusicService : MediaBrowserServiceCompat() {
                 )
 
 
+            } catch (e: SocketTimeoutException) {
+                // Когда сохранён не верный CountryCode, по запросу такого не найдёт и выдаст ошибку retrofit2.HttpException: HTTP 404
+                e.printStackTrace()
+//                firebaseMusicSource.fetchMediaData("AD")
+                // TODO в этом случае лучше ничего не скачивать и выдать диалоговое окно об ошибке
             } catch (e: IOException) {
                 // Когда сохранён не верный CountryCode, по запросу такого не найдёт и выдаст ошибку retrofit2.HttpException: HTTP 404
                 e.printStackTrace()
-                firebaseMusicSource.fetchMediaData("AD")
+//                firebaseMusicSource.fetchMediaData("AD")
+                // TODO в этом случае лучше ничего не скачивать и выдать диалоговое окно об ошибке
             }
         }
 
@@ -201,19 +208,21 @@ class MusicService : MediaBrowserServiceCompat() {
 
         serviceScope.launch {
 
-            // Проверить, заканчивается ли ссылка на .m3u8
-            // Если да, нам нужно использовать HlsMediaSource
-            val mediaUri =
-                firebaseMusicSource.radioStations[curSongIndex].description.mediaUri.toString()
-            if (mediaUri.endsWith(".m3u8")
-            ) {
-                // TODO Player is accessed on the wrong thread.
-                exoPlayer.setMediaSource(firebaseMusicSource.asHlsMediaSource(httpDataSourceFactory)) // Вызываем метод из firebaseMusicSource, чтобы сформировать данные для плейлист
-                // TODO Так мы исправили ошибку UnrecognizedInputFormatException, но только если станция запущена из viewpager. Если до такой станции дошли через кнопки в уведомлении, станция играть не будет.
-            } else {
-                // TODO Player is accessed on the wrong thread.
-                // ExoPlayer.prepare(MediaSource mediaSource) is deprecated. Use setMediaSource(MediaSource) and ExoPlayer.prepare() instead
-                exoPlayer.setMediaSource(firebaseMusicSource.asMediaSource(dataSourceFactory)) // Вызываем метод из firebaseMusicSource, чтобы сформировать данные для плейлист
+            if (!radioStations.isNullOrEmpty()) {
+                // Проверить, заканчивается ли ссылка на .m3u8
+                // Если да, нам нужно использовать HlsMediaSource
+                val mediaUri =
+                    firebaseMusicSource.radioStations[curSongIndex].description.mediaUri.toString()
+                if (mediaUri.endsWith(".m3u8")
+                ) {
+                    // TODO Player is accessed on the wrong thread.
+                    exoPlayer.setMediaSource(firebaseMusicSource.asHlsMediaSource(httpDataSourceFactory)) // Вызываем метод из firebaseMusicSource, чтобы сформировать данные для плейлист
+                    // TODO Так мы исправили ошибку UnrecognizedInputFormatException, но только если станция запущена из viewpager. Если до такой станции дошли через кнопки в уведомлении, станция играть не будет.
+                } else {
+                    // TODO Player is accessed on the wrong thread.
+                    // ExoPlayer.prepare(MediaSource mediaSource) is deprecated. Use setMediaSource(MediaSource) and ExoPlayer.prepare() instead
+                    exoPlayer.setMediaSource(firebaseMusicSource.asMediaSource(dataSourceFactory)) // Вызываем метод из firebaseMusicSource, чтобы сформировать данные для плейлист
+                }
             }
 
             exoPlayer.seekTo(

@@ -19,7 +19,6 @@ import com.myproject.radiojourney.data.localDatabaseRoom.IRadioStationDAO
 import com.myproject.radiojourney.utils.exoplayer.State.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.IOException
 import javax.inject.Inject
 
 // TODO RENAME
@@ -76,7 +75,7 @@ class FirebaseMusicSource @Inject constructor(
 
         radioStations = countryCodeRadioStations.map { radioStationRemote ->
 
-            if (radioStationRemote.url_resolved.isNullOrEmpty()) {
+            if (radioStationRemote.url_resolved.isEmpty()) {
                 Log.d(
                     TAG,
                     "Found nullable urlResolved: name = ${radioStationRemote.name}, url = ${radioStationRemote.url}, urlResolved = ${radioStationRemote.url_resolved}"
@@ -120,7 +119,7 @@ class FirebaseMusicSource @Inject constructor(
 
             radioStations = favouriteRadioStations.map { radioStationLocal ->
 
-                if (radioStationLocal.urlResolved.isNullOrEmpty()) {
+                if (radioStationLocal.urlResolved.isEmpty()) {
                     Log.d(
                         TAG,
                         "Found nullable urlResolved: name = ${radioStationLocal.stationName}, urlResolved = ${radioStationLocal.urlResolved}"

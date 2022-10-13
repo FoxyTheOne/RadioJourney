@@ -501,10 +501,10 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 //
 //                    val isSame = bmapStar.sameAs(bmapDrawableForComparing)
 
-                    // TODO !!!!!!!!!!! When you choose a new country playlist, begins to play the first radio station, no matter what you chose. Here I call the method myself, so that the first radio station is called automatically, but it is not very convenient and not always helps
-                    if (country.countryCode != mainViewModel.curPlayingSongLiveData.value?.description?.subtitle) {
-                        mainViewModel.fetchSongs(country.countryCode)
-                    }
+//                    // TODO !!!!!!!!!!! When you choose a new country playlist, begins to play the first radio station, no matter what you chose. Here I call the method myself, so that the first radio station is called automatically, but it is not very convenient and not always helps
+//                    if (country.countryCode != mainViewModel.curPlayingSongLiveData.value?.description?.subtitle) {
+//                        mainViewModel.fetchSongs(country.countryCode)
+//                    }
 
                     Log.d(
                         TAG,
