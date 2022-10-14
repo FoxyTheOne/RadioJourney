@@ -394,7 +394,6 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    // TODO Refactor this method
     @Synchronized
     fun synchronizedCheckThePosition(
         position: Int,
@@ -403,36 +402,31 @@ class MainViewModel @Inject constructor(
     ) {
 //        viewModelScope.launch(Dispatchers.Default) {
 
-        var newPosition = position
-        var radioStationList = radioStationListFromLiveData
+        try {
 
-        // Если наша liveData пуста, возьмем список, который есть у нас в swipe adapter
-        if (radioStationListFromLiveData == null) {
-            radioStationList = radioStationListFromSwipeAdapterNonNullButCanBeEmpty
-        }
+            var newPosition = position
+            var radioStationList = radioStationListFromLiveData
 
-        // Если мы скачиваем новый плейлист, то здесь всегда сначала получаем position = 0
-        // Нужно проверить, действительно ли мы выбрали первую песню в плейлисте
-        if (newPosition == 0) {
-            var radioStationNeedToFind: RadioStationPresentation? = null
-            val mediaId: String? = _newMediaIdLiveData.value
+            // Если наша liveData пуста, возьмем список, который есть у нас в swipe adapter
+            if (radioStationListFromLiveData == null) {
+                radioStationList = radioStationListFromSwipeAdapterNonNullButCanBeEmpty
+            }
 
             // If position = 0, check the position
-            try {
+            // Если мы скачиваем новый плейлист, то здесь всегда сначала получаем position = 0
+            // Нужно проверить, действительно ли мы выбрали первую песню в плейлисте
+            if (newPosition == 0) {
+                var radioStationNeedToFind: RadioStationPresentation? = null
+                val mediaId: String? = _newMediaIdLiveData.value
+
                 // For sure, calculating chosen position
                 radioStationList?.let { nonNullRadioStationList ->
 
                     if (nonNullRadioStationList.isNotEmpty() && !mediaId.isNullOrBlank()) {
                         // Иногда находит несколько радиостанцийю Остановимся на первой.
                         // TODO У нас снова одинаковые mediaId. Нужно переделать базу данных
-//                            nonNullRadioStationList.forEach {
-//                                if (it.urlResolved == mediaId) {
-//                                    radioStationNeedToFind = it
-//
-//                                }
-//                            }
 
-                        val maxListIndex = nonNullRadioStationList.size + 1
+                        val maxListIndex = nonNullRadioStationList.size - 1
                         for (i in 0..maxListIndex) {
                             if (nonNullRadioStationList[i].urlResolved == mediaId) {
                                 radioStationNeedToFind = nonNullRadioStationList[i]
@@ -450,126 +444,109 @@ class MainViewModel @Inject constructor(
                 // Т.обр., если мы нашли нужную радиостанцию в списке, radioStationNeedToFind != null. Тогда записываем нужную позицию.
                 // Если же не нашли - позиция остаётся то же, какая и прилетела в метод изначально
 
-//                radioStationNeedToFind?.let {
-//                    // looking for the index of that song
-//                    val newItemIndex = radioStationList?.indexOf(radioStationNeedToFind)
-//
-//                    // That function will return -1 if the song doesn't exist, so we must check:
-//                    if (newItemIndex != -1 && newItemIndex != null && newItemIndex <= radioStationList?.size ?: 0) {
-//                        newPosition = newItemIndex
-//                        Log.d(
-//                            TAG,
-//                            "checkThePosition -> radioStationList.indexOf(radioStationNeedToFind) != -1 && != null && <= radioStationList?.size, position found: newPosition = $newItemIndex"
-//                        )
-//                    } else {
-//                        Log.d(
-//                            TAG,
-//                            "checkThePosition -> radioStationList.indexOf(radioStationNeedToFind) is not correct, found: newItemIndex = $newItemIndex, radioStationList?.size = ${radioStationList?.size}"
-//                        )
-//                    }
-//                }
-
                 Log.d(
                     TAG,
                     "position found: $newPosition, station need to play: $radioStationNeedToFind"
                 )
-
-            } catch (e1: AccountsException) {
-                // AccountsException -> Known direct subclasses: AuthenticatorException, NetworkErrorException, OperationCanceledException
-                e1.printStackTrace()
-                _dialogInternetTroubleLiveData.call()
-            } catch (e2: IOException) {
-                e2.printStackTrace()
-                _errorMessageLiveData.postValue(
-                    Event(
-                        Resource.error(
-                            "An unknown error occurred",
-                            null
-                        )
-                    )
-                )
             }
-        }
 
-        // name position:
+            // name position:
 
-        val playbackState = playbackStateLiveData.value
+            val playbackState = playbackStateLiveData.value
 //            val maxIndex = radioStationListFromSwipeAdapterNonNullButCanBeEmpty.size + 1
-        var maxIndex = 0
-        radioStationList?.let { maxIndex = it.size + 1 }
+            var maxIndex = 0
+            radioStationList?.let { maxIndex = it.size - 1 }
 
-        // We must check, if player is playing
-        if (playbackState?.isPlaying == true) {
+            // We must check, if player is playing
+            if (playbackState?.isPlaying == true) {
 
-            // Если выбрать радиостанцию US (2000 Rock ...), а после неё первое Белорусское радио в списке (альфарадио) - вылетает IndexOutOfBoundsException, т.к. сначала ищет 300+ индекс в списке из 53х
-            try {
-                Log.d(
-                    TAG,
-                    "Checking: maxIndex = $maxIndex, position = $newPosition"
-                )
-                if (newPosition <= maxIndex) {
+                // Если выбрать радиостанцию US (2000 Rock ...), а после неё первое Белорусское радио в списке (альфарадио) - вылетает IndexOutOfBoundsException, т.к. сначала ищет 300+ индекс в списке из 53х
+                try {
 
-                    Log.d(TAG, "position <= maxIndex")
+                    Log.d(
+                        TAG,
+                        "Checking: maxIndex = $maxIndex, position = $newPosition"
+                    )
 
-                    val test = radioStationList?.get(newPosition)
-                    Log.d(TAG, "test = $test")
+                    if (newPosition <= maxIndex) {
+                        Log.d(TAG, "position <= maxIndex")
+
+                        val test = radioStationList?.get(newPosition)
+                        Log.d(TAG, "test = $test")
 //                    playOrToggleSong(radioStationListFromSwipeAdapterNonNullButCanBeEmpty[newPosition])
-                    radioStationList?.get(newPosition)?.let { playOrToggleSong(it) }
+                        radioStationList?.get(newPosition)?.let { playOrToggleSong(it) }
 
-                    Log.d(
-                        TAG,
-                        "playbackState?.isPlaying == true mainViewModel.playOrToggleSong() called, position = $newPosition, countryCode = ${
-                            radioStationList?.get(
-                                0
-                            )?.countryCode
-                        }"
-                    )
-
-                }
-            } catch (e: IndexOutOfBoundsException) {
-                Log.d(TAG, "CAUGHT IndexOutOfBoundsException!")
-                e.printStackTrace()
-            }
-
-        } else {
-            // При включении программы и загрузке контента, попадаем сюда
-
-            try {
-                Log.d(TAG, "Checking: maxIndex = $maxIndex, position = $newPosition")
-                if (newPosition <= maxIndex) {
-
-                    Log.d(TAG, "position <= maxIndex")
-
-                    _updateCurPlayingRadioStationLiveData.postValue(
-                        radioStationList?.get(newPosition)
-                    )
-
-                    Log.d(
-                        TAG,
-                        "playbackState?.isPlaying != true curPlayingRadioStation = swipeRadioStationAdapter.radioStationList[position]"
-                    )
-
-                }
-            } catch (e: IndexOutOfBoundsException) {
-                Log.d(TAG, "fun namePosition - CACHED IndexOutOfBoundsException!")
-                e.printStackTrace()
-            }
-
-            // TODO Нам нужно вернуться в onPrepareFromMediaId, если мы выбрали песню из другого плейлиста и включить её. НО! Нам не нужно включать станцию сразу при включении программы
-            val isNotJustLaunched = isNotJustLaunchedLiveData.value
-            isNotJustLaunched?.let {
-                if (it) {
-                    // Здесь мы точно перешли из списка в HomeRadioFragment и хотим включить радио
-                    radioStationList?.let { list ->
-                        if (list.isNotEmpty()) {
-                            playOrToggleSong(
-                                list[newPosition],
-                                true
-                            )
-                        } // Если список пуст, значит это список избранного, который не заполнен
+                        Log.d(
+                            TAG,
+                            "playbackState?.isPlaying == true mainViewModel.playOrToggleSong() called, position = $newPosition, countryCode = ${
+                                radioStationList?.get(
+                                    0
+                                )?.countryCode
+                            }"
+                        )
                     }
+
+                } catch (e: IndexOutOfBoundsException) {
+                    Log.d(TAG, "CAUGHT IndexOutOfBoundsException!")
+                    e.printStackTrace()
+                }
+
+            } else {
+                // При включении программы и загрузке контента так же попадаем сюда
+
+                try {
+
+                    Log.d(TAG, "Checking: maxIndex = $maxIndex, position = $newPosition")
+
+                    if (newPosition <= maxIndex) {
+                        Log.d(TAG, "position <= maxIndex")
+
+                        _updateCurPlayingRadioStationLiveData.postValue(
+                            radioStationList?.get(newPosition)
+                        )
+
+                        Log.d(
+                            TAG,
+                            "playbackState?.isPlaying != true curPlayingRadioStation = swipeRadioStationAdapter.radioStationList[position]"
+                        )
+                    }
+
+                    // TODO Нам нужно вернуться в onPrepareFromMediaId, если мы выбрали песню из другого плейлиста и включить её. НО! Нам не нужно включать станцию сразу при включении программы
+                    val isNotJustLaunched = isNotJustLaunchedLiveData.value
+                    isNotJustLaunched?.let {
+                        if (it) {
+                            // Здесь мы точно перешли из списка в HomeRadioFragment и хотим включить радио
+                            radioStationList?.let { list ->
+                                if (list.isNotEmpty() && newPosition < list.size) {
+                                    playOrToggleSong(
+                                        list[newPosition],
+                                        true
+                                    )
+                                } // Если список пуст, значит это список избранного, который не заполнен
+                            }
+                        }
+                    }
+
+                } catch (e: IndexOutOfBoundsException) {
+                    Log.d(TAG, "fun namePosition - CACHED IndexOutOfBoundsException!")
+                    e.printStackTrace()
                 }
             }
+
+        } catch (e1: AccountsException) {
+            // AccountsException -> Known direct subclasses: AuthenticatorException, NetworkErrorException, OperationCanceledException
+            e1.printStackTrace()
+            _dialogInternetTroubleLiveData.call()
+        } catch (e2: IOException) {
+            e2.printStackTrace()
+            _errorMessageLiveData.postValue(
+                Event(
+                    Resource.error(
+                        "An unknown error occurred",
+                        null
+                    )
+                )
+            )
         }
 
 //        }
