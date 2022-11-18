@@ -1,4 +1,4 @@
-package com.myproject.radiojourney.presentation.content.radioStationList
+package com.myproject.radiojourney.presentation.content.radioStationList.current
 
 import android.os.Bundle
 import android.util.Log
@@ -7,18 +7,16 @@ import android.widget.TextView
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.view.isVisible
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
-import com.myproject.radiojourney.other.Constants
 import com.myproject.radiojourney.presentation.MainViewModel
-import com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioFragmentDirections
+import com.myproject.radiojourney.presentation.content.radioStationList.adapter.old.RadioListAdapter
+import com.myproject.radiojourney.presentation.content.radioStationList.base.BaseRadioListFragmentAbstract
 import com.myproject.radiojourney.utils.exoplayer.MusicServiceConnection
 import com.myproject.radiojourney.utils.extension.isPlayEnabled
-import com.myproject.radiojourney.utils.extension.isPlaying
 import com.myproject.radiojourney.utils.extension.isPrepared
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject

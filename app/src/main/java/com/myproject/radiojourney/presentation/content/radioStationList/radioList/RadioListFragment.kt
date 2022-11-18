@@ -1,4 +1,4 @@
-package com.myproject.radiojourney.presentation.content.radioStationList
+package com.myproject.radiojourney.presentation.content.radioStationList.radioList
 
 import android.app.Dialog
 import android.os.Bundle
@@ -16,6 +16,8 @@ import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 import com.myproject.radiojourney.other.Status
+import com.myproject.radiojourney.presentation.content.radioStationList.adapter.ListRadioStationAdapter
+import com.myproject.radiojourney.presentation.content.radioStationList.base.BaseRadioListFragmentAbstract
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
@@ -120,17 +122,37 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
                 showProgress()
 
                 // 1.5. ОБРАБОТКА КЛИКА -> Получаем результат клика во фрагменте (описываем нашу анонимную функцию из RecyclerView)
-                recyclerViewRadioStationList.adapter =
-                    RadioListAdapter(radioStationList) { radioStationPresentationOnClick ->
-                        Log.d(TAG, "Выбранный элемент списка: $radioStationPresentationOnClick")
+//                recyclerViewRadioStationList.adapter =
+//                    RadioListAdapter(radioStationList) { radioStationPresentationOnClick ->
+//                        Log.d(TAG, "Выбранный элемент списка: $radioStationPresentationOnClick")
+//
+//                        // Открываем по клику другой фрагмент, передаём туда нашу радиостанцию
+//                        val direction = RadioListFragmentDirections.actionRadioListFragmentToHomeRadioFragment(
+//                                radioStationPresentationOnClick
+//                            )
+//                        this.findNavController().navigate(direction)
+//                    }
 
-                        // Открываем по клику другой фрагмент, передаём туда нашу радиостанцию
-                        val direction =
-                            RadioListFragmentDirections.actionRadioListFragmentToHomeRadioFragment(
-                                radioStationPresentationOnClick
-                            )
+                // Инициализируем адаптер
+                val listRadioStationAdapter = ListRadioStationAdapter()
+                // Перезаписываем список радиостанций для адаптера
+                listRadioStationAdapter.radioStationList = radioStationPresentationList
+                // Определяем адаптер для recycler view
+                recyclerViewRadioStationList.adapter =
+                    listRadioStationAdapter
+                // Устанавливаем Click Listener
+                listRadioStationAdapter.setItemClickListener { radioStationPresentationOnClick ->
+                    Log.d(TAG, "Выбранный элемент списка: $radioStationPresentationOnClick")
+
+                    // Открываем по клику другой фрагмент, передаём туда нашу радиостанцию
+                    val direction =
+                        RadioListFragmentDirections.actionRadioListFragmentToHomeRadioFragment(
+                            radioStationPresentationOnClick
+                        )
+                    if (this.findNavController().currentDestination?.id == R.id.radioListFragment) {
                         this.findNavController().navigate(direction)
                     }
+                }
 
                 Log.d(
                     TAG,

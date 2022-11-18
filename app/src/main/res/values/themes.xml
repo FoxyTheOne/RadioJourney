@@ -80,4 +80,5 @@
         <item name="android:textSize">14sp</item>
         <item name="fontWeight">500</item>
     </style>
+
 </resources>

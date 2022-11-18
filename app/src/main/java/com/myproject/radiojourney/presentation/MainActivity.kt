@@ -22,7 +22,7 @@ import com.myproject.radiojourney.other.Constants.AUDIO_CONNECTING
 import com.myproject.radiojourney.other.Constants.AUDIO_PLAYING
 import com.myproject.radiojourney.other.Constants.AUDIO_STOPPED
 import com.myproject.radiojourney.other.Status.*
-import com.myproject.radiojourney.presentation.adapter.SwipeRadioStationAdapter
+import com.myproject.radiojourney.presentation.content.radioStationList.adapter.SwipeRadioStationAdapter
 import com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioFragmentDirections
 import com.myproject.radiojourney.utils.extension.isPlaying
 import com.myproject.radiojourney.utils.oldMusicPlayer.ForegroundNotificationService
@@ -104,7 +104,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
         binding?.imageStar?.setImageResource(R.drawable.star_transparent)
 
-        binding?.vpSong?.adapter = swipeRadioStationAdapter
+//        binding?.vpSong?.adapter = swipeRadioStationAdapter
 
         mOnPageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
 
@@ -380,6 +380,9 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                 curPlayingRadioStation =
                     radioStationNeedToFind // we also update our curPlayingRadioStation
             }
+
+            // Убираем прогресс и делаем кнопки снова кликабельными
+            mainViewModel.hideProgressAndSetClickable()
         }
     }
 
@@ -395,6 +398,9 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 //                            if(radioStations.isNotEmpty()) {
 //                                glide.load((curPlayingSong ?: radioStations[0]).imageUrl).into(ivCurSongImage)
 //                            }
+
+                            // Попробуем назначить адаптер после обновления списка радиостанций
+                            binding?.vpSong?.adapter = swipeRadioStationAdapter
 
                             mOnPageChangeCallback?.onPageSelected(0)
                             // TODO почему-то этот метод изредка не вызывается, хотя должен
@@ -448,6 +454,9 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                         binding?.imageStar?.setImageResource(R.drawable.star_transparent)
                     }
                 }
+
+                // Убираем прогресс и делаем кнопки снова кликабельными
+                mainViewModel.hideProgressAndSetClickable()
             }
         }
 
@@ -554,6 +563,27 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             } else {
                 binding?.imageStar?.setImageResource(R.drawable.star_transparent)
             }
+        }
+
+        mainViewModel.setNonClickableLiveData.observe(this) {
+            // Запустить отображение прогресс бара + заблокировать нажатия как на HomeRadioFragment, так и проигрыватель в main activity
+            // MainActivity
+            binding?.imageStar?.isClickable = false
+            binding?.imageStar?.isEnabled = false
+            binding?.vpSong?.isClickable = false // TODO не работает
+            binding?.vpSong?.isEnabled = false // TODO не работает
+            binding?.ivPlayPause?.isClickable = false
+            binding?.ivPlayPause?.isEnabled = false
+        }
+        mainViewModel.setClickableLiveData.observe(this) {
+            // Убрать отображение прогресс бара + разблокировать нажатия как на HomeRadioFragment, так и проигрыватель в main activity
+            // MainActivity
+            binding?.imageStar?.isClickable = true
+            binding?.imageStar?.isEnabled = true
+            binding?.vpSong?.isClickable = true // TODO не работает
+            binding?.vpSong?.isEnabled = true // TODO не работает
+            binding?.ivPlayPause?.isClickable = true
+            binding?.ivPlayPause?.isEnabled = true
         }
     }
 

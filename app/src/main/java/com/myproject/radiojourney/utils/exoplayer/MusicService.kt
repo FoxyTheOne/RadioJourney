@@ -2,6 +2,7 @@ package com.myproject.radiojourney.utils.exoplayer
 
 import android.app.PendingIntent
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaDescriptionCompat
@@ -111,7 +112,11 @@ class MusicService : MediaBrowserServiceCompat() {
 
         // Pending intent for opening our activity when we click on notification
         val openActivityIntent = packageManager?.getLaunchIntentForPackage(packageName)?.let {
-            PendingIntent.getActivity(this, 0, it, 0)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                PendingIntent.getActivity(this, 0, it, PendingIntent.FLAG_MUTABLE)
+            } else {
+                PendingIntent.getActivity(this, 0, it, PendingIntent.FLAG_UPDATE_CURRENT)
+            }
         }
 
         // Media session comes with token. We can use this token to get some information about this media session

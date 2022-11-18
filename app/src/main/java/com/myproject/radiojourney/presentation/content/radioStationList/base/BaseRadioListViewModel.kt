@@ -1,4 +1,4 @@
-package com.myproject.radiojourney.presentation.content.radioStationList
+package com.myproject.radiojourney.presentation.content.radioStationList.base
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel

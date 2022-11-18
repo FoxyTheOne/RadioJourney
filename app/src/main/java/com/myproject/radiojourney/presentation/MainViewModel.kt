@@ -94,6 +94,11 @@ class MainViewModel @Inject constructor(
     val dialogInternetTroubleLiveData: LiveData<Boolean> =
         _dialogInternetTroubleLiveData
 
+    private val _setClickableLiveData = MutableLiveData<Boolean>()
+    val setClickableLiveData: LiveData<Boolean> = _setClickableLiveData
+    private val _setNonClickableLiveData = MutableLiveData<Boolean>()
+    val setNonClickableLiveData: LiveData<Boolean> = _setNonClickableLiveData
+
     init {
         try {
             // Here we start query media items, so let's put it into LiveData:
@@ -270,6 +275,12 @@ class MainViewModel @Inject constructor(
         val args = Bundle()
         args.putString("nRecNo", countryCode)
         musicServiceConnection.sendCommand(ADD_SONGS, args)
+
+        _setNonClickableLiveData.call()
+    }
+
+    fun hideProgressAndSetClickable() {
+        _setClickableLiveData.call()
     }
 
     // when View model is destroyed - заканчиваем нашу связь с сервисом

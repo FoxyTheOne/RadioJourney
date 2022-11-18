@@ -162,6 +162,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             LocationServices.getFusedLocationProviderClient(requireContext())
 
         if (arguments != null) {
+
             arguments?.getParcelable<RadioStationPresentation>("radio_station") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
                 ?.let { radioStation ->
                     Log.d(TAG, "Выбранный элемент списка: $radioStation")
@@ -182,6 +183,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                     mainViewModel.playOrToggleSong(radioStationFavourite, false)
                     mainViewModel.notJustLaunchedEnableAutoplay()
                 }
+
         }
 //        else {
 //            viewModel.getStoredRadioStation() // 1. Подгрузить радиостанцию из Shared Preference, если она там сохранена. Если нет - текст "выберите радиостанцию"
@@ -275,8 +277,10 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 //            // TODO !!!!!!!!!!! When you choose a new country playlist, begins to play the first radio station, no matter what you chose. Here I call the method myself, so that the first radio station is called automatically, byt it is not very convenient and not always helps
 //            mainViewModel.fetchSongs("FAV")
 
-            this.findNavController()
-                .navigate(R.id.action_homeRadioFragment_to_favouriteListFragment)
+            if (this.findNavController().currentDestination?.id == R.id.homeRadioFragment) {
+                this.findNavController()
+                    .navigate(R.id.action_homeRadioFragment_to_favouriteListFragment)
+            }
         }
     }
 
@@ -293,6 +297,28 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         })
         viewModel.hideProgressLiveData.observe(viewLifecycleOwner, {
             hideProgress()
+        })
+        mainViewModel.setNonClickableLiveData.observe(viewLifecycleOwner, {
+            // Запустить отображение прогресс бара + заблокировать нажатия как на HomeRadioFragment, так и проигрыватель в main activity
+            // HomeRadioFragment
+            binding?.buttonGoToFavourites?.isClickable = false
+            binding?.buttonGoToFavourites?.isEnabled = false
+            // TODO карта - не проработано (InfoWindow)
+
+            // Progress bar
+            showProgress()
+            binding?.progressCircularLoadingArguments?.isVisible = true
+        })
+        mainViewModel.setClickableLiveData.observe(viewLifecycleOwner, {
+            // Убрать отображение прогресс бара + разблокировать нажатия как на HomeRadioFragment, так и проигрыватель в main activity
+            // HomeRadioFragment
+            binding?.buttonGoToFavourites?.isClickable = true
+            binding?.buttonGoToFavourites?.isEnabled = true
+            // TODO карта - не проработано (InfoWindow)
+
+            // Progress bar
+            hideProgress()
+            binding?.progressCircularLoadingArguments?.isVisible = false
         })
         mainViewModel.dialogInternetTroubleLiveData.observe(viewLifecycleOwner, {
             dialogInternetTrouble.show()

@@ -1,4 +1,4 @@
-package com.myproject.radiojourney.presentation.content.radioStationList
+package com.myproject.radiojourney.presentation.content.radioStationList.radioList
 
 import android.accounts.AccountsException
 import androidx.lifecycle.LiveData

@@ -1,4 +1,4 @@
-package com.myproject.radiojourney.presentation.content.radioStationList
+package com.myproject.radiojourney.presentation.content.radioStationList.favourite
 
 import android.app.Dialog
 import android.os.Bundle
@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.other.Status
 import com.myproject.radiojourney.presentation.MainViewModel
+import com.myproject.radiojourney.presentation.content.radioStationList.base.BaseRadioListFragmentAbstract
 
 /**
  * Страница с избранным
@@ -136,11 +137,12 @@ class FavouriteListFragment : BaseRadioListFragmentAbstract() {
                         { radioStationFavouriteOnClick ->
                             Log.d(TAG, "Выбранный элемент списка: $radioStationFavouriteOnClick")
                             // Открываем по клику другой фрагмент, передаём туда нашу радиостанцию
-                            val direction =
-                                FavouriteListFragmentDirections.actionFavouriteListFragmentToHomeRadioFragment(
+                            val direction = FavouriteListFragmentDirections.actionFavouriteListFragmentToHomeRadioFragment(
                                     radioStationFavouriteOnClick
                                 )
-                            this.findNavController().navigate(direction)
+                            if (this.findNavController().currentDestination?.id == R.id.favouriteListFragment) {
+                                this.findNavController().navigate(direction)
+                            }
                         },
                         { radioStationFavouriteOnStarClick ->
                             Log.d(

@@ -30,7 +30,7 @@
 
     <fragment
         android:id="@+id/radioListFragment"
-        android:name="com.myproject.radiojourney.presentation.content.radioStationList.RadioListFragment"
+        android:name="com.myproject.radiojourney.presentation.content.radioStationList.radioList.RadioListFragment"
         android:label="RadioListFragment">
         <action
             android:id="@+id/action_radioListFragment_to_homeRadioFragment"
@@ -44,7 +44,7 @@
 
     <fragment
         android:id="@+id/favouriteListFragment"
-        android:name="com.myproject.radiojourney.presentation.content.radioStationList.FavouriteListFragment"
+        android:name="com.myproject.radiojourney.presentation.content.radioStationList.favourite.FavouriteListFragment"
         android:label="FavouriteListFragment">
         <action
             android:id="@+id/action_favouriteListFragment_to_homeRadioFragment"
@@ -87,7 +87,7 @@
         app:destination="@id/homeRadioFragment" />
     <fragment
         android:id="@+id/currentPlaylistFragment"
-        android:name="com.myproject.radiojourney.presentation.content.radioStationList.CurrentPlaylistFragment"
+        android:name="com.myproject.radiojourney.presentation.content.radioStationList.current.CurrentPlaylistFragment"
         android:label="CurrentPlaylistFragment" >
         <action
             android:id="@+id/action_currentPlaylistFragment_to_homeRadioFragment"

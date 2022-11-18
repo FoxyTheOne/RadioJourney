@@ -1,4 +1,4 @@
-package com.myproject.radiojourney.presentation.adapter
+package com.myproject.radiojourney.presentation.content.radioStationList.adapter
 
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.recyclerview.widget.AsyncListDiffer

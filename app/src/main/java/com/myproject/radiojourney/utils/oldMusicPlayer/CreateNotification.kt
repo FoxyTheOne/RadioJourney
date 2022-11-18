@@ -59,12 +59,21 @@ class CreateNotification {
                 // Add also ".setStyle"
                 val intentPlay = Intent(context, NotificationActionBroadcast::class.java)
                     .setAction(Constants.NOTIFICATION_MUSIC_ACTION_PLAY)
-                val pendingIntentPlay = PendingIntent.getBroadcast(
-                    context,
-                    0,
-                    intentPlay,
-                    PendingIntent.FLAG_UPDATE_CURRENT
-                )
+                val pendingIntentPlay = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    PendingIntent.getBroadcast(
+                        context,
+                        0,
+                        intentPlay,
+                        PendingIntent.FLAG_MUTABLE
+                    )
+                } else {
+                    PendingIntent.getBroadcast(
+                        context,
+                        0,
+                        intentPlay,
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                    )
+                }
 
                 // create a Notification
                 val notification =
