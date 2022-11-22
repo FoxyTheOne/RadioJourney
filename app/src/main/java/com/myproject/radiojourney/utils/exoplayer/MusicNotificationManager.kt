@@ -11,6 +11,7 @@ import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.other.Constants.NOTIFICATION_CHANNEL_ID
 import com.myproject.radiojourney.other.Constants.NOTIFICATION_ID
+import com.myproject.radiojourney.utils.extension.removeLastNchars
 import java.util.*
 
 class MusicNotificationManager(
@@ -97,8 +98,24 @@ class MusicNotificationManager(
             val countryCode = mediaController.metadata.description.subtitle.toString()
             // Don't know, how to reach MediaMetadataCompat key METADATA_KEY_ARTIST, so I'm converting country code to the country name
             // But maybe it's better to do so. Because of this, the country name can be written in different languages, depending on the phone settings.
-            val loc = Locale("", countryCode)
-            return loc.displayName
+//            val loc = Locale("", countryCode)
+//            return loc.displayName
+
+            // Если заканчивается на _FAV, дописать "избранное"
+            return if (countryCode.endsWith("_FAV")) {
+                val str: String = countryCode
+                val n = 4 // "_FAV" -> 4 chars
+
+                val newCountryCode = str.removeLastNchars(str, n)
+
+        //                countryCode = newCountryCode ?: ""
+
+                val loc = Locale("", newCountryCode)
+                context.getString(R.string.homeRadio_goToFavourites) + ": " + loc.displayName
+            } else {
+                val loc = Locale("", countryCode)
+                loc.displayName
+            }
         }
 
         // Our large icon for notification
