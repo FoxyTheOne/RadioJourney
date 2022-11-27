@@ -38,6 +38,30 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+
+        // Название файла
+        applicationVariants.all { variant ->
+            variant.outputs.all { output ->
+
+                def APP_TITLE = "RadioJourney"
+                def SEPARATOR = "_"
+
+                // какой билд (зависит от того, какой выбрали в Active Build Variant)
+                def buildType = variant.buildType.name
+                // versionName, который мы указали в defaultConfig -> versionName
+                def version = variant.versionName
+                // инициализация объекта даты
+                def date = new Date()
+                // указываем формат даты типа "09.11.21"
+                def formattedDate = date.format('dd.MM.yy')
+
+                // объединяем все в одну строчку
+                def apkName = APP_TITLE + SEPARATOR + buildType + SEPARATOR + formattedDate + ".apk"
+
+                // создем APK файл с названием $apkName
+                outputFileName = new File(apkName)
+            }
+        }
     }
 
     compileOptions {
