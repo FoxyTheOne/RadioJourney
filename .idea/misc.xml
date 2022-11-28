@@ -4,6 +4,8 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/drawable/button_rounded_corners.xml" value="0.36974358974358973" />
+        <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/drawable/ic_baseline_location_on_24.xml" value="0.37552083333333336" />
+        <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/drawable/ic_baseline_location_on_24_orange.xml" value="0.37552083333333336" />
         <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/drawable/ic_launcher_background.xml" value="0.37552083333333336" />
         <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/drawable/ic_play_arrow_orange.xml" value="0.37552083333333336" />
         <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/layout/activity_main.xml" value="0.29528985507246375" />

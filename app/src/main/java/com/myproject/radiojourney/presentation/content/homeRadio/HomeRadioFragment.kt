@@ -209,23 +209,43 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         }
 
         // Настраиваем наш customMarker
-        customMarkerYouAreHere = Bitmap.createScaledBitmap(
-            (ContextCompat.getDrawable(
-                requireContext(),
-                R.drawable.marker
-            ) as BitmapDrawable).bitmap,
-            100,
-            100,
-            false
-        )
+        var myMarkerBitmap: Bitmap? = null
 
-        var myBitmap: Bitmap? = null
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            context?.getDrawable(R.drawable.ic_baseline_location_on_24_orange)?.let {
+                myMarkerBitmap = viewModel.bitmapOrNull(it)
+
+                myMarkerBitmap?.let { nonNullBitmap ->
+                    customMarkerYouAreHere = Bitmap.createScaledBitmap(
+                        nonNullBitmap,
+                        100,
+                        100,
+                        false
+                    )
+                }
+            }
+        }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP || myMarkerBitmap == null) {
+            customMarkerYouAreHere = Bitmap.createScaledBitmap(
+                (ContextCompat.getDrawable(
+                    requireContext(),
+                    R.drawable.marker
+                ) as BitmapDrawable).bitmap,
+                100,
+                100,
+                false
+            )
+        }
+
+        // Настраиваем radio icon
+        var myRadioBitmap: Bitmap? = null
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             context?.getDrawable(R.drawable.ic_baseline_radio_24_orange)?.let {
-                myBitmap = viewModel.bitmapOrNull(it)
+                myRadioBitmap = viewModel.bitmapOrNull(it)
 
-                myBitmap?.let { nonNullBitmap ->
+                myRadioBitmap?.let { nonNullBitmap ->
                     customMarkerRadio = Bitmap.createScaledBitmap(
                         nonNullBitmap,
                         80,
@@ -236,7 +256,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             }
         }
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP || myBitmap == null) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP || myRadioBitmap == null) {
             customMarkerRadio = Bitmap.createScaledBitmap(
                 (ContextCompat.getDrawable(
                     requireContext(),
