@@ -102,7 +102,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         val view: View = binding!!.root
         setContentView(view)
 
-        binding?.imageStar?.setImageResource(R.drawable.star_transparent)
+        binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_border_24_orange)
 
 //        binding?.vpSong?.adapter = swipeRadioStationAdapter
 
@@ -116,9 +116,9 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                 if (swipeRadioStationAdapter.radioStationList.isNotEmpty()) {
 
                     if (swipeRadioStationAdapter.radioStationList[position].isStationInFavourite) {
-                        binding?.imageStar?.setImageResource(R.drawable.star)
+                        binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_24_orange)
                     } else {
-                        binding?.imageStar?.setImageResource(R.drawable.star_transparent)
+                        binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_border_24_orange)
                     }
 
                 }
@@ -449,9 +449,9 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
                 currentRadioStationPosition?.let { position ->
                     if (swipeRadioStationAdapter.radioStationList[position].isStationInFavourite) {
-                        binding?.imageStar?.setImageResource(R.drawable.star)
+                        binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_24_orange)
                     } else {
-                        binding?.imageStar?.setImageResource(R.drawable.star_transparent)
+                        binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_border_24_orange)
                     }
                 }
 
@@ -546,12 +546,12 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
         // Favourites
         mainViewModel.stationSavedInFavouritesLiveData.observe(this) {
-            binding?.imageStar?.setImageResource(R.drawable.star)
+            binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_24_orange)
             // Так же ставим true в объекте текущей радиостанции
             setTheRightStateOfFavourite(true)
         }
         mainViewModel.stationDeletedFromFavouritesLiveData.observe(this) {
-            binding?.imageStar?.setImageResource(R.drawable.star_transparent)
+            binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_border_24_orange)
             // Так же ставим false в объекте текущей радиостанции
             setTheRightStateOfFavourite(false)
         }
@@ -559,9 +559,9 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         // Если изменение было в FavouriteListFragment, здесь тоже нужно это отобразить:
         mainViewModel.changeTheStarLiveData.observe(this) {
             if (it) {
-                binding?.imageStar?.setImageResource(R.drawable.star)
+                binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_24_orange)
             } else {
-                binding?.imageStar?.setImageResource(R.drawable.star_transparent)
+                binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_border_24_orange)
             }
         }
 

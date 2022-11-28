@@ -26,6 +26,9 @@
         <action
             android:id="@+id/action_homeRadioFragment_to_currentPlaylistFragment"
             app:destination="@id/currentPlaylistFragment" />
+        <action
+            android:id="@+id/action_homeRadioFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
     </fragment>
 
     <fragment
@@ -97,6 +100,14 @@
                 android:name="radio_station"
                 app:argType="com.myproject.radiojourney.entities.presentation.RadioStationPresentation" />
         </action>
+    </fragment>
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.myproject.radiojourney.presentation.content.settingsFragment.SettingsFragment"
+        android:label="SettingsFragment" >
+        <action
+            android:id="@+id/action_settingsFragment_to_homeRadioFragment"
+            app:destination="@id/homeRadioFragment" />
     </fragment>
 
 </navigation>

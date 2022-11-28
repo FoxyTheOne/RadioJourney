@@ -42,6 +42,16 @@
     <string name="currentPlaylist_title">Current playlist</string>
     <string name="currentPlaylist_empty">Playlist is empty</string>
 
+    <string name="settings_tittle">Settings</string>
+    <string name="settings_saveToGoogle">Save to Google Drive</string>
+    <string name="settings_restoreFromGoogle">Restore from Google Drive</string>
+    <string name="settings_saveToLocalStorage">Save to local storage</string>
+    <string name="settings_restoreLocalStorage">Restore from local storage</string>
+    <string name="settings_textMail">Mail for your feedbacks</string>
+    <string name="settings_mail">gartel.av@gmail.com</string>
+    <string name="settings_coffee">Support the project</string>
+    <string name="settings_pixabay">The app uses images from pixabay.com</string>
+
     <!-- exoplayer -->
     <string name="notification_channel_name">Radio station channel</string>
     <string name="notification_channel_description">Shows the currently playing radio station</string>

@@ -24,7 +24,7 @@
             android:background="?attr/colorPrimary"
             android:elevation="4dp"
             android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
-            app:layout_constraintBottom_toTopOf="@+id/linear_canTakeTime"
+            app:layout_constraintBottom_toTopOf="@+id/linear_saveToGoogleSettings"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -65,7 +65,7 @@
         -->
 
         <LinearLayout
-            android:id="@+id/linear_canTakeTime"
+            android:id="@+id/linear_saveToGoogleSettings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/background_transparent"
@@ -110,7 +110,7 @@
             android:paddingBottom="@dimen/space_beforeOrAfterElement"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linear_canTakeTime">
+            app:layout_constraintTop_toBottomOf="@+id/linear_saveToGoogleSettings">
 
             <!-- Don't need Recommended any more, but need to do another button here later -->
             <!-- androidx.appcompat.widget.AppCompatButton
@@ -141,13 +141,13 @@
         </LinearLayout>
 
         <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/image_radio"
+            android:id="@+id/image_settings"
             android:layout_width="56dp"
             android:layout_height="56dp"
             android:layout_marginStart="@dimen/space_small"
             android:layout_marginBottom="@dimen/space_small"
             android:scaleType="centerCrop"
-            android:src="@drawable/radio_clker_free_vector_images_pixabay"
+            android:src="@drawable/ic_baseline_settings_applications_24_orange"
             app:layout_constraintBottom_toBottomOf="@+id/linear_radioStationButtons"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@+id/linear_radioStationButtons" />

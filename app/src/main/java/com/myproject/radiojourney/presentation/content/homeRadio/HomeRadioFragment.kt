@@ -8,6 +8,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.location.Location
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.*
@@ -217,15 +218,35 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             100,
             false
         )
-        customMarkerRadio = Bitmap.createScaledBitmap(
-            (ContextCompat.getDrawable(
-                requireContext(),
-                R.drawable.radio_icon4
-            ) as BitmapDrawable).bitmap,
-            80,
-            80,
-            false
-        )
+
+        var myBitmap: Bitmap? = null
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            context?.getDrawable(R.drawable.ic_baseline_radio_24_orange)?.let {
+                myBitmap = viewModel.bitmapOrNull(it)
+
+                myBitmap?.let { nonNullBitmap ->
+                    customMarkerRadio = Bitmap.createScaledBitmap(
+                        nonNullBitmap,
+                        80,
+                        80,
+                        false
+                    )
+                }
+            }
+        }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP || myBitmap == null) {
+            customMarkerRadio = Bitmap.createScaledBitmap(
+                (ContextCompat.getDrawable(
+                    requireContext(),
+                    R.drawable.radio_icon4
+                ) as BitmapDrawable).bitmap,
+                80,
+                80,
+                false
+            )
+        }
 
         // LOCATION -> 1.5. Создадим метод для получения Current location либо Last location
         getCurrentOrLastLocation()
@@ -272,6 +293,12 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         }
         binding?.buttonZoomMinus?.setOnClickListener {
             mMap.animateCamera(CameraUpdateFactory.zoomOut())
+        }
+        binding?.imageSettings?.setOnClickListener {
+            if (this.findNavController().currentDestination?.id == R.id.homeRadioFragment) {
+                this.findNavController()
+                    .navigate(R.id.action_homeRadioFragment_to_settingsFragment)
+            }
         }
         binding?.buttonGoToFavourites?.setOnClickListener {
 //            // TODO !!!!!!!!!!! When you choose a new country playlist, begins to play the first radio station, no matter what you chose. Here I call the method myself, so that the first radio station is called automatically, byt it is not very convenient and not always helps

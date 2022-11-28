@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.myproject.radiojourney.R
 import com.myproject.radiojourney.domain.homeRadioUseCase.IHomeRadioUseCase
 import com.myproject.radiojourney.domain.logOutUseCase.ILogOutUseCase
 import com.myproject.radiojourney.entities.presentation.CountryPresentation
@@ -15,6 +16,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.Drawable
+
 
 /**
  * Presentation layer, ViewModel. Работа с компонентами Android. Работает только с Interactor.
@@ -92,6 +97,23 @@ class HomeRadioViewModel @Inject constructor(
             _showProgressLiveData.call()
             logOutInteractor.onLogout()
             _hideProgressLiveData.call()
+        }
+    }
+
+    fun bitmapOrNull(drawable: Drawable): Bitmap? {
+        return try {
+            val bitmap: Bitmap = Bitmap.createBitmap(
+                drawable.intrinsicWidth,
+                drawable.intrinsicHeight,
+                Bitmap.Config.ARGB_8888
+            )
+            val canvas = Canvas(bitmap)
+            drawable.setBounds(0, 0, canvas.width, canvas.height)
+            drawable.draw(canvas)
+            bitmap
+        } catch (e: OutOfMemoryError) {
+            // Handle the error
+            null
         }
     }
 

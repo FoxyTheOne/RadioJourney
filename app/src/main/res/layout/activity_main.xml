@@ -17,7 +17,7 @@
         android:paddingBottom="@dimen/space_small"
         android:background="@color/background_transparent"
         android:scaleType="centerCrop"
-        tools:src="@drawable/star_transparent"
+        tools:src="@drawable/ic_baseline_star_border_24_orange"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/vpSong" />

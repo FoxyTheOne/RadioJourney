@@ -42,6 +42,16 @@
     <string name="currentPlaylist_title">Текущий плейлист</string>
     <string name="currentPlaylist_empty">Здесь пусто</string>
 
+    <string name="settings_tittle">Настройки</string>
+    <string name="settings_saveToGoogle">Сохранить на Google Drive</string>
+    <string name="settings_restoreFromGoogle">Восстановить из Google Drive</string>
+    <string name="settings_saveToLocalStorage">Сохранить в локальное хранилище</string>
+    <string name="settings_restoreLocalStorage">Восстановить из локального хранилища</string>
+    <string name="settings_textMail">Почта для обратной связи</string>
+    <string name="settings_mail">gartel.av@gmail.com</string>
+    <string name="settings_coffee">Поддержать проект</string>
+    <string name="settings_pixabay">В приложении использовались изображения с сайта pixabay.com</string>
+
     <!-- exoplayer -->
     <string name="notification_channel_name">Поток радиостанции</string>
     <string name="notification_channel_description">Показывает выбранную радиостанцию</string>
