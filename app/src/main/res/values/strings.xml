@@ -49,6 +49,7 @@
     <string name="settings_restoreLocalStorage">Restore from local storage</string>
     <string name="settings_textMail">Mail for your feedbacks</string>
     <string name="settings_mail">gartel.av@gmail.com</string>
+    <string name="settings_textAndMail">Mail for your feedbacks: gartel.av@gmail.com</string>
     <string name="settings_coffee">Support the project</string>
     <string name="settings_pixabay">The app uses images from pixabay.com</string>
 

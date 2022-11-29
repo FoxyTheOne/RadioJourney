@@ -70,9 +70,21 @@
         <item name="fontWeight">500</item>
     </style>
 
+    <style name="vpSong" parent="@style/login_bottom">
+        <item name="android:textSize">18sp</item>
+    </style>
+
+    <style name="login_bottom_small" parent="@style/login_bottom">
+        <item name="android:textSize">12sp</item>
+    </style>
+
     <style name="login_bottom_orange" parent="@style/title_default">
         <item name="android:textColor">@color/bright_orange</item>
         <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="login_bottom_orange_small" parent="@style/login_bottom_orange">
+        <item name="android:textSize">12sp</item>
     </style>
 
     <style name="map_description" parent="@style/title_default">

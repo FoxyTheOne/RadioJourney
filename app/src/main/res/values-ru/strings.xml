@@ -49,6 +49,7 @@
     <string name="settings_restoreLocalStorage">Восстановить из локального хранилища</string>
     <string name="settings_textMail">Почта для обратной связи</string>
     <string name="settings_mail">gartel.av@gmail.com</string>
+    <string name="settings_textAndMail">Почта для обратной связи: gartel.av@gmail.com</string>
     <string name="settings_coffee">Поддержать проект</string>
     <string name="settings_pixabay">В приложении использовались изображения с сайта pixabay.com</string>
 

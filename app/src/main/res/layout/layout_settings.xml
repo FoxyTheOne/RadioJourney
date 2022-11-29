@@ -31,7 +31,6 @@
             android:id="@+id/linear_settingsTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/background_transparent"
             android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -68,9 +67,10 @@
             android:id="@+id/linear_saveToGoogleSettings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/background_transparent"
             android:gravity="start"
             android:orientation="horizontal"
+            android:paddingStart="@dimen/space_32"
+            android:paddingEnd="@dimen/space_32"
             android:paddingTop="@dimen/space_beforeOrAfterElement"
             android:paddingBottom="@dimen/space_beforeOrAfterElement"
             app:layout_constraintEnd_toEndOf="parent"
@@ -79,12 +79,11 @@
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/image_saveToGoogle"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_marginStart="@dimen/space_small"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:layout_marginEnd="@dimen/space_beforeOrAfterElement"
                 android:scaleType="centerCrop"
-                android:src="@drawable/ic_baseline_data_saver_on_24_orange" />
+                android:src="@drawable/ic_baseline_cloud_upload_24_orange" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/text_saveToGoogle"
@@ -92,7 +91,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:paddingEnd="@dimen/space_beforeOrAfterElement"
                 android:text="@string/settings_saveToGoogle" />
         </LinearLayout>
 
@@ -100,9 +98,10 @@
             android:id="@+id/linear_restoreFromGoogleSettings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/background_transparent"
             android:gravity="start"
             android:orientation="horizontal"
+            android:paddingStart="@dimen/space_32"
+            android:paddingEnd="@dimen/space_32"
             android:paddingBottom="@dimen/space_beforeOrAfterElement"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -110,12 +109,11 @@
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/image_restoreFromGoogle"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_marginStart="@dimen/space_small"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:layout_marginEnd="@dimen/space_beforeOrAfterElement"
                 android:scaleType="centerCrop"
-                android:src="@drawable/ic_baseline_restore_24_orange" />
+                android:src="@drawable/ic_baseline_cloud_download_24_orange" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/text_restoreFromGoogle"
@@ -123,7 +121,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:paddingEnd="@dimen/space_beforeOrAfterElement"
                 android:text="@string/settings_restoreFromGoogle" />
         </LinearLayout>
 
@@ -131,9 +128,10 @@
             android:id="@+id/linear_saveToLocalStorageSettings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/background_transparent"
             android:gravity="start"
             android:orientation="horizontal"
+            android:paddingStart="@dimen/space_32"
+            android:paddingEnd="@dimen/space_32"
             android:paddingBottom="@dimen/space_beforeOrAfterElement"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -141,9 +139,8 @@
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/image_saveToLocalStorage"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_marginStart="@dimen/space_small"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:layout_marginEnd="@dimen/space_beforeOrAfterElement"
                 android:scaleType="centerCrop"
                 android:src="@drawable/ic_baseline_data_saver_on_24_orange" />
@@ -154,7 +151,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:paddingEnd="@dimen/space_beforeOrAfterElement"
                 android:text="@string/settings_saveToLocalStorage" />
         </LinearLayout>
 
@@ -162,9 +158,10 @@
             android:id="@+id/linear_restoreFromLocalStorageSettings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/background_transparent"
             android:gravity="start"
             android:orientation="horizontal"
+            android:paddingStart="@dimen/space_32"
+            android:paddingEnd="@dimen/space_32"
             android:paddingBottom="@dimen/space_beforeOrAfterElement"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -172,9 +169,8 @@
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/image_restoreFromLocalStorage"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_marginStart="@dimen/space_small"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:layout_marginEnd="@dimen/space_beforeOrAfterElement"
                 android:scaleType="centerCrop"
                 android:src="@drawable/ic_baseline_restore_24_orange" />
@@ -185,7 +181,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:paddingEnd="@dimen/space_beforeOrAfterElement"
                 android:text="@string/settings_restoreLocalStorage" />
         </LinearLayout>
 
@@ -193,9 +188,10 @@
             android:id="@+id/linear_forCoffee"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/background_transparent"
             android:gravity="start"
             android:orientation="horizontal"
+            android:paddingStart="@dimen/space_32"
+            android:paddingEnd="@dimen/space_32"
             android:paddingBottom="@dimen/space_beforeOrAfterElement"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -203,9 +199,8 @@
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/image_forCoffee"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_marginStart="@dimen/space_small"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:layout_marginEnd="@dimen/space_beforeOrAfterElement"
                 android:scaleType="centerCrop"
                 android:src="@drawable/ic_baseline_coffee_24_orange" />
@@ -216,13 +211,22 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:paddingEnd="@dimen/space_beforeOrAfterElement"
                 android:text="@string/settings_coffee" />
         </LinearLayout>
 
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/image_block"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:scaleType="centerCrop"
+            app:layout_constraintBottom_toTopOf="@+id/text_mail"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/linear_forCoffee" />
+
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/text_mail"
-            style="@style/login_bottom"
+            style="@style/login_bottom_small"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingStart="@dimen/space_beforeOrAfterElement"
@@ -231,13 +235,13 @@
             android:paddingBottom="0dp"
             android:text="@string/settings_textMail"
             android:textAlignment="center"
+            app:layout_constraintBottom_toTopOf="@+id/mail"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linear_forCoffee" />
+            app:layout_constraintStart_toStartOf="parent" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/mail"
-            style="@style/login_bottom_orange"
+            style="@style/login_bottom_orange_small"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingStart="@dimen/space_beforeOrAfterElement"
@@ -246,21 +250,21 @@
             android:paddingBottom="@dimen/space_beforeOrAfterElement"
             android:text="@string/settings_mail"
             android:textAlignment="center"
+            app:layout_constraintBottom_toTopOf="@+id/pixabay"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/text_mail" />
+            app:layout_constraintStart_toStartOf="parent" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/pixabay"
-            style="@style/login_bottom"
+            style="@style/login_bottom_small"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="@dimen/space_beforeOrAfterElement"
             android:text="@string/settings_pixabay"
             android:textAlignment="center"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/mail" />
+            app:layout_constraintStart_toStartOf="parent" />
 
         <!-- layout для ProgressBar -->
         <FrameLayout

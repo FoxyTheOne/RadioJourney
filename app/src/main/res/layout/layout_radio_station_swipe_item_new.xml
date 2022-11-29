@@ -7,7 +7,7 @@
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/tvPrimary"
-        style="@style/login_title"
+        style="@style/vpSong"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:gravity="center"

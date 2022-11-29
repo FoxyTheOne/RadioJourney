@@ -8,6 +8,7 @@
         <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/drawable/ic_baseline_location_on_24_orange.xml" value="0.37552083333333336" />
         <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/drawable/ic_launcher_background.xml" value="0.37552083333333336" />
         <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/drawable/ic_play_arrow_orange.xml" value="0.37552083333333336" />
+        <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/layout-v21/layout_settings1.xml" value="0.3129528985507246" />
         <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/layout/activity_main.xml" value="0.29528985507246375" />
         <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/layout/favorite.xml" value="0.359375" />
         <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/layout/layout_base_radio_station_list.xml" value="0.359375" />
@@ -23,9 +24,11 @@
         <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/layout/layout_radio_station_list_favourite_item.xml" value="0.359375" />
         <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/layout/layout_radio_station_list_favourite_item2.xml" value="0.359375" />
         <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/layout/layout_radio_station_list_item.xml" value="0.359375" />
+        <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/layout/layout_radio_station_list_item_new.xml" value="0.3129528985507246" />
         <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/layout/layout_radio_station_list_recommended.xml" value="0.3038949275362319" />
         <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/layout/layout_radio_station_swipe_item_new.xml" value="0.359375" />
         <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/layout/layout_settings.xml" value="0.3129528985507246" />
+        <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/layout/layout_settings1.xml" value="0.3129528985507246" />
         <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/layout/layout_sign_in.xml" value="0.29528985507246375" />
         <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/layout/layout_sign_up.xml" value="0.2963917525773196" />
         <entry key="..\:/androidProjects/RadioJourney/app/src/main/res/layout/layout_swipe_radio_station_list_item.xml" value="0.359375" />
