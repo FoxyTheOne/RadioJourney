@@ -14,6 +14,10 @@ import com.myproject.radiojourney.other.Status
 import com.myproject.radiojourney.presentation.content.base.BaseContentFragmentAbstract
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import android.content.Intent
+import android.net.Uri
+import androidx.core.content.ContextCompat
+
 
 /**
  * Страница настроек.
@@ -61,6 +65,22 @@ class SettingsFragment: BaseContentFragmentAbstract() {
                 this.findNavController()
                     .navigate(R.id.action_settingsFragment_to_homeRadioFragment)
             }
+        }
+        binding?.mail?.setOnClickListener {
+            val subject = "RadioJourney app"
+            val message = "Input your message"
+            val email = "gartel.av@gmail.com"
+
+            val selectorIntent = Intent(Intent.ACTION_SENDTO)
+            selectorIntent.data = Uri.parse("mailto:") // only email apps should handle this
+
+            val emailIntent = Intent(Intent.ACTION_SEND)
+            emailIntent.putExtra(Intent.EXTRA_EMAIL, arrayOf(email))
+            emailIntent.putExtra(Intent.EXTRA_SUBJECT, subject)
+            emailIntent.putExtra(Intent.EXTRA_TEXT, message)
+            emailIntent.selector = selectorIntent
+
+            activity!!.startActivity(Intent.createChooser(emailIntent, "Choose an Email client :"))
         }
     }
 
