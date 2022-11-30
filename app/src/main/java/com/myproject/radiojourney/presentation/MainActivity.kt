@@ -5,7 +5,6 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.media.MediaMetadataCompat.*
 import android.support.v4.media.session.PlaybackStateCompat
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -25,7 +24,6 @@ import com.myproject.radiojourney.other.Status.*
 import com.myproject.radiojourney.presentation.content.radioStationList.adapter.SwipeRadioStationAdapter
 import com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioFragmentDirections
 import com.myproject.radiojourney.utils.extension.isPlaying
-import com.myproject.radiojourney.utils.oldMusicPlayer.ForegroundNotificationService
 import com.myproject.radiojourney.utils.service.ProgressForegroundService
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.*
@@ -47,14 +45,14 @@ import java.util.*
  *
  * - В проекте используется архитектурный паттерн MVVM и подход Clean Architecture;
  * - Используется DI – Hilt, а также Navigation component и View Binding;
- * - Для хранения небольших пар ключ-значение (логин и пароль, токен и тп.) я использую Shared preferences;
+ * - Для хранения небольших пар ключ-значение (токен и тп.) я использую Shared preferences;
  * - Для сохранения локаций маркеров на карте, а также для хранения избранных радиостанций используется реляционная база данных Room.
  * При первом запуске нужно дождаться окончания кеширования, в дальнейшем данные берутся из подписки на локальную базу данных;
  * - Для отображения прогресса кеширования в уведомлении используется Foreground service;
  * - Все запросы на сервер, либо в локальную БД из ViewModel я делаю через Coroutines;
  * - Для запроса на сервер используется Retrofit2.
  *
- * My graduate work is an application for listening to Internet radio stations. I am using API.radio-browser.info
+ * This project is an application for listening to Internet radio stations. I am using API.radio-browser.info
  * which allows you to access to collected internet radio stations from all over the world (https://www.radio-browser.info/).
  * This API is available for free. The author allows to use it in free and commercial software without restrictions.
  *
@@ -70,32 +68,28 @@ import java.util.*
  * - Hilt is used here, as well as Navigation component and View Binding;
  * - To store small key-value pairs (token for instance), I use Shared preferences;
  * - The Room database is used to store marker locations on the map, as well as to store favorite radio stations.
- * You need to wait for the end of caching at the first start. Further the data is taken from the subscription to the local database;
+ * You need to wait until caching ends at the first start. Further the data is taken from the subscription to the local database;
  * - I use Foreground service to display caching progress in notification;
  * - I make all requests to the server, or to the local database from the ViewModel, through Coroutines;
  * - For the request to the server, Retrofit2 is used.
  */
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), IAppSettings {
-    companion object {
-        private const val TAG = "MainActivity"
-    }
-
     // VIEW BINDING -> 1. Объявляем переменную. This property is only valid between onCreateView and onDestroyView
     private var binding: ActivityMainBinding? = null
 
     private val mainViewModel by viewModels<MainViewModel>() // Такую же view model мы зарегистрировали в homeFragment. Основная ViewModel, для общения с плейером в bottom bar
-
-    private val swipeRadioStationAdapter = SwipeRadioStationAdapter()
 
     // Variable for currently playing song
     private var curPlayingRadioStation: RadioStationPresentation? = null
     private var playbackState: PlaybackStateCompat? = null
 
     private var mOnPageChangeCallback: ViewPager2.OnPageChangeCallback? = null
+    private val swipeRadioStationAdapter = SwipeRadioStationAdapter()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
 //        setContentView(R.layout.activity_main) <- заменяем на view binding:
         // VIEW BINDING -> 2. Инициализация
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -104,10 +98,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
         binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_border_24_orange)
 
-//        binding?.vpSong?.adapter = swipeRadioStationAdapter
-
         mOnPageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
-
             override fun onPageScrolled(
                 position: Int,
                 positionOffset: Float,
@@ -122,7 +113,6 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                     }
 
                 }
-
                 super.onPageScrolled(position, positionOffset, positionOffsetPixels)
             }
 
@@ -130,94 +120,16 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
 
-                // TODO всё в один synchronized метод
                 mainViewModel.synchronizedCheckThePosition(
                     position,
                     mainViewModel.mediaItemsListLiveData.value?.data,
                     swipeRadioStationAdapter.radioStationList
                 )
-
-////                namePosition(position)
-//
-//                // Если мы скачиваем новый плейлист, то здесь всегда сначала получаем position = 0
-//                // Нужно проверить, действительно ли мы выбрали первую песню в плейлисте
-//                if (position == 0) {
-//                    if (!swipeRadioStationAdapter.radioStationList.isNullOrEmpty()) {
-//                        Log.d(
-//                            TAG,
-//                            "onPageSelected 1) position == 0, checking the position, countryCode = ${swipeRadioStationAdapter.radioStationList[0].countryCode}"
-//                        )
-//                    }
-////                    mainViewModel.newMediaIdLiveData.observe(this@MainActivity) { так не работает
-//
-////                    val radioStationList = swipeRadioStationAdapter.radioStationList
-//                    val resource = mainViewModel.mediaItemsListLiveData.value
-//                    var radioStationList = resource?.data
-//
-//                    if (radioStationList == null) {
-//                        radioStationList = swipeRadioStationAdapter.radioStationList
-//                    }
-//
-//                    if (!radioStationList.isNullOrEmpty()) {
-//                        Log.d(
-//                            TAG,
-//                            "!!!!!!! radioStationList countryCode = ${radioStationList[0].countryCode}"
-//                        )
-//                    }
-//
-//                    mainViewModel.checkThePosition(position, radioStationList)
-//
-//                    mainViewModel.newPositionLiveData.observe(this@MainActivity) {
-//                        if (!swipeRadioStationAdapter.radioStationList.isNullOrEmpty()) {
-//                            Log.d(
-//                                TAG,
-//                                "onPageSelected 4) _newPositionLiveData.postValue(newPosition), position got: $it, countryCode = ${swipeRadioStationAdapter.radioStationList[0].countryCode}"
-//                            )
-//                        }
-//                        namePosition(it)
-//                    }
-//
-////                    }
-//
-////                    var newPosition = position
-////                    var radioStationNeedToFind: RadioStationPresentation? = null
-////                    val mediaId: String? = mainViewModel.newMediaIdLiveData.value
-////
-////                    // For sure, calculating chosen position
-////                    if (swipeRadioStationAdapter.radioStationList.isNotEmpty() && !mediaId.isNullOrBlank()) {
-////                        swipeRadioStationAdapter.radioStationList.forEach {
-////                            if (it.url == mediaId) {
-////                                radioStationNeedToFind = it
-////                            }
-////                        }
-////                    }
-////
-////                    radioStationNeedToFind?.let {
-////                        val newItemIndex =
-////                            swipeRadioStationAdapter.radioStationList.indexOf(radioStationNeedToFind) // looking for the index of that song
-////                        // That function will return -1 if the song doesn't exist, so we must check:
-////                        if (newItemIndex != -1) newPosition = newItemIndex
-////                    }
-//
-//                    // TODO Если будем повторять два раза, вынести в отдельный метод
-////                    // We must check, if player is playing
-////                    if (playbackState?.isPlaying == true) {
-////                        mainViewModel.playOrToggleSong(swipeRadioStationAdapter.radioStationList[newPosition])
-////                    } else {
-////                        curPlayingRadioStation =
-////                            swipeRadioStationAdapter.radioStationList[newPosition]
-//////                        binding?.vpSong?.currentItem = newPosition
-////                    }
-//
-//                } else {
-//                    namePosition(position)
-//                }
-
             }
         }
 
-        subscribeToObservers()
         initListeners()
+        subscribeToObservers()
 
         // COUNTRY LIST MARKERS ON MAP -> 1. Получаем список кодов стран, преобразуем в локальные модели, сохраняем в Room.
         // Делается 1 раз, при запуске приложения и по окончанию stopSelf()
@@ -227,38 +139,13 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                 ProgressForegroundService::class.java
             )
         )
-
-        // Starting foreground service (music notification)
-        this.startService(
-            Intent(
-                this,
-                ForegroundNotificationService::class.java
-            )
-        )
-
-//        onBackPressedDispatcher.addCallback(this, onBackPressedCallback);
     }
-
-//    private val onBackPressedCallback: OnBackPressedCallback =
-//        object : OnBackPressedCallback(true /* Enabled by default */) {
-//            override fun handleOnBackPressed() {
-//                when (findNavController(R.id.navHostFragment).currentDestination?.id) {
-//                    R.id.favouriteListFragment -> findNavController(R.id.navHostFragment).navigate(
-//                        FavouriteListFragmentDirections.actionGlobalHomeRadioFragment()
-//                    )
-//                    R.id.radioListFragment -> findNavController(R.id.navHostFragment).navigate(
-//                        RadioListFragmentDirections.actionGlobalHomeRadioFragment()
-//                    )
-//                }
-//            }
-//        }
 
     private fun initListeners() {
         // To detect if it is swiped
         mOnPageChangeCallback?.let {
             binding?.vpSong?.registerOnPageChangeCallback(it)
         }
-
 
         // Click listener (on play image)
         binding?.ivPlayPause?.setOnClickListener {
@@ -267,22 +154,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             }
         }
 
-//        // Navigate to the RadioListFragment if a song in player was clicked
-//        swipeRadioStationAdapter.setItemClickListener {
-//            // Узнаем название страны
-//            val loc = Locale("", it.countryCode)
-//            val countryName = loc.displayName // Название страны на используемом в настройках языке
-////            val countryName2 = it.country // Здесь строка всегда на английском
-//
-//            // Перенесём countryCode на RadioListFragment для запроса списка станций
-//            if (it.countryCode != "null") {
-//                val direction =
-//                    HomeRadioFragmentDirections.actionHomeRadioFragmentToRadioListFragment("${it.countryCode}||${countryName}")
-//                if (this.findNavController(R.id.navHostFragment).currentDestination?.id == R.id.homeRadioFragment) {
-//                    this.findNavController(R.id.navHostFragment).navigate(direction)
-//                }
-//            }
-//        }
+        // При нажатии на плейер, открывается список радиостанций в текущем плейлисте
         swipeRadioStationAdapter.setItemClickListener {
             val direction =
                 HomeRadioFragmentDirections.actionHomeRadioFragmentToCurrentPlaylistFragment()
@@ -291,7 +163,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             }
         }
 
-        // Let's add a listener to our NavContoller to hide BottomBar when we are on the first page, where we are cashing
+        // Let's add a listener to our NavController to hide BottomBar when we are on the first page, where we are cashing
         this.findNavController(R.id.navHostFragment)
             .addOnDestinationChangedListener { _, destination, _ ->
                 when (destination.id) {
@@ -316,34 +188,8 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         }
     }
 
-    // ???
-    // when a new song play, widget.ViewPager2 must automatically swipe to the corresponding song
-    // parameter - the new song, that began to play
-//    private fun switchViewPagerToCurrentSong(radioStation: RadioStationPresentation) {
-//        // TODO не находит, всегда индекс -1 Написать лог отследить список, в котором он ищет
-//        val checkStation1 = swipeRadioStationAdapter.radioStationList[0]
-//        val checkStation2 = swipeRadioStationAdapter.radioStationList[1]
-//        val checkStation3 = swipeRadioStationAdapter.radioStationList[2]
-//
-//        val needToFind = radioStation
-//
-//        val newItemIndex =
-//            swipeRadioStationAdapter.radioStationList.indexOf(radioStation) // looking for the index of that song
-//        // That function will return -1 if the song doesn't exist, so we must check:
-//        if (newItemIndex != -1) {
-//            binding?.vpSong?.currentItem =
-//                newItemIndex // currentItem - is the index of the song, that is displayed. We change it to a new one
-//            curPlayingRadioStation = radioStation // we also update our curPlayingRadioStation
-//        }
-//    }
-
     private fun switchViewPagerToCurrentSong(mediaId: String, countryCode: String) {
-        // Сохранить country code и mediaId радиостанции в shared preference
-//        mainViewModel.saveLastUsedRadioStationUrlAndCode(mediaId, countryCode) перенесём воview model
-
         var radioStationNeedToFind: RadioStationPresentation? = null
-
-        val testRadioStationList = swipeRadioStationAdapter.radioStationList
 
         if (swipeRadioStationAdapter.radioStationList.isNotEmpty()) {
             swipeRadioStationAdapter.radioStationList.forEach {
@@ -351,27 +197,12 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                     radioStationNeedToFind = it
                 }
             }
-
-//            // Если радиостанция в плейлисте не нашлась, нужно обновить swipeAdapter и обновить плейлист, в которой найти и включить нужную станцию
-//            if (radioStationNeedToFind == null) {
-//                mainViewModel.dataSavedSuccessfulLiveData.observe(this) {
-//                    // TODO перезапуск сервиса?
-////                Intent(this, MusicService::class.java).also { intent ->
-////                    startService(intent)
-////                }
-//                    // The startService() method returns immediately, and the Android system calls the service's onStartCommand() method. If the service isn't already running, the system first calls onCreate(), and then it calls onStartCommand().
-//                    // If the service doesn't also provide binding, the intent that is delivered with startService() is the only mode of communication between the application component and the service. However, if you want the service to send a result back, the client that starts the service can create a PendingIntent for a broadcast (with getBroadcast()) and deliver it to the service in the Intent that starts the service. The service can then use the broadcast to deliver a result.
-//                    // Multiple requests to start the service result in multiple corresponding calls to the service's onStartCommand(). However, only one request to stop the service (with stopSelf() or stopService()) is required to stop it.
-//
-//                    mainViewModel.fetchSongs(countryCode) // TODO Удалить, так не получается. В метод switchViewPagerToCurrentSong() прилетает уже песня из используемого плейлиста (остаётся текущая, если выбирать другую страну)
-//                }
-//            }
         }
-
 
         radioStationNeedToFind?.let {
             val newItemIndex =
                 swipeRadioStationAdapter.radioStationList.indexOf(radioStationNeedToFind) // looking for the index of that song
+
             // That function will return -1 if the song doesn't exist, so we must check:
             if (newItemIndex != -1) {
                 binding?.vpSong?.currentItem =
@@ -432,11 +263,6 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             // if we had an individual image
 //            glide.load(curPlayingSong?.imageUrl).into(ivCurSongImage)
 
-//            switchViewPagerToCurrentSong(curPlayingRadioStation ?: return@observe)
-
-            val test =
-                it.description.subtitle.toString() // !!! Сюда прилетает уже не то. Проверить Music Service
-
             val mediaId = it.description.mediaId
 
             switchViewPagerToCurrentSong(
@@ -483,7 +309,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                         binding?.let { nonNullBinding ->
                             Snackbar.make(
                                 nonNullBinding.rootLayout.rootView,
-                                result.message ?: "An unknown error occured",
+                                result.message ?: "An unknown error occurred",
                                 Snackbar.LENGTH_LONG
                             ).show()
                         }
@@ -566,24 +392,25 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         }
 
         mainViewModel.setNonClickableLiveData.observe(this) {
-            // Запустить отображение прогресс бара + заблокировать нажатия как на HomeRadioFragment, так и проигрыватель в main activity
-            // MainActivity
-            binding?.imageStar?.isClickable = false
-            binding?.imageStar?.isEnabled = false
-            binding?.vpSong?.isClickable = false // TODO не работает
-            binding?.vpSong?.isEnabled = false // TODO не работает
-            binding?.ivPlayPause?.isClickable = false
-            binding?.ivPlayPause?.isEnabled = false
+            // Изредка не срабатывает логика и кнопки остаются заблокированым. В таком случае нет возможности продолжать пользоваться приложением.
+//            // Запустить отображение прогресс бара + заблокировать нажатия как на HomeRadioFragment, так и проигрыватель в main activity
+//            // MainActivity
+//            binding?.imageStar?.isClickable = false
+//            binding?.imageStar?.isEnabled = false
+//            binding?.vpSong?.isClickable = false // TODO не работает
+//            binding?.vpSong?.isEnabled = false // TODO не работает
+//            binding?.ivPlayPause?.isClickable = false
+//            binding?.ivPlayPause?.isEnabled = false
         }
         mainViewModel.setClickableLiveData.observe(this) {
-            // Убрать отображение прогресс бара + разблокировать нажатия как на HomeRadioFragment, так и проигрыватель в main activity
-            // MainActivity
-            binding?.imageStar?.isClickable = true
-            binding?.imageStar?.isEnabled = true
-            binding?.vpSong?.isClickable = true // TODO не работает
-            binding?.vpSong?.isEnabled = true // TODO не работает
-            binding?.ivPlayPause?.isClickable = true
-            binding?.ivPlayPause?.isEnabled = true
+//            // Убрать отображение прогресс бара + разблокировать нажатия как на HomeRadioFragment, так и проигрыватель в main activity
+//            // MainActivity
+//            binding?.imageStar?.isClickable = true
+//            binding?.imageStar?.isEnabled = true
+//            binding?.vpSong?.isClickable = true // TODO не работает
+//            binding?.vpSong?.isEnabled = true // TODO не работает
+//            binding?.ivPlayPause?.isClickable = true
+//            binding?.ivPlayPause?.isEnabled = true
         }
     }
 
@@ -599,75 +426,6 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                 }
             }
         }
-    }
-
-    private fun namePosition(position: Int) {
-
-        Log.d(TAG, "onPageSelected 5) namePosition() called")
-
-        // We must check, if player is playing
-        if (playbackState?.isPlaying == true) {
-
-            // Если выбрать радиостанцию US (2000 Rock ...), а после неё первое Белорусское радио в списке (альфарадио) - вылетает IndexOutOfBoundsException, т.к. сначала ищет 300+ индекс в списке из 53х
-            try {
-                val maxIndex = swipeRadioStationAdapter.radioStationList.size + 1
-                Log.d(
-                    TAG,
-                    "Checking: maxIndex = $maxIndex, position = $position, country code = ${swipeRadioStationAdapter.radioStationList[0].countryCode}, looking for station: ${swipeRadioStationAdapter.radioStationList[position].stationName}"
-                )
-                if (position <= maxIndex) {
-                    Log.d(TAG, "position <= maxIndex")
-
-                    mainViewModel.playOrToggleSong(swipeRadioStationAdapter.radioStationList[position])
-                    Log.d(
-                        TAG,
-                        "onPageSelected 6) playbackState?.isPlaying == true mainViewModel.playOrToggleSong() called, position = $position, countryCode = ${swipeRadioStationAdapter.radioStationList[0].countryCode}"
-                    )
-
-                }
-            } catch (e: IndexOutOfBoundsException) {
-                Log.d(TAG, "CAUGHT IndexOutOfBoundsException!")
-                e.printStackTrace()
-            }
-
-        } else {
-            // При включении программы и загрузке контента, попадаем сюда
-
-            try {
-                val maxIndex = swipeRadioStationAdapter.radioStationList.size + 1
-                Log.d(TAG, "Checking: maxIndex = $maxIndex, position = $position")
-                if (position <= maxIndex) {
-                    Log.d(TAG, "position <= maxIndex")
-
-                    curPlayingRadioStation =
-                        swipeRadioStationAdapter.radioStationList[position]
-                    // binding?.vpSong?.currentItem = position /// ??? убрать
-                    Log.d(
-                        TAG,
-                        "6) playbackState?.isPlaying != true curPlayingRadioStation = swipeRadioStationAdapter.radioStationList[position]"
-                    )
-
-                }
-            } catch (e: IndexOutOfBoundsException) {
-                Log.d(TAG, "fun namePosition - CACHED IndexOutOfBoundsException!")
-                e.printStackTrace()
-            }
-
-            // TODO Нам нужно вернуться в onPrepareFromMediaId, если мы выбрали песню из другого плейлиста и включить её. НО! Нам не нужно включать станцию сразу при включении программы
-            val isNotJustLaunched = mainViewModel.isNotJustLaunchedLiveData.value
-            isNotJustLaunched?.let {
-                if (isNotJustLaunched) {
-                    // Здесь мы точно перешли из списка в HomeRadioFragment и хотим включить радио
-                    if (swipeRadioStationAdapter.radioStationList.isNotEmpty()) {
-                        mainViewModel.playOrToggleSong(
-                            swipeRadioStationAdapter.radioStationList[position],
-                            true
-                        )
-                    } // Если список пуст, значит это список избранного, который не заполнен
-                }
-            }
-        }
-
     }
 
     // function for hiding our bottom bar
@@ -689,13 +447,6 @@ class MainActivity : AppCompatActivity(), IAppSettings {
     }
 
     override fun onDestroy() {
-        // Stop foreground service (music notification)
-        this.stopService(
-            Intent(
-                this,
-                ForegroundNotificationService::class.java
-            )
-        )
         super.onDestroy()
         binding = null // VIEW BINDING -> 3. onDestroyView()
 

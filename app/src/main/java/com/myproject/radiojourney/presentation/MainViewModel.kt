@@ -461,7 +461,7 @@ class MainViewModel @Inject constructor(
                 )
             }
 
-            // name position:
+            // Previous fun NAME POSITION:
 
             val playbackState = playbackStateLiveData.value
 //            val maxIndex = radioStationListFromSwipeAdapterNonNullButCanBeEmpty.size + 1
@@ -484,6 +484,7 @@ class MainViewModel @Inject constructor(
 
                         val test = radioStationList?.get(newPosition)
                         Log.d(TAG, "test = $test")
+
 //                    playOrToggleSong(radioStationListFromSwipeAdapterNonNullButCanBeEmpty[newPosition])
                         radioStationList?.get(newPosition)?.let { playOrToggleSong(it) }
 

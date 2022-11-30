@@ -346,22 +346,23 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             hideProgress()
         })
         mainViewModel.setNonClickableLiveData.observe(viewLifecycleOwner, {
-            // Запустить отображение прогресс бара + заблокировать нажатия как на HomeRadioFragment, так и проигрыватель в main activity
-            // HomeRadioFragment
-            binding?.buttonGoToFavourites?.isClickable = false
-            binding?.buttonGoToFavourites?.isEnabled = false
-            // TODO карта - не проработано (InfoWindow)
+            // Изредка не срабатывает логика и кнопки остаются заблокированым. В таком случае нет возможности продолжать пользоваться приложением.
+//            // Запустить отображение прогресс бара + заблокировать нажатия как на HomeRadioFragment, так и проигрыватель в main activity
+//            // HomeRadioFragment
+//            binding?.buttonGoToFavourites?.isClickable = false
+//            binding?.buttonGoToFavourites?.isEnabled = false
+//            // TODO карта - не проработано (InfoWindow)
 
             // Progress bar
             showProgress()
             binding?.progressCircularLoadingArguments?.isVisible = true
         })
         mainViewModel.setClickableLiveData.observe(viewLifecycleOwner, {
-            // Убрать отображение прогресс бара + разблокировать нажатия как на HomeRadioFragment, так и проигрыватель в main activity
-            // HomeRadioFragment
-            binding?.buttonGoToFavourites?.isClickable = true
-            binding?.buttonGoToFavourites?.isEnabled = true
-            // TODO карта - не проработано (InfoWindow)
+//            // Убрать отображение прогресс бара + разблокировать нажатия как на HomeRadioFragment, так и проигрыватель в main activity
+//            // HomeRadioFragment
+//            binding?.buttonGoToFavourites?.isClickable = true
+//            binding?.buttonGoToFavourites?.isEnabled = true
+//            // TODO карта - не проработано (InfoWindow)
 
             // Progress bar
             hideProgress()

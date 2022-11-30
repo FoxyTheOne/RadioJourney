@@ -92,9 +92,9 @@ class FavoriteListAdapter(
             textRadioStationClickCount.text = radioStationFavourite.clickCount.toString()
 
             if (radioStationFavourite.isStationInFavourite) {
-                imageStar.setImageResource(R.drawable.star)
+                imageStar.setImageResource(R.drawable.ic_baseline_star_24_orange)
             } else {
-                imageStar.setImageResource(R.drawable.star_transparent)
+                imageStar.setImageResource(R.drawable.ic_baseline_star_border_24_orange)
             }
         }
 
