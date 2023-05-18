@@ -19,7 +19,7 @@ import java.lang.Exception
 
 /**
  * Создадим Bound Service
- * BOUND_SERVICE -> 1. Для начала, задекларируем Bound Service в Manifest
+ * BOUND_SERVICE -> 1. Для начала, декларируем Bound Service в Manifest
  * BOUND_SERVICE -> 4. Расширяем Service(), а так же наш интерфейс IAppBinder
  */
 @AndroidEntryPoint
@@ -101,7 +101,7 @@ class MusicPlayerBoundService : Service(), IMusicPlayerBinder {
 
                 // Далее используется метод prepare или prepareAsync (в паре с OnPreparedListener).
                 // Эти методы подготавливают плеер к проигрыванию. Как понятно из названия, prepareAsync делает это асинхронно и, когда все сделает, сообщит об этом слушателю из метода setOnPreparedListener.
-                // А метод prepare работает синхронно. Соотвественно, если хотим прослушать файл из инета, то используем prepareAsync, иначе наше приложение повесится, т.к. заблокируется основной поток, который обслуживает UI.
+                // А метод prepare работает синхронно. Соотвественно, если хотим прослушать файл из интернета, то используем prepareAsync, иначе наше приложение повесится, т.к. заблокируется основной поток, который обслуживает UI.
                 Log.d(TAG, "PLAY URL (MP3), MEDIA PLAYER -> prepareAsync")
                 setOnPreparedListener {
                     Log.d(TAG, "PLAY URL (MP3), MEDIA PLAYER -> onPrepared")
@@ -160,7 +160,7 @@ class MusicPlayerBoundService : Service(), IMusicPlayerBinder {
 
     // PLAY URL (MP3), MEDIA PLAYER -> 4. В методе releaseMP мы выполняем метод release.
     // Он освобождает используемые проигрывателем ресурсы, его рекомендуется вызывать когда вы закончили работу с плеером.
-    // Более того, хелп рекомендует вызывать этот метод и при onPause/onStop, если нет острой необходимости держать объект.
+    // Более того, help рекомендует вызывать этот метод и при onPause/onStop, если нет острой необходимости держать объект.
     private fun releaseMediaPlayer() {
         try {
             mediaPlayer?.release()

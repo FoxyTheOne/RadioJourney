@@ -9,7 +9,9 @@ import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.location.Location
 import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
+import android.os.Parcelable
 import android.util.Log
 import android.view.*
 import android.widget.*
@@ -27,7 +29,6 @@ import com.myproject.radiojourney.IAppSettings
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.presentation.content.base.BaseContentFragmentAbstract
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collect
 import javax.inject.Inject
 import com.myproject.radiojourney.entities.presentation.CountryPresentation
 import com.google.android.gms.maps.model.LatLng
@@ -35,10 +36,13 @@ import com.google.android.gms.maps.model.Marker
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.content.res.AppCompatResources
+import androidx.lifecycle.Lifecycle
 import com.myproject.radiojourney.databinding.LayoutHomeRadioBinding
 import com.myproject.radiojourney.utils.oldMusicPlayer.*
 import kotlinx.coroutines.*
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.other.Status
 import com.myproject.radiojourney.presentation.MainViewModel
@@ -53,7 +57,7 @@ import com.myproject.radiojourney.presentation.MainViewModel
  * LOCATION -> 1.2. Имплементировать необходимую библиотеку (play services location)
  * LOCATION -> 1.3. Для доступа к местоположению, нужно разрешение. Логика запроса разрешения - в предыдущем фрагменте
  * LOCATION -> 1.4. Получим наш FusedLocationProviderClient. Именно он имеет в себе методы, с помощью которых мы можем определить локацию
- * GOOGLE MAPS -> 2. В инструкции от гугла всё делается в activity, а у нас - фрагмент. Следовательно, будут небольшие изменения
+ * GOOGLE MAPS -> 2. В инструкции от google всё делается в activity, а у нас - фрагмент. Следовательно, будут небольшие изменения
  *
  * TODO повторить проверку разрешения определения местоположения
  */
@@ -71,7 +75,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
     lateinit var appSettings: IAppSettings
 
     // 1.1. ViewModel. We bind our viewModel to the cycle of our activity, not fragment. So, we need to do this way:
-    lateinit var mainViewModel: MainViewModel
+    private lateinit var mainViewModel: MainViewModel
 
     private val viewModel by viewModels<HomeRadioViewModel>()
 
@@ -80,7 +84,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
     // Переменная для нашего FusedLocationProviderClient
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
 
-    // GOOGLE MAPS -> 2.1. Объявляем переменную, в соответствии с инструкцией от гугла
+    // GOOGLE MAPS -> 2.1. Объявляем переменную, в соответствии с инструкцией от google
     private lateinit var mMap: GoogleMap
 
     // GOOGLE MAPS -> 2.6. Объявляем переменную для маркера
@@ -102,7 +106,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         // VIEW BINDING -> 2. Инициализация
         binding = LayoutHomeRadioBinding.inflate(inflater, container, false)
         // TOOLBAR
-        setHasOptionsMenu(true)
+        setHasOptionsMenu(true) // TODO setHasOptionsMenu deprecated
         // TOOLBAR - где будет находиться в нашем layout
         binding?.let {
             appSettings.setToolbar(it.homeToolbar)
@@ -164,7 +168,44 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 
         if (arguments != null) {
 
-            arguments?.getParcelable<RadioStationPresentation>("radio_station") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+//                arguments?.getParcelable("radio_station", RadioStationPresentation::class.java) // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
+//                    ?.let { radioStation ->
+//                        Log.d(TAG, "Выбранный элемент списка: $radioStation")
+//
+//                        // Здесь мы получаем выбранную станцию из списка радиостанций по клику. Необходимо передать её в наш новый плейер
+//                        mainViewModel.saveNewMediaId(radioStation.urlResolved)
+//                        mainViewModel.fetchSongs(radioStation.countryCode)
+//                        mainViewModel.playOrToggleSong(radioStation, false)
+//                        mainViewModel.notJustLaunchedEnableAutoplay()
+//                    }
+//            } else {
+//                arguments?.getParcelable<RadioStationPresentation>("radio_station") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
+//                    ?.let { radioStation ->
+//                        Log.d(TAG, "Выбранный элемент списка: $radioStation")
+//
+//                        // Здесь мы получаем выбранную станцию из списка радиостанций по клику. Необходимо передать её в наш новый плейер
+//                        mainViewModel.saveNewMediaId(radioStation.urlResolved)
+//                        mainViewModel.fetchSongs(radioStation.countryCode)
+//                        mainViewModel.playOrToggleSong(radioStation, false)
+//                        mainViewModel.notJustLaunchedEnableAutoplay()
+//                    }
+//            }
+//
+// arguments?.getParcelable<RadioStationPresentation>("radio_station") is deprecated. For lesser code, let's write inline lambda for < and >= Build.VERSION_CODES.TIRAMISU
+//
+//            arguments?.getParcelable<RadioStationPresentation>("radio_station") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
+//                ?.let { radioStation ->
+//                    Log.d(TAG, "Выбранный элемент списка: $radioStation")
+//
+//                    // Здесь мы получаем выбранную станцию из списка радиостанций по клику. Необходимо передать её в наш новый плейер
+//                    mainViewModel.saveNewMediaId(radioStation.urlResolved)
+//                    mainViewModel.fetchSongs(radioStation.countryCode)
+//                    mainViewModel.playOrToggleSong(radioStation, false)
+//                    mainViewModel.notJustLaunchedEnableAutoplay()
+//                }
+
+            arguments?.parcelable<RadioStationPresentation>("radio_station") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
                 ?.let { radioStation ->
                     Log.d(TAG, "Выбранный элемент списка: $radioStation")
 
@@ -174,7 +215,41 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                     mainViewModel.playOrToggleSong(radioStation, false)
                     mainViewModel.notJustLaunchedEnableAutoplay()
                 }
-            arguments?.getParcelable<RadioStationPresentation>("radio_station_favourite") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
+
+//            arguments?.getParcelable<RadioStationPresentation>("radio_station_favourite") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
+//                ?.let { radioStationFavourite ->
+//                    Log.d(TAG, "Выбранный элемент списка: $radioStationFavourite")
+//
+//                    // Здесь мы переходим из фрагмента "Избранное". Стоит загрузить в плейер плейлист избранного.
+//                    mainViewModel.saveNewMediaId(radioStationFavourite.urlResolved)
+//                    mainViewModel.fetchSongs("FAV")
+//                    mainViewModel.playOrToggleSong(radioStationFavourite, false)
+//                    mainViewModel.notJustLaunchedEnableAutoplay()
+//                }
+
+            arguments?.parcelable<RadioStationPresentation>("radio_station_favourite") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
+                ?.let { radioStationFavourite ->
+                    Log.d(TAG, "Выбранный элемент списка: $radioStationFavourite")
+
+                    // Здесь мы переходим из фрагмента "Избранное". Стоит загрузить в плейер плейлист избранного.
+                    mainViewModel.saveNewMediaId(radioStationFavourite.urlResolved)
+                    mainViewModel.fetchSongs("FAV")
+                    mainViewModel.playOrToggleSong(radioStationFavourite, false)
+                    mainViewModel.notJustLaunchedEnableAutoplay()
+                }
+
+//            arguments?.getParcelable<RadioStationPresentation>("radio_station_favourite") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
+//                ?.let { radioStationFavourite ->
+//                    Log.d(TAG, "Выбранный элемент списка: $radioStationFavourite")
+//
+//                    // Здесь мы переходим из фрагмента "Избранное". Стоит загрузить в плейер плейлист избранного.
+//                    mainViewModel.saveNewMediaId(radioStationFavourite.urlResolved)
+//                    mainViewModel.fetchSongs("FAV")
+//                    mainViewModel.playOrToggleSong(radioStationFavourite, false)
+//                    mainViewModel.notJustLaunchedEnableAutoplay()
+//                }
+
+            arguments?.parcelable<RadioStationPresentation>("radio_station_favourite") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
                 ?.let { radioStationFavourite ->
                     Log.d(TAG, "Выбранный элемент списка: $radioStationFavourite")
 
@@ -186,14 +261,15 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                 }
 
         }
+
 //        else {
 //            viewModel.getStoredRadioStation() // 1. Подгрузить радиостанцию из Shared Preference, если она там сохранена. Если нет - текст "выберите радиостанцию"
 //        }
 
         // GOOGLE MAPS -> 2.2. Obtain the SupportMapFragment and get notified when the map is ready to be used.
         // Необходимо найти supportFragmentManager в списке всех фрагментов
-        // val mapFragment = requireActivity().supportFragmentManager.findFragmentById(R.id.map) не сработает,т.к. этот метод ищет внутри активити.
-        // А наш supportFragmentManager находится не в активити: у нас есть HomeRadioFragment, а он - внутри этого HomeRadioFragment (т.е. фрагмент, внутри фрагмента)
+        // val mapFragment = requireActivity().supportFragmentManager.findFragmentById(R.id.map) не сработает,т.к. этот метод ищет внутри activity.
+        // А наш supportFragmentManager находится не в activity: у нас есть HomeRadioFragment, а он - внутри этого HomeRadioFragment (т.е. фрагмент, внутри фрагмента)
         // Если мы открываем фрагмент внутри фрагмента, мы можем искать их с помощью childFragmentManager (заменяем, вместо supportFragmentManager)
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         // Т.обр. мы говорим, что слушателем инициализации SupportMapFragment будет именно наш фрагмент (HomeRadioFragment)
@@ -211,22 +287,41 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         // Настраиваем наш customMarker
         var myMarkerBitmap: Bitmap? = null
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            context?.getDrawable(R.drawable.ic_baseline_location_on_24_orange)?.let {
-                myMarkerBitmap = viewModel.bitmapOrNull(it)
+        if (SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            context?.let { nonNullContext ->
+                AppCompatResources.getDrawable(
+                    nonNullContext,
+                    R.drawable.ic_baseline_location_on_24_orange
+                )?.let {
+                    myMarkerBitmap = viewModel.bitmapOrNull(it)
 
-                myMarkerBitmap?.let { nonNullBitmap ->
-                    customMarkerYouAreHere = Bitmap.createScaledBitmap(
-                        nonNullBitmap,
-                        100,
-                        100,
-                        false
-                    )
+                    myMarkerBitmap?.let { nonNullBitmap ->
+                        customMarkerYouAreHere = Bitmap.createScaledBitmap(
+                            nonNullBitmap,
+                            100,
+                            100,
+                            false
+                        )
+                    }
                 }
             }
+
+//            context?.getDrawable(R.drawable.ic_baseline_location_on_24_orange)?.let {
+//                myMarkerBitmap = viewModel.bitmapOrNull(it)
+//
+//                myMarkerBitmap?.let { nonNullBitmap ->
+//                    customMarkerYouAreHere = Bitmap.createScaledBitmap(
+//                        nonNullBitmap,
+//                        100,
+//                        100,
+//                        false
+//                    )
+//                }
+//            }
+
         }
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP || myMarkerBitmap == null) {
+        if (SDK_INT < Build.VERSION_CODES.LOLLIPOP || myMarkerBitmap == null) {
             customMarkerYouAreHere = Bitmap.createScaledBitmap(
                 (ContextCompat.getDrawable(
                     requireContext(),
@@ -241,22 +336,40 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         // Настраиваем radio icon
         var myRadioBitmap: Bitmap? = null
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            context?.getDrawable(R.drawable.ic_baseline_radio_24_orange)?.let {
-                myRadioBitmap = viewModel.bitmapOrNull(it)
+        if (SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            context?.let { nonNullContext ->
+                AppCompatResources.getDrawable(
+                    nonNullContext,
+                    R.drawable.ic_baseline_radio_24_orange
+                )?.let {
+                    myRadioBitmap = viewModel.bitmapOrNull(it)
 
-                myRadioBitmap?.let { nonNullBitmap ->
-                    customMarkerRadio = Bitmap.createScaledBitmap(
-                        nonNullBitmap,
-                        80,
-                        80,
-                        false
-                    )
+                    myRadioBitmap?.let { nonNullBitmap ->
+                        customMarkerRadio = Bitmap.createScaledBitmap(
+                            nonNullBitmap,
+                            80,
+                            80,
+                            false
+                        )
+                    }
                 }
             }
+
+//            context?.getDrawable(R.drawable.ic_baseline_radio_24_orange)?.let {
+//                myRadioBitmap = viewModel.bitmapOrNull(it)
+//
+//                myRadioBitmap?.let { nonNullBitmap ->
+//                    customMarkerRadio = Bitmap.createScaledBitmap(
+//                        nonNullBitmap,
+//                        80,
+//                        80,
+//                        false
+//                    )
+//                }
+//            }
         }
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP || myRadioBitmap == null) {
+        if (SDK_INT < Build.VERSION_CODES.LOLLIPOP || myRadioBitmap == null) {
             customMarkerRadio = Bitmap.createScaledBitmap(
                 (ContextCompat.getDrawable(
                     requireContext(),
@@ -339,13 +452,13 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 
     private fun subscribeOnLiveData() {
         // Показываем или прячем Progress
-        viewModel.showProgressLiveData.observe(viewLifecycleOwner, {
+        viewModel.showProgressLiveData.observe(viewLifecycleOwner) {
             showProgress()
-        })
-        viewModel.hideProgressLiveData.observe(viewLifecycleOwner, {
+        }
+        viewModel.hideProgressLiveData.observe(viewLifecycleOwner) {
             hideProgress()
-        })
-        mainViewModel.setNonClickableLiveData.observe(viewLifecycleOwner, {
+        }
+        mainViewModel.setNonClickableLiveData.observe(viewLifecycleOwner) {
             // Изредка не срабатывает логика и кнопки остаются заблокированым. В таком случае нет возможности продолжать пользоваться приложением.
 //            // Запустить отображение прогресс бара + заблокировать нажатия как на HomeRadioFragment, так и проигрыватель в main activity
 //            // HomeRadioFragment
@@ -356,8 +469,8 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             // Progress bar
             showProgress()
             binding?.progressCircularLoadingArguments?.isVisible = true
-        })
-        mainViewModel.setClickableLiveData.observe(viewLifecycleOwner, {
+        }
+        mainViewModel.setClickableLiveData.observe(viewLifecycleOwner) {
 //            // Убрать отображение прогресс бара + разблокировать нажатия как на HomeRadioFragment, так и проигрыватель в main activity
 //            // HomeRadioFragment
 //            binding?.buttonGoToFavourites?.isClickable = true
@@ -367,11 +480,11 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             // Progress bar
             hideProgress()
             binding?.progressCircularLoadingArguments?.isVisible = false
-        })
-        mainViewModel.dialogInternetTroubleLiveData.observe(viewLifecycleOwner, {
+        }
+        mainViewModel.dialogInternetTroubleLiveData.observe(viewLifecycleOwner) {
             dialogInternetTrouble.show()
-        })
-        viewModel.errorMessageLiveData.observe(this) {
+        }
+        viewModel.errorMessageLiveData.observe(viewLifecycleOwner) {
             it?.getContentIfNotHandled()?.let { result ->
                 when (result.status) {
                     // If everything is ok, we don't want to show anything. Only if smth went wrong
@@ -383,6 +496,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                                 Snackbar.LENGTH_LONG
                             ).show()
                         }
+
                     else -> Unit
                 }
             }
@@ -396,9 +510,10 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                     binding?.progressCircular?.isVisible = false
                     // Здесь можно заполнить наш адаптер для recycler view, если он есть на этой странице.
 //                    result.data?.let { songs ->
-//                        songAdapter.songs = songs // это триггернет setter из адаптера: var songs: List<Song>; get() = differ.currentList; !!! set(value) = differ.submitList(value) !!!
+//                        songAdapter.songs = songs // это триггернёт setter из адаптера: var songs: List<Song>; get() = differ.currentList; !!! set(value) = differ.submitList(value) !!!
 //                    }
                 }
+
                 Status.ERROR -> Unit // We never emitted here an error status, so we don't do anything here
                 Status.LOADING -> binding?.progressCircular?.isVisible = true
             }
@@ -406,28 +521,80 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
     }
 
     private fun subscribeOnFlow() {
-        lifecycleScope.launchWhenCreated {
-            viewModel.countryListFlow.collect { countryPresentationList ->
-                binding?.textLoadingData?.isVisible = false
-                countryList =
-                    countryPresentationList // Заполним массив для последующей обработки клика
-                showProgress()
-                countryPresentationList.forEach { countryPresentation ->
-                    addMarkersOnMap(countryPresentation)
-                }
-                hideProgress()
+        // Function launchWhenCreated is deprecated as it can lead to wasted resources in some cases.
+        // Replace with suspending repeatOnLifecycle to run the block whenever the Lifecycle state is at least Lifecycle.State.CREATED.
 
-                if (countryPresentationList == emptyList<CountryPresentation>()) { // Мы переходим на эту страницу только если БД не пуста. Если массив пустой - что-то пошло не так
+//        lifecycleScope.launchWhenCreated {
+//            viewModel.countryListFlow.collect { countryPresentationList ->
+//                binding?.textLoadingData?.isVisible = false
+//                countryList =
+//                    countryPresentationList // Заполним массив для последующей обработки клика
+//                showProgress()
+//                countryPresentationList.forEach { countryPresentation ->
+//                    addMarkersOnMap(countryPresentation)
+//                }
+//                hideProgress()
+//
+//                if (countryPresentationList == emptyList<CountryPresentation>()) { // Мы переходим на эту страницу только если БД не пуста. Если массив пустой - что-то пошло не так
+//                    showProgress()
+//                    Toast.makeText(
+//                        context,
+//                        "Something went wrong. Waiting for database response.",
+//                        Toast.LENGTH_LONG
+//                    ).show()
+//                }
+//            }
+//        }
+
+        lifecycleScope.launch {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.CREATED) {
+
+                viewModel.countryListFlow.collect { countryPresentationList ->
+                    binding?.textLoadingData?.isVisible = false
+                    countryList =
+                        countryPresentationList // Заполним массив для последующей обработки клика
                     showProgress()
-                    Toast.makeText(
-                        context,
-                        "Something went wrong. Waiting for database response.",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    countryPresentationList.forEach { countryPresentation ->
+                        addMarkersOnMap(countryPresentation)
+                    }
+                    hideProgress()
+
+                    if (countryPresentationList == emptyList<CountryPresentation>()) { // Мы переходим на эту страницу только если БД не пуста. Если массив пустой - что-то пошло не так
+                        showProgress()
+                        Toast.makeText(
+                            context,
+                            "Something went wrong. Waiting for database response.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
                 }
+
             }
         }
+
     }
+
+// Intent
+//    inline fun <reified T : Parcelable> Intent.parcelable(key: String): T? = when {
+//        SDK_INT >= 33 -> getParcelableExtra(key, T::class.java)
+//        else -> @Suppress("DEPRECATION") getParcelableExtra(key) as? T
+//    }
+
+// Bundle
+    private inline fun <reified T : Parcelable> Bundle.parcelable(key: String): T? = when {
+        SDK_INT >= 33 -> getParcelable(key, T::class.java)
+        else -> @Suppress("DEPRECATION") getParcelable(key) as? T
+    }
+
+// Bundle & Intent ArrayList
+//    inline fun <reified T : Parcelable> Bundle.parcelableArrayList(key: String): ArrayList<T>? = when {
+//        SDK_INT >= 33 -> getParcelableArrayList(key, T::class.java)
+//        else -> @Suppress("DEPRECATION") getParcelableArrayList(key)
+//    }
+//    inline fun <reified T : Parcelable> Intent.parcelableArrayList(key: String): ArrayList<T>? = when {
+//        SDK_INT >= 33 -> getParcelableArrayListExtra(key, T::class.java)
+//        else -> @Suppress("DEPRECATION") getParcelableArrayListExtra(key)
+//    }
 
     private fun showProgress() {
         binding?.frameLayout?.isVisible = true
@@ -616,6 +783,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             Log.d(TAG, "showLogoutDialog() was called")
             true
         }
+
         else -> {
             // If we got here, the user's action was not recognized.
             // Invoke the superclass to handle it.

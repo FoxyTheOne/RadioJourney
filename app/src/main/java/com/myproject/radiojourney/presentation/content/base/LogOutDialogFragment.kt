@@ -40,7 +40,7 @@ class LogOutDialogFragment : DialogFragment() {
             dismiss()
         }
         buttonYes.setOnClickListener {
-            // По кнопке да вызываем наш метод из интерфейса. Описываем его в фрагменте, в котором расположен тулбар (content фрагмент).
+            // По кнопке да вызываем наш метод из интерфейса. Описываем его в фрагменте, в котором расположен toolbar (content фрагмент).
             // BaseContentFragmentAbstract должен наследоваться от этого интерфейса, чтобы в content фрагменте описать этот метод
             listener?.onLogOut()
             dismiss()

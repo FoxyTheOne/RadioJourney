@@ -5,7 +5,7 @@ import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * Базовый фрагмент для расширения content фрагментами.
- * Содержит логику открытия всплывающего окна при нажатии на кнопку выхода на тулбаре. Непосредственно логика метода onLogOut() описывается в фрагменте, который содержит тулбар
+ * Содержит логику открытия всплывающего окна при нажатии на кнопку выхода на toolbar. Непосредственно логика метода onLogOut() описывается в фрагменте, который содержит toolbar
  */
 @AndroidEntryPoint
 abstract class BaseContentFragmentAbstract : Fragment(), ILogOutListener {

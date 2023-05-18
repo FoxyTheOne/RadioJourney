@@ -102,7 +102,7 @@ class MusicServiceConnection(context: Context) {
             // But to have access to token we also must create a mediaBrowser instance and for that we need this MediaBrowserConnectionCallback(). So, return here later, when we will have that instance
             // After we have mediaBrowser instance, we can return to this method
             mediaController = MediaControllerCompat(context, mediaBrowser.sessionToken).apply {
-                registerCallback(MediaContollerCallback()) // <- our second inner class
+                registerCallback(MediaControllerCallback()) // <- our second inner class
             }
             _isConnectedLiveData.postValue(Event(Resource.success(true))) // post connection data to LiveData
         }
@@ -128,7 +128,7 @@ class MusicServiceConnection(context: Context) {
         }
     }
 
-    private inner class MediaContollerCallback : MediaControllerCompat.Callback() {
+    private inner class MediaControllerCallback : MediaControllerCompat.Callback() {
         // When playback state changes this function will be called
         override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
             _playbackStateLiveData.postValue(state) // We are posting our state and now we have an access to it from our fragment

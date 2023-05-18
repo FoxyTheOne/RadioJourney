@@ -21,6 +21,10 @@
         Разрешение для Alert Window:
     -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <!--
+        When targeting Android 13 or higher, posting a permission requires holding the `POST_NOTIFICATIONS` permission:
+    -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".App"

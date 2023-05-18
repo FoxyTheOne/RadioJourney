@@ -3,7 +3,7 @@ package com.myproject.radiojourney.utils.extension
 import androidx.core.util.PatternsCompat
 
 fun String?.isEmailValid(): Boolean {
-    return if (this != null && this.isNotBlank()) {
+    return if (!this.isNullOrBlank()) {
         isNotBlank() && PatternsCompat.EMAIL_ADDRESS.matcher(this).matches()
     } else {
         false
@@ -11,7 +11,7 @@ fun String?.isEmailValid(): Boolean {
 }
 
 fun String?.isPasswordValid(): Boolean {
-    return if (this != null && this.isNotBlank()) {
+    return if (!this.isNullOrBlank()) {
         isNotBlank() && this.length > 5
     } else {
         false

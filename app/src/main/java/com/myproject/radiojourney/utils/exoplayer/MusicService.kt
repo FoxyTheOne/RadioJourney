@@ -90,7 +90,7 @@ class MusicService : MediaBrowserServiceCompat() {
                 // если первый запуск - запустить по умолчанию
                 val lastPlayedCountryCode = preference.getLastUsedRadioStationCountryCode()
 
-                // Загрузаем метаданные всех радиостанций с определенным country code ПРИ ЗАПУСКЕ СЕРВИСА
+                // Загружаем метаданные всех радиостанций с определенным country code ПРИ ЗАПУСКЕ СЕРВИСА
                 firebaseMusicSource.fetchMediaData(
                     if (lastPlayedCountryCode != "null" && lastPlayedCountryCode.isNotBlank()) lastPlayedCountryCode
                     else "AD"
@@ -179,8 +179,8 @@ class MusicService : MediaBrowserServiceCompat() {
     ) {
         var lastItemIndex = 0
 
-        val test = curPlayingSong?.description?.subtitle
-        val testRadioStations = radioStations
+//        val test = curPlayingSong?.description?.subtitle
+//        val testRadioStations = radioStations
 
         // Если мы только что запустили программу, то песня ещё не будет выбрана. Стоит отобразить в плейере ту, что была выбрана последней в предыдущем запуске
         // TODO Если будет глючить, возможно стоит попробовать ориентироваться на isPlayerInitialized, а не curPlayingSong
@@ -198,7 +198,7 @@ class MusicService : MediaBrowserServiceCompat() {
                 }
             }
 
-            // Если станция нашлась, находим её иднекс для плейера. Если не нашлась - оставляем значение 0 (просто первая в списке)
+            // Если станция нашлась, находим её индекс для плейера. Если не нашлась - оставляем значение 0 (просто первая в списке)
             radioStationNeedToFind?.let {
                 // looking for the index of last listened song
                 lastItemIndex = radioStations.indexOf(radioStationNeedToFind)
@@ -213,7 +213,7 @@ class MusicService : MediaBrowserServiceCompat() {
 
         serviceScope.launch {
 
-            if (!radioStations.isNullOrEmpty()) {
+            if (radioStations.isNotEmpty()) {
                 // Проверить, заканчивается ли ссылка на .m3u8
                 // Если да, нам нужно использовать HlsMediaSource
                 val mediaUri =
@@ -248,7 +248,7 @@ class MusicService : MediaBrowserServiceCompat() {
         clientPackageName: String,
         clientUid: Int,
         rootHints: Bundle?
-    ): BrowserRoot? {
+    ): BrowserRoot {
         return BrowserRoot(MEDIA_ROOT_ID, null)
     }
 

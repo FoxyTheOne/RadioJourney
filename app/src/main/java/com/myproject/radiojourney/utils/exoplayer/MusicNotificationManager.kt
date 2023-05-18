@@ -106,7 +106,7 @@ class MusicNotificationManager(
                 val str: String = countryCode
                 val n = 4 // "_FAV" -> 4 chars
 
-                val newCountryCode = str.removeLastNchars(str, n)
+                val newCountryCode = str.removeLastNchars(str, n) ?: ""
 
         //                countryCode = newCountryCode ?: ""
 

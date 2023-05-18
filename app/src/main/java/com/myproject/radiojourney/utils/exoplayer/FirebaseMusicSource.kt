@@ -188,7 +188,7 @@ class FirebaseMusicSource @Inject constructor(
     }
 
     // A list of media items. Список MediaMetadataCompat теперь преобразуем в список MediaBrowserCompat.MediaItem (для нашей MainViewModel). Сформированный список вернется как результат работы функции там, где её вызвали.
-    // Метод необходимо выхывать после того, как список radioStations будет полностью сформирован!
+    // Метод необходимо вызывать после того, как список radioStations будет полностью сформирован!
     fun asMediaItems() = radioStations.map { radioStation ->
         val extrasRadioStationInfo = Bundle().apply {
             putLong("ClickCount", radioStation.getLong(METADATA_KEY_DOWNLOAD_STATUS))
@@ -227,7 +227,7 @@ class FirebaseMusicSource @Inject constructor(
 //    }
 
     // Для формирования плейлиста из нескольких песен/радиостанций. Info for exoplayer to stream songs
-    // TODO составлять список в плейлист из одной, выбранной страныю После того, как переделаем список с сервера в MAP
+    // TODO составлять список в плейлист из одной, выбранной страны. После того, как переделаем список с сервера в MAP
     fun asMediaSource(dataSourceFactory: DefaultDataSource.Factory): ConcatenatingMediaSource {
         val concatenatingMediaSource = ConcatenatingMediaSource() // empty by default
         radioStations.forEach { radioStation ->

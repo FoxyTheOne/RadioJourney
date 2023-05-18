@@ -8,7 +8,6 @@ import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.myproject.radiojourney.utils.exoplayer.FirebaseMusicSource
 import com.myproject.radiojourney.utils.exoplayer.callback.State.*
-import com.myproject.radiojourney.utils.extension.removeLastNchars
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.io.IOException
@@ -19,9 +18,9 @@ class MusicPlaybackPreparer(
     private val playerPrepared: (MediaMetadataCompat?) -> Unit // lambda, that can be called when our player is prepared
 ) : MediaSessionConnector.PlaybackPreparer {
 
-    companion object {
-        private const val TAG = "MusicPlaybackPreparer"
-    }
+//    companion object {
+//        private const val TAG = "MusicPlaybackPreparer"
+//    }
 
     private var lastCountryCode: String? = null
 
@@ -80,8 +79,8 @@ class MusicPlaybackPreparer(
                 serviceScope.launch {
                     state = STATE_INITIALIZING
 
-                    var countryCode =
-                        extras?.get("nRecNo") // Достаём country code и далее сравниваем его. Если коды разные, скачиваем новый плейлист
+                    val countryCode =
+                        extras?.getString("nRecNo") // Достаём country code и далее сравниваем его. Если коды разные, скачиваем новый плейлист
 
                     if (countryCode == "FAV") {
 
@@ -164,8 +163,8 @@ class MusicPlaybackPreparer(
         firebaseMusicSource.whenReady {
             // looking for a song with media id
 
-            val test = mediaId
-            val testRadioStations = firebaseMusicSource.radioStations
+//            val test = mediaId
+//            val testRadioStations = firebaseMusicSource.radioStations
 
             var itemToPlay =
                 firebaseMusicSource.radioStations.find { mediaId == it.description.mediaId }
@@ -177,7 +176,7 @@ class MusicPlaybackPreparer(
 //                // Думаю, его нужно скачивать по клику на recycler view при переходе на фрагмент (вызывать метод из mainViewModel)
 //                // TODO А здесь останавливаться до when ready (подсмотреть, как мы это делали). Когда плейлист скачался, ещё раз ищем itemToPlay
 //
-//                // TODO для начала попробовать просто вызывать fetch из вью модели по клику на элемент. Там (т.е. уже здесь, в onCommand) задать логику, если countru code совпадает, всё ок. Если нет - скачиваем
+//                // TODO для начала попробовать просто вызывать fetch из вью модели по клику на элемент. Там (т.е. уже здесь, в onCommand) задать логику, если country code совпадает, всё ок. Если нет - скачиваем
 //
 //                firebaseMusicSource.whenReady { isInitialized ->
 //                    if (isInitialized) {

@@ -6,7 +6,6 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.location.Address
 import android.location.Geocoder
 import android.os.Build
 import android.os.IBinder
@@ -26,7 +25,7 @@ import javax.inject.Inject
 
 /**
  * Создадим Foreground Service
- * FOREGROUND_SERVICE -> 1. Для начала, задекларируем Foreground Service в Manifest. А так же добавим туда разрешение для Foreground Service
+ * FOREGROUND_SERVICE -> 1. Для начала, декларируем Foreground Service в Manifest. А так же добавим туда разрешение для Foreground Service
  */
 @AndroidEntryPoint
 class ProgressForegroundService @Inject constructor() : Service() {
@@ -141,7 +140,7 @@ class ProgressForegroundService @Inject constructor() : Service() {
                     val countryLocalList = mutableListOf<CountryLocal>()
 
                     val geocoder = Geocoder(context)
-                    var addresses: MutableList<Address>
+//                    var addresses: MutableList<Address>
                     var latitude = 0.0
                     var longitude = 0.0
 
@@ -158,12 +157,23 @@ class ProgressForegroundService @Inject constructor() : Service() {
                         // В этом месте часто исключение, как будто проблема с интернетом
                         Log.d(TAG, "Starting geocoder")
 
-                        addresses = geocoder.getFromLocationName(countryName, 1)
-                        if (addresses.size > 0) {
-                            latitude = addresses[0].latitude
-                            longitude = addresses[0].longitude
+                        // Deprecated. Using lambda Geocoder.getAddress instead, it is written below this method
+//                        addresses =
+//                            geocoder.getFromLocationName(countryName, 1) as MutableList<Address>
+//                        if (addresses.size > 0) {
+//                            latitude = addresses[0].latitude
+//                            longitude = addresses[0].longitude
+//                        }
+
+                        // Using our private fun, written below this method
+                        geocoder.getAddress(countryName) { address: android.location.Address? ->
+                            if (address != null) {
+                                latitude = address.latitude
+                                longitude = address.longitude
+                            }
                         }
-//                    Log.d(TAG, "результат addresses: $latitude, $longitude")
+
+                        // Log.d(TAG, "результат addresses: $latitude, $longitude")
 
                         // remote -> local
                         val countryLocal = CountryLocal.fromRemoteToLocal(
@@ -207,7 +217,7 @@ class ProgressForegroundService @Inject constructor() : Service() {
                 } else {
                     Log.d(
                         TAG,
-                        "countryCodeRemoteList size = $listSize. The server is down. Please, try again later"
+                        "countryCodeRemoteList size = 0. The server is down. Please, try again later"
                     )
                     // TODO notification "The server is down. Please, try again later"
                 }
@@ -216,7 +226,17 @@ class ProgressForegroundService @Inject constructor() : Service() {
                 intent.putExtra(KEY_BROADCAST_END, 100)
                 sendBroadcast(intent)
 
-                stopForeground(true)
+                // stopForeground(true) - deprecated
+                // STOP_FOREGROUND_DETACH if set, the notification previously supplied to startForeground(int, Notification) will be detached from the service's lifecycle.
+                // The notification will remain shown even after the service is stopped and destroyed.
+                // STOP_FOREGROUND_REMOVE if supplied, the notification previously supplied to startForeground(int, Notification) will be cancelled and removed from display.
+                @Suppress("DEPRECATION")
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                } else {
+                    stopForeground(true)
+                }
+
                 notificationManager.cancel(5)
                 stopSelf()
 
@@ -232,11 +252,43 @@ class ProgressForegroundService @Inject constructor() : Service() {
 //                    dialogInternetTrouble.show()
 //                }
 
-                stopForeground(true)
+                // stopForeground(true) - deprecated
+                // STOP_FOREGROUND_DETACH if set, the notification previously supplied to startForeground(int, Notification) will be detached from the service's lifecycle.
+                // The notification will remain shown even after the service is stopped and destroyed.
+                // STOP_FOREGROUND_REMOVE if supplied, the notification previously supplied to startForeground(int, Notification) will be cancelled and removed from display.
+                @Suppress("DEPRECATION")
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                } else {
+                    stopForeground(true)
+                }
+
                 notificationManager.cancel(5)
                 stopSelf()
             }
         }
+    }
+
+    // Lambda for getting address from countryName
+    @Suppress("DEPRECATION")
+    private fun Geocoder.getAddress(
+        countryName: String,
+        address: (android.location.Address?) -> Unit
+    ) {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            getFromLocationName(countryName, 1) { address(it.firstOrNull()) }
+            return
+        }
+
+        // Для старых версий Android:
+        try {
+            address(getFromLocationName(countryName, 1)?.firstOrNull())
+        } catch (e: Exception) {
+            //will catch if there is an internet problem
+            address(null)
+        }
+
     }
 
     // FOREGROUND_SERVICE -> 6. Запустим наш Foreground Service из NotificationFragment

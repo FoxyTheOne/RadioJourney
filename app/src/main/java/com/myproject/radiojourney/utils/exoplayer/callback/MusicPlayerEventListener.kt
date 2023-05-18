@@ -1,5 +1,7 @@
 package com.myproject.radiojourney.utils.exoplayer.callback
 
+import android.app.Service
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
 import com.google.android.exoplayer2.PlaybackException
@@ -15,7 +17,7 @@ class MusicPlayerEventListener(
         private const val TAG = "MusicPlayerEventLis-r"
     }
 
-    var playWhenReadySaved = true
+    private var playWhenReadySaved = true
 
     // default void onPlayerStateChanged(boolean playWhenReady, @State int playbackState) {} is DEPRECATED.
     // Use onPlaybackStateChanged(int) and onPlayWhenReadyChanged(boolean, int) instead:
@@ -42,8 +44,20 @@ class MusicPlayerEventListener(
 
         // if everything is ready and prepared AND we shouldn't play it automatically
         if (playbackState == Player.STATE_READY && !playWhenReadySaved) {
-            musicService.stopForeground(false) // than we stop foreground but notification must stay
+
+            // stopForeground(false) - deprecated
+            // STOP_FOREGROUND_DETACH if set, the notification previously supplied to startForeground(int, Notification) will be detached from the service's lifecycle.
+            // The notification will remain shown even after the service is stopped and destroyed.
+            // STOP_FOREGROUND_REMOVE if supplied, the notification previously supplied to startForeground(int, Notification) will be cancelled and removed from display.
+            @Suppress("DEPRECATION")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                musicService.stopForeground(Service.STOP_FOREGROUND_DETACH) // than we stop foreground but notification must stay
+            } else {
+                musicService.stopForeground(false) // than we stop foreground but notification must stay
+            }
+
         }
+
     }
 
     // TODO onPlayerError - обработать
