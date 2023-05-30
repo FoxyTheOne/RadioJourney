@@ -18,9 +18,9 @@ class RecommendedListAdapter(
     private val onStarClicked: (RadioStationPresentation) -> Unit
 ) :
     RecyclerView.Adapter<RecommendedListAdapter.RecommendedListViewHolder>() {
-    companion object {
-        private const val TAG = "RecommendedListAdapter"
-    }
+//    companion object {
+//        private const val TAG = "RecommendedListAdapter"
+//    }
 
     // Создаём элемент списка. Initialize itemView for each item
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecommendedListViewHolder {
@@ -30,7 +30,7 @@ class RecommendedListAdapter(
     }
 
     // Сюда залетает элемент списка, к-рый был создан в onCreateViewHolder() и здесь мы его наполняем
-    // Однако, лучше просто вызвать метод из вложенного класа, где и осуществить непосредственно наполнение, описание clickListener и проч.
+    // Однако, лучше просто вызвать метод из вложенного класса, где и осуществить непосредственно наполнение, описание clickListener и проч.
     override fun onBindViewHolder(holder: RecommendedListViewHolder, position: Int) {
         holder.setRecommendedRadioStation(recommendedStationList[position])
     }
@@ -39,7 +39,7 @@ class RecommendedListAdapter(
     override fun getItemCount(): Int = recommendedStationList.size
 
     inner class RecommendedListViewHolder(
-        private val itemView: View,
+        itemView: View,
         private val onItemClicked: (RadioStationPresentation) -> Unit,
         private val onStarClicked: (RadioStationPresentation) -> Unit
     ) :

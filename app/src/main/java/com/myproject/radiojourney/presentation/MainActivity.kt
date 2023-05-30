@@ -3,7 +3,6 @@ package com.myproject.radiojourney.presentation
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.support.v4.media.MediaMetadataCompat.*
 import android.support.v4.media.session.PlaybackStateCompat
 import android.view.View
 import android.widget.Toast
@@ -26,7 +25,6 @@ import com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioFragme
 import com.myproject.radiojourney.utils.extension.isPlaying
 import com.myproject.radiojourney.utils.service.ProgressForegroundService
 import dagger.hilt.android.AndroidEntryPoint
-import java.util.*
 
 /**
  * This source code is free for studying purposes but you are not allowed to copy and use it in other applications (projects).
@@ -442,17 +440,18 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         binding?.ivPlayPause?.isVisible = true
     }
 
-    override fun onBackPressed() {
-        super.onBackPressed()
-    }
+//    override fun onBackPressed() {
+//        super.onBackPressed()
+//    }
 
     override fun onDestroy() {
-        super.onDestroy()
-        binding = null // VIEW BINDING -> 3. onDestroyView()
-
         mOnPageChangeCallback?.let {
             binding?.vpSong?.unregisterOnPageChangeCallback(it)
         }
+
+        binding = null // VIEW BINDING -> 3. onDestroyView()
+
+        super.onDestroy()
     }
 
     override fun setToolbar(toolbar: Toolbar?) {

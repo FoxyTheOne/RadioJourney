@@ -5,5 +5,5 @@ import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 
 interface IMainRadioUseCase {
     suspend fun mediaItemChildrenToRadioStationPresentation(children: MutableList<MediaBrowserCompat.MediaItem>): List<RadioStationPresentation>
-    suspend fun saveLastUsedRadioStationUrlAndCode(url: String, countryCode: String)
+    suspend fun saveLastUsedRadioStationUrlAndCode(urlResolved: String, countryCode: String)
 }

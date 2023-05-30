@@ -27,9 +27,9 @@ class RadioListViewModel @Inject constructor(
     private val radioListInteractor: IRadioListUseCase
 ) : ViewModel() {
 
-    companion object {
-        private const val TAG = "RadioListViewModel"
-    }
+//    companion object {
+//        private const val TAG = "RadioListViewModel"
+//    }
 
     // Получение списка радиостанций
     private val _radioStationListLiveData = MutableLiveData<List<RadioStationPresentation>>()

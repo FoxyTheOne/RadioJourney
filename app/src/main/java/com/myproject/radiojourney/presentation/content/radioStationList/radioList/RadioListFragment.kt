@@ -90,16 +90,16 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
 
     private fun subscribeOnLiveData() {
         // Показываем или прячем Progress
-        viewModel.showProgressLiveData.observe(viewLifecycleOwner, {
+        viewModel.showProgressLiveData.observe(viewLifecycleOwner) {
             showProgress()
-        })
-        viewModel.hideProgressLiveData.observe(viewLifecycleOwner, {
+        }
+        viewModel.hideProgressLiveData.observe(viewLifecycleOwner) {
             hideProgress()
-        })
-        viewModel.dialogInternetTroubleLiveData.observe(viewLifecycleOwner, {
+        }
+        viewModel.dialogInternetTroubleLiveData.observe(viewLifecycleOwner) {
             dialogInternetTrouble.show()
-        })
-        viewModel.errorMessageLiveData.observe(this) {
+        }
+        viewModel.errorMessageLiveData.observe(viewLifecycleOwner) {
             it?.getContentIfNotHandled()?.let { result ->
                 when (result.status) {
                     // If everything is ok, we don't want to show anything. Only if smth went wrong
@@ -111,17 +111,16 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
                                 Snackbar.LENGTH_LONG
                             ).show()
                         }
+
                     else -> Unit
                 }
             }
         }
-        viewModel.radioStationListLiveData.observe(
-            viewLifecycleOwner,
-            { radioStationPresentationList ->
-                radioStationList = radioStationPresentationList
-                showProgress()
+        viewModel.radioStationListLiveData.observe(viewLifecycleOwner) { radioStationPresentationList ->
+            radioStationList = radioStationPresentationList
+            showProgress()
 
-                // 1.5. ОБРАБОТКА КЛИКА -> Получаем результат клика во фрагменте (описываем нашу анонимную функцию из RecyclerView)
+            // 1.5. ОБРАБОТКА КЛИКА -> Получаем результат клика во фрагменте (описываем нашу анонимную функцию из RecyclerView)
 //                recyclerViewRadioStationList.adapter =
 //                    RadioListAdapter(radioStationList) { radioStationPresentationOnClick ->
 //                        Log.d(TAG, "Выбранный элемент списка: $radioStationPresentationOnClick")
@@ -133,34 +132,34 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
 //                        this.findNavController().navigate(direction)
 //                    }
 
-                // Инициализируем адаптер
-                val listRadioStationAdapter = ListRadioStationAdapter()
-                // Перезаписываем список радиостанций для адаптера
-                listRadioStationAdapter.radioStationList = radioStationPresentationList
-                // Определяем адаптер для recycler view
-                recyclerViewRadioStationList.adapter =
-                    listRadioStationAdapter
-                // Устанавливаем Click Listener
-                listRadioStationAdapter.setItemClickListener { radioStationPresentationOnClick ->
-                    Log.d(TAG, "Выбранный элемент списка: $radioStationPresentationOnClick")
+            // Инициализируем адаптер
+            val listRadioStationAdapter = ListRadioStationAdapter()
+            // Перезаписываем список радиостанций для адаптера
+            listRadioStationAdapter.radioStationList = radioStationPresentationList
+            // Определяем адаптер для recycler view
+            recyclerViewRadioStationList.adapter =
+                listRadioStationAdapter
+            // Устанавливаем Click Listener
+            listRadioStationAdapter.setItemClickListener { radioStationPresentationOnClick ->
+                Log.d(TAG, "Выбранный элемент списка: $radioStationPresentationOnClick")
 
-                    // Открываем по клику другой фрагмент, передаём туда нашу радиостанцию
-                    val direction =
-                        RadioListFragmentDirections.actionRadioListFragmentToHomeRadioFragment(
-                            radioStationPresentationOnClick
-                        )
-                    if (this.findNavController().currentDestination?.id == R.id.radioListFragment) {
-                        this.findNavController().navigate(direction)
-                    }
+                // Открываем по клику другой фрагмент, передаём туда нашу радиостанцию
+                val direction =
+                    RadioListFragmentDirections.actionRadioListFragmentToHomeRadioFragment(
+                        radioStationPresentationOnClick
+                    )
+                if (this.findNavController().currentDestination?.id == R.id.radioListFragment) {
+                    this.findNavController().navigate(direction)
                 }
+            }
 
-                Log.d(
-                    TAG,
-                    "Успешный запрос в локальную БД (радиостанции). Получен результат: массив size = ${radioStationPresentationList.size}, элемент[0] = ${radioStationPresentationList[0].countryCode}, ${radioStationPresentationList[0].urlResolved}"
-                )
+            Log.d(
+                TAG,
+                "Успешный запрос в локальную БД (радиостанции). Получен результат: массив size = ${radioStationPresentationList.size}, элемент[0] = ${radioStationPresentationList[0].countryCode}, ${radioStationPresentationList[0].urlResolved}"
+            )
 
-                hideProgress()
-            })
+            hideProgress()
+        }
     }
 
     private fun showProgress() {

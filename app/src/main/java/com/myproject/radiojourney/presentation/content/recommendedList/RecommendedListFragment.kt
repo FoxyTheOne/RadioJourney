@@ -4,8 +4,11 @@ import android.app.Dialog
 import android.os.Bundle
 import android.util.Log
 import android.view.*
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
@@ -45,7 +48,7 @@ class RecommendedListFragment : BaseContentFragmentAbstract() {
         // VIEW BINDING -> 2. Инициализация
         binding = LayoutRadioStationListRecommendedBinding.inflate(inflater, container, false)
         // TOOLBAR
-        setHasOptionsMenu(true)
+//        setHasOptionsMenu(true) // setHasOptionsMenu deprecated
         // TOOLBAR - где будет находиться в нашем layout
         binding?.let {
             appSettings.setToolbar(it.homeToolbar)
@@ -55,6 +58,38 @@ class RecommendedListFragment : BaseContentFragmentAbstract() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // TOOLBAR in TIRAMISU
+        // The usage of an interface lets you inject your own implementation
+        val menuHost: MenuHost = requireActivity()
+
+        // Add menu items without using the Fragment Menu APIs
+        // Note how we can tie the MenuProvider to the viewLifecycleOwner
+        // and an optional Lifecycle.State (here, RESUMED) to indicate when
+        // the menu should be visible
+        menuHost.addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                // Add menu items here
+                menuInflater.inflate(R.menu.home_toolbar_menu, menu)
+            }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                // Handle the menu selection
+                return when (menuItem.itemId) {
+                    R.id.log_out -> {
+                        showLogoutDialog()
+                        Log.d(TAG, "showLogoutDialog() was called")
+                        true
+                    }
+
+                    else -> {
+                        // If we got here, the user's action was not recognized.
+                        Log.d(TAG, "else result")
+                        false
+                    }
+                }
+            }
+        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
 
         // Получаем список рекомендуемого для отображения
         viewModel.getRadioStationRecommendedListAndShow()
@@ -69,16 +104,16 @@ class RecommendedListFragment : BaseContentFragmentAbstract() {
 
     private fun subscribeOnLiveData() {
         // Показываем или прячем Progress
-        viewModel.showProgressLiveData.observe(viewLifecycleOwner, {
+        viewModel.showProgressLiveData.observe(viewLifecycleOwner) {
             showProgress()
-        })
-        viewModel.hideProgressLiveData.observe(viewLifecycleOwner, {
+        }
+        viewModel.hideProgressLiveData.observe(viewLifecycleOwner) {
             hideProgress()
-        })
-        viewModel.dialogInternetTroubleLiveData.observe(viewLifecycleOwner, {
+        }
+        viewModel.dialogInternetTroubleLiveData.observe(viewLifecycleOwner) {
             dialogInternetTrouble.show()
-        })
-        viewModel.errorMessageLiveData.observe(this) {
+        }
+        viewModel.errorMessageLiveData.observe(viewLifecycleOwner) {
             it?.getContentIfNotHandled()?.let { result ->
                 when (result.status) {
                     // If everything is ok, we don't want to show anything. Only if smth went wrong
@@ -90,68 +125,67 @@ class RecommendedListFragment : BaseContentFragmentAbstract() {
                                 Snackbar.LENGTH_LONG
                             ).show()
                         }
+
                     else -> Unit
                 }
             }
         }
-        viewModel.radioStationRecommendedListLiveData.observe(
-            viewLifecycleOwner,
-            { radioStationPresentationList ->
-                showProgress()
+        viewModel.radioStationRecommendedListLiveData.observe(viewLifecycleOwner) { radioStationPresentationList ->
+            showProgress()
 
-                // 1.5. ОБРАБОТКА КЛИКА -> Получаем результат клика во фрагменте (описываем нашу анонимную функцию из RecyclerView)
-                // Инициализация адаптера
-                if (radioStationPresentationList != null && radioStationPresentationList.isNotEmpty()) {
+            // 1.5. ОБРАБОТКА КЛИКА -> Получаем результат клика во фрагменте (описываем нашу анонимную функцию из RecyclerView)
+            // Инициализация адаптера
+            if (radioStationPresentationList != null && radioStationPresentationList.isNotEmpty()) {
 
-                    recommendedListAdapter = RecommendedListAdapter(
-                        radioStationPresentationList,
-                        { radioStationPresentationOnClick ->
-                            Log.d(TAG, "Выбранный элемент списка: $radioStationPresentationOnClick")
-                            // Открываем по клику другой фрагмент, передаём туда нашу радиостанцию
-                            val direction =
-                                RecommendedListFragmentDirections.actionRecommendedListFragmentToHomeRadioFragment(
-                                    radioStationPresentationOnClick
-                                )
-                            this.findNavController().navigate(direction)
-                        },
-                        { radioStationOnStarClick ->
-                            Log.d(
-                                TAG,
-                                "Выбранный элемент списка: $radioStationOnStarClick"
+                recommendedListAdapter = RecommendedListAdapter(
+                    radioStationPresentationList,
+                    { radioStationPresentationOnClick ->
+                        Log.d(TAG, "Выбранный элемент списка: $radioStationPresentationOnClick")
+                        // Открываем по клику другой фрагмент, передаём туда нашу радиостанцию
+                        val direction =
+                            RecommendedListFragmentDirections.actionRecommendedListFragmentToHomeRadioFragment(
+                                radioStationPresentationOnClick
                             )
-                            // По клику нужно добавить либо удалить из избранного, предварительно проверив наличие радиостанции в базе
-                            viewModel.checkIsStationInFavouritesAndChangeTheStar(
-                                radioStationOnStarClick
-                            )
-                        })
-                    binding?.recyclerViewRecommendedRadioStationList?.adapter =
-                        recommendedListAdapter
+                        this.findNavController().navigate(direction)
+                    },
+                    { radioStationOnStarClick ->
+                        Log.d(
+                            TAG,
+                            "Выбранный элемент списка: $radioStationOnStarClick"
+                        )
+                        // По клику нужно добавить либо удалить из избранного, предварительно проверив наличие радиостанции в базе
+                        viewModel.checkIsStationInFavouritesAndChangeTheStar(
+                            radioStationOnStarClick
+                        )
+                    })
+                binding?.recyclerViewRecommendedRadioStationList?.adapter =
+                    recommendedListAdapter
 
-                    val animator: DefaultItemAnimator = object : DefaultItemAnimator() {
-                        override fun canReuseUpdatedViewHolder(viewHolder: RecyclerView.ViewHolder): Boolean {
-                            return true
-                        }
+                val animator: DefaultItemAnimator = object : DefaultItemAnimator() {
+                    override fun canReuseUpdatedViewHolder(viewHolder: RecyclerView.ViewHolder): Boolean {
+                        return true
                     }
-                    binding?.recyclerViewRecommendedRadioStationList?.itemAnimator = animator
-
-                } else {
-                    hideProgress()
-                    return@observe
                 }
+                binding?.recyclerViewRecommendedRadioStationList?.itemAnimator = animator
 
-                Log.d(
-                    TAG,
-                    "Успешный запрос в локальную БД (радиостанции). Получен результат: массив size = ${radioStationPresentationList.size}, элемент[0] = ${radioStationPresentationList[0].countryCode}, ${radioStationPresentationList[0].urlResolved}"
-                )
-
+            } else {
                 hideProgress()
-            })
-        viewModel.stationSavedInFavouritesLiveData.observe(viewLifecycleOwner, {
+                return@observe
+            }
+
+            Log.d(
+                TAG,
+                "Успешный запрос в локальную БД (радиостанции). Получен результат: массив size = ${radioStationPresentationList.size}, элемент[0] = ${radioStationPresentationList[0].countryCode}, ${radioStationPresentationList[0].urlResolved}"
+            )
+
+            hideProgress()
+        }
+        viewModel.stationSavedInFavouritesLiveData.observe(viewLifecycleOwner) {
             binding?.recyclerViewRecommendedRadioStationList?.adapter?.notifyDataSetChanged()
-        })
-        viewModel.stationDeletedFromFavouritesLiveData.observe(viewLifecycleOwner, {
+        }
+        viewModel.stationDeletedFromFavouritesLiveData.observe(viewLifecycleOwner) {
             binding?.recyclerViewRecommendedRadioStationList?.adapter?.notifyDataSetChanged()
-        })
+        }
     }
 
     private fun showProgress() {
@@ -164,26 +198,26 @@ class RecommendedListFragment : BaseContentFragmentAbstract() {
         binding?.progressCircular?.isVisible = false
     }
 
-    // TOOLBAR
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        super.onCreateOptionsMenu(menu, inflater)
-        inflater.inflate(R.menu.home_toolbar_menu, menu)
-    }
-
-    // TOOLBAR - обработка клика
-    override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
-        R.id.log_out -> {
-            showLogoutDialog()
-            Log.d(TAG, "showLogoutDialog() was called")
-            true
-        }
-        else -> {
-            // If we got here, the user's action was not recognized.
-            // Invoke the superclass to handle it.
-            Log.d(TAG, "else result")
-            super.onOptionsItemSelected(item)
-        }
-    }
+//    // TOOLBAR
+//    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+//        super.onCreateOptionsMenu(menu, inflater)
+//        inflater.inflate(R.menu.home_toolbar_menu, menu)
+//    }
+//
+//    // TOOLBAR - обработка клика
+//    override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
+//        R.id.log_out -> {
+//            showLogoutDialog()
+//            Log.d(TAG, "showLogoutDialog() was called")
+//            true
+//        }
+//        else -> {
+//            // If we got here, the user's action was not recognized.
+//            // Invoke the superclass to handle it.
+//            Log.d(TAG, "else result")
+//            super.onOptionsItemSelected(item)
+//        }
+//    }
 
     // TOOLBAR - Описываем метод из интерфейса ILogOutListener для выхода из аккаунта приложения
     override fun onLogOut() {

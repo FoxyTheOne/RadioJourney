@@ -37,6 +37,8 @@ import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.lifecycle.Lifecycle
 import com.myproject.radiojourney.databinding.LayoutHomeRadioBinding
 import com.myproject.radiojourney.utils.oldMusicPlayer.*
@@ -106,7 +108,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         // VIEW BINDING -> 2. Инициализация
         binding = LayoutHomeRadioBinding.inflate(inflater, container, false)
         // TOOLBAR
-        setHasOptionsMenu(true) // TODO setHasOptionsMenu deprecated
+//        setHasOptionsMenu(true) // setHasOptionsMenu deprecated
         // TOOLBAR - где будет находиться в нашем layout
         binding?.let {
             appSettings.setToolbar(it.homeToolbar)
@@ -116,6 +118,37 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // TOOLBAR in TIRAMISU
+        // The usage of an interface lets you inject your own implementation
+        val menuHost: MenuHost = requireActivity()
+
+        // Add menu items without using the Fragment Menu APIs
+        // Note how we can tie the MenuProvider to the viewLifecycleOwner
+        // and an optional Lifecycle.State (here, RESUMED) to indicate when
+        // the menu should be visible
+        menuHost.addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                // Add menu items here
+                menuInflater.inflate(R.menu.home_toolbar_menu, menu)
+            }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                // Handle the menu selection
+                return when (menuItem.itemId) {
+                    R.id.log_out -> {
+                        showLogoutDialog()
+                        Log.d(TAG, "showLogoutDialog() was called")
+                        true
+                    }
+                    else -> {
+                        // If we got here, the user's action was not recognized.
+                        Log.d(TAG, "else result")
+                        false
+                    }
+                }
+            }
+        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
 
         // Если каким-то образом мы попали на этот фрагмент минуя первый, загрузочный фрагмент - стоит ещё раз проверить разрешения
         // Если разрешения нет - или запросить их, или перекинуть на загрузочный фрагмент и там запросить
@@ -770,27 +803,27 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         }
     }
 
-    // TOOLBAR
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        super.onCreateOptionsMenu(menu, inflater)
-        inflater.inflate(R.menu.home_toolbar_menu, menu)
-    }
-
-    // TOOLBAR - обработка клика
-    override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
-        R.id.log_out -> {
-            showLogoutDialog()
-            Log.d(TAG, "showLogoutDialog() was called")
-            true
-        }
-
-        else -> {
-            // If we got here, the user's action was not recognized.
-            // Invoke the superclass to handle it.
-            Log.d(TAG, "else result")
-            super.onOptionsItemSelected(item)
-        }
-    }
+//    // TOOLBAR
+//    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+//        super.onCreateOptionsMenu(menu, inflater)
+//        inflater.inflate(R.menu.home_toolbar_menu, menu)
+//    }
+//
+//    // TOOLBAR - обработка клика
+//    override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
+//        R.id.log_out -> {
+//            showLogoutDialog()
+//            Log.d(TAG, "showLogoutDialog() was called")
+//            true
+//        }
+//
+//        else -> {
+//            // If we got here, the user's action was not recognized.
+//            // Invoke the superclass to handle it.
+//            Log.d(TAG, "else result")
+//            super.onOptionsItemSelected(item)
+//        }
+//    }
 
     // TOOLBAR - Описываем метод из интерфейса ILogOutListener для выхода из аккаунта приложения
     override fun onLogOut() {

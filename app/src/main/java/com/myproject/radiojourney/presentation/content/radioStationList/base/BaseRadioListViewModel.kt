@@ -20,9 +20,9 @@ import javax.inject.Inject
 class BaseRadioListViewModel @Inject constructor(
     private val logOutInteractor: ILogOutUseCase
 ) : ViewModel() {
-    companion object {
-        private const val TAG = "BaseRadioListViewModel"
-    }
+//    companion object {
+//        private const val TAG = "BaseRadioListViewModel"
+//    }
 
     // LiveData, которые будут отвечать за отображение прогресса (кружок)
     private val _showProgressLiveData = MutableLiveData<Boolean>()

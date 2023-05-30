@@ -3,7 +3,7 @@ package com.myproject.radiojourney.entities.local
 import com.google.android.gms.maps.model.LatLng
 
 /**
- * Для теста
+ * For testing
  */
 data class Place(
     val name: String,

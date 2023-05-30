@@ -20,11 +20,13 @@ import android.content.Intent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.IntentFilter
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.entities.presentation.CountryPresentation
 import com.myproject.radiojourney.other.Status
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
 /**
  * Фрагмент для загрузки и входа в приложение.
@@ -33,7 +35,7 @@ import kotlinx.coroutines.flow.collect
 @AndroidEntryPoint
 class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
     companion object {
-        private const val TAG = "FirstScreenFragment"
+        //        private const val TAG = "FirstScreenFragment"
         private const val FILTER_FOR_BROADCAST = "FILTER_FOR_BROADCAST"
         private const val KEY_BROADCAST_LIST_SIZE = "KEY_BROADCAST_LIST_SIZE"
         private const val KEY_BROADCAST_COUNT = "KEY_BROADCAST_COUNT"
@@ -85,7 +87,7 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
             }
 
         // Переход на контент в случае успешной аутентификации
-        viewModel.signInLiveData.observe(viewLifecycleOwner, {
+        viewModel.signInLiveData.observe(viewLifecycleOwner) {
             // Если одно из разрешений уже есть, открываем LocationFragment
             if (ContextCompat.checkSelfPermission(
                     requireContext(),
@@ -108,7 +110,7 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
                     )
                 )
             }
-        })
+        }
 
         // Настройки диалогового окна
         dialogInternetTrouble = Dialog(requireContext())
@@ -143,16 +145,16 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
 
     private fun subscribeOnLiveData() {
         // Показываем или прячем Progress
-        viewModel.showProgressLiveData.observe(viewLifecycleOwner, {
+        viewModel.showProgressLiveData.observe(viewLifecycleOwner) {
             showProgress()
-        })
-        viewModel.hideProgressLiveData.observe(viewLifecycleOwner, {
+        }
+        viewModel.hideProgressLiveData.observe(viewLifecycleOwner) {
             hideProgress()
-        })
-        viewModel.dialogInternetTroubleLiveData.observe(viewLifecycleOwner, {
+        }
+        viewModel.dialogInternetTroubleLiveData.observe(viewLifecycleOwner) {
             dialogInternetTrouble.show()
-        })
-        viewModel.errorMessageLiveData.observe(this) {
+        }
+        viewModel.errorMessageLiveData.observe(viewLifecycleOwner) {
             it?.getContentIfNotHandled()?.let { result ->
                 when (result.status) {
                     // If everything is ok, we don't want to show anything. Only if smth went wrong
@@ -164,6 +166,7 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
                                 Snackbar.LENGTH_LONG
                             ).show()
                         }
+
                     else -> Unit
                 }
             }
@@ -171,14 +174,32 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
     }
 
     private fun subscribeOnFlow() {
-        lifecycleScope.launchWhenCreated {
-            viewModel.countryListFlow.collect {
-                if (it != listOf<CountryPresentation>()) {
-                    binding?.buttonLogIn?.isVisible = true
-                    binding?.progressBarHorizontal?.isVisible = false
+
+        // Function launchWhenCreated is deprecated as it can lead to wasted resources in some cases.
+        // Replace with suspending repeatOnLifecycle to run the block whenever the Lifecycle state is at least Lifecycle.State.CREATED.
+
+//        lifecycleScope.launchWhenCreated {
+//            viewModel.countryListFlow.collect {
+//                if (it != listOf<CountryPresentation>()) {
+//                    binding?.buttonLogIn?.isVisible = true
+//                    binding?.progressBarHorizontal?.isVisible = false
+//                }
+//            }
+//        }
+
+        lifecycleScope.launch {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.CREATED) {
+
+                viewModel.countryListFlow.collect {
+                    if (it != listOf<CountryPresentation>()) {
+                        binding?.buttonLogIn?.isVisible = true
+                        binding?.progressBarHorizontal?.isVisible = false
+                    }
                 }
+
             }
         }
+
     }
 
     private fun showProgress() {

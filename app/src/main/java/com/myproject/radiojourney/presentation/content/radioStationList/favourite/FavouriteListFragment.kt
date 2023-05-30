@@ -34,7 +34,7 @@ class FavouriteListFragment : BaseRadioListFragmentAbstract() {
     private val viewModel by viewModels<FavouriteListViewModel>()
 
     // 1.1. ViewModel. We bind our viewModel to the cycle of our activity, not fragment. So, we need to do this way:
-    lateinit var mainViewModel: MainViewModel
+    private lateinit var mainViewModel: MainViewModel
 
     private lateinit var dialogInternetTrouble: Dialog
     private lateinit var favouriteListAdapter: FavoriteListAdapter
@@ -80,28 +80,30 @@ class FavouriteListFragment : BaseRadioListFragmentAbstract() {
     private fun initListeners() {
         imageArrowBack.setOnClickListener {
             if (this.findNavController().currentDestination?.id == R.id.favouriteListFragment) {
-                this.findNavController().navigate(R.id.action_favouriteListFragment_to_homeRadioFragment)
+                this.findNavController()
+                    .navigate(R.id.action_favouriteListFragment_to_homeRadioFragment)
             }
         }
         textFavouritesEmpty.setOnClickListener {
             if (this.findNavController().currentDestination?.id == R.id.favouriteListFragment) {
-                this.findNavController().navigate(R.id.action_favouriteListFragment_to_homeRadioFragment)
+                this.findNavController()
+                    .navigate(R.id.action_favouriteListFragment_to_homeRadioFragment)
             }
         }
     }
 
     private fun subscribeOnLiveData() {
         // Показываем или прячем Progress
-        viewModel.showProgressLiveData.observe(viewLifecycleOwner, {
+        viewModel.showProgressLiveData.observe(viewLifecycleOwner) {
             showProgress()
-        })
-        viewModel.hideProgressLiveData.observe(viewLifecycleOwner, {
+        }
+        viewModel.hideProgressLiveData.observe(viewLifecycleOwner) {
             hideProgress()
-        })
-        viewModel.dialogInternetTroubleLiveData.observe(viewLifecycleOwner, {
+        }
+        viewModel.dialogInternetTroubleLiveData.observe(viewLifecycleOwner) {
             dialogInternetTrouble.show()
-        })
-        viewModel.errorMessageLiveData.observe(this) {
+        }
+        viewModel.errorMessageLiveData.observe(viewLifecycleOwner) {
             it?.getContentIfNotHandled()?.let { result ->
                 when (result.status) {
                     // If everything is ok, we don't want to show anything. Only if smth went wrong
@@ -113,104 +115,104 @@ class FavouriteListFragment : BaseRadioListFragmentAbstract() {
                                 Snackbar.LENGTH_LONG
                             ).show()
                         }
+
                     else -> Unit
                 }
             }
         }
-        viewModel.radioStationFavouriteListLiveData.observe(
-            viewLifecycleOwner,
-            { radioStationFavouritePresentationList ->
-                showProgress()
+        viewModel.radioStationFavouriteListLiveData.observe(viewLifecycleOwner) { radioStationFavouritePresentationList ->
+            showProgress()
 
-                // 1.5. ОБРАБОТКА КЛИКА -> Получаем результат клика во фрагменте (описываем нашу анонимную функцию из RecyclerView)
-                // Инициализация адаптера
-                val favouriteStationList = viewModel.radioStationFavouriteListLiveData.value
+            // 1.5. ОБРАБОТКА КЛИКА -> Получаем результат клика во фрагменте (описываем нашу анонимную функцию из RecyclerView)
+            // Инициализация адаптера
+            val favouriteStationList = viewModel.radioStationFavouriteListLiveData.value
 
-                if (favouriteStationList != null && favouriteStationList.isNotEmpty()) {
+            if (!favouriteStationList.isNullOrEmpty()) {
 
-//                    // Если не пустой список избранного, тогда попробовать вызвать метод для загрузки плейлиста. Вызы вать из YjmeFragment при открытии этого фрагмента оказалось не очень хорошей идеей
+//                    // Если не пустой список избранного, тогда попробовать вызвать метод для загрузки плейлиста. Вызывать из HomeFragment при открытии этого фрагмента оказалось не очень хорошей идеей
 //                    // TODO !!!!!!!!!!! When you choose a new country playlist, begins to play the first radio station, no matter what you chose. Here I call the method myself, so that the first radio station is called automatically, but it is not very convenient and not always helps
 //                    mainViewModel.fetchSongs("FAV")
 
-                    favouriteListAdapter = FavoriteListAdapter(
-                        favouriteStationList,
-                        { radioStationFavouriteOnClick ->
-                            Log.d(TAG, "Выбранный элемент списка: $radioStationFavouriteOnClick")
-                            // Открываем по клику другой фрагмент, передаём туда нашу радиостанцию
-                            val direction = FavouriteListFragmentDirections.actionFavouriteListFragmentToHomeRadioFragment(
-                                    radioStationFavouriteOnClick
-                                )
-                            if (this.findNavController().currentDestination?.id == R.id.favouriteListFragment) {
-                                this.findNavController().navigate(direction)
-                            }
-                        },
-                        { radioStationFavouriteOnStarClick ->
-                            Log.d(
-                                TAG,
-                                "Выбранный элемент списка: $radioStationFavouriteOnStarClick"
+                favouriteListAdapter = FavoriteListAdapter(
+                    favouriteStationList,
+                    { radioStationFavouriteOnClick ->
+                        Log.d(TAG, "Выбранный элемент списка: $radioStationFavouriteOnClick")
+                        // Открываем по клику другой фрагмент, передаём туда нашу радиостанцию
+                        val direction =
+                            FavouriteListFragmentDirections.actionFavouriteListFragmentToHomeRadioFragment(
+                                radioStationFavouriteOnClick
                             )
-                            // По клику нужно добавить либо удалить из избранного, предварительно проверив наличие радиостанции в базе
-                            viewModel.checkIsStationInFavouritesAndChangeTheStar(
-                                radioStationFavouriteOnStarClick
-                            )
-                        })
-
-                    recyclerViewRadioStationList.adapter = favouriteListAdapter
-
-                    val animator: DefaultItemAnimator = object : DefaultItemAnimator() {
-                        override fun canReuseUpdatedViewHolder(viewHolder: RecyclerView.ViewHolder): Boolean {
-                            return true
+                        if (this.findNavController().currentDestination?.id == R.id.favouriteListFragment) {
+                            this.findNavController().navigate(direction)
                         }
+                    },
+                    { radioStationFavouriteOnStarClick ->
+                        Log.d(
+                            TAG,
+                            "Выбранный элемент списка: $radioStationFavouriteOnStarClick"
+                        )
+                        // По клику нужно добавить либо удалить из избранного, предварительно проверив наличие радиостанции в базе
+                        viewModel.checkIsStationInFavouritesAndChangeTheStar(
+                            radioStationFavouriteOnStarClick
+                        )
+                    })
+
+                recyclerViewRadioStationList.adapter = favouriteListAdapter
+
+                val animator: DefaultItemAnimator = object : DefaultItemAnimator() {
+                    override fun canReuseUpdatedViewHolder(viewHolder: RecyclerView.ViewHolder): Boolean {
+                        return true
                     }
-                    recyclerViewRadioStationList.itemAnimator = animator
-
-                } else {
-                    textFavouritesEmpty.isVisible = true
-                    hideProgress()
-                    return@observe
                 }
+                recyclerViewRadioStationList.itemAnimator = animator
 
-                Log.d(
-                    TAG,
-                    "Успешный запрос в локальную БД (радиостанции). Получен результат: массив size = ${radioStationFavouritePresentationList.size}, элемент[0] = ${radioStationFavouritePresentationList[0].countryCode}, ${radioStationFavouritePresentationList[0].urlResolved}"
-                )
-
+            } else {
+                textFavouritesEmpty.isVisible = true
                 hideProgress()
-            })
-        viewModel.stationSavedInFavouritesLiveData.observe(viewLifecycleOwner, {
+                return@observe
+            }
+
+            Log.d(
+                TAG,
+                "Успешный запрос в локальную БД (радиостанции). Получен результат: массив size = ${radioStationFavouritePresentationList.size}, элемент[0] = ${radioStationFavouritePresentationList[0].countryCode}, ${radioStationFavouritePresentationList[0].urlResolved}"
+            )
+
+            hideProgress()
+        }
+        viewModel.stationSavedInFavouritesLiveData.observe(viewLifecycleOwner) {
             recyclerViewRadioStationList.adapter?.notifyDataSetChanged()
             // Нужно так же сообщить это плейеру в activity
             mainViewModel.changeTheStar(true)
-        })
-        viewModel.stationDeletedFromFavouritesLiveData.observe(viewLifecycleOwner, {
+        }
+        viewModel.stationDeletedFromFavouritesLiveData.observe(viewLifecycleOwner) {
             recyclerViewRadioStationList.adapter?.notifyDataSetChanged()
             // Нужно так же сообщить это плейеру в activity
             mainViewModel.changeTheStar(false)
-        })
+        }
 
         // Если изменение было в activity, и открыт этот фрагмент, здесь тоже нужно это отобразить:
-        mainViewModel.stationSavedInFavouritesLiveData.observe(viewLifecycleOwner, {
+        mainViewModel.stationSavedInFavouritesLiveData.observe(viewLifecycleOwner) {
             recyclerViewRadioStationList.adapter?.notifyDataSetChanged()
             viewModel.changeTheStar(
                 mainViewModel.curPlayingSongLiveData.value?.description?.mediaId,
                 true
             )
-        })
+        }
         // Если мы добавили звезду в плейере, то в список в FavouriteListFragment нужно добавить не просто звезду, а всю позицию - на случай, если её там не было
-        mainViewModel.addAStationToFavouriteListIfItIsNotThereLiveData.observe(viewLifecycleOwner, {
+        mainViewModel.addAStationToFavouriteListIfItIsNotThereLiveData.observe(viewLifecycleOwner) {
             viewModel.addAStationToFavouriteListIfItIsNotThere(it)
-        })
+        }
         // Если добавляем первую станцию в пустой список, нужно убрать надпись
-        viewModel.addingAStationToAnEmptyListLiveData.observe(viewLifecycleOwner, {
+        viewModel.addingAStationToAnEmptyListLiveData.observe(viewLifecycleOwner) {
             textFavouritesEmpty.isVisible = false
-        })
-        mainViewModel.stationDeletedFromFavouritesLiveData.observe(viewLifecycleOwner, {
+        }
+        mainViewModel.stationDeletedFromFavouritesLiveData.observe(viewLifecycleOwner) {
             recyclerViewRadioStationList.adapter?.notifyDataSetChanged()
             viewModel.changeTheStar(
                 mainViewModel.curPlayingSongLiveData.value?.description?.mediaId,
                 false
             )
-        })
+        }
     }
 
     private fun showProgress() {

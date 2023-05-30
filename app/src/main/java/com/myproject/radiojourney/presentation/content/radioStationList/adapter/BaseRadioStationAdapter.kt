@@ -70,5 +70,5 @@ abstract class BaseRadioStationAdapter(
     }
 
     // 5. ViewHolder class
-    class RadioStationViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {}
+    class RadioStationViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
 }

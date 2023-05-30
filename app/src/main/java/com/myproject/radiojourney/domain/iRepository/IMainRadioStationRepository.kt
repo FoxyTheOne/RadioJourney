@@ -9,15 +9,15 @@ interface IMainRadioStationRepository {
 
     suspend fun isRadioStationStored(): Boolean
     suspend fun getRadioStationUrl(): String?
-    suspend fun getRadioStationSaved(radioStationUrl: String): RadioStationLocal?
+    suspend fun getRadioStationSaved(radioStationUrlResolved: String): RadioStationLocal?
 
     // Поменять в Shared Preference setIsRadioStationStored на true. Сохранить в Shared Preference (url)
-    suspend fun saveRadioStationUrl(isStored: Boolean, url: String)
+    suspend fun saveRadioStationUrl(isStored: Boolean, urlResolved: String)
 
     // И сохранить радиостанцию в Room
     suspend fun saveRadioStationInRoom(radioStationLocal: RadioStationLocal)
 
     suspend fun getRadioStationList(countryCode: String): List<RadioStationLocal>
 
-    suspend fun saveLastUsedRadioStationUrlAndCode(url: String, countryCode: String)
+    suspend fun saveLastUsedRadioStationUrlAndCode(urlResolved: String, countryCode: String)
 }

@@ -1,6 +1,5 @@
 package com.myproject.radiojourney.domain.homeRadioUseCase
 
-import com.myproject.radiojourney.domain.iRepository.IFavoriteStationRepository
 import com.myproject.radiojourney.domain.iRepository.IMainRadioStationRepository
 import com.myproject.radiojourney.entities.local.RadioStationLocal
 import com.myproject.radiojourney.entities.presentation.CountryPresentation
@@ -21,7 +20,7 @@ import javax.inject.Inject
  */
 class HomeRadioUseCase @Inject constructor(
     private val mainRadioStationRepository: IMainRadioStationRepository,
-    private val favoriteStationRepository: IFavoriteStationRepository
+//    private val favoriteStationRepository: IFavoriteStationRepository
 ) : IHomeRadioUseCase {
 
     // local -> presentation. Оператор .map помогает перехватить данные и преобразовать их

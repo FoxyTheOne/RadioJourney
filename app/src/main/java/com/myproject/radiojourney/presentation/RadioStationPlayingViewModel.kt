@@ -18,11 +18,11 @@ class RadioStationPlayingViewModel @Inject constructor(
 
     private val playbackState = musicServiceConnection.playbackStateLiveData
 
-    private val _curSongDuration = MutableLiveData<Long>()
-    val curSongDuration: LiveData<Long> = _curSongDuration
+    private val _curSongDurationLiveData = MutableLiveData<Long>()
+    val curSongDurationLiveData: LiveData<Long> = _curSongDurationLiveData
 
-    private val _curPlayerPosition = MutableLiveData<Long>()
-    val curPlayerPosition: LiveData<Long> = _curPlayerPosition
+    private val _curPlayerPositionLiveData = MutableLiveData<Long>()
+    val curPlayerPositionLiveData: LiveData<Long> = _curPlayerPositionLiveData
 
     init {
         updateCurrentPlayerPosition()
@@ -35,9 +35,9 @@ class RadioStationPlayingViewModel @Inject constructor(
             while (true) {
                 // there is no function for getting value from exoplayer of player current position. So, we must calculate it on our oun (we'll write an extension)
                 val pos = playbackState.value?.currentPlaybackPosition
-                if (curPlayerPosition.value != pos) {
-                    _curPlayerPosition.postValue(pos ?: continue)
-                    _curSongDuration.postValue(MusicService.curSongDuration)
+                if (curPlayerPositionLiveData.value != pos) {
+                    _curPlayerPositionLiveData.postValue(pos ?: continue)
+                    _curSongDurationLiveData.postValue(MusicService.curSongDuration)
                 }
                 delay(UPDATE_PLAYER_POSITION_INTERVAL)
             }

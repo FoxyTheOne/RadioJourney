@@ -144,17 +144,17 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun skipToNextSong() {
-        musicServiceConnection.transportControls.skipToNext()
-    }
-
-    fun skipToPreviousSong() {
-        musicServiceConnection.transportControls.skipToPrevious()
-    }
-
-    fun seekTo(pos: Long) {
-        musicServiceConnection.transportControls.seekTo(pos)
-    }
+//    fun skipToNextSong() {
+//        musicServiceConnection.transportControls.skipToNext()
+//    }
+//
+//    fun skipToPreviousSong() {
+//        musicServiceConnection.transportControls.skipToPrevious()
+//    }
+//
+//    fun seekTo(pos: Long) {
+//        musicServiceConnection.transportControls.seekTo(pos)
+//    }
 
     // isPrepared, isPlaying, isPlayEnabled <- it's our extensions
     // In our case, METADATA_KEY_MEDIA_ID = radioStationRemote.url
@@ -295,7 +295,7 @@ class MainViewModel @Inject constructor(
         _newMediaIdLiveData.postValue(mediaId)
     }
 
-    // TODO Test version Нужно вызывать метод playOrToggleSong, когда у нас новый плейлист а песня была на паузе. И в то же время не нужно autoplay стразу при запуске программы. Поставим флажок
+    // TODO Test version Нужно вызывать метод playOrToggleSong, когда у нас новый плейлист а песня была на паузе. И в то же время не нужно autoplay сразу при запуске программы. Поставим флажок
     fun notJustLaunchedEnableAutoplay() {
         _isNotJustLaunchedLiveData.postValue(true)
     }
@@ -341,69 +341,69 @@ class MainViewModel @Inject constructor(
         _addAStationToFavouriteListIfItIsNotThereLiveData.postValue(radioStationFavourite)
     }
 
-    fun checkThePosition(position: Int, radioStationList: List<RadioStationPresentation>) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                var newPosition = position
-                var radioStationNeedToFind: RadioStationPresentation? = null
-                val mediaId: String? = _newMediaIdLiveData.value
-
-                // For sure, calculating chosen position
-                if (radioStationList.isNotEmpty() && !mediaId.isNullOrBlank()) {
-                    radioStationList.forEach {
-                        if (it.urlResolved == mediaId) {
-                            radioStationNeedToFind = it
-                        }
-                    }
-                }
-
-                radioStationNeedToFind?.let {
-                    // looking for the index of that song
-                    val newItemIndex = radioStationList.indexOf(radioStationNeedToFind)
-                    // That function will return -1 if the song doesn't exist, so we must check:
-                    if (newItemIndex != -1) {
-                        if (newItemIndex >= radioStationList.size) {
-                            Log.d(
-                                TAG,
-                                "onPageSelected 2) checkThePosition -> radioStationList.indexOf(radioStationNeedToFind) >= radioStationList.size, found: $newItemIndex"
-                            )
-                        } else {
-                            Log.d(
-                                TAG,
-                                "onPageSelected 2) checkThePosition -> radioStationList.indexOf(radioStationNeedToFind) != -1, position found: newPosition = $newItemIndex"
-                            )
-                            newPosition = newItemIndex
-                        }
-                    } else {
-                        Log.d(
-                            TAG,
-                            "onPageSelected 2) checkThePosition -> radioStationList.indexOf(radioStationNeedToFind) = -1, found: $newItemIndex"
-                        )
-                    }
-                }
-
-                Log.d(
-                    TAG,
-                    "onPageSelected 3) _newPositionLiveData.postValue(newPosition), position given: $newPosition, station need to play: $radioStationNeedToFind"
-                )
-                _newPositionLiveData.postValue(newPosition)
-            } catch (e1: AccountsException) {
-                // AccountsException -> Known direct subclasses: AuthenticatorException, NetworkErrorException, OperationCanceledException
-                e1.printStackTrace()
-                _dialogInternetTroubleLiveData.call()
-            } catch (e2: IOException) {
-                e2.printStackTrace()
-                _errorMessageLiveData.postValue(
-                    Event(
-                        Resource.error(
-                            "An unknown error occurred",
-                            null
-                        )
-                    )
-                )
-            }
-        }
-    }
+//    fun checkThePosition(position: Int, radioStationList: List<RadioStationPresentation>) {
+//        viewModelScope.launch(Dispatchers.IO) {
+//            try {
+//                var newPosition = position
+//                var radioStationNeedToFind: RadioStationPresentation? = null
+//                val mediaId: String? = _newMediaIdLiveData.value
+//
+//                // For sure, calculating chosen position
+//                if (radioStationList.isNotEmpty() && !mediaId.isNullOrBlank()) {
+//                    radioStationList.forEach {
+//                        if (it.urlResolved == mediaId) {
+//                            radioStationNeedToFind = it
+//                        }
+//                    }
+//                }
+//
+//                radioStationNeedToFind?.let {
+//                    // looking for the index of that song
+//                    val newItemIndex = radioStationList.indexOf(radioStationNeedToFind)
+//                    // That function will return -1 if the song doesn't exist, so we must check:
+//                    if (newItemIndex != -1) {
+//                        if (newItemIndex >= radioStationList.size) {
+//                            Log.d(
+//                                TAG,
+//                                "onPageSelected 2) checkThePosition -> radioStationList.indexOf(radioStationNeedToFind) >= radioStationList.size, found: $newItemIndex"
+//                            )
+//                        } else {
+//                            Log.d(
+//                                TAG,
+//                                "onPageSelected 2) checkThePosition -> radioStationList.indexOf(radioStationNeedToFind) != -1, position found: newPosition = $newItemIndex"
+//                            )
+//                            newPosition = newItemIndex
+//                        }
+//                    } else {
+//                        Log.d(
+//                            TAG,
+//                            "onPageSelected 2) checkThePosition -> radioStationList.indexOf(radioStationNeedToFind) = -1, found: $newItemIndex"
+//                        )
+//                    }
+//                }
+//
+//                Log.d(
+//                    TAG,
+//                    "onPageSelected 3) _newPositionLiveData.postValue(newPosition), position given: $newPosition, station need to play: $radioStationNeedToFind"
+//                )
+//                _newPositionLiveData.postValue(newPosition)
+//            } catch (e1: AccountsException) {
+//                // AccountsException -> Known direct subclasses: AuthenticatorException, NetworkErrorException, OperationCanceledException
+//                e1.printStackTrace()
+//                _dialogInternetTroubleLiveData.call()
+//            } catch (e2: IOException) {
+//                e2.printStackTrace()
+//                _errorMessageLiveData.postValue(
+//                    Event(
+//                        Resource.error(
+//                            "An unknown error occurred",
+//                            null
+//                        )
+//                    )
+//                )
+//            }
+//        }
+//    }
 
     @Synchronized
     fun synchronizedCheckThePosition(
@@ -434,7 +434,7 @@ class MainViewModel @Inject constructor(
                 radioStationList?.let { nonNullRadioStationList ->
 
                     if (nonNullRadioStationList.isNotEmpty() && !mediaId.isNullOrBlank()) {
-                        // Иногда находит несколько радиостанцийю Остановимся на первой.
+                        // Иногда находит несколько радиостанцию Остановимся на первой.
                         // TODO У нас снова одинаковые mediaId. Нужно переделать базу данных
 
                         val maxListIndex = nonNullRadioStationList.size - 1

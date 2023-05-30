@@ -18,9 +18,9 @@ class FavoriteListAdapter(
     private val onStarClicked: (RadioStationPresentation) -> Unit
 ) :
     RecyclerView.Adapter<FavoriteListAdapter.FavoriteListViewHolder>() {
-    companion object {
-        private const val TAG = "FavoriteListAdapter"
-    }
+//    companion object {
+//        private const val TAG = "FavoriteListAdapter"
+//    }
 
     // Создаём элемент списка. Initialize itemView for each item
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FavoriteListViewHolder {
@@ -30,7 +30,7 @@ class FavoriteListAdapter(
     }
 
     // Сюда залетает элемент списка, к-рый был создан в onCreateViewHolder() и здесь мы его наполняем
-    // Однако, лучше просто вызвать метод из вложенного класа, где и осуществить непосредственно наполнение, описание clickListener и проч.
+    // Однако, лучше просто вызвать метод из вложенного класса, где и осуществить непосредственно наполнение, описание clickListener и проч.
     override fun onBindViewHolder(holder: FavoriteListViewHolder, position: Int) {
         holder.setFavouriteRadioStation(favouriteStationList[position])
     }
@@ -39,7 +39,7 @@ class FavoriteListAdapter(
     override fun getItemCount(): Int = favouriteStationList.size
 
     inner class FavoriteListViewHolder(
-        private val itemView: View,
+        itemView: View,
         private val onItemClicked: (RadioStationPresentation) -> Unit,
         private val onStarClicked: (RadioStationPresentation) -> Unit
     ) :

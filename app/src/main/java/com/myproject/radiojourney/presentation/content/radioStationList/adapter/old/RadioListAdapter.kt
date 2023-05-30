@@ -14,9 +14,9 @@ class RadioListAdapter(
     private val onItemClicked: (RadioStationPresentation) -> Unit
 ) :
     RecyclerView.Adapter<RadioListAdapter.RadioListViewHolder>() {
-    companion object {
-        private const val TAG = "RadioListAdapter"
-    }
+//    companion object {
+//        private const val TAG = "RadioListAdapter"
+//    }
 
     // Создаём элемент списка. Initialize itemView for each item
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RadioListViewHolder {
@@ -26,7 +26,7 @@ class RadioListAdapter(
     }
 
     // Сюда залетает элемент списка, к-рый был создан в onCreateViewHolder() и здесь мы его наполняем
-    // Однако, лучше просто вызвать метод из вложенного класа, где и осуществить непосредственно наполнение, описание clickListener и проч.
+    // Однако, лучше просто вызвать метод из вложенного класса, где и осуществить непосредственно наполнение, описание clickListener и проч.
     override fun onBindViewHolder(holder: RadioListViewHolder, position: Int) {
         holder.setRadioStation(radioStationList[position])
     }
@@ -36,7 +36,7 @@ class RadioListAdapter(
         radioStationList.size
 
     inner class RadioListViewHolder(
-        private val itemView: View,
+        itemView: View,
         private val onItemClicked: (RadioStationPresentation) -> Unit
     ) :
         RecyclerView.ViewHolder(itemView) {

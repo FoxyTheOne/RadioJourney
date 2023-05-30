@@ -4,7 +4,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.myproject.radiojourney.R
 import com.myproject.radiojourney.domain.homeRadioUseCase.IHomeRadioUseCase
 import com.myproject.radiojourney.domain.logOutUseCase.ILogOutUseCase
 import com.myproject.radiojourney.entities.presentation.CountryPresentation
@@ -30,12 +29,12 @@ import android.graphics.drawable.Drawable
 @HiltViewModel
 class HomeRadioViewModel @Inject constructor(
     private val logOutInteractor: ILogOutUseCase,
-    private val homeRadioInteractor: IHomeRadioUseCase
+    homeRadioInteractor: IHomeRadioUseCase
 ) : ViewModel() {
 
-    companion object {
-        private const val TAG = "HomeRadioViewModel"
-    }
+//    companion object {
+//        private const val TAG = "HomeRadioViewModel"
+//    }
 
     // Подписка на локальную БД
     private val _countryListFlow = homeRadioInteractor.subscribeOnCountryList()

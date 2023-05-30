@@ -1,6 +1,5 @@
 package com.myproject.radiojourney.data.repository
 
-import android.content.Context
 import android.util.Log
 import com.myproject.radiojourney.data.dataSource.local.favorite.ILocalFavoriteDataSource
 import com.myproject.radiojourney.data.dataSource.local.radio.ILocalRadioDataSource
@@ -8,8 +7,6 @@ import com.myproject.radiojourney.data.dataSource.network.INetworkRadioDataSourc
 import com.myproject.radiojourney.domain.iRepository.IMainRadioStationRepository
 import com.myproject.radiojourney.entities.local.CountryLocal
 import com.myproject.radiojourney.entities.local.RadioStationLocal
-import com.myproject.radiojourney.utils.exoplayer.FirebaseMusicSource
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
@@ -21,11 +18,11 @@ import javax.inject.Inject
  * При работе с model, здесь происходит запрос в remote, преобразование remote -> local, сохранение результата в базу данных.
  */
 class MainRadioStationRepository @Inject constructor(
-    @ApplicationContext private val context: Context,
+//    @ApplicationContext private val context: Context,
     private val networkRadioDataSource: INetworkRadioDataSource,
     private val localRadioDataSource: ILocalRadioDataSource,
     private val localFavoriteDataSource: ILocalFavoriteDataSource,
-    private val firebaseMusicSource: FirebaseMusicSource
+//    private val firebaseMusicSource: FirebaseMusicSource
 ) : IMainRadioStationRepository {
     companion object {
         private const val TAG = "ContentRepository"

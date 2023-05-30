@@ -31,7 +31,7 @@ class CurrentPlaylistFragment : BaseRadioListFragmentAbstract() {
     }
 
     // 1.1. ViewModel. We bind our viewModel to the cycle of our activity, not fragment. So, we need to do this way:
-    lateinit var mainViewModel: MainViewModel
+    private lateinit var mainViewModel: MainViewModel
 
     @Inject
     lateinit var musicServiceConnection: MusicServiceConnection
@@ -65,7 +65,8 @@ class CurrentPlaylistFragment : BaseRadioListFragmentAbstract() {
 
         radioStationPlaylist = mainViewModel.mediaItemsListLiveData.value?.data ?: emptyList()
 
-        if (!radioStationPlaylist.isNullOrEmpty()) {
+        if (radioStationPlaylist.isNotEmpty()) {
+//        if (!radioStationPlaylist.isNullOrEmpty()) {
             radioListAdapter = RadioListAdapter(radioStationPlaylist) { radioStationPresentationOnClick ->
                 Log.d(TAG, "Выбранный элемент списка: $radioStationPresentationOnClick")
 
