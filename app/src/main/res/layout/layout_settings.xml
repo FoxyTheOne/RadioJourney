@@ -54,7 +54,7 @@
                 android:layout_weight="1"
                 android:gravity="center"
                 android:padding="@dimen/space_beforeOrAfterElement"
-                android:text="@string/settings_tittle" />
+                android:text="@string/settings_tittle2" />
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:layout_width="48dp"
@@ -64,6 +64,30 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/linear_textAbout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/space_32"
+            android:paddingEnd="@dimen/space_32"
+            android:paddingTop="@dimen/space_small"
+            android:paddingBottom="@dimen/space_32"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/linear_settingsTitle">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/text_about"
+                style="@style/login_bottom"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="@string/settings_text" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:visibility="gone"
             android:id="@+id/linear_saveToGoogleSettings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -75,7 +99,7 @@
             android:paddingBottom="@dimen/space_beforeOrAfterElement"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linear_settingsTitle">
+            app:layout_constraintTop_toBottomOf="@+id/linear_textAbout">
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/image_saveToGoogle"
@@ -95,6 +119,7 @@
         </LinearLayout>
 
         <LinearLayout
+            android:visibility="gone"
             android:id="@+id/linear_restoreFromGoogleSettings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -125,6 +150,7 @@
         </LinearLayout>
 
         <LinearLayout
+            android:visibility="gone"
             android:id="@+id/linear_saveToLocalStorageSettings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -155,6 +181,7 @@
         </LinearLayout>
 
         <LinearLayout
+            android:visibility="gone"
             android:id="@+id/linear_restoreFromLocalStorageSettings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -233,7 +260,7 @@
             android:paddingTop="@dimen/space_beforeOrAfterElement"
             android:paddingEnd="@dimen/space_beforeOrAfterElement"
             android:paddingBottom="0dp"
-            android:text="@string/settings_textMail"
+            android:text="@string/settings_textMail2"
             android:textAlignment="center"
             app:layout_constraintBottom_toTopOf="@+id/mail"
             app:layout_constraintEnd_toEndOf="parent"

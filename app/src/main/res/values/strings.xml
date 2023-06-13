@@ -43,11 +43,18 @@
     <string name="currentPlaylist_empty">Playlist is empty</string>
 
     <string name="settings_tittle">Settings</string>
+    <string name="settings_tittle2">About</string>
+    <string name="settings_text">This application is created for listening to Internet radio stations.
+
+Therefor we use database https://www.radio-browser.info/ that contains information about Internet radio stations all over the world.
+
+Just click on the place on the map you are insterested in, chose radiostation from the list and enjoy!</string>
     <string name="settings_saveToGoogle">Save to Google Drive</string>
     <string name="settings_restoreFromGoogle">Restore from Google Drive</string>
     <string name="settings_saveToLocalStorage">Save to local storage</string>
     <string name="settings_restoreLocalStorage">Restore from local storage</string>
     <string name="settings_textMail">Mail for your feedbacks</string>
+    <string name="settings_textMail2">It is my first app. Feel free to email your advices</string>
     <string name="settings_mail">gartel.av@gmail.com</string>
     <string name="settings_textAndMail">Mail for your feedbacks: gartel.av@gmail.com</string>
     <string name="settings_coffee">Support the project</string>

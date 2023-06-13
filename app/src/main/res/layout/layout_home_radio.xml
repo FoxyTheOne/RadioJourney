@@ -132,6 +132,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/space_beforeOrAfterElement"
+                android:layout_marginTop="@dimen/space_small"
                 android:background="@drawable/button_rounded_corners"
                 android:text="@string/homeRadio_goToFavourites"
                 android:textColor="@color/white"
@@ -147,7 +148,7 @@
             android:layout_marginStart="@dimen/space_small"
             android:layout_marginBottom="@dimen/space_small"
             android:scaleType="centerCrop"
-            android:src="@drawable/ic_baseline_settings_applications_24_orange"
+            android:src="@drawable/outline_info_24"
             app:layout_constraintBottom_toBottomOf="@+id/linear_radioStationButtons"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@+id/linear_radioStationButtons" />
