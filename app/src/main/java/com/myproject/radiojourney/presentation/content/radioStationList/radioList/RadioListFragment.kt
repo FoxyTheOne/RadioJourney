@@ -33,7 +33,7 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
 
     private var radioStationList = listOf(
         RadioStationPresentation(
-            "Test", "test", 2, "test", "test",
+            "2", "Test", "test", 2, "test", "test",
             isStationInFavourite = false,
             isStationInRecommended = false
         )

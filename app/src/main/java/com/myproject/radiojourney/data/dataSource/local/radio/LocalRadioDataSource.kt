@@ -29,7 +29,7 @@ class LocalRadioDataSource @Inject constructor(
     override suspend fun getRadioStationUrl(): String? = preference.getRadioStationUrl()
 
     override suspend fun getRadioStationSaved(radioStationUrl: String): RadioStationLocal? =
-        radioStationDAO.getRadioStation(radioStationUrl)
+        radioStationDAO.getRadioStationByUrl(radioStationUrl)
 
     override suspend fun saveRadioStationInRoom(radioStation: RadioStationLocal) {
         // Сохранить радиостанцию в Room

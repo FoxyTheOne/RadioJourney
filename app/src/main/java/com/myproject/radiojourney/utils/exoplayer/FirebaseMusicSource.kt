@@ -87,7 +87,7 @@ class FirebaseMusicSource @Inject constructor(
             MediaMetadataCompat.Builder()
                 .putString(
                     METADATA_KEY_MEDIA_ID,
-                    radioStationRemote.url_resolved
+                    radioStationRemote.stationuuid
                 ) // media Id / url (Primary key) / Пробую поменять здесь url на urlResolved, т.к. обнаружились нестыковки у первых станций в плейлистах
                 .putString(METADATA_KEY_MEDIA_URI, radioStationRemote.url_resolved) // url_resolved
                 .putString(METADATA_KEY_TITLE, radioStationRemote.name) // station name
@@ -103,7 +103,8 @@ class FirebaseMusicSource @Inject constructor(
                 ) // country code
                 .build()
         }.filter {
-            !it.description.mediaId.isNullOrEmpty()
+//            !it.description.mediaId.isNullOrEmpty() - TODO mediaId was url_resolved, but I'm changing it to stationuuid. Check if everything will work correct
+            it.description.mediaUri.toString().isNotEmpty()
         }
 
         state = STATE_INITIALIZED
@@ -131,7 +132,7 @@ class FirebaseMusicSource @Inject constructor(
                 MediaMetadataCompat.Builder()
                     .putString(
                         METADATA_KEY_MEDIA_ID,
-                        radioStationLocal.urlResolved
+                        radioStationLocal.stationuuid
                     ) // media Id / url (Primary key) / Пробую поменять здесь url на urlResolved, т.к. обнаружились нестыковки у первых станций в плейлистах
                     .putString(
                         METADATA_KEY_MEDIA_URI,
@@ -153,7 +154,8 @@ class FirebaseMusicSource @Inject constructor(
                     ) // country code
                     .build()
             }.filter {
-                !it.description.mediaId.isNullOrEmpty()
+//            !it.description.mediaId.isNullOrEmpty() - TODO mediaId was url_resolved, but I'm changing it to stationuuid. Check if everything will work correct
+                it.description.mediaUri.toString().isNotEmpty()
             }
 
 //            state = STATE_INITIALIZED
@@ -195,15 +197,15 @@ class FirebaseMusicSource @Inject constructor(
             putString("Country", radioStation.getString(METADATA_KEY_ARTIST))
         }
 
-        if (radioStation.description.mediaId.isNullOrEmpty()) {
+        if (radioStation.description.mediaUri.toString().isEmpty()) {
             Log.d(
                 TAG,
-                "name = ${radioStation.description.title}, url = ${radioStation.description.mediaUri}, mediaId = ${radioStation.description.mediaUri}"
+                "name = ${radioStation.description.title}, url = ${radioStation.description.mediaUri}, mediaUri = ${radioStation.description.mediaUri}"
             )
         }
 
         val desc = MediaDescriptionCompat.Builder()
-            .setMediaId(radioStation.description.mediaId) // media Id / url (Primary key)
+            .setMediaId(radioStation.description.mediaId) // media Id / stationuuid (Primary key)
             .setMediaUri(
                 radioStation.getString(METADATA_KEY_MEDIA_URI).toUri()
             ) // url_resolved

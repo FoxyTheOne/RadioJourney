@@ -25,9 +25,10 @@ class MainRadioUseCase @Inject constructor(
             val radioStation = getRadioStationSaved(it.description.mediaUri.toString())
 
             RadioStationPresentation(
+                stationuuid = it.mediaId ?: "",
                 stationName = it.description.title.toString(),
-                urlResolved = it.mediaId ?: "",
-//                urlResolved = it.description.mediaUri.toString(),
+//                urlResolved = it.mediaId ?: "",
+                urlResolved = it.description.mediaUri.toString(),
                 clickCount = it.description.extras?.getLong("ClickCount")
                     ?.toInt()
                     ?: 0,

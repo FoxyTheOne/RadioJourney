@@ -9,8 +9,11 @@ interface IRadioStationDAO {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveRadioStationList(vararg radioStationLocalList: RadioStationLocal)
 
+    @Query("SELECT * from RadioStationLocal WHERE stationuuid LIKE:stationUuid")
+    suspend fun getRadioStationByUuid(stationUuid: String): RadioStationLocal?
+
     @Query("SELECT * from RadioStationLocal WHERE url_resolved LIKE:urlResolved")
-    suspend fun getRadioStation(urlResolved: String): RadioStationLocal?
+    suspend fun getRadioStationByUrl(urlResolved: String): RadioStationLocal?
 
     @Query("SELECT * from RadioStationLocal WHERE countrycode LIKE:countryCode")
     fun getRadioStationList(countryCode: String): Flow<List<RadioStationLocal>>
