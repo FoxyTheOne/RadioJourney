@@ -82,8 +82,7 @@ class CurrentPlaylistFragment : BaseRadioListFragmentAbstract() {
             textPlaylistEmpty.isVisible = true
         }
 
-        // TODO Этому здесь не место. Если будет так оставлять, нужно перенести в корутины
-        // Хотя с другой стороны - нам нужно, чтобы пока не заиграет станция, ничего не нажималось
+        // TODO Этому здесь не место. Если будет так оставлять, нужно перенести в корутины. Хотя с другой стороны - нам нужно, чтобы пока не заиграет станция, ничего не нажималось
         val isPlayerPrepared = mainViewModel.playbackStateLiveData.value?.isPrepared ?: false
         mainViewModel.playbackStateLiveData.value?.let { playbackState ->
             if (isPlayerPrepared && playbackState.isPlayEnabled) {

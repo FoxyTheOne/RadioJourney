@@ -118,6 +118,8 @@ class SettingsFragment : BaseContentFragmentAbstract() {
                 )
             )
         }
+
+        // TODO click on coffee
     }
 
     private fun subscribeOnLiveData() {

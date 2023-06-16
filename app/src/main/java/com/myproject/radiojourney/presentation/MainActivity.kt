@@ -427,7 +427,6 @@ class MainActivity : AppCompatActivity(), IAppSettings {
     }
 
     // function for hiding our bottom bar
-    // TODO maybe use Group view?
     private fun hideBottomBar() {
         binding?.imageStar?.isVisible = false
         binding?.vpSong?.isVisible = false

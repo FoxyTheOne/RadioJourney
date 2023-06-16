@@ -129,10 +129,6 @@ class FavouriteListFragment : BaseRadioListFragmentAbstract() {
 
             if (!favouriteStationList.isNullOrEmpty()) {
 
-//                    // Если не пустой список избранного, тогда попробовать вызвать метод для загрузки плейлиста. Вызывать из HomeFragment при открытии этого фрагмента оказалось не очень хорошей идеей
-//                    // TODO !!!!!!!!!!! When you choose a new country playlist, begins to play the first radio station, no matter what you chose. Here I call the method myself, so that the first radio station is called automatically, but it is not very convenient and not always helps
-//                    mainViewModel.fetchSongs("FAV")
-
                 favouriteListAdapter = FavoriteListAdapter(
                     favouriteStationList,
                     { radioStationFavouriteOnClick ->

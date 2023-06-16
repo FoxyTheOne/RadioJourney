@@ -14,6 +14,7 @@ import com.myproject.radiojourney.data.dataSource.network.INetworkRadioDataSourc
 import com.myproject.radiojourney.data.dataSource.network.NetworkRadioDataSource
 import com.myproject.radiojourney.data.dataSource.network.service.IRadioServiceWrapper
 import com.myproject.radiojourney.data.dataSource.network.service.RadioServiceWrapper
+import com.myproject.radiojourney.data.dataSource.network.service.UserAgentInterceptor
 import com.myproject.radiojourney.data.localDatabaseRoom.*
 import com.myproject.radiojourney.data.repository.AuthRepository
 import com.myproject.radiojourney.data.repository.FavoriteStationRepository
@@ -47,6 +48,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ViewModelComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import okhttp3.Interceptor
 import javax.inject.Singleton
 
 @Module
@@ -83,6 +85,12 @@ abstract class SingletonModule {
             @ApplicationContext context: Context
         ) =
             MusicServiceConnection(context) // Создаём экземпляр нашего класса MusicServiceConnection, для создания которого нужен context
+
+        @Provides
+        fun providesUserAgentInterceptor(
+            @ApplicationContext context: Context
+        ) =
+            UserAgentInterceptor(context) // Создаём экземпляр нашего класса UserAgentInterceptor, для создания которого нужен context
     }
 
     @Binds

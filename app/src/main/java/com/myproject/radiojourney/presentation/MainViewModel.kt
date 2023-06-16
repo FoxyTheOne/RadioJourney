@@ -524,7 +524,7 @@ class MainViewModel @Inject constructor(
                     }
 
                     // TODO Нам нужно вернуться в onPrepareFromMediaId, если мы выбрали песню из другого плейлиста и включить её. НО! Нам не нужно включать станцию сразу при включении программы
-                    val isNotJustLaunched = isNotJustLaunchedLiveData.value
+                    val isNotJustLaunched = _isNotJustLaunchedLiveData.value
                     isNotJustLaunched?.let {
                         if (it) {
                             // Здесь мы точно перешли из списка в HomeRadioFragment и хотим включить радио

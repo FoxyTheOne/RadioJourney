@@ -65,7 +65,7 @@ class RadioListViewModel @Inject constructor(
                 _hideProgressLiveData.call()
             } catch (e: IOException) {
                 e.printStackTrace()
-                // TODO всплывающее окно об ошибке скачивания плейлиста. Проверьте интернет-соединение и повторите действие ещё раз
+                _dialogInternetTroubleLiveData.call()
                 _errorMessageLiveData.postValue(
                     Event(
                         Resource.error(

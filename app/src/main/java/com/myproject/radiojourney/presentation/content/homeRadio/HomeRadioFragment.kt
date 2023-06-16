@@ -467,9 +467,6 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             }
         }
         binding?.buttonGoToFavourites?.setOnClickListener {
-//            // TODO !!!!!!!!!!! When you choose a new country playlist, begins to play the first radio station, no matter what you chose. Here I call the method myself, so that the first radio station is called automatically, byt it is not very convenient and not always helps
-//            mainViewModel.fetchSongs("FAV")
-
             if (this.findNavController().currentDestination?.id == R.id.homeRadioFragment) {
                 this.findNavController()
                     .navigate(R.id.action_homeRadioFragment_to_favouriteListFragment)
@@ -774,11 +771,6 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 //                    val bmapDrawableForComparing = (myDrawableForComparing as BitmapDrawable).bitmap
 //
 //                    val isSame = bmapStar.sameAs(bmapDrawableForComparing)
-
-//                    // TODO !!!!!!!!!!! When you choose a new country playlist, begins to play the first radio station, no matter what you chose. Here I call the method myself, so that the first radio station is called automatically, but it is not very convenient and not always helps
-//                    if (country.countryCode != mainViewModel.curPlayingSongLiveData.value?.description?.subtitle) {
-//                        mainViewModel.fetchSongs(country.countryCode)
-//                    }
 
                     Log.d(
                         TAG,

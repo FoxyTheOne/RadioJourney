@@ -260,7 +260,7 @@
             android:paddingTop="@dimen/space_beforeOrAfterElement"
             android:paddingEnd="@dimen/space_beforeOrAfterElement"
             android:paddingBottom="0dp"
-            android:text="@string/settings_textMail2"
+            android:text="@string/settings_textMail"
             android:textAlignment="center"
             app:layout_constraintBottom_toTopOf="@+id/mail"
             app:layout_constraintEnd_toEndOf="parent"
@@ -274,7 +274,7 @@
             android:paddingStart="@dimen/space_beforeOrAfterElement"
             android:paddingTop="@dimen/space_small"
             android:paddingEnd="@dimen/space_beforeOrAfterElement"
-            android:paddingBottom="@dimen/space_beforeOrAfterElement"
+            android:paddingBottom="@dimen/space_32"
             android:text="@string/settings_mail"
             android:textAlignment="center"
             app:layout_constraintBottom_toTopOf="@+id/pixabay"
@@ -282,6 +282,7 @@
             app:layout_constraintStart_toStartOf="parent" />
 
         <androidx.appcompat.widget.AppCompatTextView
+            android:visibility="gone"
             android:id="@+id/pixabay"
             style="@style/login_bottom_small"
             android:layout_width="wrap_content"
