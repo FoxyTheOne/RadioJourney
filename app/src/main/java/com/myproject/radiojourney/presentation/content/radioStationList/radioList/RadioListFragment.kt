@@ -6,16 +6,19 @@ import android.util.Log
 import android.view.*
 import android.widget.FrameLayout
 import android.widget.ProgressBar
+import android.widget.TextView
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 import com.myproject.radiojourney.other.Status
+import com.myproject.radiojourney.presentation.MainViewModel
 import com.myproject.radiojourney.presentation.content.radioStationList.adapter.ListRadioStationAdapter
 import com.myproject.radiojourney.presentation.content.radioStationList.base.BaseRadioListFragmentAbstract
 import dagger.hilt.android.AndroidEntryPoint
@@ -28,6 +31,9 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
     companion object {
         private const val TAG = "RadioListFragment"
     }
+
+    // 1.1. ViewModel. We bind our viewModel to the cycle of our activity, not fragment. So, we need to do this way:
+    private lateinit var mainViewModel: MainViewModel
 
     private val viewModel by viewModels<RadioListViewModel>()
 
@@ -43,10 +49,15 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
     private lateinit var countryCode: String
     private lateinit var countryName: String
     private lateinit var textRadioListTitle: AppCompatTextView
+    private lateinit var textRadioListSecondTitleSelect: AppCompatTextView
+    private lateinit var textRadioListSecondTitleDownload: AppCompatTextView
     private lateinit var imageArrowBack: AppCompatImageView
+    private lateinit var textRadioStationsEmpty: TextView
     private lateinit var recyclerViewRadioStationList: RecyclerView
     private lateinit var frameLayout: FrameLayout
     private lateinit var progressCircular: ProgressBar
+    private lateinit var radioCountryCodeFromActivity: String
+    private lateinit var listRadioStationAdapter: ListRadioStationAdapter
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -58,10 +69,19 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
             countryName = resultArray[1]
         }
 
+        // 1.2. ViewModel. We bind our viewModel to the lifecycle of our activity, not fragment. We pass our activity as an owner of the lifecycle.
+        // So, we need to do this way:
+        mainViewModel = ViewModelProvider(requireActivity())[MainViewModel::class.java]
+
         textRadioListTitle = view.findViewById(R.id.text_myFavorites_title)
         textRadioListTitle.text = countryName
 
+        textRadioListSecondTitleSelect = view.findViewById(R.id.text_radioStationDialogTitleSelect)
+        textRadioListSecondTitleDownload =
+            view.findViewById(R.id.text_radioStationDialogTitleDownload)
+
         imageArrowBack = view.findViewById(R.id.image_arrowBack)
+        textRadioStationsEmpty = view.findViewById(R.id.text_radioStationsEmpty)
         recyclerViewRadioStationList = view.findViewById(R.id.recyclerView_radioStationList)
         frameLayout = view.findViewById(R.id.frameLayout)
         progressCircular = view.findViewById(R.id.progressCircular)
@@ -75,8 +95,22 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
         // Передайте ссылку на разметку
         dialogInternetTrouble.setContentView(R.layout.layout_internet_trouble_dialog)
 
+        // Инициализируем адаптер
+        listRadioStationAdapter = ListRadioStationAdapter()
+
         initListeners()
         subscribeOnLiveData()
+
+        // Если у нас играет другой плейлист, нужно показать надпись "скачать". Если же этот плейлист уже скачан - "выберите радиостанцию"
+        radioCountryCodeFromActivity =
+            if ((mainViewModel.mediaItemsListLiveData.value?.data?.size ?: 0) >= 1) {
+                mainViewModel.mediaItemsListLiveData.value?.data?.get(0)?.countryCode
+                    ?: ""
+            } else {
+                ""
+            }
+
+        changeTextSelectOrDownload()
     }
 
     private fun initListeners() {
@@ -120,6 +154,8 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
             radioStationList = radioStationPresentationList
             showProgress()
 
+            changeTextSelectOrDownload()
+
             // 1.5. ОБРАБОТКА КЛИКА -> Получаем результат клика во фрагменте (описываем нашу анонимную функцию из RecyclerView)
 //                recyclerViewRadioStationList.adapter =
 //                    RadioListAdapter(radioStationList) { radioStationPresentationOnClick ->
@@ -132,25 +168,49 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
 //                        this.findNavController().navigate(direction)
 //                    }
 
-            // Инициализируем адаптер
-            val listRadioStationAdapter = ListRadioStationAdapter()
-            // Перезаписываем список радиостанций для адаптера
-            listRadioStationAdapter.radioStationList = radioStationPresentationList
-            // Определяем адаптер для recycler view
-            recyclerViewRadioStationList.adapter =
-                listRadioStationAdapter
-            // Устанавливаем Click Listener
-            listRadioStationAdapter.setItemClickListener { radioStationPresentationOnClick ->
-                Log.d(TAG, "Выбранный элемент списка: $radioStationPresentationOnClick")
+            if (!radioStationPresentationList.isNullOrEmpty()) {
 
-                // Открываем по клику другой фрагмент, передаём туда нашу радиостанцию
-                val direction =
-                    RadioListFragmentDirections.actionRadioListFragmentToHomeRadioFragment(
-                        radioStationPresentationOnClick
-                    )
-                if (this.findNavController().currentDestination?.id == R.id.radioListFragment) {
-                    this.findNavController().navigate(direction)
+                textRadioStationsEmpty.isVisible = false
+
+//                // Инициализируем адаптер
+//                val listRadioStationAdapter = ListRadioStationAdapter()
+
+                // Перезаписываем список радиостанций для адаптера
+                listRadioStationAdapter.radioStationList = radioStationPresentationList
+                // Определяем адаптер для recycler view
+                recyclerViewRadioStationList.adapter =
+                    listRadioStationAdapter
+                // Устанавливаем Click Listener
+                listRadioStationAdapter.setItemClickListener { radioStationPresentationOnClick ->
+                    Log.d(TAG, "Выбранный элемент списка: $radioStationPresentationOnClick")
+
+                    // Открываем по клику другой фрагмент, передаём туда нашу радиостанцию
+                    val direction =
+                        RadioListFragmentDirections.actionRadioListFragmentToHomeRadioFragment(
+                            radioStationPresentationOnClick
+                        )
+                    if (this.findNavController().currentDestination?.id == R.id.radioListFragment) {
+                        this.findNavController().navigate(direction)
+                    }
                 }
+
+                textRadioListSecondTitleDownload.setOnClickListener {
+                    Log.d(TAG, "Загружаем плейлист")
+
+                    // Открываем по клику другой фрагмент, передаём туда нашу радиостанцию
+                    val direction =
+                        RadioListFragmentDirections.actionRadioListFragmentToHomeRadioFragment(
+                            radioStationPresentationList[0]
+                        )
+                    if (this.findNavController().currentDestination?.id == R.id.radioListFragment) {
+                        this.findNavController().navigate(direction)
+                    }
+                }
+
+            } else {
+                textRadioStationsEmpty.isVisible = true
+                hideProgress()
+                return@observe
             }
 
             Log.d(
@@ -159,6 +219,32 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
             )
 
             hideProgress()
+        }
+    }
+
+    private fun changeTextSelectOrDownload() {
+        val radioStationListFromFragment = viewModel.radioStationListLiveData.value
+
+        // Список может оказаться пустым. Проверяем
+        if (!radioStationListFromFragment.isNullOrEmpty()) {
+
+            // Если он не пуст, проверяем его country code
+            val radioCountryCodeFromFragment = radioStationListFromFragment[0].countryCode
+
+            // И сравниваем с countrycode в плейере
+            if (radioCountryCodeFromFragment == radioCountryCodeFromActivity) {
+                textRadioListSecondTitleSelect.isVisible = true
+                textRadioListSecondTitleDownload.isVisible = false
+                listRadioStationAdapter.isClickableRecyclerView = true
+            } else {
+                textRadioListSecondTitleSelect.isVisible = false
+                textRadioListSecondTitleDownload.isVisible = true
+                listRadioStationAdapter.isClickableRecyclerView = false
+            }
+
+        } else {
+            // List is empty
+            textRadioListSecondTitleDownload.isVisible = false
         }
     }
 

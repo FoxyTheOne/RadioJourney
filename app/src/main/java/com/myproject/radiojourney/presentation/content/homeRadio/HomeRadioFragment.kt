@@ -243,7 +243,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                     Log.d(TAG, "Выбранный элемент списка: $radioStation")
 
                     // Здесь мы получаем выбранную станцию из списка радиостанций по клику. Необходимо передать её в наш новый плейер
-                    mainViewModel.saveNewMediaId(radioStation.urlResolved)
+                    mainViewModel.saveNewMediaId(radioStation.stationuuid)
                     mainViewModel.fetchSongs(radioStation.countryCode)
                     mainViewModel.playOrToggleSong(radioStation, false)
                     mainViewModel.notJustLaunchedEnableAutoplay()
@@ -265,7 +265,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                     Log.d(TAG, "Выбранный элемент списка: $radioStationFavourite")
 
                     // Здесь мы переходим из фрагмента "Избранное". Стоит загрузить в плейер плейлист избранного.
-                    mainViewModel.saveNewMediaId(radioStationFavourite.urlResolved)
+                    mainViewModel.saveNewMediaId(radioStationFavourite.stationuuid)
                     mainViewModel.fetchSongs("FAV")
                     mainViewModel.playOrToggleSong(radioStationFavourite, false)
                     mainViewModel.notJustLaunchedEnableAutoplay()
@@ -287,7 +287,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                     Log.d(TAG, "Выбранный элемент списка: $radioStationFavourite")
 
                     // Здесь мы переходим из фрагмента "Избранное". Стоит загрузить в плейер плейлист избранного.
-                    mainViewModel.saveNewMediaId(radioStationFavourite.urlResolved)
+                    mainViewModel.saveNewMediaId(radioStationFavourite.stationuuid)
                     mainViewModel.fetchSongs("FAV")
                     mainViewModel.playOrToggleSong(radioStationFavourite, false)
                     mainViewModel.notJustLaunchedEnableAutoplay()

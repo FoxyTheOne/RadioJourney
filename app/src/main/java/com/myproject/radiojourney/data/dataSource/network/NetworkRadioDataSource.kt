@@ -7,6 +7,7 @@ import com.myproject.radiojourney.entities.remote.RadioStationRemote
 import retrofit2.HttpException
 import java.io.IOException
 import java.net.InetAddress
+import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import java.util.*
 import javax.inject.Inject
@@ -22,6 +23,7 @@ class NetworkRadioDataSource @Inject constructor(
     // These steps should be done in your APP or program.
     override suspend fun getCountryCodeList(): List<CountryCodeRemote> {
         try {
+
             // 1. Get a list of available servers.
             // Do a DNS-lookup of 'all.api.radio-browser.info'. This gives you a list of all available servers.
             val listDNSResultArray = updateDNSList()
@@ -35,10 +37,10 @@ class NetworkRadioDataSource @Inject constructor(
 
             val resultDNSIterator = listDNSResultArray.iterator()
             while (resultDNSIterator.hasNext()) {
-                try {
-                    val baseURL = "https://${resultDNSIterator.next()}"
-                    Log.d(TAG, "результат baseURL = $baseURL")
+                val baseURL = "https://${resultDNSIterator.next()}"
+                Log.d(TAG, "результат baseURL = $baseURL")
 
+                try {
                     // radioServiceWrapper - обёртка. Инициализируем retrofit и получаем сервис:
                     val radioService = radioServiceWrapper.getRadioService(baseURL)
                     // И затем делаем запрос getCountryCodeList():
@@ -49,14 +51,19 @@ class NetworkRadioDataSource @Inject constructor(
                     }
 
                     if (countryCodeRemoteList != emptyList<String>()) break
+                } catch (e: SocketTimeoutException) {
+                    Log.d(TAG, "Exception: ${e.message}. Failed to connect to baseURL. Continue searching baseURL in resultDNSIterator")
+                    e.printStackTrace()
+                    continue
                 } catch (e: IOException) {
-                    Log.d(TAG, "Exception: ${e.message}. Problem with the server")
+                    Log.d(TAG, "Exception: ${e.message}. Problem with the server. Continue searching baseURL in resultDNSIterator")
                     e.printStackTrace()
                     continue
                 }
             }
 
             return countryCodeRemoteList
+
         } catch (e: HttpException) {
             Log.d(TAG, "Exception: ${e.message}. The server is down")
             e.printStackTrace()
@@ -74,38 +81,57 @@ class NetworkRadioDataSource @Inject constructor(
     // API -> Для того, чтобы воспользоваться API радиостанций, нужно выполнить несколько шагов.
     // These steps should be done in your APP or program.
     override suspend fun getRadioStationList(countryCode: String): List<RadioStationRemote> {
-        // 1. Get a list of available servers.
-        // Do a DNS-lookup of 'all.api.radio-browser.info'. This gives you a list of all available servers.
-        val listDNSResultArray = updateDNSList()
+        try {
 
-        // 2. Randomize the list and choose the first entry of the now random list. If a request fails just retry the request with the next entry in the list.
-        listDNSResultArray.shuffle()
+            // 1. Get a list of available servers.
+            // Do a DNS-lookup of 'all.api.radio-browser.info'. This gives you a list of all available servers.
+            val listDNSResultArray = updateDNSList()
 
-        // Пробуем перебирать сервера
-        var radioStationRemoteList =
-            listOf<RadioStationRemote>() // Пустой массив для результата запроса
+            // 2. Randomize the list and choose the first entry of the now random list. If a request fails just retry the request with the next entry in the list.
+            listDNSResultArray.shuffle()
 
-        val resultDNSIterator = listDNSResultArray.iterator()
-        while (resultDNSIterator.hasNext()) {
-            val baseURL = "https://${resultDNSIterator.next()}"
-            Log.d(TAG, "результат baseURL = $baseURL")
+            // Пробуем перебирать сервера
+            var radioStationRemoteList =
+                listOf<RadioStationRemote>() // Пустой массив для результата запроса
 
-            // radioServiceWrapper - обёртка. Инициализируем retrofit и получаем сервис:
-            val radioService = radioServiceWrapper.getRadioService(baseURL)
-            // И затем делаем запрос getCountryCodeList():
-            radioStationRemoteList = radioService.getRadioStationList(searchTerm = countryCode)
+            val resultDNSIterator = listDNSResultArray.iterator()
 
-            if (radioStationRemoteList != emptyList<String>()) {
-                Log.d(
-                    TAG,
-                    "Успешный запрос. Получен результат radioStationRemoteList $radioStationRemoteList, элемент[0]: ${radioStationRemoteList[0]}"
-                )
+            while (resultDNSIterator.hasNext()) {
+                val baseURL = "https://${resultDNSIterator.next()}"
+                Log.d(TAG, "результат baseURL = $baseURL")
 
-                break
+                try {
+                    // radioServiceWrapper - обёртка. Инициализируем retrofit и получаем сервис:
+                    val radioService = radioServiceWrapper.getRadioService(baseURL)
+                    // И затем делаем запрос getCountryCodeList():
+                    radioStationRemoteList =
+                        radioService.getRadioStationList(searchTerm = countryCode)
+
+                    if (radioStationRemoteList != emptyList<String>()) {
+                        Log.d(
+                            TAG,
+                            "Успешный запрос. Получен результат radioStationRemoteList $radioStationRemoteList, элемент[0]: ${radioStationRemoteList[0]}"
+                        )
+                        break
+                    }
+                } catch (e: SocketTimeoutException) {
+                    Log.d(TAG, "Exception: ${e.message}. Failed to connect to baseURL. Continue searching baseURL in resultDNSIterator")
+                    e.printStackTrace()
+                    continue
+                } catch (e: IOException) {
+                    Log.d(TAG, "Exception: ${e.message}. Problem with the server. Continue searching baseURL in resultDNSIterator")
+                    e.printStackTrace()
+                    continue
+                }
             }
-        }
 
-        return radioStationRemoteList
+            return radioStationRemoteList
+
+        } catch (e: HttpException) {
+            Log.d(TAG, "Exception: ${e.message}. The server is down")
+            e.printStackTrace()
+            return listOf()
+        }
     }
 
     // do the DNS request

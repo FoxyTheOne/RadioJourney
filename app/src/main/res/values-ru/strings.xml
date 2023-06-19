@@ -26,8 +26,10 @@
     <string name="dialogInternetTrouble_text2_cashing">Если же нет, не обращайте внимание на ошибку. Если нужно, повторите последнее действие</string>
     <string name="dialogInternetTrouble_text">Возникла проблема при запросе на сервер. Попробуйте повторить последнее действие или проверье ваше интернет соендинение.</string>
 
-    <string name="radioStationList_title">Список радиостанций. Выберите:</string>
+    <string name="radioStationList_title_select">Список радиостанций. Выберите:</string>
+    <string name="radioStationList_title_download">Нажмите здесь, чтобы загрузить и включить этот список радиостанций</string>
     <string name="radioStationList_count">Счётчик нажатий: </string>
+    <string name="radioStationList_empty">Здесь пусто. Что-то пошло не так</string>
 
     <string name="foregroundNotification_name">Кеширование локаций</string>
     <string name="foregroundNotification_description">Кеширование… </string>

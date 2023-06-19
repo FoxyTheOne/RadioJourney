@@ -7,6 +7,8 @@ import com.myproject.radiojourney.R
 class SwipeRadioStationAdapter :
     BaseRadioStationAdapter(R.layout.layout_radio_station_swipe_item_new) {
 
+    var isClickableRecyclerView = true
+
     // Определяем абстрактную переменную
     override val differ = AsyncListDiffer(this, diffCallback)
 
@@ -20,9 +22,13 @@ class SwipeRadioStationAdapter :
             title.text = text
 
             setOnClickListener {
-                onItemClickListener?.let { clickLambda ->
-                    clickLambda(radioStation)
+
+                if (isClickableRecyclerView) {
+                    onItemClickListener?.let { clickLambda ->
+                        clickLambda(radioStation)
+                    }
                 }
+
             }
         }
     }

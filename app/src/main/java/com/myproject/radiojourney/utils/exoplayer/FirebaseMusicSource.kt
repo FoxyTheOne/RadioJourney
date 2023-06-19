@@ -88,7 +88,7 @@ class FirebaseMusicSource @Inject constructor(
                 .putString(
                     METADATA_KEY_MEDIA_ID,
                     radioStationRemote.stationuuid
-                ) // media Id / url (Primary key) / Пробую поменять здесь url на urlResolved, т.к. обнаружились нестыковки у первых станций в плейлистах
+                ) // media Id / stationuuid (Primary key) /
                 .putString(METADATA_KEY_MEDIA_URI, radioStationRemote.url_resolved) // url_resolved
                 .putString(METADATA_KEY_TITLE, radioStationRemote.name) // station name
                 .putString(METADATA_KEY_DISPLAY_TITLE, radioStationRemote.name) // station name
@@ -133,7 +133,7 @@ class FirebaseMusicSource @Inject constructor(
                     .putString(
                         METADATA_KEY_MEDIA_ID,
                         radioStationLocal.stationuuid
-                    ) // media Id / url (Primary key) / Пробую поменять здесь url на urlResolved, т.к. обнаружились нестыковки у первых станций в плейлистах
+                    ) // media Id / stationuuid (Primary key)
                     .putString(
                         METADATA_KEY_MEDIA_URI,
                         radioStationLocal.urlResolved

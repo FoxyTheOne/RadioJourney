@@ -172,12 +172,12 @@ class MainViewModel @Inject constructor(
                 Log.d(TAG, "isPrepared = true: $isPrepared")
 
                 // if we want to play the same song (pause and play it again)
-                val test = mediaItem.urlResolved
+                val test = mediaItem.stationuuid
                 val test2 = curPlayingSongLiveData.value?.getString(METADATA_KEY_MEDIA_ID)
                 Log.d(TAG, "test = $test, test2 = $test2")
 
                 if (isPrepared &&
-                    mediaItem.urlResolved ==
+                    mediaItem.stationuuid ==
                     curPlayingSongLiveData.value?.getString(METADATA_KEY_MEDIA_ID)
                 ) { // curPlayingSong.value?.getString(METADATA_KEY_MEDIA_ID) <- it's how we get metadata of currently playing song
 
@@ -196,8 +196,10 @@ class MainViewModel @Inject constructor(
                                         "_FAV"
                                     )
                                 ) {
+                                    // TODO check (we changed mediaId from url to id)
                                     musicServiceConnection.transportControls.playFromMediaId(
-                                        mediaItem.urlResolved,
+//                                        mediaItem.urlResolved,
+                                        mediaItem.stationuuid,
                                         null
                                     )
                                     if (toggle) musicServiceConnection.transportControls.pause()
@@ -223,8 +225,10 @@ class MainViewModel @Inject constructor(
                     _messageLiveData.postValue(AUDIO_CONNECTING)
                     Log.d(TAG, "Включаем другую песню ${mediaItem.stationName}")
 
+                    // TODO check (we changed mediaId from url to id)
                     musicServiceConnection.transportControls.playFromMediaId(
-                        mediaItem.urlResolved,
+                        mediaItem.stationuuid,
+//                        mediaItem.urlResolved,
                         null
                     )
                     saveLastUsedRadioStationUrlAndCode(mediaItem.urlResolved, mediaItem.countryCode)
@@ -423,50 +427,49 @@ class MainViewModel @Inject constructor(
                 radioStationList = radioStationListFromSwipeAdapterNonNullButCanBeEmpty
             }
 
+            var maxRadioStationListIndex = 0
+            radioStationList?.let { maxRadioStationListIndex = it.size - 1 }
+
             // If position = 0, check the position
             // Если мы скачиваем новый плейлист, то здесь всегда сначала получаем position = 0
             // Нужно проверить, действительно ли мы выбрали первую песню в плейлисте
-            if (newPosition == 0) {
-                var radioStationNeedToFind: RadioStationPresentation? = null
-                val mediaId: String? = _newMediaIdLiveData.value
+//            if (newPosition == 0) {
+//                var radioStationNeedToFind: RadioStationPresentation? = null
+//                val mediaId: String? = _newMediaIdLiveData.value
+//
+//                // For sure, calculating chosen position
+//                radioStationList?.let { nonNullRadioStationList ->
+//
+//                    if (nonNullRadioStationList.isNotEmpty() && !mediaId.isNullOrBlank()) {
+//                        // Иногда находит несколько радиостанций с одинаковым url. Остановимся на первой.
+//
+////                        val maxListIndex = nonNullRadioStationList.size - 1
+//                        for (i in 0..maxRadioStationListIndex) {
+//                            if (nonNullRadioStationList[i].stationuuid == mediaId) {
+//                                radioStationNeedToFind = nonNullRadioStationList[i]
+//                                newPosition = i
+//                                Log.d(
+//                                    TAG,
+//                                    "position found: newPosition = $newPosition"
+//                                )
+//                                break
+//                            }
+//                        }
+//                    }
+//
+//                }
+//                // Т.обр., если мы нашли нужную радиостанцию в списке, radioStationNeedToFind != null. Тогда записываем нужную позицию.
+//                // Если же не нашли - позиция остаётся то же, какая и прилетела в метод изначально
+//
+//                Log.d(
+//                    TAG,
+//                    "position found: $newPosition, station need to play: $radioStationNeedToFind"
+//                )
+//            }
 
-                // For sure, calculating chosen position
-                radioStationList?.let { nonNullRadioStationList ->
-
-                    if (nonNullRadioStationList.isNotEmpty() && !mediaId.isNullOrBlank()) {
-                        // Иногда находит несколько радиостанцию Остановимся на первой.
-                        // TODO У нас снова одинаковые mediaId. Нужно переделать базу данных
-
-                        val maxListIndex = nonNullRadioStationList.size - 1
-                        for (i in 0..maxListIndex) {
-                            if (nonNullRadioStationList[i].urlResolved == mediaId) {
-                                radioStationNeedToFind = nonNullRadioStationList[i]
-                                newPosition = i
-                                Log.d(
-                                    TAG,
-                                    "position found: newPosition = $newPosition"
-                                )
-                                break
-                            }
-                        }
-                    }
-
-                }
-                // Т.обр., если мы нашли нужную радиостанцию в списке, radioStationNeedToFind != null. Тогда записываем нужную позицию.
-                // Если же не нашли - позиция остаётся то же, какая и прилетела в метод изначально
-
-                Log.d(
-                    TAG,
-                    "position found: $newPosition, station need to play: $radioStationNeedToFind"
-                )
-            }
-
-            // Previous fun NAME POSITION:
+            // Previous it was fun NAME POSITION:
 
             val playbackState = playbackStateLiveData.value
-//            val maxIndex = radioStationListFromSwipeAdapterNonNullButCanBeEmpty.size + 1
-            var maxIndex = 0
-            radioStationList?.let { maxIndex = it.size - 1 }
 
             // We must check, if player is playing
             if (playbackState?.isPlaying == true) {
@@ -476,10 +479,10 @@ class MainViewModel @Inject constructor(
 
                     Log.d(
                         TAG,
-                        "Checking: maxIndex = $maxIndex, position = $newPosition"
+                        "Checking: maxIndex = $maxRadioStationListIndex, radio station position = $newPosition"
                     )
 
-                    if (newPosition <= maxIndex) {
+                    if (newPosition <= maxRadioStationListIndex) {
                         Log.d(TAG, "position <= maxIndex")
 
                         val test = radioStationList?.get(newPosition)
@@ -508,9 +511,9 @@ class MainViewModel @Inject constructor(
 
                 try {
 
-                    Log.d(TAG, "Checking: maxIndex = $maxIndex, position = $newPosition")
+                    Log.d(TAG, "Checking: maxIndex = $maxRadioStationListIndex, position = $newPosition")
 
-                    if (newPosition <= maxIndex) {
+                    if (newPosition <= maxRadioStationListIndex) {
                         Log.d(TAG, "position <= maxIndex")
 
                         _updateCurPlayingRadioStationLiveData.postValue(

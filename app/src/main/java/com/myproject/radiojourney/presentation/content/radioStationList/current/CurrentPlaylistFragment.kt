@@ -38,7 +38,8 @@ class CurrentPlaylistFragment : BaseRadioListFragmentAbstract() {
 
     private var radioStationPlaylist: List<RadioStationPresentation> = emptyList()
     private lateinit var textRadioListTitle: AppCompatTextView
-    private lateinit var textRadioStationDialogTitle: AppCompatTextView
+    private lateinit var textRadioListSecondTitleSelect: AppCompatTextView
+    private lateinit var textRadioListSecondTitleDownload: AppCompatTextView
     private lateinit var imageArrowBack: AppCompatImageView
     private lateinit var radioListAdapter: RadioListAdapter
     private lateinit var recyclerViewRadioStationList: RecyclerView
@@ -50,8 +51,10 @@ class CurrentPlaylistFragment : BaseRadioListFragmentAbstract() {
         textRadioListTitle = view.findViewById(R.id.text_myFavorites_title)
         textRadioListTitle.text = resources.getText(R.string.currentPlaylist_title)
 
-        textRadioStationDialogTitle = view.findViewById(R.id.text_radioStationDialogTitle)
-        textRadioStationDialogTitle.isVisible = false
+        textRadioListSecondTitleSelect = view.findViewById(R.id.text_radioStationDialogTitleSelect)
+        textRadioListSecondTitleDownload = view.findViewById(R.id.text_radioStationDialogTitleDownload)
+        textRadioListSecondTitleSelect.isVisible = false
+        textRadioListSecondTitleDownload.isVisible = false
 
         imageArrowBack = view.findViewById(R.id.image_arrowBack)
         recyclerViewRadioStationList = view.findViewById(R.id.recyclerView_radioStationList)

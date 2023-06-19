@@ -7,6 +7,8 @@ import com.myproject.radiojourney.R
 class ListRadioStationAdapter:
     BaseRadioStationAdapter(R.layout.layout_radio_station_list_item) {
 
+    var isClickableRecyclerView = false
+
     // Определяем абстрактную переменную
     override val differ = AsyncListDiffer(this, diffCallback)
 
@@ -24,9 +26,13 @@ class ListRadioStationAdapter:
             textRadioStationClickCount.text = radioStation.clickCount.toString()
 
             setOnClickListener {
-                onItemClickListener?.let { clickLambda ->
-                    clickLambda(radioStation)
+
+                if (isClickableRecyclerView) {
+                    onItemClickListener?.let { clickLambda ->
+                        clickLambda(radioStation)
+                    }
                 }
+
             }
         }
     }

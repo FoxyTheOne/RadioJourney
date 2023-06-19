@@ -22,6 +22,8 @@ class FavoriteListAdapter(
 //        private const val TAG = "FavoriteListAdapter"
 //    }
 
+    var isClickableRecyclerView = false
+
     // Создаём элемент списка. Initialize itemView for each item
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FavoriteListViewHolder {
         val itemView = LayoutInflater.from(parent.context)
@@ -65,17 +67,25 @@ class FavoriteListAdapter(
         // 1.4. ОБРАБОТКА КЛИКА -> В функции init{} д.б. view.setOnClickListener{}, который передаст информацию в фрагмент, а уже из фрагмента мы будем передавать информацию во view model
         init {
             linearStationDescription.setOnClickListener {
-                // ОБРАБОТКА КЛИКА -> Передадим по клику нашу переменную, если она не null (передаём в нашу анонимную функцию)
-                radioStationFavourite?.let { nonNullRadioStationPresentation ->
-                    onItemClicked(nonNullRadioStationPresentation)
+
+                if (isClickableRecyclerView) {
+                    // ОБРАБОТКА КЛИКА -> Передадим по клику нашу переменную, если она не null (передаём в нашу анонимную функцию)
+                    radioStationFavourite?.let { nonNullRadioStationPresentation ->
+                        onItemClicked(nonNullRadioStationPresentation)
+                    }
                 }
+
             }
             // По клику на звезду у нас будет другая функция (добавить /удалить из избранного)
             linearImageStar.setOnClickListener {
-                // ОБРАБОТКА КЛИКА -> Передадим по клику нашу переменную, если она не null (передаём в нашу анонимную функцию)
-                radioStationFavourite?.let { nonNullRadioStationPresentation ->
-                    onStarClicked(nonNullRadioStationPresentation)
+
+                if (isClickableRecyclerView) {
+                    // ОБРАБОТКА КЛИКА -> Передадим по клику нашу переменную, если она не null (передаём в нашу анонимную функцию)
+                    radioStationFavourite?.let { nonNullRadioStationPresentation ->
+                        onStarClicked(nonNullRadioStationPresentation)
+                    }
                 }
+
             }
         }
 

@@ -16,6 +16,7 @@ import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
 import com.google.android.exoplayer2.upstream.DefaultDataSource
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
+import com.myproject.radiojourney.data.dataSource.network.NetworkRadioDataSource
 import com.myproject.radiojourney.data.sharedPreference.IAppSharedPreference
 import com.myproject.radiojourney.other.Constants.MEDIA_ROOT_ID
 import com.myproject.radiojourney.other.Constants.NETWORK_ERROR
@@ -99,11 +100,19 @@ class MusicService : MediaBrowserServiceCompat() {
 
             } catch (e: SocketTimeoutException) {
                 // Когда сохранён не верный CountryCode, по запросу такого не найдёт и выдаст ошибку retrofit2.HttpException: HTTP 404
+                Log.d(
+                    TAG,
+                    "! Caught SocketTimeoutException in method firebaseMusicSource.fetchMediaData()"
+                )
                 e.printStackTrace()
 //                firebaseMusicSource.fetchMediaData("AD")
                 // TODO в этом случае лучше ничего не скачивать и выдать диалоговое окно об ошибке
             } catch (e: IOException) {
                 // Когда сохранён не верный CountryCode, по запросу такого не найдёт и выдаст ошибку retrofit2.HttpException: HTTP 404
+                Log.d(
+                    TAG,
+                    "! Caught IOException in method firebaseMusicSource.fetchMediaData()"
+                )
                 e.printStackTrace()
 //                firebaseMusicSource.fetchMediaData("AD")
                 // TODO в этом случае лучше ничего не скачивать и выдать диалоговое окно об ошибке
@@ -185,14 +194,14 @@ class MusicService : MediaBrowserServiceCompat() {
         // Если мы только что запустили программу, то песня ещё не будет выбрана. Стоит отобразить в плейере ту, что была выбрана последней в предыдущем запуске
         // TODO Если будет глючить, возможно стоит попробовать ориентироваться на isPlayerInitialized, а не curPlayingSong
         if (curPlayingSong == null) {
-            // Находим её mediaId
+            // Находим её mediaId (after updating database, we're looking for url, not mediaId)
             val lastUsedRadioStationUrl = preference.getLastUsedRadioStationUrl()
             var radioStationNeedToFind: MediaMetadataCompat? = null
 
-            // Находим станцию по mediaId
+            // Находим станцию по mediaId (after updating database, we're looking for url, not mediaId)
             if (lastUsedRadioStationUrl != "") {
                 radioStations.forEach {
-                    if (it.description.mediaId == lastUsedRadioStationUrl) {
+                    if (it.description.mediaUri.toString() == lastUsedRadioStationUrl) {
                         radioStationNeedToFind = it
                     }
                 }

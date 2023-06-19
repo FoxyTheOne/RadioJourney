@@ -4,8 +4,10 @@ import android.net.Uri
 import android.os.Bundle
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import android.util.Log
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
+import com.myproject.radiojourney.data.dataSource.network.NetworkRadioDataSource
 import com.myproject.radiojourney.utils.exoplayer.FirebaseMusicSource
 import com.myproject.radiojourney.utils.exoplayer.callback.State.*
 import kotlinx.coroutines.CoroutineScope
@@ -18,9 +20,9 @@ class MusicPlaybackPreparer(
     private val playerPrepared: (MediaMetadataCompat?) -> Unit // lambda, that can be called when our player is prepared
 ) : MediaSessionConnector.PlaybackPreparer {
 
-//    companion object {
-//        private const val TAG = "MusicPlaybackPreparer"
-//    }
+    companion object {
+        private const val TAG = "MusicPlaybackPreparer"
+    }
 
     private var lastCountryCode: String? = null
 
@@ -128,6 +130,7 @@ class MusicPlaybackPreparer(
                                     )
                                 } catch (e: IOException) {
                                     // Когда сохранён не верный CountryCode, по запросу такого не найдёт и выдаст ошибку retrofit2.HttpException: HTTP 404
+                                    Log.d(TAG, "Exception: ${e.message}. Problem occurred in method onCommand")
                                     e.printStackTrace()
                                     firebaseMusicSource.fetchMediaData("AD")
                                     // TODO Была такая ошибка из-за проблемы с интернетом. Сделать высвечивание сообщения об ошибке, чтобы понимали, почему скачался и включился не тот плейлист

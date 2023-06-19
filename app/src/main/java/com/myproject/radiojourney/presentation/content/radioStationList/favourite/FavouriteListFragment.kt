@@ -9,6 +9,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.appcompat.widget.AppCompatTextView
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
@@ -21,6 +22,9 @@ import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.other.Status
 import com.myproject.radiojourney.presentation.MainViewModel
 import com.myproject.radiojourney.presentation.content.radioStationList.base.BaseRadioListFragmentAbstract
+import com.myproject.radiojourney.presentation.content.radioStationList.radioList.RadioListFragment
+import com.myproject.radiojourney.presentation.content.radioStationList.radioList.RadioListFragmentDirections
+import java.io.IOException
 
 /**
  * Страница с избранным
@@ -39,31 +43,35 @@ class FavouriteListFragment : BaseRadioListFragmentAbstract() {
     private lateinit var dialogInternetTrouble: Dialog
     private lateinit var favouriteListAdapter: FavoriteListAdapter
     private lateinit var textRadioListTitle: AppCompatTextView
-    private lateinit var textRadioStationDialogTitle: AppCompatTextView
+    private lateinit var textRadioListSecondTitleSelect: AppCompatTextView
+    private lateinit var textRadioListSecondTitleDownload: AppCompatTextView
     private lateinit var imageArrowBack: AppCompatImageView
     private lateinit var textFavouritesEmpty: TextView
     private lateinit var recyclerViewRadioStationList: RecyclerView
     private lateinit var frameLayout: FrameLayout
     private lateinit var progressCircular: ProgressBar
+    private lateinit var radioCountryCodeFromActivity: String
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // 1.2. ViewModel. We bind our viewModel to the lifecycle of our activity, not fragment. We pass our activity as an owner of the lifecycle.
+        // So, we need to do this way:
+        mainViewModel = ViewModelProvider(requireActivity())[MainViewModel::class.java]
+
         textRadioListTitle = view.findViewById(R.id.text_myFavorites_title)
         textRadioListTitle.text = resources.getText(R.string.favouriteRadioStationList_title)
 
-        textRadioStationDialogTitle = view.findViewById(R.id.text_radioStationDialogTitle)
-        textRadioStationDialogTitle.isVisible = false
+        textRadioListSecondTitleSelect = view.findViewById(R.id.text_radioStationDialogTitleSelect)
+        textRadioListSecondTitleDownload =
+            view.findViewById(R.id.text_radioStationDialogTitleDownload)
+        textRadioListSecondTitleSelect.isVisible = false
 
         imageArrowBack = view.findViewById(R.id.image_arrowBack)
         textFavouritesEmpty = view.findViewById(R.id.text_favouritesEmpty)
         recyclerViewRadioStationList = view.findViewById(R.id.recyclerView_radioStationList)
         frameLayout = view.findViewById(R.id.frameLayout)
         progressCircular = view.findViewById(R.id.progressCircular)
-
-        // 1.2. ViewModel. We bind our viewModel to the lifecycle of our activity, not fragment. We pass our activity as an owner of the lifecycle.
-        // So, we need to do this way:
-        mainViewModel = ViewModelProvider(requireActivity())[MainViewModel::class.java]
 
         // Получаем список избранного для отображения
         viewModel.getRadioStationFavouriteListAndShow()
@@ -75,6 +83,16 @@ class FavouriteListFragment : BaseRadioListFragmentAbstract() {
 
         initListeners()
         subscribeOnLiveData()
+
+        // Если у нас играет другой плейлист, нужно показать надпись "скачать". Если же этот плейлист уже скачан - "выберите радиостанцию"
+        radioCountryCodeFromActivity =
+            if ((mainViewModel.mediaItemsListLiveData.value?.data?.size ?: 0) >= 1) {
+                mainViewModel.mediaItemsListLiveData.value?.data?.get(0)?.countryCode
+                    ?: ""
+            } else {
+                ""
+            }
+        changeTextDownloadOrNothing()
     }
 
     private fun initListeners() {
@@ -162,6 +180,21 @@ class FavouriteListFragment : BaseRadioListFragmentAbstract() {
                 }
                 recyclerViewRadioStationList.itemAnimator = animator
 
+                changeTextDownloadOrNothing()
+
+                textRadioListSecondTitleDownload.setOnClickListener {
+                    Log.d(TAG, "Загружаем плейлист")
+
+                    // Открываем по клику другой фрагмент, передаём туда нашу радиостанцию
+                    val direction =
+                        FavouriteListFragmentDirections.actionFavouriteListFragmentToHomeRadioFragment(
+                            radioStationFavouritePresentationList[0]
+                        )
+                    if (this.findNavController().currentDestination?.id == R.id.favouriteListFragment) {
+                        this.findNavController().navigate(direction)
+                    }
+                }
+
             } else {
                 textFavouritesEmpty.isVisible = true
                 hideProgress()
@@ -208,6 +241,36 @@ class FavouriteListFragment : BaseRadioListFragmentAbstract() {
                 mainViewModel.curPlayingSongLiveData.value?.description?.mediaId,
                 false
             )
+        }
+    }
+
+    private fun changeTextDownloadOrNothing() {
+        val favouriteStationList = viewModel.radioStationFavouriteListLiveData.value
+
+        // Список избранного может быть пустым. Проверяем
+        if (!favouriteStationList.isNullOrEmpty()) {
+
+            // Если он не пуст, всё хорошо. В этом фрагменте могут быть только избранные радиостанции, поэтому проверять можно только список в плейере
+//            val radioCountryCodeFromFragment = favouriteStationList[0].countryCode
+
+            // textRadioListSecondTitleDownload виден только если у нас список избранного и на экране, и в плейере:
+//            textRadioListSecondTitleDownload.isVisible =
+//                !radioCountryCodeFromActivity.endsWith("_FAV", ignoreCase = true)
+            try {
+                if (radioCountryCodeFromActivity.endsWith("_FAV", ignoreCase = true)) {
+                    textRadioListSecondTitleDownload.isVisible = false
+                    favouriteListAdapter.isClickableRecyclerView = true
+                } else {
+                    textRadioListSecondTitleDownload.isVisible = true
+                    favouriteListAdapter.isClickableRecyclerView = false
+                }
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+
+        } else {
+            // Favourites list is empty
+            textRadioListSecondTitleDownload.isVisible = false
         }
     }
 

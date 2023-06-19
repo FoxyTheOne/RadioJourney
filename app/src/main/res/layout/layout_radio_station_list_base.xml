@@ -32,7 +32,7 @@
             android:layout_height="wrap_content"
             android:background="@color/background_transparent"
             android:orientation="horizontal"
-            app:layout_constraintBottom_toTopOf="@+id/text_radioStationDialogTitle"
+            app:layout_constraintBottom_toTopOf="@+id/text_radioStationDialogTitleSelect"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/home_toolbar"
@@ -66,7 +66,7 @@
 
         <!-- View только для обычных списков, не My favourites -->
         <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/text_radioStationDialogTitle"
+            android:id="@+id/text_radioStationDialogTitleSelect"
             style="@style/login_bottom_orange"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -74,11 +74,27 @@
             android:paddingStart="@dimen/space_beforeOrAfterElement"
             android:paddingEnd="@dimen/space_beforeOrAfterElement"
             android:paddingBottom="@dimen/space_beforeOrAfterElement"
-            android:text="@string/radioStationList_title"
-            app:layout_constraintBottom_toTopOf="@+id/recyclerView_radioStationList"
+            android:text="@string/radioStationList_title_select"
+            app:layout_constraintBottom_toTopOf="@+id/text_radioStationDialogTitleDownload"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/linear_radioStationsTitle"
+            app:layout_constraintVertical_chainStyle="packed" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/text_radioStationDialogTitleDownload"
+            style="@style/login_bottom_orange"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:padding="@dimen/space_beforeOrAfterElement"
+            android:background="@color/orange_transparent"
+            android:textColor="@color/white"
+            android:text="@string/radioStationList_title_download"
+            app:layout_constraintBottom_toTopOf="@+id/recyclerView_radioStationList"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/text_radioStationDialogTitleSelect"
             app:layout_constraintVertical_chainStyle="packed" />
 
         <androidx.recyclerview.widget.RecyclerView
@@ -89,10 +105,10 @@
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/text_radioStationDialogTitle"
+            app:layout_constraintTop_toBottomOf="@+id/text_radioStationDialogTitleDownload"
             app:layout_constraintVertical_chainStyle="packed" />
 
-        <!-- View если My favourites или Playlist пустые -->
+        <!-- View если My favourites пуст -->
         <TextView
             android:id="@+id/text_favouritesEmpty"
             style="@style/login_bottom"
@@ -100,6 +116,19 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/space_beforeOrAfterElement"
             android:text="@string/favouriteRadioStationList_empty"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/linear_radioStationsTitle" />
+
+        <!-- View если Playlist пуст -->
+        <TextView
+            android:id="@+id/text_radioStationsEmpty"
+            style="@style/login_bottom"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_beforeOrAfterElement"
+            android:text="@string/radioStationList_empty"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

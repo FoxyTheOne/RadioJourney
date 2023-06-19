@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.snackbar.Snackbar
@@ -25,6 +26,7 @@ import com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioFragme
 import com.myproject.radiojourney.utils.extension.isPlaying
 import com.myproject.radiojourney.utils.service.ProgressForegroundService
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
 /**
  * This source code is free for studying purposes but you are not allowed to copy and use it in other applications (projects).
@@ -103,6 +105,11 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                 positionOffsetPixels: Int
             ) {
                 if (swipeRadioStationAdapter.radioStationList.isNotEmpty()) {
+
+////                     TODO check if placing here this method would help
+//                    mainViewModel.curPlayingSongLiveData.value?.description?.let {
+//                        switchViewPagerToCurrentSong(it.mediaId ?: "", it.subtitle.toString())
+//                    }
 
                     if (swipeRadioStationAdapter.radioStationList[position].isStationInFavourite) {
                         binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_24_orange)
@@ -191,7 +198,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
         if (swipeRadioStationAdapter.radioStationList.isNotEmpty()) {
             swipeRadioStationAdapter.radioStationList.forEach {
-                if (it.urlResolved == mediaId) {
+                if (it.stationuuid == mediaId) {
                     radioStationNeedToFind = it
                 }
             }
@@ -221,6 +228,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             it?.let { result ->
                 when (result.status) {
                     SUCCESS -> {
+
                         result.data?.let { radioStations ->
                             swipeRadioStationAdapter.radioStationList = radioStations
                             // if we had an individual image
@@ -231,20 +239,21 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                             // Попробуем назначить адаптер после обновления списка радиостанций
                             binding?.vpSong?.adapter = swipeRadioStationAdapter
 
-                            mOnPageChangeCallback?.onPageSelected(0)
-                            // TODO почему-то этот метод изредка не вызывается, хотя должен
+//                            mOnPageChangeCallback?.onPageSelected(0)
+//                            // TODO почему-то этот метод изредка не вызывается, хотя должен
 
                             // В этом месте данные в curPlayingRadioStation будут старые, т.е. данные о предыдущей радиостанции. Это нужно для сравнения предыдущей и текущей в дальнейшем в методе mainViewModel.playOrToggleSong()
-
                             switchViewPagerToCurrentSong(
-                                curPlayingRadioStation?.urlResolved ?: return@observe,
+                                curPlayingRadioStation?.stationuuid ?: return@observe,
                                 curPlayingRadioStation?.countryCode ?: return@observe
                             )
 
                             mOnPageChangeCallback?.onPageScrolled(0, 0.0f, 0)
-                            // TODO Если не включать плейер, а просто листать от списка к списку, этот метод перестаёт вызываться на четвертый раз и звезда перестаёт меняться (избранное/не избранное). Поэтому на всякий случай вызываю его дополнительно. Не самый лучший вариант, думаю. Поэтому помечаю на проверку в дальнейшем.
+                            // ??? Если не включать плейер, а просто листать от списка к списку, этот метод перестаёт вызываться на четвертый раз и звезда перестаёт меняться (избранное/не избранное). Поэтому на всякий случай вызываю его дополнительно. Не самый лучший вариант, думаю. Поэтому помечаю на проверку в дальнейшем.
                         }
+
                     }
+
                     ERROR -> Unit // we don't need this
                     LOADING -> Unit // we don't need this
                 }
@@ -311,6 +320,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                                 Snackbar.LENGTH_LONG
                             ).show()
                         }
+
                     else -> Unit
                 }
             }
@@ -329,6 +339,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                                 Snackbar.LENGTH_LONG
                             ).show()
                         }
+
                     else -> Unit
                 }
             }
@@ -346,6 +357,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                                 Snackbar.LENGTH_LONG
                             ).show()
                         }
+
                     else -> Unit
                 }
             }
@@ -358,11 +370,13 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                     it,
                     Toast.LENGTH_LONG
                 ).show()
+
                 AUDIO_STOPPED, AUDIO_PLAYING -> Toast.makeText(
                     this,
                     it,
                     Toast.LENGTH_SHORT
                 ).show()
+
                 else -> {
                 } // Note the block
             }

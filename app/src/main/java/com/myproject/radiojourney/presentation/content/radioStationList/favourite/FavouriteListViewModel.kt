@@ -184,7 +184,7 @@ class FavouriteListViewModel @Inject constructor(
             try {
                 _radioStationFavouriteListLiveData.value.apply {
                     this?.forEach {
-                        if (it.urlResolved == mediaId) {
+                        if (it.stationuuid == mediaId) {
                             it.isStationInFavourite = isFavourite
                         }
                     }
