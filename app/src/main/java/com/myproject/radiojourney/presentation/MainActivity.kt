@@ -1,5 +1,6 @@
 package com.myproject.radiojourney.presentation
 
+import android.app.Dialog
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -87,6 +88,8 @@ class MainActivity : AppCompatActivity(), IAppSettings {
     private var mOnPageChangeCallback: ViewPager2.OnPageChangeCallback? = null
     private val swipeRadioStationAdapter = SwipeRadioStationAdapter()
 
+    private lateinit var dialogPleaseWait: Dialog
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -106,7 +109,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             ) {
                 if (swipeRadioStationAdapter.radioStationList.isNotEmpty()) {
 
-////                     TODO check if placing here this method would help
+////                     TODO check if placing here this method would help - или переместить в playOrToggleSong()
 //                    mainViewModel.curPlayingSongLiveData.value?.description?.let {
 //                        switchViewPagerToCurrentSong(it.mediaId ?: "", it.subtitle.toString())
 //                    }
@@ -116,6 +119,9 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                     } else {
                         binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_border_24_orange)
                     }
+
+//                    // Убираем прогресс и делаем кнопки снова кликабельными
+//                    mainViewModel.hideProgressAndSetClickable()
 
                 }
                 super.onPageScrolled(position, positionOffset, positionOffsetPixels)
@@ -132,6 +138,11 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                 )
             }
         }
+
+        // Настройки диалогового окна
+        dialogPleaseWait = Dialog(this)
+        // Передайте ссылку на разметку
+        dialogPleaseWait.setContentView(R.layout.layout_please_wait_dialog)
 
         initListeners()
         subscribeToObservers()
@@ -154,6 +165,10 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
         // Click listener (on play image)
         binding?.ivPlayPause?.setOnClickListener {
+            if (!swipeRadioStationAdapter.isClickableRecyclerView) {
+                dialogPleaseWait.show()
+            }
+
             curPlayingRadioStation?.let {
                 mainViewModel.playOrToggleSong(it, true) // true, because now we want to autoplay
             }
@@ -161,6 +176,10 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
         // При нажатии на плейер, открывается список радиостанций в текущем плейлисте
         swipeRadioStationAdapter.setItemClickListener {
+            if (!swipeRadioStationAdapter.isClickableRecyclerView) {
+                dialogPleaseWait.show()
+            }
+
             val direction =
                 HomeRadioFragmentDirections.actionHomeRadioFragmentToCurrentPlaylistFragment()
             if (this.findNavController(R.id.navHostFragment).currentDestination?.id == R.id.homeRadioFragment) {
@@ -217,8 +236,8 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                     radioStationNeedToFind // we also update our curPlayingRadioStation
             }
 
-            // Убираем прогресс и делаем кнопки снова кликабельными
-            mainViewModel.hideProgressAndSetClickable()
+//            // Убираем прогресс и делаем кнопки снова кликабельными
+//            mainViewModel.hideProgressAndSetClickable()
         }
     }
 
@@ -297,6 +316,18 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             curPlayingRadioStation = it
         }
 
+        // Иногда сбивается и в уведомлении показывает правильную станцию, а в плейере - нет. Добавляю страховку
+        mainViewModel.switchViewPagerOnceAgainLiveData.observe(this) {
+            if (it == null) return@observe
+
+            val mediaId = it.description.mediaId
+
+            switchViewPagerToCurrentSong(
+                mediaId ?: return@observe,
+                it.description.subtitle.toString()
+            )
+        }
+
         // LIVEDATA: Will be called everytime the playback changes (pause the player, play a song etc.) -> change our image
         mainViewModel.playbackStateLiveData.observe(this) {
             playbackState = it
@@ -338,6 +369,8 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                                 result.message ?: "An unknown error occurred",
                                 Snackbar.LENGTH_LONG
                             ).show()
+
+                            swipeRadioStationAdapter.isClickableRecyclerView = true
                         }
 
                     else -> Unit
@@ -356,6 +389,8 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                                 result.message ?: "An unknown error occurred",
                                 Snackbar.LENGTH_LONG
                             ).show()
+
+                            swipeRadioStationAdapter.isClickableRecyclerView = true
                         }
 
                     else -> Unit
@@ -413,6 +448,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 //            binding?.vpSong?.isEnabled = false // TODO не работает
 //            binding?.ivPlayPause?.isClickable = false
 //            binding?.ivPlayPause?.isEnabled = false
+            swipeRadioStationAdapter.isClickableRecyclerView = false
         }
         mainViewModel.setClickableLiveData.observe(this) {
 //            // Убрать отображение прогресс бара + разблокировать нажатия как на HomeRadioFragment, так и проигрыватель в main activity
@@ -423,6 +459,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 //            binding?.vpSong?.isEnabled = true // TODO не работает
 //            binding?.ivPlayPause?.isClickable = true
 //            binding?.ivPlayPause?.isEnabled = true
+            swipeRadioStationAdapter.isClickableRecyclerView = true
         }
     }
 

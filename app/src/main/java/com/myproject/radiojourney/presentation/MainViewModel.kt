@@ -3,6 +3,7 @@ package com.myproject.radiojourney.presentation
 import android.accounts.AccountsException
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
+import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.MediaMetadataCompat.METADATA_KEY_MEDIA_ID
 import android.util.Log
 import androidx.lifecycle.LiveData
@@ -77,6 +78,10 @@ class MainViewModel @Inject constructor(
         MutableLiveData<RadioStationPresentation>()
     val addAStationToFavouriteListIfItIsNotThereLiveData: LiveData<RadioStationPresentation> =
         _addAStationToFavouriteListIfItIsNotThereLiveData
+
+    private val _switchViewPagerOnceAgainLiveData = MutableLiveData<MediaMetadataCompat?>()
+    val switchViewPagerOnceAgainLiveData: LiveData<MediaMetadataCompat?> =
+        _switchViewPagerOnceAgainLiveData
 
     // LiveData from our ServiceConnection
     val isConnectedLiveData = musicServiceConnection.isConnectedLiveData
@@ -159,6 +164,8 @@ class MainViewModel @Inject constructor(
     // isPrepared, isPlaying, isPlayEnabled <- it's our extensions
     // In our case, METADATA_KEY_MEDIA_ID = radioStationRemote.url
     fun playOrToggleSong(mediaItem: RadioStationPresentation, toggle: Boolean = false) {
+
+
         Log.d(
             TAG,
             "playOrToggleSong() called, radioStation = ${mediaItem.stationName}"
@@ -203,15 +210,18 @@ class MainViewModel @Inject constructor(
                                         null
                                     )
                                     if (toggle) musicServiceConnection.transportControls.pause()
+                                    _switchViewPagerOnceAgainLiveData.postValue(curPlayingSongLiveData.value)
                                 }
 
                                 if (toggle) musicServiceConnection.transportControls.pause()
                             }
+
                             playbackState.isPlayEnabled -> {
                                 // Создадим уведомление
                                 _messageLiveData.postValue(AUDIO_CONNECTING)
                                 musicServiceConnection.transportControls.play()
                             }
+
                             else -> Unit
                         }
                         saveLastUsedRadioStationUrlAndCode(
@@ -232,6 +242,7 @@ class MainViewModel @Inject constructor(
                         null
                     )
                     saveLastUsedRadioStationUrlAndCode(mediaItem.urlResolved, mediaItem.countryCode)
+                    _switchViewPagerOnceAgainLiveData.postValue(curPlayingSongLiveData.value)
                 }
             } catch (e1: AccountsException) {
                 // AccountsException -> Known direct subclasses: AuthenticatorException, NetworkErrorException, OperationCanceledException
@@ -280,6 +291,10 @@ class MainViewModel @Inject constructor(
         args.putString("nRecNo", countryCode)
         musicServiceConnection.sendCommand(ADD_SONGS, args)
 
+//        _setNonClickableLiveData.call()
+    }
+
+    fun showProgressAndDisableClick() {
         _setNonClickableLiveData.call()
     }
 
@@ -511,7 +526,10 @@ class MainViewModel @Inject constructor(
 
                 try {
 
-                    Log.d(TAG, "Checking: maxIndex = $maxRadioStationListIndex, position = $newPosition")
+                    Log.d(
+                        TAG,
+                        "Checking: maxIndex = $maxRadioStationListIndex, position = $newPosition"
+                    )
 
                     if (newPosition <= maxRadioStationListIndex) {
                         Log.d(TAG, "position <= maxIndex")

@@ -201,6 +201,8 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 
         if (arguments != null) {
 
+            mainViewModel.showProgressAndDisableClick()
+
 //            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
 //                arguments?.getParcelable("radio_station", RadioStationPresentation::class.java) // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
 //                    ?.let { radioStation ->
@@ -492,8 +494,8 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             // Изредка не срабатывает логика и кнопки остаются заблокированым. В таком случае нет возможности продолжать пользоваться приложением.
 //            // Запустить отображение прогресс бара + заблокировать нажатия как на HomeRadioFragment, так и проигрыватель в main activity
 //            // HomeRadioFragment
-//            binding?.buttonGoToFavourites?.isClickable = false
-//            binding?.buttonGoToFavourites?.isEnabled = false
+            binding?.buttonGoToFavourites?.isClickable = false
+            binding?.buttonGoToFavourites?.isEnabled = false
 //            // TODO карта - не проработано (InfoWindow)
 
             // Progress bar
@@ -503,8 +505,8 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         mainViewModel.setClickableLiveData.observe(viewLifecycleOwner) {
 //            // Убрать отображение прогресс бара + разблокировать нажатия как на HomeRadioFragment, так и проигрыватель в main activity
 //            // HomeRadioFragment
-//            binding?.buttonGoToFavourites?.isClickable = true
-//            binding?.buttonGoToFavourites?.isEnabled = true
+            binding?.buttonGoToFavourites?.isClickable = true
+            binding?.buttonGoToFavourites?.isEnabled = true
 //            // TODO карта - не проработано (InfoWindow)
 
             // Progress bar

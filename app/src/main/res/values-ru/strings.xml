@@ -25,6 +25,9 @@
     <string name="dialogInternetTrouble_text_cashing">Если это первый запуск и кеширование не закончилось - пожалуйста, включите и выключите авиарежим, после чего перезапустите программу.</string>
     <string name="dialogInternetTrouble_text2_cashing">Если же нет, не обращайте внимание на ошибку. Если нужно, повторите последнее действие</string>
     <string name="dialogInternetTrouble_text">Возникла проблема при запросе на сервер. Попробуйте повторить последнее действие или проверье ваше интернет соендинение.</string>
+    <string name="dialogPleaseWait_title">Пожалуйста, подождите!</string>
+    <string name="dialogPleaseWait_text">Пытаюсь подключиться к радиостанции</string>
+    <string name="dialog_close">(Нажмите на свободное место, чтобы закрыть окно)</string>
 
     <string name="radioStationList_title_select">Список радиостанций. Выберите:</string>
     <string name="radioStationList_title_download">Нажмите здесь, чтобы загрузить и включить этот список радиостанций</string>
