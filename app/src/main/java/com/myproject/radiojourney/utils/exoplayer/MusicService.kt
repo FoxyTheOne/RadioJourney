@@ -10,6 +10,7 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.media.MediaBrowserServiceCompat
+import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
@@ -97,7 +98,6 @@ class MusicService : MediaBrowserServiceCompat() {
                     else "AD"
                 )
 
-
             } catch (e: SocketTimeoutException) {
                 // Когда сохранён не верный CountryCode, по запросу такого не найдёт и выдаст ошибку retrofit2.HttpException: HTTP 404
                 Log.d(
@@ -144,7 +144,10 @@ class MusicService : MediaBrowserServiceCompat() {
             MusicPlayerNotificationListener(this)
         ) {
             // here we can update the current duration of the song that is playing
-            curSongDuration = exoPlayer.duration
+//            curSongDuration = exoPlayer.duration
+            if ( exoPlayer.duration != C.TIME_UNSET){
+                curSongDuration = exoPlayer.duration
+            }
         }
 
         // lambda in this {} will be switched every time, when user chooses a new song
@@ -222,7 +225,7 @@ class MusicService : MediaBrowserServiceCompat() {
 
         serviceScope.launch {
 
-            if (radioStations.isNotEmpty()) {
+            if (radioStations.isNotEmpty() && curSongIndex < radioStations.size) {
                 // Проверить, заканчивается ли ссылка на .m3u8
                 // Если да, нам нужно использовать HlsMediaSource
                 val mediaUri =
@@ -318,16 +321,17 @@ class MusicService : MediaBrowserServiceCompat() {
 
     // when the task of the service has been removed (when the intent has been removed)
     override fun onTaskRemoved(rootIntent: Intent?) {
-        super.onTaskRemoved(rootIntent)
         exoPlayer.stop()
+        super.onTaskRemoved(rootIntent)
     }
 
     override fun onDestroy() {
-        super.onDestroy()
         serviceScope.cancel()
 
         exoPlayer.removeListener(musicPlayerEventListener)
         exoPlayer.release()
+
+        super.onDestroy()
     }
 
     // It will be called once our service needs new description from media item

@@ -33,14 +33,14 @@ abstract class BaseAuthFragmentAbstract : Fragment() {
         if (tokenForCheck.isNotBlank()) {
             Toast.makeText(
                 context,
-                "Your token: $tokenForCheck, it's not a first start",
+                "Welcome back!",
                 Toast.LENGTH_LONG
             ).show()
             findNavController().navigate(R.id.action_global_home_radio_fragment)
         } else {
             Toast.makeText(
                 context,
-                "Your token: $tokenForCheck, it's a first start",
+                "Thanks for uploading!",
                 Toast.LENGTH_LONG
             ).show()
         }

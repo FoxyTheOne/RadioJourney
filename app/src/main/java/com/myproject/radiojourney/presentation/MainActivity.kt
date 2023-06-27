@@ -1,16 +1,18 @@
 package com.myproject.radiojourney.presentation
 
+import android.accounts.AccountsException
 import android.app.Dialog
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.media.session.PlaybackStateCompat
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.doOnLayout
 import androidx.core.view.isVisible
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.snackbar.Snackbar
@@ -18,16 +20,18 @@ import com.myproject.radiojourney.IAppSettings
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.ActivityMainBinding
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
+import com.myproject.radiojourney.other.Constants
 import com.myproject.radiojourney.other.Constants.AUDIO_CONNECTING
 import com.myproject.radiojourney.other.Constants.AUDIO_PLAYING
 import com.myproject.radiojourney.other.Constants.AUDIO_STOPPED
 import com.myproject.radiojourney.other.Status.*
 import com.myproject.radiojourney.presentation.content.radioStationList.adapter.SwipeRadioStationAdapter
 import com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioFragmentDirections
+import com.myproject.radiojourney.utils.exoplayer.MusicService
 import com.myproject.radiojourney.utils.extension.isPlaying
 import com.myproject.radiojourney.utils.service.ProgressForegroundService
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
+import java.io.IOException
 
 /**
  * This source code is free for studying purposes but you are not allowed to copy and use it in other applications (projects).
@@ -76,6 +80,10 @@ import kotlinx.coroutines.launch
  */
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), IAppSettings {
+    companion object {
+        private const val TAG = "MainActivity"
+    }
+
     // VIEW BINDING -> 1. Объявляем переменную. This property is only valid between onCreateView and onDestroyView
     private var binding: ActivityMainBinding? = null
 
@@ -109,11 +117,6 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             ) {
                 if (swipeRadioStationAdapter.radioStationList.isNotEmpty()) {
 
-////                     TODO check if placing here this method would help - или переместить в playOrToggleSong()
-//                    mainViewModel.curPlayingSongLiveData.value?.description?.let {
-//                        switchViewPagerToCurrentSong(it.mediaId ?: "", it.subtitle.toString())
-//                    }
-
                     if (swipeRadioStationAdapter.radioStationList[position].isStationInFavourite) {
                         binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_24_orange)
                     } else {
@@ -131,11 +134,62 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
 
-                mainViewModel.synchronizedCheckThePosition(
-                    position,
-                    mainViewModel.mediaItemsListLiveData.value?.data,
-                    swipeRadioStationAdapter.radioStationList
-                )
+//                mainViewModel.synchronizedCheckThePosition(
+//                    position,
+//                    mainViewModel.mediaItemsListLiveData.value?.data,
+//                    swipeRadioStationAdapter.radioStationList
+//                )
+
+                // Если выбрать радиостанцию US (2000 Rock ...), а после неё первое Белорусское радио в списке (альфарадио) - вылетает IndexOutOfBoundsException, т.к. сначала ищет 300+ индекс в списке из 53х
+                val swipeRadioStationList = swipeRadioStationAdapter.radioStationList
+                val maxRadioStationListIndex = swipeRadioStationAdapter.radioStationList.size - 1
+                if (swipeRadioStationList.isNotEmpty() && maxRadioStationListIndex >= position) {
+
+                    try {
+                        // We must check, if player is playing
+                        if (playbackState?.isPlaying == true) {
+                            mainViewModel.playOrToggleSong(swipeRadioStationList[position])
+                        } else {
+                            // При включении программы и загрузке контента так же попадаем сюда
+                            curPlayingRadioStation = swipeRadioStationList[position]
+
+                            // TODO Нам нужно вернуться в onPrepareFromMediaId, если мы выбрали песню из другого плейлиста и включить её. НО! Нам не нужно включать станцию сразу при включении программы
+                            val isNotJustLaunched = mainViewModel.isNotJustLaunchedLiveData.value
+
+                            // Первый запуск
+                            if (isNotJustLaunched == null || !isNotJustLaunched) {
+                                switchViewPagerToCurrentSong(
+                                    swipeRadioStationList[position].stationuuid,
+                                    swipeRadioStationList[position].countryCode
+                                )
+                            }
+
+                            // Не первый запуск
+                            isNotJustLaunched?.let {
+                                if (it) {
+                                    // Здесь мы точно перешли из списка в HomeRadioFragment и хотим включить радио
+                                    mainViewModel.playOrToggleSong(
+                                        swipeRadioStationList[position],
+                                        true
+                                    )
+                                    // Если список пуст, значит это список избранного, который не заполнен. Но проверку на заполненность списка мы уже сделали
+                                }
+                            }
+                        }
+                    } catch (e: IndexOutOfBoundsException) {
+                        Log.d(TAG, "CAUGHT IndexOutOfBoundsException!")
+                        e.printStackTrace()
+                    } catch (e1: AccountsException) {
+                        // AccountsException -> Known direct subclasses: AuthenticatorException, NetworkErrorException, OperationCanceledException
+                        e1.printStackTrace()
+                        mainViewModel.dialogInternetTroubleCall()
+                    } catch (e2: IOException) {
+                        e2.printStackTrace()
+                        mainViewModel.errorMessagePost("An unknown error occurred")
+                    }
+
+                }
+
             }
         }
 
@@ -165,10 +219,6 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
         // Click listener (on play image)
         binding?.ivPlayPause?.setOnClickListener {
-            if (!swipeRadioStationAdapter.isClickableRecyclerView) {
-                dialogPleaseWait.show()
-            }
-
             curPlayingRadioStation?.let {
                 mainViewModel.playOrToggleSong(it, true) // true, because now we want to autoplay
             }
@@ -176,10 +226,6 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
         // При нажатии на плейер, открывается список радиостанций в текущем плейлисте
         swipeRadioStationAdapter.setItemClickListener {
-            if (!swipeRadioStationAdapter.isClickableRecyclerView) {
-                dialogPleaseWait.show()
-            }
-
             val direction =
                 HomeRadioFragmentDirections.actionHomeRadioFragmentToCurrentPlaylistFragment()
             if (this.findNavController(R.id.navHostFragment).currentDestination?.id == R.id.homeRadioFragment) {
@@ -213,6 +259,9 @@ class MainActivity : AppCompatActivity(), IAppSettings {
     }
 
     private fun switchViewPagerToCurrentSong(mediaId: String, countryCode: String) {
+        val curPlayingMediaId = mainViewModel.curPlayingSongLiveData.value?.description?.mediaId
+        if (mediaId != curPlayingMediaId) return
+
         var radioStationNeedToFind: RadioStationPresentation? = null
 
         if (swipeRadioStationAdapter.radioStationList.isNotEmpty()) {
@@ -229,8 +278,12 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
             // That function will return -1 if the song doesn't exist, so we must check:
             if (newItemIndex != -1) {
-                binding?.vpSong?.currentItem =
-                    newItemIndex // currentItem - is the index of the song, that is displayed. We change it to a new one
+//                binding?.vpSong?.currentItem =
+//                    newItemIndex // currentItem - is the index of the song, that is displayed. We change it to a new one
+
+                binding?.vpSong?.doOnLayout {
+                    binding?.vpSong?.setCurrentItem(newItemIndex, false)
+                }
 
                 curPlayingRadioStation =
                     radioStationNeedToFind // we also update our curPlayingRadioStation
@@ -258,7 +311,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                             // Попробуем назначить адаптер после обновления списка радиостанций
                             binding?.vpSong?.adapter = swipeRadioStationAdapter
 
-//                            mOnPageChangeCallback?.onPageSelected(0)
+                            mOnPageChangeCallback?.onPageSelected(0)
 //                            // TODO почему-то этот метод изредка не вызывается, хотя должен
 
                             // В этом месте данные в curPlayingRadioStation будут старые, т.е. данные о предыдущей радиостанции. Это нужно для сравнения предыдущей и текущей в дальнейшем в методе mainViewModel.playOrToggleSong()
@@ -270,6 +323,8 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                             mOnPageChangeCallback?.onPageScrolled(0, 0.0f, 0)
                             // ??? Если не включать плейер, а просто листать от списка к списку, этот метод перестаёт вызываться на четвертый раз и звезда перестаёт меняться (избранное/не избранное). Поэтому на всякий случай вызываю его дополнительно. Не самый лучший вариант, думаю. Поэтому помечаю на проверку в дальнейшем.
                         }
+
+                        mainViewModel.stateInitialized()
 
                     }
 
@@ -283,49 +338,51 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         mainViewModel.curPlayingSongLiveData.observe(this) {
             if (it == null) return@observe
 
-//            curPlayingRadioStation =
-//                it.toRadioStationPresentation() // we use a method from our extensions (to convert Media MetadataCompat to our RadioStationPresentation)
+            mainViewModel.whenReady { isInitialized ->
+                if (isInitialized) {
 
-            // if we had an individual image
+                    // if we had an individual image
 //            glide.load(curPlayingSong?.imageUrl).into(ivCurSongImage)
 
-            val mediaId = it.description.mediaId
+                    val mediaId = it.description.mediaId
+                    val countrycode = it.description.subtitle.toString()
+//                            switchViewPagerToCurrentSong(mediaId ?: return@observe, countrycode)
+                    switchViewPagerToCurrentSong(mediaId ?: return@whenReady, countrycode)
 
-            switchViewPagerToCurrentSong(
-                mediaId ?: return@observe,
-                it.description.subtitle.toString()
-            )
+                    // Favorite star
+                    if (swipeRadioStationAdapter.radioStationList.isNotEmpty() && countrycode == swipeRadioStationAdapter.radioStationList[0].countryCode) {
+                        val currentRadioStationPosition = binding?.vpSong?.currentItem
 
-            if (swipeRadioStationAdapter.radioStationList.isNotEmpty() && it.description?.subtitle == swipeRadioStationAdapter.radioStationList[0].countryCode) {
-                val currentRadioStationPosition = binding?.vpSong?.currentItem
+                        currentRadioStationPosition?.let { position ->
+                            if (swipeRadioStationAdapter.radioStationList[position].isStationInFavourite) {
+                                binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_24_orange)
+                            } else {
+                                binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_border_24_orange)
+                            }
+                        }
 
-                currentRadioStationPosition?.let { position ->
-                    if (swipeRadioStationAdapter.radioStationList[position].isStationInFavourite) {
-                        binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_24_orange)
-                    } else {
-                        binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_border_24_orange)
+                        // Убираем прогресс и делаем кнопки снова кликабельными
+                        mainViewModel.hideProgressAndSetClickable()
                     }
+
                 }
-
-                // Убираем прогресс и делаем кнопки снова кликабельными
-                mainViewModel.hideProgressAndSetClickable()
             }
+
         }
 
-        mainViewModel.updateCurPlayingRadioStationLiveData.observe(this) {
-            curPlayingRadioStation = it
-        }
+//        mainViewModel.updateCurPlayingRadioStationLiveData.observe(this) {
+//            curPlayingRadioStation = it
+//        }
 
         // Иногда сбивается и в уведомлении показывает правильную станцию, а в плейере - нет. Добавляю страховку
         mainViewModel.switchViewPagerOnceAgainLiveData.observe(this) {
-            if (it == null) return@observe
+            mainViewModel.whenReady { isInitialized ->
+                if (isInitialized) {
 
-            val mediaId = it.description.mediaId
+                    switchViewPagerToCurrentSong(it.stationuuid, it.countryCode)
 
-            switchViewPagerToCurrentSong(
-                mediaId ?: return@observe,
-                it.description.subtitle.toString()
-            )
+                }
+            }
         }
 
         // LIVEDATA: Will be called everytime the playback changes (pause the player, play a song etc.) -> change our image
@@ -350,6 +407,9 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                                 result.message ?: "An unknown error occurred",
                                 Snackbar.LENGTH_LONG
                             ).show()
+
+                            // Убираем прогресс и делаем кнопки снова кликабельными
+                            mainViewModel.hideProgressAndSetClickable()
                         }
 
                     else -> Unit
@@ -370,7 +430,8 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                                 Snackbar.LENGTH_LONG
                             ).show()
 
-                            swipeRadioStationAdapter.isClickableRecyclerView = true
+                            // Убираем прогресс и делаем кнопки снова кликабельными
+                            mainViewModel.hideProgressAndSetClickable()
                         }
 
                     else -> Unit
@@ -390,7 +451,8 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                                 Snackbar.LENGTH_LONG
                             ).show()
 
-                            swipeRadioStationAdapter.isClickableRecyclerView = true
+                            // Убираем прогресс и делаем кнопки снова кликабельными
+                            mainViewModel.hideProgressAndSetClickable()
                         }
 
                     else -> Unit

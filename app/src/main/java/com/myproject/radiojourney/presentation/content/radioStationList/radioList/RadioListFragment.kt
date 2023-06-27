@@ -197,6 +197,9 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
                 textRadioListSecondTitleDownload.setOnClickListener {
                     Log.d(TAG, "Загружаем плейлист")
 
+                    // Иногда после скачивания нового плейлиста экзоплейер не обновляется. Поэтому перед тем, как включить первую станцию нового плейлиста, укажем явно, что его нужно скачать
+                    mainViewModel.fetchSongs(radioStationPresentationList[0].countryCode)
+
                     // Открываем по клику другой фрагмент, передаём туда нашу радиостанцию
                     val direction =
                         RadioListFragmentDirections.actionRadioListFragmentToHomeRadioFragment(

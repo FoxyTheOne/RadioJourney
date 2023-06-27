@@ -15,9 +15,7 @@ class MusicPlayerNotificationListener(
 
     // what we will do when notification is cancelled
     override fun onNotificationCancelled(notificationId: Int, dismissedByUser: Boolean) {
-        super.onNotificationCancelled(notificationId, dismissedByUser)
         musicService.apply {
-
             // stopForeground(true) - deprecated
             // STOP_FOREGROUND_DETACH if set, the notification previously supplied to startForeground(int, Notification) will be detached from the service's lifecycle.
             // The notification will remain shown even after the service is stopped and destroyed.
@@ -32,6 +30,8 @@ class MusicPlayerNotificationListener(
             isForegroundService = false
             stopSelf()
         }
+
+        super.onNotificationCancelled(notificationId, dismissedByUser)
     }
 
     override fun onNotificationPosted(
@@ -39,7 +39,6 @@ class MusicPlayerNotificationListener(
         notification: Notification,
         ongoing: Boolean
     ) {
-        super.onNotificationPosted(notificationId, notification, ongoing)
         musicService.apply {
             if (ongoing && !isForegroundService) {
                 ContextCompat.startForegroundService(
@@ -50,5 +49,7 @@ class MusicPlayerNotificationListener(
                 isForegroundService = true
             }
         }
+
+        super.onNotificationPosted(notificationId, notification, ongoing)
     }
 }

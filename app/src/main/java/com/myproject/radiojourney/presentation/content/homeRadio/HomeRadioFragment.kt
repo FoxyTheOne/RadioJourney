@@ -515,6 +515,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         }
         mainViewModel.dialogInternetTroubleLiveData.observe(viewLifecycleOwner) {
             dialogInternetTrouble.show()
+            mainViewModel.hideProgressAndSetClickable()
         }
         viewModel.errorMessageLiveData.observe(viewLifecycleOwner) {
             it?.getContentIfNotHandled()?.let { result ->
@@ -582,22 +583,27 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             lifecycle.repeatOnLifecycle(Lifecycle.State.CREATED) {
 
                 viewModel.countryListFlow.collect { countryPresentationList ->
-                    binding?.textLoadingData?.isVisible = false
-                    countryList =
-                        countryPresentationList // Заполним массив для последующей обработки клика
-                    showProgress()
-                    countryPresentationList.forEach { countryPresentation ->
-                        addMarkersOnMap(countryPresentation)
-                    }
-                    hideProgress()
-
-                    if (countryPresentationList == emptyList<CountryPresentation>()) { // Мы переходим на эту страницу только если БД не пуста. Если массив пустой - что-то пошло не так
+                    try {
+                        binding?.textLoadingData?.isVisible = false
+                        countryList =
+                            countryPresentationList // Заполним массив для последующей обработки клика
                         showProgress()
-                        Toast.makeText(
-                            context,
-                            "Something went wrong. Waiting for database response.",
-                            Toast.LENGTH_LONG
-                        ).show()
+                        countryPresentationList.forEach { countryPresentation ->
+                            addMarkersOnMap(countryPresentation)
+                        }
+                        hideProgress()
+
+                        if (countryPresentationList == emptyList<CountryPresentation>()) { // Мы переходим на эту страницу только если БД не пуста. Если массив пустой - что-то пошло не так
+                            showProgress()
+                            Toast.makeText(
+                                context,
+                                "Something went wrong. Waiting for database response.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    } catch (e: UninitializedPropertyAccessException) {
+                        Log.d(TAG, "mMap is not ready yet")
+                        e.printStackTrace()
                     }
                 }
 
