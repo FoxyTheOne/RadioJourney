@@ -8,6 +8,8 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.MediaMetadataCompat.*
 import android.util.Log
 import androidx.core.net.toUri
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
@@ -17,6 +19,7 @@ import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
 import com.myproject.radiojourney.data.dataSource.network.INetworkRadioDataSource
 import com.myproject.radiojourney.data.localDatabaseRoom.IRadioStationDAO
 import com.myproject.radiojourney.utils.exoplayer.State.*
+import com.myproject.radiojourney.utils.extension.call
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -31,6 +34,10 @@ class FirebaseMusicSource @Inject constructor(
     companion object {
         private const val TAG = "FirebaseMusicSource"
     }
+
+    private val _notifyChildrenChangedLiveData = MutableLiveData<Boolean>()
+    val notifyChildrenChangedLiveData: LiveData<Boolean> =
+        _notifyChildrenChangedLiveData
 
     // Список, куда будут сохраняться метаданные по каждой радиостанции с помощью метода fetchMediaData()
     var radioStations = emptyList<MediaMetadataCompat>() // meta info about radioStations
@@ -107,6 +114,7 @@ class FirebaseMusicSource @Inject constructor(
             it.description.mediaUri.toString().isNotEmpty()
         }
 
+        _notifyChildrenChangedLiveData.call()
         state = STATE_INITIALIZED
     }
 
@@ -186,6 +194,7 @@ class FirebaseMusicSource @Inject constructor(
 //                ) // country code
 //                .build()
 //        }
+        _notifyChildrenChangedLiveData.call()
         state = STATE_INITIALIZED
     }
 

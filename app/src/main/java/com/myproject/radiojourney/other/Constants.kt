@@ -27,4 +27,10 @@ object Constants {
     const val AUDIO_CONNECTING = "Connecting to radio station..."
     const val AUDIO_PLAYING = "Audio started playing"
     const val AUDIO_STOPPED = "Audio stopped"
+
+    // Broadcast для полосы прогресса FirstScreenLoadingFragment - ProgressForegroundService
+    const val FILTER_FOR_BROADCAST = "FILTER_FOR_BROADCAST"
+    const val KEY_BROADCAST_LIST_SIZE = "KEY_BROADCAST_LIST_SIZE"
+    const val KEY_BROADCAST_COUNT = "KEY_BROADCAST_COUNT"
+    const val KEY_BROADCAST_END = "KEY_BROADCAST_END"
 }

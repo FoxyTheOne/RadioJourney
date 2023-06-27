@@ -25,6 +25,11 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.entities.presentation.CountryPresentation
+import com.myproject.radiojourney.other.Constants
+import com.myproject.radiojourney.other.Constants.FILTER_FOR_BROADCAST
+import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_COUNT
+import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_END
+import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_LIST_SIZE
 import com.myproject.radiojourney.other.Status
 import kotlinx.coroutines.launch
 
@@ -34,13 +39,13 @@ import kotlinx.coroutines.launch
  */
 @AndroidEntryPoint
 class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
-    companion object {
-        //        private const val TAG = "FirstScreenFragment"
-        private const val FILTER_FOR_BROADCAST = "FILTER_FOR_BROADCAST"
-        private const val KEY_BROADCAST_LIST_SIZE = "KEY_BROADCAST_LIST_SIZE"
-        private const val KEY_BROADCAST_COUNT = "KEY_BROADCAST_COUNT"
-        private const val KEY_BROADCAST_END = "KEY_BROADCAST_END"
-    }
+//    companion object {
+//        private const val TAG = "FirstScreenFragment"
+//        private const val FILTER_FOR_BROADCAST = "FILTER_FOR_BROADCAST"
+//        private const val KEY_BROADCAST_LIST_SIZE = "KEY_BROADCAST_LIST_SIZE"
+//        private const val KEY_BROADCAST_COUNT = "KEY_BROADCAST_COUNT"
+//        private const val KEY_BROADCAST_END = "KEY_BROADCAST_END"
+//    }
 
     // VIEW BINDING -> 1. Объявляем переменную. This property is only valid between onCreateView and onDestroyView
     private var binding: LayoutFirstScreenLoadingBinding? = null

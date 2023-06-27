@@ -1,7 +1,10 @@
 package com.myproject.radiojourney.utils.exoplayer
 
 import android.app.PendingIntent
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Build
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
@@ -9,6 +12,7 @@ import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
+import androidx.lifecycle.Observer
 import androidx.media.MediaBrowserServiceCompat
 import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlayer
@@ -19,8 +23,10 @@ import com.google.android.exoplayer2.upstream.DefaultDataSource
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
 import com.myproject.radiojourney.data.dataSource.network.NetworkRadioDataSource
 import com.myproject.radiojourney.data.sharedPreference.IAppSharedPreference
+import com.myproject.radiojourney.other.Constants
 import com.myproject.radiojourney.other.Constants.MEDIA_ROOT_ID
 import com.myproject.radiojourney.other.Constants.NETWORK_ERROR
+import com.myproject.radiojourney.presentation.firstScreen.FirstScreenLoadingFragment
 import com.myproject.radiojourney.utils.exoplayer.callback.MusicPlaybackPreparer
 import com.myproject.radiojourney.utils.exoplayer.callback.MusicPlayerEventListener
 import com.myproject.radiojourney.utils.exoplayer.callback.MusicPlayerNotificationListener
@@ -75,6 +81,8 @@ class MusicService : MediaBrowserServiceCompat() {
     private var isPlayerInitialized = false
 
     private lateinit var musicPlayerEventListener: MusicPlayerEventListener
+
+    private lateinit var observer: Observer<Boolean>
 
     companion object {
         private const val TAG = "MusicService"
@@ -163,6 +171,13 @@ class MusicService : MediaBrowserServiceCompat() {
                 true
             )
         }
+
+        // Observing notifyChildrenChangedLiveData from firebase in service
+        observer = Observer<Boolean> {
+            //Live data value has changed
+            notifyChildrenChanged(MEDIA_ROOT_ID)
+        }
+        firebaseMusicSource.notifyChildrenChangedLiveData.observeForever(observer)
 
         mediaSessionConnector = MediaSessionConnector(mediaSession)
         mediaSessionConnector.setPlaybackPreparer(musicPlaybackPreparer) // 11.
@@ -294,7 +309,6 @@ class MusicService : MediaBrowserServiceCompat() {
                                 isPlayerInitialized = true
                             }
                         } catch (exception: Exception) {
-                            // TODO
                             // not recommend to notify here , instead notify when you
                             // change existing list in MusicPlaybackPreparer onCommand()
                             notifyChildrenChanged(MEDIA_ROOT_ID)
@@ -330,6 +344,7 @@ class MusicService : MediaBrowserServiceCompat() {
 
         exoPlayer.removeListener(musicPlayerEventListener)
         exoPlayer.release()
+        firebaseMusicSource.notifyChildrenChangedLiveData.removeObserver(observer)
 
         super.onDestroy()
     }
