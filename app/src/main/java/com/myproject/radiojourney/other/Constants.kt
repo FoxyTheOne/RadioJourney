@@ -36,5 +36,5 @@ object Constants {
 
     // Broadcast для завершения сервиса MainActivity - MusicService
     const val FILTER_FOR_BROADCAST_MS = "FILTER_FOR_BROADCAST_MS"
-    const val KEY_BROADCAST_ACTIVITY_DESTROYED = "KEY_BROADCAST_ACTIVITY_DESTROYED"
+    const val KEY_BROADCAST_ACTIVITY = "KEY_BROADCAST_ACTIVITY"
 }

@@ -189,8 +189,8 @@ class MusicService : MediaBrowserServiceCompat() {
         exoPlayer.addListener(musicPlayerEventListener)
         musicNotificationManager.showNotification(exoPlayer)
 
-        // 3.Broadcast для завершения сервиса (1 - в MainActivity)
-        registerReceiver(receiver, IntentFilter(FILTER_FOR_BROADCAST_MS))
+//        // 3.Broadcast для завершения сервиса (1 - в MainActivity)
+//        registerReceiver(receiver, IntentFilter(FILTER_FOR_BROADCAST_MS))
     }
 
     // Запущенный сервис будет работать пока у него не вызван stopSelf().
@@ -199,11 +199,6 @@ class MusicService : MediaBrowserServiceCompat() {
 
     fun testMethodForError() {
 
-    }
-
-    fun cancelNotifications() {
-        musicNotificationManager.cancelNotifications()
-        Log.d(TAG, "Убираем уведомление musicNotificationManager.cancelNotifications()")
     }
 
     // Let's prepare our exoplayer
@@ -356,14 +351,12 @@ class MusicService : MediaBrowserServiceCompat() {
 
         serviceScope.cancel()
 
-        cancelNotifications()
-
         exoPlayer.removeListener(musicPlayerEventListener)
         exoPlayer.release()
         firebaseMusicSource.notifyChildrenChangedLiveData.removeObserver(observer)
 
-        // 3.Broadcast - регистрируем в onCreate и отписываемся в onDestroy
-        unregisterReceiver(receiver)
+//        // 3.Broadcast - регистрируем в onCreate и отписываемся в onDestroy
+//        unregisterReceiver(receiver)
 
         super.onDestroy()
     }
@@ -378,18 +371,28 @@ class MusicService : MediaBrowserServiceCompat() {
         }
     }
 
-    // 2.Broadcast для завершения сервиса (1 - в MainActivity)
-    // Создадим анонимный класс => не нужно регистрировать в манифесте
-    private var receiver: BroadcastReceiver? = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent) {
-            Log.d(TAG, "Получен ключ из Activity в BroadcastReceiver")
-            val numberFromActivity =
-                intent.getIntExtra(Constants.KEY_BROADCAST_ACTIVITY_DESTROYED, 1)
-
-            if (numberFromActivity == 100) {
-                Log.d(TAG, "Получен ключ KEY_BROADCAST_VIEW_MODEL_DESTROYED, завершаем сервис")
-                onDestroy()
-            }
-        }
-    }
+//    // 2.Broadcast для управления уведомлением из Activity (1 - в MainActivity)
+//    // Создадим анонимный класс => не нужно регистрировать в манифесте
+//    private var receiver: BroadcastReceiver? = object : BroadcastReceiver() {
+//        override fun onReceive(context: Context?, intent: Intent) {
+//            Log.d(TAG, "Получен ключ из Activity в BroadcastReceiver")
+//
+////            if (numberFromActivity == 100) {
+////                Log.d(TAG, "Получен ключ KEY_BROADCAST_ACTIVITY_DESTROYED, число 100 - убираем уведомление")
+//////                onDestroy()
+////                cancelNotifications()
+////            }
+//
+//            when (intent.getIntExtra(Constants.KEY_BROADCAST_ACTIVITY, 1)) {
+//                50 -> {
+//                    Log.d(TAG, "Получен ключ KEY_BROADCAST_ACTIVITY, число 50 - показываем уведомление")
+//                    musicNotificationManager.showNotification(exoPlayer)
+//                }
+//                100 -> {
+//                    Log.d(TAG, "Получен ключ KEY_BROADCAST_ACTIVITY, число 100 - убираем уведомление")
+//                    musicNotificationManager.cancelNotifications()
+//                }
+//            }
+//        }
+//    }
 }

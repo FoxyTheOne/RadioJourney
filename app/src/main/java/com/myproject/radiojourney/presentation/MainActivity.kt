@@ -20,16 +20,14 @@ import com.myproject.radiojourney.IAppSettings
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.ActivityMainBinding
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
-import com.myproject.radiojourney.other.Constants
 import com.myproject.radiojourney.other.Constants.AUDIO_CONNECTING
 import com.myproject.radiojourney.other.Constants.AUDIO_PLAYING
 import com.myproject.radiojourney.other.Constants.AUDIO_STOPPED
 import com.myproject.radiojourney.other.Constants.FILTER_FOR_BROADCAST_MS
-import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_ACTIVITY_DESTROYED
+import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_ACTIVITY
 import com.myproject.radiojourney.other.Status.*
 import com.myproject.radiojourney.presentation.content.radioStationList.adapter.SwipeRadioStationAdapter
 import com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioFragmentDirections
-import com.myproject.radiojourney.utils.exoplayer.MusicService
 import com.myproject.radiojourney.utils.extension.isPlaying
 import com.myproject.radiojourney.utils.service.ProgressForegroundService
 import dagger.hilt.android.AndroidEntryPoint
@@ -148,15 +146,16 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                 if (swipeRadioStationList.isNotEmpty() && maxRadioStationListIndex >= position) {
 
                     try {
+                        // TODO Нам нужно вернуться в onPrepareFromMediaId, если мы выбрали песню из другого плейлиста и включить её. НО! Нам не нужно включать станцию сразу при включении программы
+                        val isNotJustLaunched = mainViewModel.isNotJustLaunchedLiveData.value
+
                         // We must check, if player is playing
-                        if (playbackState?.isPlaying == true) {
+                        // Добавляю "&& isNotJustLaunched == true" для того, чтобы туда не заходило при повторном запуске приложения (когда станция играет из уведомления и ты кликаешь на уведомление)
+                        if (playbackState?.isPlaying == true && isNotJustLaunched == true) {
                             mainViewModel.playOrToggleSong(swipeRadioStationList[position])
                         } else {
                             // При включении программы и загрузке контента так же попадаем сюда
                             curPlayingRadioStation = swipeRadioStationList[position]
-
-                            // TODO Нам нужно вернуться в onPrepareFromMediaId, если мы выбрали песню из другого плейлиста и включить её. НО! Нам не нужно включать станцию сразу при включении программы
-                            val isNotJustLaunched = mainViewModel.isNotJustLaunchedLiveData.value
 
                             // Первый запуск
                             if (isNotJustLaunched == null || !isNotJustLaunched) {
@@ -211,6 +210,16 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                 ProgressForegroundService::class.java
             )
         )
+
+//        // 1.Broadcast для отображения уведомления (2,3 - в MusicService)
+//        val intentMS =
+//            Intent(FILTER_FOR_BROADCAST_MS) // FILTER is a string to identify this intent
+//        intentMS.apply {
+//            Log.d(TAG, "Отправляем ключ KEY_BROADCAST_ACTIVITY, для отображения уведомления")
+//            putExtra(KEY_BROADCAST_ACTIVITY, 50)
+//            sendBroadcast(this)
+//        }
+
     }
 
     private fun initListeners() {
@@ -565,14 +574,14 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
         binding = null // VIEW BINDING -> 3. onDestroyView()
 
-        // 1.Broadcast для завершения сервиса (2,3 - в MusicService)
-        val intentMS =
-            Intent(FILTER_FOR_BROADCAST_MS) // FILTER is a string to identify this intent
-        intentMS.apply {
-            Log.d(TAG, "Отправляем ключ KEY_BROADCAST_VIEW_MODEL_DESTROYED, чтобы завершить сервис")
-            putExtra(KEY_BROADCAST_ACTIVITY_DESTROYED, 100)
-            sendBroadcast(this)
-        }
+//        // 1.Broadcast для того, чтобы убрать уведомление (2,3 - в MusicService)
+//        val intentMS =
+//            Intent(FILTER_FOR_BROADCAST_MS) // FILTER is a string to identify this intent
+//        intentMS.apply {
+//            Log.d(TAG, "Отправляем ключ KEY_BROADCAST_ACTIVITY, чтобы убрать уведомление")
+//            putExtra(KEY_BROADCAST_ACTIVITY, 100)
+//            sendBroadcast(this)
+//        }
 
         super.onDestroy()
     }
