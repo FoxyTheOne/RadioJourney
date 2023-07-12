@@ -2,24 +2,34 @@ package com.myproject.radiojourney.utils.exoplayer
 
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.Handler
+import android.os.IBinder
 import android.os.Looper
 import android.os.ResultReceiver
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.myproject.radiojourney.other.Constants.NETWORK_ERROR
 import com.myproject.radiojourney.other.Event
 import com.myproject.radiojourney.other.Resource
+import com.myproject.radiojourney.presentation.MainViewModel
+import com.myproject.radiojourney.utils.service.ProgressForegroundService
 
 /**
  * A class for connection between activity or fragment with MusicService
  */
 class MusicServiceConnection(context: Context) {
+    companion object {
+        private const val TAG = "MusicServiceConnection"
+    }
+
     // LiveData for our Service, where we will keep data (data for our fragments to update if server changes)
     private val _isConnectedLiveData =
         MutableLiveData<Event<Resource<Boolean>>>() // For current state. Event and Resource - are our classes
@@ -43,6 +53,33 @@ class MusicServiceConnection(context: Context) {
     // To have access to token we also must create a mediaBrowser instance and for that we need this MediaBrowserConnectionCallback()
     // So, let's create an instance of mediaBrowserConnectionCallback()
     private val mediaBrowserConnectionCallback = MediaBrowserConnectionCallback(context)
+
+//    Based on the classes you mentioned, it seems like the responsibility of starting, stopping, and destroying the `MusicService` lies within the `MusicServiceConnection` class.
+//    To ensure that the `MusicService` is properly stopped and destroyed when the application is closed, you can do the following:
+//    1. In the `MusicServiceConnection`, override the `onServiceConnected()` method and start the `MusicService` from there. This ensures that the service is started when the connection is established.
+//    2. In the `MusicServiceConnection`, override the `onServiceDisconnected()` method and handle the disconnection by stopping and destroying the `MusicService`. You can call `stopService()` and `unbindService()` to stop and unbind the service, respectively.
+//    3. In the `MusicService`, override the `onDestroy()` method and call `stopForeground(true)` to remove the service from the foreground state and hide the notification.
+//    By implementing these steps, the `MusicService` should be properly started, stopped, and destroyed when the application is opened and closed, respectively.
+//    private val serviceConnection = object : ServiceConnection {
+//        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+////            context.startService(
+////                Intent(
+////                    context,
+////                    MusicService::class.java
+////                )
+////            )
+//        }
+//        override fun onServiceDisconnected(name: ComponentName?) {
+//            context.stopService(
+//                Intent(
+//                    context,
+//                    MusicService::class.java
+//                )
+//            )
+//            Log.d(TAG, "Вызван метод onServiceDisconnected() в классе MusicServiceConnection")
+//        }
+//    }
+//    No, this ^ won't work. We are stopping service in MusicPlayerNotificationListener
 
     // And then, in the end - an instance of mediaBrowser
     private val mediaBrowser = MediaBrowserCompat(
@@ -97,6 +134,7 @@ class MusicServiceConnection(context: Context) {
     ) : MediaBrowserCompat.ConnectionCallback() {
 
         // Once this musicService connection here is active, this function will be called
+        // Invoked after MediaBrowser#connect() when the request has successfully completed
         override fun onConnected() {
             // Once it is connected, we have access to our session token and we can now initialize mediaController
             // But to have access to token we also must create a mediaBrowser instance and for that we need this MediaBrowserConnectionCallback(). So, return here later, when we will have that instance
@@ -107,6 +145,7 @@ class MusicServiceConnection(context: Context) {
             _isConnectedLiveData.postValue(Event(Resource.success(true))) // post connection data to LiveData
         }
 
+        // Invoked when the client is disconnected from the media browser
         override fun onConnectionSuspended() {
             _isConnectedLiveData.postValue(
                 Event(
@@ -117,6 +156,7 @@ class MusicServiceConnection(context: Context) {
             )
         }
 
+        // Invoked when the connection to the media browser failed
         override fun onConnectionFailed() {
             _isConnectedLiveData.postValue(
                 Event(
@@ -158,6 +198,13 @@ class MusicServiceConnection(context: Context) {
         // If our session is destroyed, we can call a function from mediaBrowserConnectionCallback() - so we will post an error status to our LiveData
         override fun onSessionDestroyed() {
             mediaBrowserConnectionCallback.onConnectionSuspended()
+
+//            Disconnect when the media session is destroyed
+//            If the media session becomes invalid, the onSessionDestroyed() callback is issued. When that happens, the session cannot become functional again within the lifetime of the MediaBrowserService. Although functions related to MediaBrowser might continue to work, a user cannot view or control playback from a destroyed media session, which will likely diminish the value of your application.
+//            Therefore, when the session is destroyed, you must disconnect from the MediaBrowserService by calling disconnect(). This ensures that the browser service has no bound clients and can be destroyed by the OS. If you need to reconnect to the MediaBrowserService later (for example, if your application wants to maintain a persistent connection to the media app), create a new instance of MediaBrowser rather than reusing the old one.
+            if (mediaBrowser.isConnected) {
+                mediaBrowser.disconnect()
+            }
         }
     }
 }

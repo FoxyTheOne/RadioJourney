@@ -21,12 +21,11 @@ import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
 import com.google.android.exoplayer2.upstream.DefaultDataSource
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
-import com.myproject.radiojourney.data.dataSource.network.NetworkRadioDataSource
 import com.myproject.radiojourney.data.sharedPreference.IAppSharedPreference
 import com.myproject.radiojourney.other.Constants
+import com.myproject.radiojourney.other.Constants.FILTER_FOR_BROADCAST_MS
 import com.myproject.radiojourney.other.Constants.MEDIA_ROOT_ID
 import com.myproject.radiojourney.other.Constants.NETWORK_ERROR
-import com.myproject.radiojourney.presentation.firstScreen.FirstScreenLoadingFragment
 import com.myproject.radiojourney.utils.exoplayer.callback.MusicPlaybackPreparer
 import com.myproject.radiojourney.utils.exoplayer.callback.MusicPlayerEventListener
 import com.myproject.radiojourney.utils.exoplayer.callback.MusicPlayerNotificationListener
@@ -35,6 +34,7 @@ import kotlinx.coroutines.*
 import java.io.IOException
 import java.net.SocketTimeoutException
 import javax.inject.Inject
+
 
 /**
  * Создадим наш Exoplayer и сервис для него.
@@ -153,7 +153,7 @@ class MusicService : MediaBrowserServiceCompat() {
         ) {
             // here we can update the current duration of the song that is playing
 //            curSongDuration = exoPlayer.duration
-            if ( exoPlayer.duration != C.TIME_UNSET){
+            if (exoPlayer.duration != C.TIME_UNSET) {
                 curSongDuration = exoPlayer.duration
             }
         }
@@ -188,6 +188,9 @@ class MusicService : MediaBrowserServiceCompat() {
         musicPlayerEventListener = MusicPlayerEventListener(this)
         exoPlayer.addListener(musicPlayerEventListener)
         musicNotificationManager.showNotification(exoPlayer)
+
+        // 3.Broadcast для завершения сервиса (1 - в MainActivity)
+        registerReceiver(receiver, IntentFilter(FILTER_FOR_BROADCAST_MS))
     }
 
     // Запущенный сервис будет работать пока у него не вызван stopSelf().
@@ -196,6 +199,11 @@ class MusicService : MediaBrowserServiceCompat() {
 
     fun testMethodForError() {
 
+    }
+
+    fun cancelNotifications() {
+        musicNotificationManager.cancelNotifications()
+        Log.d(TAG, "Убираем уведомление musicNotificationManager.cancelNotifications()")
     }
 
     // Let's prepare our exoplayer
@@ -248,7 +256,11 @@ class MusicService : MediaBrowserServiceCompat() {
                 if (mediaUri.endsWith(".m3u8")
                 ) {
                     // TODO Player is accessed on the wrong thread.
-                    exoPlayer.setMediaSource(firebaseMusicSource.asHlsMediaSource(httpDataSourceFactory)) // Вызываем метод из firebaseMusicSource, чтобы сформировать данные для плейлист
+                    exoPlayer.setMediaSource(
+                        firebaseMusicSource.asHlsMediaSource(
+                            httpDataSourceFactory
+                        )
+                    ) // Вызываем метод из firebaseMusicSource, чтобы сформировать данные для плейлист
                     // TODO Так мы исправили ошибку UnrecognizedInputFormatException, но только если станция запущена из viewpager. Если до такой станции дошли через кнопки в уведомлении, станция играть не будет.
                 } else {
                     // TODO Player is accessed on the wrong thread.
@@ -340,11 +352,18 @@ class MusicService : MediaBrowserServiceCompat() {
     }
 
     override fun onDestroy() {
+        Log.d(TAG, "MUSIC SERVICE IS DESTROYED -> вызван метод onDestroy()")
+
         serviceScope.cancel()
+
+        cancelNotifications()
 
         exoPlayer.removeListener(musicPlayerEventListener)
         exoPlayer.release()
         firebaseMusicSource.notifyChildrenChangedLiveData.removeObserver(observer)
+
+        // 3.Broadcast - регистрируем в onCreate и отписываемся в onDestroy
+        unregisterReceiver(receiver)
 
         super.onDestroy()
     }
@@ -356,6 +375,21 @@ class MusicService : MediaBrowserServiceCompat() {
             windowIndex: Int
         ): MediaDescriptionCompat {
             return firebaseMusicSource.radioStations[windowIndex].description // windowIndex - index of the song that is now playing
+        }
+    }
+
+    // 2.Broadcast для завершения сервиса (1 - в MainActivity)
+    // Создадим анонимный класс => не нужно регистрировать в манифесте
+    private var receiver: BroadcastReceiver? = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent) {
+            Log.d(TAG, "Получен ключ из Activity в BroadcastReceiver")
+            val numberFromActivity =
+                intent.getIntExtra(Constants.KEY_BROADCAST_ACTIVITY_DESTROYED, 1)
+
+            if (numberFromActivity == 100) {
+                Log.d(TAG, "Получен ключ KEY_BROADCAST_VIEW_MODEL_DESTROYED, завершаем сервис")
+                onDestroy()
+            }
         }
     }
 }

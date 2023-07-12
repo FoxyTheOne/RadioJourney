@@ -737,10 +737,10 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 //    }
 
     private fun addMarkersOnMap(countryPresentation: CountryPresentation) {
-        Log.d(
-            TAG,
-            "Метод addMarkersOnMap вызван: страна = ${countryPresentation.countryName}"
-        )
+//        Log.d(
+//            TAG,
+//            "Метод addMarkersOnMap вызван: страна = ${countryPresentation.countryName}"
+//        )
         customMarkerRadio?.let { customBitmapMarker ->
             val marker = mMap.addMarker(
                 MarkerOptions()

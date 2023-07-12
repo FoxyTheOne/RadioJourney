@@ -33,4 +33,8 @@ object Constants {
     const val KEY_BROADCAST_LIST_SIZE = "KEY_BROADCAST_LIST_SIZE"
     const val KEY_BROADCAST_COUNT = "KEY_BROADCAST_COUNT"
     const val KEY_BROADCAST_END = "KEY_BROADCAST_END"
+
+    // Broadcast для завершения сервиса MainActivity - MusicService
+    const val FILTER_FOR_BROADCAST_MS = "FILTER_FOR_BROADCAST_MS"
+    const val KEY_BROADCAST_ACTIVITY_DESTROYED = "KEY_BROADCAST_ACTIVITY_DESTROYED"
 }

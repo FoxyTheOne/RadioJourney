@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
+import android.util.Log
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import com.myproject.radiojourney.R
@@ -20,6 +21,10 @@ class MusicNotificationManager(
     notificationListener: PlayerNotificationManager.NotificationListener,
     private val newSongCallback: () -> Unit // called when a new song starts
 ) {
+
+    companion object {
+        private const val TAG = "MusicNotificationMan-r"
+    }
 
     private val notificationManager: PlayerNotificationManager // custom class from exoplayer for a notification
 
@@ -70,6 +75,11 @@ class MusicNotificationManager(
     // At last, let's create a function for our exoplayer notification
     fun showNotification(player: Player) {
         notificationManager.setPlayer(player)
+    }
+
+    fun cancelNotifications() {
+        notificationManager.setPlayer(null)
+        Log.d(TAG, "Убираем уведомление notificationManager.setPlayer(null)")
     }
 
 //    fun invalidate() {

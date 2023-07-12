@@ -143,6 +143,7 @@ class ProgressForegroundService @Inject constructor() : Service() {
                     // Преобразуем коды (remote) в читабельные страны (local) с локацией
                     val countryLocalList = mutableListOf<CountryLocal>()
 
+                    Log.d(TAG, "Starting geocoder...")
                     val geocoder = Geocoder(context)
 //                    var addresses: MutableList<Address>
                     var latitude = 0.0
@@ -159,7 +160,7 @@ class ProgressForegroundService @Inject constructor() : Service() {
 
                         // Узнаем местоположение
                         // В этом месте часто исключение, как будто проблема с интернетом
-                        Log.d(TAG, "Starting geocoder")
+//                        Log.d(TAG, "Starting geocoder")
 
                         // Deprecated. Using lambda Geocoder.getAddress instead, it is written below this method
 //                        addresses =
@@ -187,7 +188,7 @@ class ProgressForegroundService @Inject constructor() : Service() {
                         )
                         countryLocalList.add(countryLocal)
 
-                        Log.d(TAG, "End of geocoding")
+//                        Log.d(TAG, "End of geocoding")
 
                         // Если notificationBuilder != null
                         notificationBuilder?.let { builder ->
@@ -208,6 +209,7 @@ class ProgressForegroundService @Inject constructor() : Service() {
                             sendBroadcast(intent)
                         }
                     }
+                    Log.d(TAG, "...End of geocoding")
 
                     Log.d(
                         TAG,

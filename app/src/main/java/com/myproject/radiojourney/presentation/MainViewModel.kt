@@ -336,15 +336,6 @@ class MainViewModel @Inject constructor(
         _setClickableLiveData.call()
     }
 
-    // when View model is destroyed - заканчиваем нашу связь с сервисом
-    override fun onCleared() {
-        musicServiceConnection.unsubscribe(
-            MEDIA_ROOT_ID,
-            object : MediaBrowserCompat.SubscriptionCallback() {})
-
-        super.onCleared()
-    }
-
     fun saveNewMediaId(mediaId: String) {
         _newMediaIdLiveData.postValue(mediaId)
     }
@@ -643,5 +634,14 @@ class MainViewModel @Inject constructor(
 //            }
 //        }
 //    }
+
+    // when View model is destroyed - заканчиваем нашу связь с сервисом
+    override fun onCleared() {
+        musicServiceConnection.unsubscribe(
+            MEDIA_ROOT_ID,
+            object : MediaBrowserCompat.SubscriptionCallback() {})
+
+        super.onCleared()
+    }
 
 }

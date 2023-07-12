@@ -24,6 +24,8 @@ import com.myproject.radiojourney.other.Constants
 import com.myproject.radiojourney.other.Constants.AUDIO_CONNECTING
 import com.myproject.radiojourney.other.Constants.AUDIO_PLAYING
 import com.myproject.radiojourney.other.Constants.AUDIO_STOPPED
+import com.myproject.radiojourney.other.Constants.FILTER_FOR_BROADCAST_MS
+import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_ACTIVITY_DESTROYED
 import com.myproject.radiojourney.other.Status.*
 import com.myproject.radiojourney.presentation.content.radioStationList.adapter.SwipeRadioStationAdapter
 import com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioFragmentDirections
@@ -562,6 +564,15 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         }
 
         binding = null // VIEW BINDING -> 3. onDestroyView()
+
+        // 1.Broadcast для завершения сервиса (2,3 - в MusicService)
+        val intentMS =
+            Intent(FILTER_FOR_BROADCAST_MS) // FILTER is a string to identify this intent
+        intentMS.apply {
+            Log.d(TAG, "Отправляем ключ KEY_BROADCAST_VIEW_MODEL_DESTROYED, чтобы завершить сервис")
+            putExtra(KEY_BROADCAST_ACTIVITY_DESTROYED, 100)
+            sendBroadcast(this)
+        }
 
         super.onDestroy()
     }
