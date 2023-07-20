@@ -153,6 +153,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                         // Добавляю "&& isNotJustLaunched == true" для того, чтобы туда не заходило при повторном запуске приложения (когда станция играет из уведомления и ты кликаешь на уведомление)
                         if (playbackState?.isPlaying == true && isNotJustLaunched == true) {
                             mainViewModel.playOrToggleSong(swipeRadioStationList[position])
+                            Log.d(TAG, "PLAYLIST_UPDATE: 4.$TAG. Метод onPageSelected() -> Плейер проигрывает радиостанцию. Программа не только что запущена. Вызываем mainViewModel.playOrToggleSong(swipeRadioStationList[position])")
                         } else {
                             // При включении программы и загрузке контента так же попадаем сюда
                             curPlayingRadioStation = swipeRadioStationList[position]
@@ -163,6 +164,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                                     swipeRadioStationList[position].stationuuid,
                                     swipeRadioStationList[position].countryCode
                                 )
+                                Log.d(TAG, "PLAYLIST_UPDATE: 4.$TAG. Метод onPageSelected() -> Плейер остановлен. Программа только что запущена. Вызываем switchViewPagerToCurrentSong()")
                             }
 
                             // Не первый запуск
@@ -173,6 +175,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                                         swipeRadioStationList[position],
                                         true
                                     )
+                                    Log.d(TAG, "PLAYLIST_UPDATE: 4.$TAG. Метод onPageSelected() -> Плейер остановлен. Программа не только что запущена. Вызываем mainViewModel.playOrToggleSong(swipeRadioStationList[position], true)")
                                     // Если список пуст, значит это список избранного, который не заполнен. Но проверку на заполненность списка мы уже сделали
                                 }
                             }
@@ -294,6 +297,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
                 binding?.vpSong?.doOnLayout {
                     binding?.vpSong?.setCurrentItem(newItemIndex, false)
+                    Log.d(TAG, "PLAYLIST_UPDATE: 4.$TAG, switchViewPagerToCurrentSong(). Обновляем наш vpSong, newItemIndex = $newItemIndex")
                 }
 
                 curPlayingRadioStation =
@@ -330,6 +334,8 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                                 curPlayingRadioStation?.stationuuid ?: return@observe,
                                 curPlayingRadioStation?.countryCode ?: return@observe
                             )
+
+                            Log.d(TAG, "PLAYLIST_UPDATE: 4.$TAG. Получаем данные из mediaItemsListLiveData")
 
                             mOnPageChangeCallback?.onPageScrolled(0, 0.0f, 0)
                             // ??? Если не включать плейер, а просто листать от списка к списку, этот метод перестаёт вызываться на четвертый раз и звезда перестаёт меняться (избранное/не избранное). Поэтому на всякий случай вызываю его дополнительно. Не самый лучший вариант, думаю. Поэтому помечаю на проверку в дальнейшем.

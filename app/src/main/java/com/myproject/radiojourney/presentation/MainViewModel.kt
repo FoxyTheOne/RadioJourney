@@ -20,6 +20,7 @@ import com.myproject.radiojourney.other.Event
 import com.myproject.radiojourney.other.Resource
 import com.myproject.radiojourney.utils.exoplayer.MusicServiceConnection
 import com.myproject.radiojourney.utils.exoplayer.State
+import com.myproject.radiojourney.utils.exoplayer.callback.MusicPlaybackPreparer
 import com.myproject.radiojourney.utils.extension.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -166,6 +167,7 @@ class MainViewModel @Inject constructor(
                             )
 
 //                            state = State.STATE_INITIALIZED
+                            Log.d(TAG, "PLAYLIST_UPDATE: 3.$TAG, onChildrenLoaded(). Данные загружены, кладём их в mediaItemsListLiveData")
                         }
                     }
                 })

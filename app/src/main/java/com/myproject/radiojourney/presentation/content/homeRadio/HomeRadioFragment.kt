@@ -202,6 +202,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         if (arguments != null) {
 
             mainViewModel.showProgressAndDisableClick()
+            Log.d(TAG, "PLAYLIST_UPDATE: 1. Выбранная из списка станция передана в HomeRadioFragment")
 
 //            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
 //                arguments?.getParcelable("radio_station", RadioStationPresentation::class.java) // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
@@ -793,11 +794,11 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                     }
 //                    this.findNavController().navigate(direction) - при переходе на Канаду - ошибка. Помогла проверка (см. выше)
 
-                    Toast.makeText(
-                        context,
-                        "Asking server for the radio station list...",
-                        Toast.LENGTH_LONG
-                    ).show()
+//                    Toast.makeText(
+//                        context,
+//                        "Asking server for the radio station list...",
+//                        Toast.LENGTH_LONG
+//                    ).show()
                 }
             }
         }

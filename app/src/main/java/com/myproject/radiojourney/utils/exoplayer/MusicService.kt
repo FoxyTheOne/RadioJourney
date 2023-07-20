@@ -26,6 +26,7 @@ import com.myproject.radiojourney.other.Constants
 import com.myproject.radiojourney.other.Constants.FILTER_FOR_BROADCAST_MS
 import com.myproject.radiojourney.other.Constants.MEDIA_ROOT_ID
 import com.myproject.radiojourney.other.Constants.NETWORK_ERROR
+import com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioFragment
 import com.myproject.radiojourney.utils.exoplayer.callback.MusicPlaybackPreparer
 import com.myproject.radiojourney.utils.exoplayer.callback.MusicPlayerEventListener
 import com.myproject.radiojourney.utils.exoplayer.callback.MusicPlayerNotificationListener
@@ -161,7 +162,9 @@ class MusicService : MediaBrowserServiceCompat() {
         // lambda in this {} will be switched every time, when user chooses a new song
         val musicPlaybackPreparer = MusicPlaybackPreparer(firebaseMusicSource, serviceScope) {
 
+            Log.d(TAG, "PLAYLIST_UPDATE: 5.$TAG, зашли в лямбду musicPlaybackPreparer.")
             if (isPlayerInitialized && it == null) {
+                Log.d(TAG, "PLAYLIST_UPDATE: 5.$TAG, MediaMetadataCompat == null, выходим из лямбды musicPlaybackPreparer.")
                 return@MusicPlaybackPreparer // Если isPlayerInitialized == true, значит это точно не первый запуск. Если isPlayerInitialized && it == null - значит сюда передан результат раньше, чем скачался плейлист (Было curPlayingSong != null && it == null, работает с нюансами)
             }
             curPlayingSong = it
@@ -262,6 +265,7 @@ class MusicService : MediaBrowserServiceCompat() {
                     // ExoPlayer.prepare(MediaSource mediaSource) is deprecated. Use setMediaSource(MediaSource) and ExoPlayer.prepare() instead
                     exoPlayer.setMediaSource(firebaseMusicSource.asMediaSource(dataSourceFactory)) // Вызываем метод из firebaseMusicSource, чтобы сформировать данные для плейлист
                 }
+                Log.d(TAG, "PLAYLIST_UPDATE: 5.$TAG, preparePlayer(). Вызываем метод мз firebaseMusicSource, чтобы сформировать данные для плейлист")
             }
 
             exoPlayer.seekTo(
@@ -272,6 +276,7 @@ class MusicService : MediaBrowserServiceCompat() {
                 playNow // play song, when it will be ready (it will be false, and after - true, when ready)
 
             exoPlayer.prepare()
+            Log.d(TAG, "PLAYLIST_UPDATE: 5.$TAG, preparePlayer(). Находим нужную станцию и включаем плейер")
 
         }
     }
