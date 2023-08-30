@@ -88,9 +88,23 @@ class MusicPlaybackPreparer(
 
                         val job = serviceScope.launch {
                             try {
-                                // Скачиваем список избранного
-                                firebaseMusicSource.fetchFavouriteMediaData()
-                                Log.d(TAG, "PLAYLIST_UPDATE: Запускаем метод для скачивания списка избранного в exoplayer")
+                                // Чтобы проверить, может быть такой плейлист уже скачан и сейчас используется, обновим переменную
+                                if (firebaseMusicSource.radioStations.isNotEmpty()) {
+                                    lastCountryCode =
+                                        firebaseMusicSource.radioStations[0].description.subtitle.toString()
+                                }
+                                Log.d(TAG, "PLAYLIST_UPDATE: Проверяем список в exoplayer, lastCountryCode = $lastCountryCode")
+
+                                val isLastCountryCodeFavorite = lastCountryCode.toString().endsWith("_FAV")
+                                Log.d(TAG, "PLAYLIST_UPDATE: Проверяем список в exoplayer, isLastCountryCodeFavorite = $isLastCountryCodeFavorite")
+
+                                if (!isLastCountryCodeFavorite) {
+                                    // Скачиваем список избранного
+                                    firebaseMusicSource.fetchFavouriteMediaData()
+                                    Log.d(TAG, "PLAYLIST_UPDATE: Запускаем метод для скачивания списка избранного в exoplayer")
+                                } else {
+                                    Log.d(TAG, "PLAYLIST_UPDATE: Список избранного уже скачан в exoplayer")
+                                }
                             } catch (e: IOException) {
                                 e.printStackTrace()
                                 // TODO Fill error message to LiveData
@@ -142,6 +156,8 @@ class MusicPlaybackPreparer(
                             job.join()
                             Log.d(TAG, "PLAYLIST_UPDATE: 2.$TAG, onCommand(). Дождались окончания загрузки нового плейлиста в exoplayer")
                             state = STATE_INITIALIZED
+                        } else {
+                            Log.d(TAG, "PLAYLIST_UPDATE: Список countryCode = $countryCode уже скачан в exoplayer")
                         }
                     }
 

@@ -2,7 +2,10 @@ package com.myproject.radiojourney.presentation
 
 import android.accounts.AccountsException
 import android.app.Dialog
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.media.session.PlaybackStateCompat
@@ -20,11 +23,10 @@ import com.myproject.radiojourney.IAppSettings
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.ActivityMainBinding
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
+import com.myproject.radiojourney.other.Constants
 import com.myproject.radiojourney.other.Constants.AUDIO_CONNECTING
 import com.myproject.radiojourney.other.Constants.AUDIO_PLAYING
 import com.myproject.radiojourney.other.Constants.AUDIO_STOPPED
-import com.myproject.radiojourney.other.Constants.FILTER_FOR_BROADCAST_MS
-import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_ACTIVITY
 import com.myproject.radiojourney.other.Status.*
 import com.myproject.radiojourney.presentation.content.radioStationList.adapter.SwipeRadioStationAdapter
 import com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioFragmentDirections
@@ -153,7 +155,10 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                         // Добавляю "&& isNotJustLaunched == true" для того, чтобы туда не заходило при повторном запуске приложения (когда станция играет из уведомления и ты кликаешь на уведомление)
                         if (playbackState?.isPlaying == true && isNotJustLaunched == true) {
                             mainViewModel.playOrToggleSong(swipeRadioStationList[position])
-                            Log.d(TAG, "PLAYLIST_UPDATE: 4.$TAG. Метод onPageSelected() -> Плейер проигрывает радиостанцию. Программа не только что запущена. Вызываем mainViewModel.playOrToggleSong(swipeRadioStationList[position])")
+                            Log.d(
+                                TAG,
+                                "PLAYLIST_UPDATE: 4.$TAG. Метод onPageSelected() -> Плейер проигрывает радиостанцию. Программа не только что запущена. Вызываем mainViewModel.playOrToggleSong(swipeRadioStationList[position])"
+                            )
                         } else {
                             // При включении программы и загрузке контента так же попадаем сюда
                             curPlayingRadioStation = swipeRadioStationList[position]
@@ -164,7 +169,10 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                                     swipeRadioStationList[position].stationuuid,
                                     swipeRadioStationList[position].countryCode
                                 )
-                                Log.d(TAG, "PLAYLIST_UPDATE: 4.$TAG. Метод onPageSelected() -> Плейер остановлен. Программа только что запущена. Вызываем switchViewPagerToCurrentSong()")
+                                Log.d(
+                                    TAG,
+                                    "PLAYLIST_UPDATE: 4.$TAG. Метод onPageSelected() -> Плейер остановлен. Программа только что запущена. Вызываем switchViewPagerToCurrentSong()"
+                                )
                             }
 
                             // Не первый запуск
@@ -175,7 +183,10 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                                         swipeRadioStationList[position],
                                         true
                                     )
-                                    Log.d(TAG, "PLAYLIST_UPDATE: 4.$TAG. Метод onPageSelected() -> Плейер остановлен. Программа не только что запущена. Вызываем mainViewModel.playOrToggleSong(swipeRadioStationList[position], true)")
+                                    Log.d(
+                                        TAG,
+                                        "PLAYLIST_UPDATE: 4.$TAG. Метод onPageSelected() -> Плейер остановлен. Программа не только что запущена. Вызываем mainViewModel.playOrToggleSong(swipeRadioStationList[position], true)"
+                                    )
                                     // Если список пуст, значит это список избранного, который не заполнен. Но проверку на заполненность списка мы уже сделали
                                 }
                             }
@@ -192,6 +203,50 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                         mainViewModel.errorMessagePost("An unknown error occurred")
                     }
 
+                }
+
+                // Тестово добавляю это сюда тоже, т.к. прогресс не всегда убирается
+                // Favorite star
+                val countryCodeInVp = swipeRadioStationAdapter.radioStationList[0].countryCode
+                val countryCodeInExoplayer = mainViewModel.curPlayingSongLiveData.value?.description?.subtitle.toString()
+                Log.d(
+                    TAG,
+                    "3. FAV_STAR: Radio station list is not empty = ${swipeRadioStationAdapter.radioStationList.isNotEmpty()}. Countrycode in exoplayer = $countryCodeInExoplayer. Countrycode in vp = $countryCodeInVp"
+                )
+
+                if (swipeRadioStationAdapter.radioStationList.isNotEmpty() && countryCodeInExoplayer == countryCodeInVp) {
+                    Log.d(TAG, "4. FAV_STAR: Entered to check favorite star and hide progress")
+
+                    val currentRadioStationPosition = binding?.vpSong?.currentItem
+
+                    currentRadioStationPosition?.let { curPosition ->
+                        // java.lang.IndexOutOfBoundsException: Index: 14, Size: 4
+                        if (curPosition < swipeRadioStationAdapter.radioStationList.size) {
+                            Log.d(
+                                TAG,
+                                "4. FAV_STAR: Checking favorite star and hiding progress"
+                            )
+
+                            if (swipeRadioStationAdapter.radioStationList[curPosition].isStationInFavourite) {
+                                binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_24_orange)
+                            } else {
+                                binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_border_24_orange)
+                            }
+
+                            // Убираем прогресс и делаем кнопки снова кликабельными
+                            mainViewModel.hideProgressAndSetClickable()
+                            Log.d(
+                                TAG,
+                                "BROADCAST: Прячем прогресс. Вызываем метод hideProgressAndSetClickable() из curPlayingSongLiveData.observe"
+                            )
+                        }
+                    }
+
+                } else {
+                    Log.d(
+                        TAG,
+                        "4. FAV_STAR: DID NOT enter to check favorite star and hide progress"
+                    )
                 }
 
             }
@@ -223,6 +278,20 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 //            sendBroadcast(this)
 //        }
 
+    }
+
+    // 3.Broadcast для горизонтальной полосы прогресса в activity (1 - в ???)
+    override fun onResume() {
+        super.onResume()
+        registerReceiver(receiver, IntentFilter(Constants.FILTER_FOR_BROADCAST_MA))
+        Log.d(TAG, "BROADCAST: Регистрируемся в onResume()")
+    }
+
+    // 3.Broadcast - регистрируем в onResume и отписываемся в onPause
+    override fun onPause() {
+        super.onPause()
+        unregisterReceiver(receiver)
+        Log.d(TAG, "BROADCAST: Отписываемся в onPause()")
     }
 
     private fun initListeners() {
@@ -296,8 +365,11 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 //                    newItemIndex // currentItem - is the index of the song, that is displayed. We change it to a new one
 
                 binding?.vpSong?.doOnLayout {
+                    Log.d(
+                        TAG,
+                        "PLAYLIST_UPDATE: 4.$TAG, switchViewPagerToCurrentSong(). Обновляем наш vpSong, newItemIndex = $newItemIndex"
+                    )
                     binding?.vpSong?.setCurrentItem(newItemIndex, false)
-                    Log.d(TAG, "PLAYLIST_UPDATE: 4.$TAG, switchViewPagerToCurrentSong(). Обновляем наш vpSong, newItemIndex = $newItemIndex")
                 }
 
                 curPlayingRadioStation =
@@ -335,10 +407,20 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                                 curPlayingRadioStation?.countryCode ?: return@observe
                             )
 
-                            Log.d(TAG, "PLAYLIST_UPDATE: 4.$TAG. Получаем данные из mediaItemsListLiveData")
+                            Log.d(
+                                TAG,
+                                "PLAYLIST_UPDATE: 4.$TAG. Получаем данные из mediaItemsListLiveData"
+                            )
 
                             mOnPageChangeCallback?.onPageScrolled(0, 0.0f, 0)
                             // ??? Если не включать плейер, а просто листать от списка к списку, этот метод перестаёт вызываться на четвертый раз и звезда перестаёт меняться (избранное/не избранное). Поэтому на всякий случай вызываю его дополнительно. Не самый лучший вариант, думаю. Поэтому помечаю на проверку в дальнейшем.
+
+                            // Полоса progressBar, которая заполняется с помощью Broadcast
+                            binding?.progressBarHorizontalDp?.progress = 85
+                            Log.d(
+                                TAG,
+                                "BROADCAST: Заполняем полосу прогресса на 85% в mediaItemsListLiveData.observe()"
+                            )
                         }
 
                         mainViewModel.stateInitialized()
@@ -358,6 +440,13 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             mainViewModel.whenReady { isInitialized ->
                 if (isInitialized) {
 
+                    // Полоса progressBar, которая заполняется с помощью Broadcast
+                    binding?.progressBarHorizontalDp?.progress = 95
+                    Log.d(
+                        TAG,
+                        "BROADCAST: Заполняем полосу прогресса на 95% в лямбде whenReady{} из curPlayingSongLiveData.observe()"
+                    )
+
                     // if we had an individual image
 //            glide.load(curPlayingSong?.imageUrl).into(ivCurSongImage)
 
@@ -366,20 +455,49 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 //                            switchViewPagerToCurrentSong(mediaId ?: return@observe, countrycode)
                     switchViewPagerToCurrentSong(mediaId ?: return@whenReady, countrycode)
 
+                    Log.d(
+                        TAG,
+                        "BROADCAST: Прячем прогресс - curPlayingSongLiveData.observe. Если список радиостаниций не пуст и countrycode одинаковый в vpSong и плейере, скроется прогресс"
+                    )
+
                     // Favorite star
+                    Log.d(
+                        TAG,
+                        "1. FAV_STAR: Radio station list is not empty = ${swipeRadioStationAdapter.radioStationList.isNotEmpty()}. Countrycode in exoplayer = $countrycode. Countrycode in vp = ${swipeRadioStationAdapter.radioStationList[0].countryCode}"
+                    )
                     if (swipeRadioStationAdapter.radioStationList.isNotEmpty() && countrycode == swipeRadioStationAdapter.radioStationList[0].countryCode) {
+                        Log.d(TAG, "2. FAV_STAR: Entered to check favorite star and hide progress")
+
                         val currentRadioStationPosition = binding?.vpSong?.currentItem
 
                         currentRadioStationPosition?.let { position ->
-                            if (swipeRadioStationAdapter.radioStationList[position].isStationInFavourite) {
-                                binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_24_orange)
-                            } else {
-                                binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_border_24_orange)
+                            // java.lang.IndexOutOfBoundsException: Index: 14, Size: 4
+                            if (position < swipeRadioStationAdapter.radioStationList.size) {
+                                Log.d(
+                                    TAG,
+                                    "2. FAV_STAR: Checking favorite star and hiding progress"
+                                )
+
+                                if (swipeRadioStationAdapter.radioStationList[position].isStationInFavourite) {
+                                    binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_24_orange)
+                                } else {
+                                    binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_border_24_orange)
+                                }
+
+                                // Убираем прогресс и делаем кнопки снова кликабельными
+                                mainViewModel.hideProgressAndSetClickable()
+                                Log.d(
+                                    TAG,
+                                    "BROADCAST: Прячем прогресс. Вызываем метод hideProgressAndSetClickable() из curPlayingSongLiveData.observe"
+                                )
                             }
                         }
 
-                        // Убираем прогресс и делаем кнопки снова кликабельными
-                        mainViewModel.hideProgressAndSetClickable()
+                    } else {
+                        Log.d(
+                            TAG,
+                            "2. FAV_STAR: DID NOT enter to check favorite star and hide progress"
+                        )
                     }
 
                 }
@@ -479,17 +597,33 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
         mainViewModel.messageLiveData.observe(this) {
             when (it) {
-                AUDIO_CONNECTING -> Toast.makeText(
-                    this,
-                    it,
-                    Toast.LENGTH_LONG
-                ).show()
+//                AUDIO_CONNECTING -> Toast.makeText(
+//                    this,
+//                    it,
+//                    Toast.LENGTH_LONG
+//                ).show()
+//
+//                AUDIO_STOPPED, AUDIO_PLAYING -> Toast.makeText(
+//                    this,
+//                    it,
+//                    Toast.LENGTH_SHORT
+//                ).show()
 
-                AUDIO_STOPPED, AUDIO_PLAYING -> Toast.makeText(
-                    this,
-                    it,
-                    Toast.LENGTH_SHORT
-                ).show()
+                AUDIO_CONNECTING -> binding?.let { nonNullBinding ->
+                    Snackbar.make(
+                        nonNullBinding.rootLayout.rootView,
+                        it,
+                        Snackbar.LENGTH_LONG
+                    ).show()
+                }
+
+                AUDIO_STOPPED, AUDIO_PLAYING -> binding?.let { nonNullBinding ->
+                    Snackbar.make(
+                        nonNullBinding.rootLayout.rootView,
+                        it,
+                        Snackbar.LENGTH_SHORT
+                    ).show()
+                }
 
                 else -> {
                 } // Note the block
@@ -528,6 +662,10 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 //            binding?.ivPlayPause?.isClickable = false
 //            binding?.ivPlayPause?.isEnabled = false
             swipeRadioStationAdapter.isClickableRecyclerView = false
+
+            binding?.frameLayoutDp?.isVisible = true
+            binding?.text1Dp?.isVisible = true
+            binding?.progressBarHorizontalDp?.isVisible = true
         }
         mainViewModel.setClickableLiveData.observe(this) {
 //            // Убрать отображение прогресс бара + разблокировать нажатия как на HomeRadioFragment, так и проигрыватель в main activity
@@ -539,6 +677,10 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 //            binding?.ivPlayPause?.isClickable = true
 //            binding?.ivPlayPause?.isEnabled = true
             swipeRadioStationAdapter.isClickableRecyclerView = true
+
+            binding?.frameLayoutDp?.isVisible = false
+            binding?.text1Dp?.isVisible = false
+            binding?.progressBarHorizontalDp?.isVisible = false
         }
     }
 
@@ -573,6 +715,10 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 //        super.onBackPressed()
 //    }
 
+    override fun setToolbar(toolbar: Toolbar?) {
+        setSupportActionBar(toolbar)
+    }
+
     override fun onDestroy() {
         mOnPageChangeCallback?.let {
             binding?.vpSong?.unregisterOnPageChangeCallback(it)
@@ -592,7 +738,38 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         super.onDestroy()
     }
 
-    override fun setToolbar(toolbar: Toolbar?) {
-        setSupportActionBar(toolbar)
+    // 2.Broadcast для горизонтальной полосы прогресса в activity (1 - в ???)
+    // Создадим анонимный класс => не нужно регистрировать в манифесте
+    private var receiver: BroadcastReceiver? = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent) {
+            val listSize = intent.getIntExtra(Constants.KEY_BROADCAST_LIST_SIZE_MA, 1)
+            val filesAmount = intent.getIntExtra(Constants.KEY_BROADCAST_COUNT_MA, 1)
+//            val endOfBroadcast = intent.getIntExtra(Constants.KEY_BROADCAST_END_MA, 1)
+            Log.d(TAG, "BROADCAST: Получаем данные в onReceive()")
+
+            if (filesAmount <= listSize) {
+                val progress = 70 * filesAmount / listSize
+                binding?.progressBarHorizontalDp?.progress = progress
+                Log.d(
+                    TAG,
+                    "BROADCAST: Получаем данные в onReceive(). progress = 70 * $filesAmount / $listSize = $progress%"
+                )
+            }
+
+//            // Когда прогресс заканчивается, отправляем об этом Broadcast
+//            val intent =
+//                Intent(Constants.FILTER_FOR_BROADCAST_MA) // FILTER is a string to identify this intent
+//            intent.putExtra(Constants.KEY_BROADCAST_END_MA, 100)
+//            Log.d(
+//                TAG,
+//                "BROADCAST: Отправляем в MainActivity сигнал об окончании бродкаста (95%)"
+//            )
+//            sendBroadcast(intent)
+
+//            if (endOfBroadcast == 100) {
+//                binding?.progressBarHorizontalDp?.progress = 100
+//                Log.d(TAG, "BROADCAST: endOfBroadcast == 100, заполняем полосу полностью")
+//            }
+        }
     }
 }

@@ -34,6 +34,8 @@
     <string name="radioStationList_count">Radio station click count: </string>
     <string name="radioStationList_empty">It\'s empty here. Something went wrong.</string>
 
+    <string name="downloading_playlist">Downloading playlist</string>
+
     <string name="foregroundNotification_name">Cashing. Please, wait. </string>
     <string name="foregroundNotification_description">Cashing… </string>
     <string name="foregroundNotification_failedName">Cashing failed.</string>

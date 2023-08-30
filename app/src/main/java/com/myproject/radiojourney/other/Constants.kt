@@ -34,7 +34,9 @@ object Constants {
     const val KEY_BROADCAST_COUNT = "KEY_BROADCAST_COUNT"
     const val KEY_BROADCAST_END = "KEY_BROADCAST_END"
 
-    // Broadcast для завершения сервиса MainActivity - MusicService
-    const val FILTER_FOR_BROADCAST_MS = "FILTER_FOR_BROADCAST_MS"
-    const val KEY_BROADCAST_ACTIVITY = "KEY_BROADCAST_ACTIVITY"
+    // Broadcast для полосы прогресса MainActivity при загрузке плейлиста
+    const val FILTER_FOR_BROADCAST_MA = "FILTER_FOR_BROADCAST_MA"
+    const val KEY_BROADCAST_LIST_SIZE_MA = "KEY_BROADCAST_LIST_SIZE_MA"
+    const val KEY_BROADCAST_COUNT_MA = "KEY_BROADCAST_COUNT_MA"
+    const val KEY_BROADCAST_END_MA = "KEY_BROADCAST_END_MA"
 }

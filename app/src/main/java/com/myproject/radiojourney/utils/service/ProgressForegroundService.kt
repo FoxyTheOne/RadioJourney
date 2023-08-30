@@ -36,10 +36,6 @@ class ProgressForegroundService @Inject constructor() : Service() {
     companion object {
         private const val TAG = "ProgressForeground"
         private const val CHANNEL_CASHING_ID = "CHANNEL_CASHING_ID" // 5
-//        private const val FILTER_FOR_BROADCAST = "FILTER_FOR_BROADCAST"
-//        private const val KEY_BROADCAST_LIST_SIZE = "KEY_BROADCAST_LIST_SIZE"
-//        private const val KEY_BROADCAST_COUNT = "KEY_BROADCAST_COUNT"
-//        private const val KEY_BROADCAST_END = "KEY_BROADCAST_END"
     }
 
     @Inject

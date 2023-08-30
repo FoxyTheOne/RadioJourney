@@ -1,10 +1,7 @@
 package com.myproject.radiojourney.utils.exoplayer
 
 import android.app.PendingIntent
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.os.Build
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
@@ -23,10 +20,12 @@ import com.google.android.exoplayer2.upstream.DefaultDataSource
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
 import com.myproject.radiojourney.data.sharedPreference.IAppSharedPreference
 import com.myproject.radiojourney.other.Constants
-import com.myproject.radiojourney.other.Constants.FILTER_FOR_BROADCAST_MS
+import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_COUNT_MA
+import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_END_MA
+import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_LIST_SIZE_MA
 import com.myproject.radiojourney.other.Constants.MEDIA_ROOT_ID
 import com.myproject.radiojourney.other.Constants.NETWORK_ERROR
-import com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioFragment
+import com.myproject.radiojourney.presentation.MainActivity
 import com.myproject.radiojourney.utils.exoplayer.callback.MusicPlaybackPreparer
 import com.myproject.radiojourney.utils.exoplayer.callback.MusicPlayerEventListener
 import com.myproject.radiojourney.utils.exoplayer.callback.MusicPlayerNotificationListener
@@ -83,7 +82,12 @@ class MusicService : MediaBrowserServiceCompat() {
 
     private lateinit var musicPlayerEventListener: MusicPlayerEventListener
 
-    private lateinit var observer: Observer<Boolean>
+    private lateinit var notifyChildrenChangedLiveDataObserver: Observer<Boolean>
+
+    val intent =
+        Intent(Constants.FILTER_FOR_BROADCAST_MA) // FILTER is a string to identify this intent
+    private lateinit var listSizeLiveDataObserver: Observer<Int>
+    private lateinit var radioStationsCountLiveDataObserver: Observer<Int>
 
     companion object {
         private const val TAG = "MusicService"
@@ -164,7 +168,10 @@ class MusicService : MediaBrowserServiceCompat() {
 
             Log.d(TAG, "PLAYLIST_UPDATE: 5.$TAG, зашли в лямбду musicPlaybackPreparer.")
             if (isPlayerInitialized && it == null) {
-                Log.d(TAG, "PLAYLIST_UPDATE: 5.$TAG, MediaMetadataCompat == null, выходим из лямбды musicPlaybackPreparer.")
+                Log.d(
+                    TAG,
+                    "PLAYLIST_UPDATE: 5.$TAG, MediaMetadataCompat == null, выходим из лямбды musicPlaybackPreparer."
+                )
                 return@MusicPlaybackPreparer // Если isPlayerInitialized == true, значит это точно не первый запуск. Если isPlayerInitialized && it == null - значит сюда передан результат раньше, чем скачался плейлист (Было curPlayingSong != null && it == null, работает с нюансами)
             }
             curPlayingSong = it
@@ -176,11 +183,36 @@ class MusicService : MediaBrowserServiceCompat() {
         }
 
         // Observing notifyChildrenChangedLiveData from firebase in service
-        observer = Observer<Boolean> {
+        notifyChildrenChangedLiveDataObserver = Observer<Boolean> {
             //Live data value has changed
             notifyChildrenChanged(MEDIA_ROOT_ID)
         }
-        firebaseMusicSource.notifyChildrenChangedLiveData.observeForever(observer)
+        firebaseMusicSource.notifyChildrenChangedLiveData.observeForever(
+            notifyChildrenChangedLiveDataObserver
+        )
+
+        // List size for broadcast
+        listSizeLiveDataObserver = Observer {
+            //Live data value has changed
+            intent.putExtra(KEY_BROADCAST_LIST_SIZE_MA, it)
+            Log.d(TAG, "BROADCAST: Отправляем в MainActivity данные из listSizeLiveDataObserver")
+            sendBroadcast(intent)
+        }
+        firebaseMusicSource.listSizeLiveData.observeForever(listSizeLiveDataObserver)
+
+        // Counting for broadcast
+        radioStationsCountLiveDataObserver = Observer {
+            //Live data value has changed
+            intent.putExtra(KEY_BROADCAST_COUNT_MA, it)
+            Log.d(
+                TAG,
+                "BROADCAST: Отправляем в MainActivity данные из radioStationsCountLiveDataObserver"
+            )
+            sendBroadcast(intent)
+        }
+        firebaseMusicSource.radioStationsCountLiveData.observeForever(
+            radioStationsCountLiveDataObserver
+        )
 
         mediaSessionConnector = MediaSessionConnector(mediaSession)
         mediaSessionConnector.setPlaybackPreparer(musicPlaybackPreparer) // 11.
@@ -246,7 +278,7 @@ class MusicService : MediaBrowserServiceCompat() {
 
         serviceScope.launch {
 
-            if (radioStations.isNotEmpty() && curSongIndex < radioStations.size) {
+            if (radioStations.isNotEmpty() && curSongIndex < firebaseMusicSource.radioStations.size) {
                 // Проверить, заканчивается ли ссылка на .m3u8
                 // Если да, нам нужно использовать HlsMediaSource
                 val mediaUri =
@@ -265,7 +297,10 @@ class MusicService : MediaBrowserServiceCompat() {
                     // ExoPlayer.prepare(MediaSource mediaSource) is deprecated. Use setMediaSource(MediaSource) and ExoPlayer.prepare() instead
                     exoPlayer.setMediaSource(firebaseMusicSource.asMediaSource(dataSourceFactory)) // Вызываем метод из firebaseMusicSource, чтобы сформировать данные для плейлист
                 }
-                Log.d(TAG, "PLAYLIST_UPDATE: 5.$TAG, preparePlayer(). Вызываем метод мз firebaseMusicSource, чтобы сформировать данные для плейлист")
+                Log.d(
+                    TAG,
+                    "PLAYLIST_UPDATE: 5.$TAG, preparePlayer(). Вызываем метод мз firebaseMusicSource, чтобы сформировать данные для плейлист"
+                )
             }
 
             exoPlayer.seekTo(
@@ -276,7 +311,10 @@ class MusicService : MediaBrowserServiceCompat() {
                 playNow // play song, when it will be ready (it will be false, and after - true, when ready)
 
             exoPlayer.prepare()
-            Log.d(TAG, "PLAYLIST_UPDATE: 5.$TAG, preparePlayer(). Находим нужную станцию и включаем плейер")
+            Log.d(
+                TAG,
+                "PLAYLIST_UPDATE: 5.$TAG, preparePlayer(). Находим нужную станцию и включаем плейер"
+            )
 
         }
     }
@@ -358,7 +396,9 @@ class MusicService : MediaBrowserServiceCompat() {
 
         exoPlayer.removeListener(musicPlayerEventListener)
         exoPlayer.release()
-        firebaseMusicSource.notifyChildrenChangedLiveData.removeObserver(observer)
+        firebaseMusicSource.notifyChildrenChangedLiveData.removeObserver(
+            notifyChildrenChangedLiveDataObserver
+        )
 
 //        // 3.Broadcast - регистрируем в onCreate и отписываемся в onDestroy
 //        unregisterReceiver(receiver)
@@ -372,7 +412,14 @@ class MusicService : MediaBrowserServiceCompat() {
             player: Player,
             windowIndex: Int
         ): MediaDescriptionCompat {
-            return firebaseMusicSource.radioStations[windowIndex].description // windowIndex - index of the song that is now playing
+//            return firebaseMusicSource.radioStations[windowIndex].description // windowIndex - index of the song that is now playing
+
+            // TODO Иногда выдаёт ошибку, например java.lang.IndexOutOfBoundsException: Index: 14, Size: 4. Пока сделаю так, не знаю как исправить, null передать нельзя
+            return if (windowIndex < firebaseMusicSource.radioStations.size) {
+                firebaseMusicSource.radioStations[windowIndex].description // windowIndex - index of the song that is now playing
+            } else {
+                firebaseMusicSource.radioStations[0].description
+            }
         }
     }
 

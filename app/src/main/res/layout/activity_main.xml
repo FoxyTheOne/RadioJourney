@@ -11,16 +11,16 @@
         android:id="@+id/image_star"
         android:layout_width="56dp"
         android:layout_height="56dp"
+        android:background="@color/background_transparent"
+        android:paddingStart="@dimen/space_small"
         android:paddingTop="@dimen/space_small"
         android:paddingEnd="@dimen/space_small"
-        android:paddingStart="@dimen/space_small"
         android:paddingBottom="@dimen/space_small"
-        android:background="@color/background_transparent"
         android:scaleType="centerCrop"
-        tools:src="@drawable/ic_baseline_star_border_24_orange"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/vpSong" />
+        app:layout_constraintTop_toTopOf="@+id/vpSong"
+        tools:src="@drawable/ic_baseline_star_border_24_orange" />
 
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/vpSong"
@@ -59,5 +59,58 @@
             app:navGraph="@navigation/app_navigation" />
 
     </FrameLayout>
+
+    <!-- layout для ProgressBar при загрузке плейлиста -->
+    <FrameLayout
+        android:id="@+id/frameLayout_dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/background_transparent"
+        android:clickable="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:visibility="gone" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_left"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="@dimen/space_beforeOrAfterElement" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_right"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_end="@dimen/space_beforeOrAfterElement" />
+
+    <TextView
+        android:id="@+id/text1_dp"
+        style="@style/login_bottom_orange"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/space_small"
+        android:text="@string/downloading_playlist"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/progress_bar_horizontal_dp"
+        app:layout_constraintLeft_toLeftOf="@+id/guideline_left"
+        app:layout_constraintRight_toRightOf="@+id/guideline_right"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <ProgressBar
+        android:id="@+id/progress_bar_horizontal_dp"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/space_small"
+        android:max="100"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="@+id/guideline_left"
+        app:layout_constraintRight_toRightOf="@+id/guideline_right"
+        app:layout_constraintTop_toBottomOf="@+id/text1_dp"
+        app:layout_constraintVertical_chainStyle="packed" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

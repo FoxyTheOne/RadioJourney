@@ -285,16 +285,17 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 //                    mainViewModel.notJustLaunchedEnableAutoplay()
 //                }
 
-            arguments?.parcelable<RadioStationPresentation>("radio_station_favourite") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
-                ?.let { radioStationFavourite ->
-                    Log.d(TAG, "Выбранный элемент списка: $radioStationFavourite")
-
-                    // Здесь мы переходим из фрагмента "Избранное". Стоит загрузить в плейер плейлист избранного.
-                    mainViewModel.saveNewMediaId(radioStationFavourite.stationuuid)
-                    mainViewModel.fetchSongs("FAV")
-                    mainViewModel.playOrToggleSong(radioStationFavourite, false)
-                    mainViewModel.notJustLaunchedEnableAutoplay()
-                }
+            // Второй раз одно и то же? Закомментирую
+//            arguments?.parcelable<RadioStationPresentation>("radio_station_favourite") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
+//                ?.let { radioStationFavourite ->
+//                    Log.d(TAG, "Выбранный элемент списка: $radioStationFavourite")
+//
+//                    // Здесь мы переходим из фрагмента "Избранное". Стоит загрузить в плейер плейлист избранного.
+//                    mainViewModel.saveNewMediaId(radioStationFavourite.stationuuid)
+//                    mainViewModel.fetchSongs("FAV")
+//                    mainViewModel.playOrToggleSong(radioStationFavourite, false)
+//                    mainViewModel.notJustLaunchedEnableAutoplay()
+//                }
 
         }
 

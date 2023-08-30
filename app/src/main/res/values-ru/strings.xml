@@ -34,6 +34,8 @@
     <string name="radioStationList_count">Счётчик нажатий: </string>
     <string name="radioStationList_empty">Здесь пусто. Что-то пошло не так</string>
 
+    <string name="downloading_playlist">Загрузка плейлиста</string>
+
     <string name="foregroundNotification_name">Кеширование локаций</string>
     <string name="foregroundNotification_description">Кеширование… </string>
     <string name="foregroundNotification_failedName">Кеширование не удалось.</string>

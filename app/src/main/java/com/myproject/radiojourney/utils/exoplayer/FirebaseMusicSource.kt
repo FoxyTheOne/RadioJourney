@@ -39,6 +39,14 @@ class FirebaseMusicSource @Inject constructor(
     val notifyChildrenChangedLiveData: LiveData<Boolean> =
         _notifyChildrenChangedLiveData
 
+    private val _listSizeLiveData = MutableLiveData<Int>()
+    val listSizeLiveData: LiveData<Int> =
+        _listSizeLiveData
+
+    private val _radioStationsCountLiveData = MutableLiveData<Int>()
+    val radioStationsCountLiveData: LiveData<Int> =
+        _radioStationsCountLiveData
+
     // Список, куда будут сохраняться метаданные по каждой радиостанции с помощью метода fetchMediaData()
     var radioStations = emptyList<MediaMetadataCompat>() // meta info about radioStations
 
@@ -80,7 +88,21 @@ class FirebaseMusicSource @Inject constructor(
 //        val allRadioStations = networkRadioDataSource.getAllRadioStationsList()
         val countryCodeRadioStations = networkRadioDataSource.getRadioStationList(countryCode)
 
+        // Отправляем цифру в MusicService для Broadcast
+        val listSize = countryCodeRadioStations.size
+        _listSizeLiveData.postValue(listSize)
+        var radioStationsCount = 0
+        var percentCount = 10
+
         radioStations = countryCodeRadioStations.map { radioStationRemote ->
+
+            // Подсчёт для Broadcast
+            radioStationsCount += 1
+            val countingForBroadcast = percentCount*listSize/100
+            if (radioStationsCount == countingForBroadcast) {
+                percentCount += 10
+                _radioStationsCountLiveData.postValue(radioStationsCount)
+            }
 
             if (radioStationRemote.url_resolved.isEmpty()) {
                 Log.d(
@@ -123,10 +145,24 @@ class FirebaseMusicSource @Inject constructor(
         state = STATE_INITIALIZING
         val favouriteRadioStations = radioStationDAO.getFavoriteRadioStationList(true)
 
+        // Отправляем цифру в MusicService для Broadcast
+        val listSize = favouriteRadioStations.size
+        _listSizeLiveData.postValue(listSize)
+        var radioStationsCount = 0
+        var percentCount = 10
+
         if (favouriteRadioStations.isNotEmpty()) {
             isFavoriteEmpty = false
 
             radioStations = favouriteRadioStations.map { radioStationLocal ->
+
+                // Подсчёт для Broadcast
+                radioStationsCount += 1
+                val countingForBroadcast = percentCount*listSize/100
+                if (radioStationsCount == countingForBroadcast) {
+                    percentCount += 10
+                    _radioStationsCountLiveData.postValue(radioStationsCount)
+                }
 
                 if (radioStationLocal.urlResolved.isEmpty()) {
                     Log.d(

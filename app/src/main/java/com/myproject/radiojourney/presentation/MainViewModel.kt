@@ -332,10 +332,12 @@ class MainViewModel @Inject constructor(
 
     fun showProgressAndDisableClick() {
         _setNonClickableLiveData.call()
+        Log.d(TAG, "BROADCAST: Показываем прогресс, вызван метод showProgressAndDisableClick()")
     }
 
     fun hideProgressAndSetClickable() {
         _setClickableLiveData.call()
+        Log.d(TAG, "BROADCAST: Прячем прогресс, вызван метод hideProgressAndSetClickable()")
     }
 
     fun saveNewMediaId(mediaId: String) {
