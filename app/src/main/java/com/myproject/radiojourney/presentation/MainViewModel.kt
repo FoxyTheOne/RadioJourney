@@ -266,8 +266,8 @@ class MainViewModel @Inject constructor(
                                 }
 
                                 playbackState.isPlayEnabled -> {
-                                    // Создадим уведомление
-                                    _messageLiveData.postValue(AUDIO_CONNECTING)
+                                    // Создадим уведомление (Snackbar.make)
+//                                    _messageLiveData.postValue(AUDIO_CONNECTING) -> вместо этого у нас полоса прогресса на экране
                                     musicServiceConnection.transportControls.play()
                                 }
 
@@ -284,8 +284,8 @@ class MainViewModel @Inject constructor(
 
                         // if we want to play another song
                     } else {
-                        // Создадим уведомление
-                        _messageLiveData.postValue(AUDIO_CONNECTING)
+                        // Создадим уведомление (Snackbar.make)
+//                      _messageLiveData.postValue(AUDIO_CONNECTING) -> вместо этого у нас полоса прогресса на экране
                         Log.d(TAG, "Включаем другую песню ${mediaItem.stationName}")
 
                         musicServiceConnection.transportControls.playFromMediaId(

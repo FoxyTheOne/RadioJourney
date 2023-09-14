@@ -104,12 +104,19 @@ class MusicService : MediaBrowserServiceCompat() {
                 // TODO узнать, какой country code был у последней радиостанции при последней запуске, если это не первый запуск
                 // если первый запуск - запустить по умолчанию
                 val lastPlayedCountryCode = preference.getLastUsedRadioStationCountryCode()
+                Log.d(TAG, "Узнаём последний используемый код страны - $lastPlayedCountryCode")
 
                 // Загружаем метаданные всех радиостанций с определенным country code ПРИ ЗАПУСКЕ СЕРВИСА
-                firebaseMusicSource.fetchMediaData(
-                    if (lastPlayedCountryCode != "null" && lastPlayedCountryCode.isNotBlank()) lastPlayedCountryCode
-                    else "AD"
-                )
+                if (lastPlayedCountryCode.endsWith("_FAV", true)) {
+                    firebaseMusicSource.fetchFavouriteMediaData()
+                    Log.d(TAG, "Загружаем метаданные fetchMediaData - FAV")
+                } else {
+                    firebaseMusicSource.fetchMediaData(
+                        if (lastPlayedCountryCode != "null" && lastPlayedCountryCode.isNotBlank()) lastPlayedCountryCode
+                        else "AD"
+                    )
+                    Log.d(TAG, "Загружаем метаданные fetchMediaData - $lastPlayedCountryCode")
+                }
 
             } catch (e: SocketTimeoutException) {
                 // Когда сохранён не верный CountryCode, по запросу такого не найдёт и выдаст ошибку retrofit2.HttpException: HTTP 404
@@ -179,7 +186,10 @@ class MusicService : MediaBrowserServiceCompat() {
                 it,
                 true
             )
-            Log.d(TAG, "PLAYLIST_UPDATE: 5.$TAG, MediaMetadataCompat передана, вызываем preparePlayer()")
+            Log.d(
+                TAG,
+                "PLAYLIST_UPDATE: 5.$TAG, MediaMetadataCompat передана, вызываем preparePlayer()"
+            )
         }
 
         // Observing notifyChildrenChangedLiveData from firebase in service
@@ -357,14 +367,20 @@ class MusicService : MediaBrowserServiceCompat() {
                                     false
                                 )
                                 isPlayerInitialized = true
-                                Log.d(TAG, "PLAYLIST_UPDATE: 5.$TAG, вызываем preparePlayer() из onLoadChildren()")
+                                Log.d(
+                                    TAG,
+                                    "PLAYLIST_UPDATE: 5.$TAG, вызываем preparePlayer() из onLoadChildren()"
+                                )
                             }
                         } catch (exception: Exception) {
                             // not recommend to notify here , instead notify when you
                             // change existing list in MusicPlaybackPreparer onCommand()
                             notifyChildrenChanged(MEDIA_ROOT_ID)
 
-                            Log.d(TAG, "PLAYLIST_UPDATE: Exception in fun onLoadChildren(), MEDIA_ROOT_ID")
+                            Log.d(
+                                TAG,
+                                "PLAYLIST_UPDATE: Exception in fun onLoadChildren(), MEDIA_ROOT_ID"
+                            )
                             exception.printStackTrace()
                         }
 

@@ -94,6 +94,7 @@ class FirebaseMusicSource @Inject constructor(
         var radioStationsCount = 0
         var percentCount = 10
 
+        Log.d(TAG, "Загружаем метаданные fetchMediaData - $countryCode")
         radioStations = countryCodeRadioStations.map { radioStationRemote ->
 
             // Подсчёт для Broadcast
@@ -136,6 +137,7 @@ class FirebaseMusicSource @Inject constructor(
             it.description.mediaUri.toString().isNotEmpty()
         }
 
+        Log.d(TAG, "Получаем список размером ${radioStations.size}")
         _notifyChildrenChangedLiveData.call()
         state = STATE_INITIALIZED
     }
@@ -151,6 +153,7 @@ class FirebaseMusicSource @Inject constructor(
         var radioStationsCount = 0
         var percentCount = 10
 
+        Log.d(TAG, "Загружаем метаданные fetchMediaData - FAV")
         if (favouriteRadioStations.isNotEmpty()) {
             isFavoriteEmpty = false
 
@@ -230,6 +233,8 @@ class FirebaseMusicSource @Inject constructor(
 //                ) // country code
 //                .build()
 //        }
+
+        Log.d(TAG, "Получаем список размером ${radioStations.size}")
         _notifyChildrenChangedLiveData.call()
         state = STATE_INITIALIZED
     }
