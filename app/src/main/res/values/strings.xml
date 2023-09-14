@@ -35,6 +35,7 @@
     <string name="radioStationList_empty">It\'s empty here. Something went wrong.</string>
 
     <string name="downloading_playlist">Downloading playlist</string>
+    <string name="downloading_radio_station">Connecting to the radio station</string>
 
     <string name="foregroundNotification_name">Cashing. Please, wait. </string>
     <string name="foregroundNotification_description">Cashing… </string>

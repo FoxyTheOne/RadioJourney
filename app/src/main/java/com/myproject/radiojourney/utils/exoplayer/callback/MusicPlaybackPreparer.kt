@@ -8,6 +8,7 @@ import android.util.Log
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.myproject.radiojourney.data.dataSource.network.NetworkRadioDataSource
+import com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioFragment
 import com.myproject.radiojourney.utils.exoplayer.FirebaseMusicSource
 import com.myproject.radiojourney.utils.exoplayer.callback.State.*
 import kotlinx.coroutines.CoroutineScope
@@ -88,6 +89,14 @@ class MusicPlaybackPreparer(
 
                         val job = serviceScope.launch {
                             try {
+//                                // Скачиваем список избранного
+//                                firebaseMusicSource.fetchFavouriteMediaData()
+//                                Log.d(
+//                                    TAG,
+//                                    "PLAYLIST_UPDATE: 5. FAV_STAR: Запускаем метод для скачивания списка избранного в exoplayer"
+//                                )
+
+
                                 // Чтобы проверить, может быть такой плейлист уже скачан и сейчас используется, обновим переменную
                                 if (firebaseMusicSource.radioStations.isNotEmpty()) {
                                     lastCountryCode =
@@ -96,14 +105,14 @@ class MusicPlaybackPreparer(
                                 Log.d(TAG, "PLAYLIST_UPDATE: Проверяем список в exoplayer, lastCountryCode = $lastCountryCode")
 
                                 val isLastCountryCodeFavorite = lastCountryCode.toString().endsWith("_FAV")
-                                Log.d(TAG, "PLAYLIST_UPDATE: Проверяем список в exoplayer, isLastCountryCodeFavorite = $isLastCountryCodeFavorite")
+                                Log.d(TAG, "PLAYLIST_UPDATE: 5. FAV_STAR: Проверяем список в exoplayer, isLastCountryCodeFavorite = $isLastCountryCodeFavorite")
 
                                 if (!isLastCountryCodeFavorite) {
                                     // Скачиваем список избранного
                                     firebaseMusicSource.fetchFavouriteMediaData()
-                                    Log.d(TAG, "PLAYLIST_UPDATE: Запускаем метод для скачивания списка избранного в exoplayer")
+                                    Log.d(TAG, "PLAYLIST_UPDATE: 5. FAV_STAR: Запускаем метод для скачивания списка избранного в exoplayer")
                                 } else {
-                                    Log.d(TAG, "PLAYLIST_UPDATE: Список избранного уже скачан в exoplayer")
+                                    Log.d(TAG, "!! PLAYLIST_UPDATE: 5. FAV_STAR: Список избранного уже скачан в exoplayer")
                                 }
                             } catch (e: IOException) {
                                 e.printStackTrace()
@@ -125,8 +134,11 @@ class MusicPlaybackPreparer(
                         // Если оставлять lastCountryCode != null, сюда не заходит, если программу включили и выбрали станцию из другого плейлиста, не включая перед этим плейер ни разу
                         // Вместо этого проверим (выше), скачан ли уже такой плей лист и сравнивать будем с такой переменной:
 
-                        if (lastCountryCode != countryCode) {
-                            Log.d(TAG, "PLAYLIST_UPDATE: 2.$TAG, onCommand(). Запускаем метод для скачивания списка радиостанций в exoplayer, т.к. $lastCountryCode != $countryCode . Если $countryCode пуст или равен нулю, будет скачиваться список по коду AD" )
+                        if (lastCountryCode != countryCode || lastCountryCode?.endsWith("_FAV", true) == true) {
+                            Log.d(
+                                TAG,
+                                "PLAYLIST_UPDATE: 2.$TAG, onCommand(). Запускаем метод для скачивания списка радиостанций в exoplayer, т.к. $lastCountryCode != $countryCode . Если $countryCode пуст или равен нулю, будет скачиваться список по коду AD"
+                            )
 //                            if (countryCode.toString().endsWith("_anyway")) {
 //                                val str: String = countryCode.toString()
 //                                val n = 7 // "_anyway" -> 7 chars
@@ -146,18 +158,30 @@ class MusicPlaybackPreparer(
                                     )
                                 } catch (e: IOException) {
                                     // Когда сохранён не верный CountryCode, по запросу такого не найдёт и выдаст ошибку retrofit2.HttpException: HTTP 404
-                                    Log.d(TAG, "PLAYLIST_UPDATE: 2.$TAG, onCommand(). Не получилось скачать плейлист. Exception: ${e.message}. Problem occurred in method onCommand.")
+                                    Log.d(
+                                        TAG,
+                                        "PLAYLIST_UPDATE: 2.$TAG, onCommand(). Не получилось скачать плейлист. Exception: ${e.message}. Problem occurred in method onCommand."
+                                    )
                                     e.printStackTrace()
                                     firebaseMusicSource.fetchMediaData("AD")
-                                    Log.d(TAG, "PLAYLIST_UPDATE: 2.$TAG, onCommand(). Запускаем метод для скачивания списка радиостанций в exoplayer с кодом AD")
+                                    Log.d(
+                                        TAG,
+                                        "PLAYLIST_UPDATE: 2.$TAG, onCommand(). Запускаем метод для скачивания списка радиостанций в exoplayer с кодом AD"
+                                    )
                                     // TODO Была такая ошибка из-за проблемы с интернетом. Сделать высвечивание сообщения об ошибке, чтобы понимали, почему скачался и включился не тот плейлист
                                 }
                             }
                             job.join()
-                            Log.d(TAG, "PLAYLIST_UPDATE: 2.$TAG, onCommand(). Дождались окончания загрузки нового плейлиста в exoplayer")
+                            Log.d(
+                                TAG,
+                                "PLAYLIST_UPDATE: 2.$TAG, onCommand(). Дождались окончания загрузки нового плейлиста в exoplayer"
+                            )
                             state = STATE_INITIALIZED
                         } else {
-                            Log.d(TAG, "PLAYLIST_UPDATE: Список countryCode = $countryCode уже скачан в exoplayer")
+                            Log.d(
+                                TAG,
+                                "PLAYLIST_UPDATE: Список countryCode = $countryCode уже скачан в exoplayer"
+                            )
                         }
                     }
 
@@ -191,7 +215,6 @@ class MusicPlaybackPreparer(
 
             var itemToPlay =
                 firebaseMusicSource.radioStations.find { mediaId == it.description.mediaId }
-            Log.d(TAG, "PLAYLIST_UPDATE: 2.$TAG, onPrepareFromMediaId(). Находим itemToPlay = $itemToPlay")
 
             // Если выбираем другую страну, в этом месте он не находит радиостанцию и в MusicService (val musicPlaybackPreparer = MusicPlaybackPreparer(firebaseMusicSource, serviceScope) {...}) отправляет null
 
@@ -222,12 +245,14 @@ class MusicPlaybackPreparer(
                     if (isInitialized) {
                         itemToPlay =
                             firebaseMusicSource.radioStations.find { mediaId == it.description.mediaId }
-                        Log.d(TAG, "PLAYLIST_UPDATE: 2.$TAG, onPrepareFromMediaId(). Находим itemToPlay = $itemToPlay из лямбды whenReady")
 
                         lastCountryCode =
                             itemToPlay?.description?.subtitle.toString() // Обновляем переменную класса после поиска
 
-                        Log.d(TAG, "PLAYLIST_UPDATE: 2.$TAG, onPrepareFromMediaId(). !!! Вызываем playerPrepared(), itemToPlay = $itemToPlay, из лямбды whenReady")
+                        Log.d(
+                            TAG,
+                            "PLAYLIST_UPDATE: 2.$TAG, onPrepareFromMediaId(). !!! Вызываем playerPrepared(), itemToPlay = $itemToPlay, из лямбды whenReady"
+                        )
                         playerPrepared(itemToPlay) // TODO Метод иногда не вызывается (см. ниже). Пока что продублировала (проверить, нужно ли удалять его снизу)
                     }
                 }
@@ -241,7 +266,10 @@ class MusicPlaybackPreparer(
                     it.description.subtitle.toString() // Обновляем переменную класса после поиска
             }
 
-            Log.d(TAG, "PLAYLIST_UPDATE: 2.$TAG, onPrepareFromMediaId(). !!! Вызываем playerPrepared(), itemToPlay = $itemToPlay")
+            Log.d(
+                TAG,
+                "PLAYLIST_UPDATE: 2.$TAG, onPrepareFromMediaId(). !!! Вызываем playerPrepared(), itemToPlay = $itemToPlay"
+            )
             playerPrepared(itemToPlay)
         }
     }

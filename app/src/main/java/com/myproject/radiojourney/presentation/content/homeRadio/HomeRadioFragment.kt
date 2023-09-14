@@ -47,6 +47,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.other.Status
+import com.myproject.radiojourney.presentation.MainActivity
 import com.myproject.radiojourney.presentation.MainViewModel
 
 
@@ -141,6 +142,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                         Log.d(TAG, "showLogoutDialog() was called")
                         true
                     }
+
                     else -> {
                         // If we got here, the user's action was not recognized.
                         Log.d(TAG, "else result")
@@ -201,91 +203,108 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 
         if (arguments != null) {
 
-            mainViewModel.showProgressAndDisableClick()
-            Log.d(TAG, "PLAYLIST_UPDATE: 1. Выбранная из списка станция передана в HomeRadioFragment")
+            Log.d(
+                TAG,
+                "PLAYLIST_UPDATE: 1. Выбранная из списка станция передана в HomeRadioFragment"
+            )
 
-//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-//                arguments?.getParcelable("radio_station", RadioStationPresentation::class.java) // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
-//                    ?.let { radioStation ->
-//                        Log.d(TAG, "Выбранный элемент списка: $radioStation")
+            arguments?.parcelable<RadioStationPresentation>("radio_station") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
+                ?.let { radioStation ->
+                    Log.d(TAG, "!! PLAYLIST_UPDATE: Передан аргумент с ключом radio_station")
+                    // Здесь мы получаем выбранную станцию из списка радиостанций по клику. Необходимо передать её в наш новый плейер
+
+                    val curCountryCode =
+                        mainViewModel.curPlayingSongLiveData.value?.description?.subtitle.toString()
+                    val argCountryCode = radioStation.countryCode
+
+                    if (argCountryCode.endsWith("_FAV", true)) {
+                        // Сюда мы попадаем, если из текущего плейлиста была выбрана favourite_station
+                        handleArgumentsFavoriteStation(
+                            radioStation,
+                            curCountryCode = curCountryCode,
+                            argCountryCode = argCountryCode
+                        )
+                    } else if (curCountryCode == argCountryCode && !curCountryCode.endsWith(
+                            "_FAV",
+                            true
+                        )
+                    ) {
+                        // Одинаковый код страны и был включен НЕ FAV - Выбор из того же плейлиста
+                        Log.d(
+                            TAG,
+                            "PLAYLIST_UPDATE: Выбранный элемент списка: $radioStation. Одинаковый код страны и был включен не FAV - Выбор из того же плейлиста, сountryCode = $argCountryCode"
+                        )
+                        mainViewModel.showProgressAndDisableClick("CRSt")
+
+                        mainViewModel.saveNewMediaId(radioStation.stationuuid)
+                        mainViewModel.playOrToggleSong(radioStation, false)
+                        mainViewModel.notJustLaunchedEnableAutoplay()
+                    } else if (curCountryCode == argCountryCode && !curCountryCode.endsWith(
+                            "_FAV",
+                            true
+                        )
+                    ) {
+                        // Одинаковый код страны, но был включен FAV - Значит загрузка нового плейлиста. Проблемный момент, если совпадает ещё и станция
+                        Log.d(
+                            TAG,
+                            "PLAYLIST_UPDATE: Выбранный элемент списка: $radioStation. Одинаковый код страны, но был включен FAV - Значит загрузка нового плейлиста. Проблемный момент, если совпадает ещё и станция, сountryCode = $argCountryCode"
+                        )
+                        mainViewModel.showProgressAndDisableClick("Dp")
+
+                        mainViewModel.saveNewMediaId(radioStation.stationuuid)
+                        mainViewModel.fetchSongs(radioStation.countryCode)
+                        mainViewModel.playOrToggleSong(radioStation, false)
+                        mainViewModel.notJustLaunchedEnableAutoplay()
+                    } else {
+                        // Загрузка нового плейлиста
+                        Log.d(
+                            TAG,
+                            "PLAYLIST_UPDATE: Выбранный элемент списка: $radioStation. Другой код страны, загрузка нового плейлиста, сountryCode = $argCountryCode"
+                        )
+                        mainViewModel.showProgressAndDisableClick("Dp")
+
+                        mainViewModel.saveNewMediaId(radioStation.stationuuid)
+                        mainViewModel.fetchSongs(radioStation.countryCode)
+                        mainViewModel.notJustLaunchedEnableAutoplay()
+                    }
+                }
+
+            arguments?.parcelable<RadioStationPresentation>("favourite_station") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
+                ?.let { radioStationFavourite ->
+                    Log.d(TAG, "!! PLAYLIST_UPDATE: Передан аргумент с ключом favourite_station")
+                    // Здесь мы переходим из фрагмента "Избранное". Стоит загрузить в плейер плейлист избранного.
+
+                    val curCountryCode =
+                        mainViewModel.curPlayingSongLiveData.value?.description?.subtitle.toString()
+                    val argCountryCode = radioStationFavourite.countryCode
+
+                    handleArgumentsFavoriteStation(
+                        radioStationFavourite,
+                        curCountryCode = curCountryCode,
+                        argCountryCode = argCountryCode
+                    )
+                }
+
+
+//            mainViewModel.showProgressAndDisableClick()
+//            Log.d(
+//                TAG,
+//                "PLAYLIST_UPDATE: 1. Выбранная из списка станция передана в HomeRadioFragment"
+//            )
 //
-//                        // Здесь мы получаем выбранную станцию из списка радиостанций по клику. Необходимо передать её в наш новый плейер
-//                        mainViewModel.saveNewMediaId(radioStation.urlResolved)
-//                        mainViewModel.fetchSongs(radioStation.countryCode)
-//                        mainViewModel.playOrToggleSong(radioStation, false)
-//                        mainViewModel.notJustLaunchedEnableAutoplay()
-//                    }
-//            } else {
-//                arguments?.getParcelable<RadioStationPresentation>("radio_station") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
-//                    ?.let { radioStation ->
-//                        Log.d(TAG, "Выбранный элемент списка: $radioStation")
+//            // arguments?.getParcelable<RadioStationPresentation>("radio_station") is deprecated. For lesser code, let's write inline lambda for < and >= Build.VERSION_CODES.TIRAMISU (parcelable instead of getParcelable)
 //
-//                        // Здесь мы получаем выбранную станцию из списка радиостанций по клику. Необходимо передать её в наш новый плейер
-//                        mainViewModel.saveNewMediaId(radioStation.urlResolved)
-//                        mainViewModel.fetchSongs(radioStation.countryCode)
-//                        mainViewModel.playOrToggleSong(radioStation, false)
-//                        mainViewModel.notJustLaunchedEnableAutoplay()
-//                    }
-//            }
-//
-// arguments?.getParcelable<RadioStationPresentation>("radio_station") is deprecated. For lesser code, let's write inline lambda for < and >= Build.VERSION_CODES.TIRAMISU
-//
-//            arguments?.getParcelable<RadioStationPresentation>("radio_station") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
+//            arguments?.parcelable<RadioStationPresentation>("radio_station") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
 //                ?.let { radioStation ->
 //                    Log.d(TAG, "Выбранный элемент списка: $radioStation")
 //
 //                    // Здесь мы получаем выбранную станцию из списка радиостанций по клику. Необходимо передать её в наш новый плейер
-//                    mainViewModel.saveNewMediaId(radioStation.urlResolved)
+//                    mainViewModel.saveNewMediaId(radioStation.stationuuid)
 //                    mainViewModel.fetchSongs(radioStation.countryCode)
 //                    mainViewModel.playOrToggleSong(radioStation, false)
 //                    mainViewModel.notJustLaunchedEnableAutoplay()
 //                }
-
-            arguments?.parcelable<RadioStationPresentation>("radio_station") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
-                ?.let { radioStation ->
-                    Log.d(TAG, "Выбранный элемент списка: $radioStation")
-
-                    // Здесь мы получаем выбранную станцию из списка радиостанций по клику. Необходимо передать её в наш новый плейер
-                    mainViewModel.saveNewMediaId(radioStation.stationuuid)
-                    mainViewModel.fetchSongs(radioStation.countryCode)
-                    mainViewModel.playOrToggleSong(radioStation, false)
-                    mainViewModel.notJustLaunchedEnableAutoplay()
-                }
-
-//            arguments?.getParcelable<RadioStationPresentation>("radio_station_favourite") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
-//                ?.let { radioStationFavourite ->
-//                    Log.d(TAG, "Выбранный элемент списка: $radioStationFavourite")
 //
-//                    // Здесь мы переходим из фрагмента "Избранное". Стоит загрузить в плейер плейлист избранного.
-//                    mainViewModel.saveNewMediaId(radioStationFavourite.urlResolved)
-//                    mainViewModel.fetchSongs("FAV")
-//                    mainViewModel.playOrToggleSong(radioStationFavourite, false)
-//                    mainViewModel.notJustLaunchedEnableAutoplay()
-//                }
-
-            arguments?.parcelable<RadioStationPresentation>("radio_station_favourite") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
-                ?.let { radioStationFavourite ->
-                    Log.d(TAG, "Выбранный элемент списка: $radioStationFavourite")
-
-                    // Здесь мы переходим из фрагмента "Избранное". Стоит загрузить в плейер плейлист избранного.
-                    mainViewModel.saveNewMediaId(radioStationFavourite.stationuuid)
-                    mainViewModel.fetchSongs("FAV")
-                    mainViewModel.playOrToggleSong(radioStationFavourite, false)
-                    mainViewModel.notJustLaunchedEnableAutoplay()
-                }
-
-//            arguments?.getParcelable<RadioStationPresentation>("radio_station_favourite") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
-//                ?.let { radioStationFavourite ->
-//                    Log.d(TAG, "Выбранный элемент списка: $radioStationFavourite")
-//
-//                    // Здесь мы переходим из фрагмента "Избранное". Стоит загрузить в плейер плейлист избранного.
-//                    mainViewModel.saveNewMediaId(radioStationFavourite.urlResolved)
-//                    mainViewModel.fetchSongs("FAV")
-//                    mainViewModel.playOrToggleSong(radioStationFavourite, false)
-//                    mainViewModel.notJustLaunchedEnableAutoplay()
-//                }
-
-            // Второй раз одно и то же? Закомментирую
 //            arguments?.parcelable<RadioStationPresentation>("radio_station_favourite") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
 //                ?.let { radioStationFavourite ->
 //                    Log.d(TAG, "Выбранный элемент списка: $radioStationFavourite")
@@ -296,6 +315,18 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 //                    mainViewModel.playOrToggleSong(radioStationFavourite, false)
 //                    mainViewModel.notJustLaunchedEnableAutoplay()
 //                }
+//
+//            // Второй раз одно и то же? Закомментирую
+////            arguments?.parcelable<RadioStationPresentation>("radio_station_favourite") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
+////                ?.let { radioStationFavourite ->
+////                    Log.d(TAG, "Выбранный элемент списка: $radioStationFavourite")
+////
+////                    // Здесь мы переходим из фрагмента "Избранное". Стоит загрузить в плейер плейлист избранного.
+////                    mainViewModel.saveNewMediaId(radioStationFavourite.stationuuid)
+////                    mainViewModel.fetchSongs("FAV")
+////                    mainViewModel.playOrToggleSong(radioStationFavourite, false)
+////                    mainViewModel.notJustLaunchedEnableAutoplay()
+////                }
 
         }
 
@@ -492,10 +523,21 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         viewModel.hideProgressLiveData.observe(viewLifecycleOwner) {
             hideProgress()
         }
-        mainViewModel.setNonClickableLiveData.observe(viewLifecycleOwner) {
+        mainViewModel.setNonClickableDpLiveData.observe(viewLifecycleOwner) {
             // Изредка не срабатывает логика и кнопки остаются заблокированым. В таком случае нет возможности продолжать пользоваться приложением.
 //            // Запустить отображение прогресс бара + заблокировать нажатия как на HomeRadioFragment, так и проигрыватель в main activity
 //            // HomeRadioFragment
+            binding?.buttonGoToFavourites?.isClickable = false
+            binding?.buttonGoToFavourites?.isEnabled = false
+//            // TODO карта - не проработано (InfoWindow)
+
+            // Progress bar
+            showProgress()
+            binding?.progressCircularLoadingArguments?.isVisible = true
+        }
+        mainViewModel.setNonClickableCRStLiveData.observe(viewLifecycleOwner) {
+            // Дублируем то, что сверху. Две LiveData для MainActivity, чтобы менять текст в уведомлении
+
             binding?.buttonGoToFavourites?.isClickable = false
             binding?.buttonGoToFavourites?.isEnabled = false
 //            // TODO карта - не проработано (InfoWindow)
@@ -620,7 +662,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 //        else -> @Suppress("DEPRECATION") getParcelableExtra(key) as? T
 //    }
 
-// Bundle
+    // Bundle
     private inline fun <reified T : Parcelable> Bundle.parcelable(key: String): T? = when {
         SDK_INT >= 33 -> getParcelable(key, T::class.java)
         else -> @Suppress("DEPRECATION") getParcelable(key) as? T
@@ -826,6 +868,54 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 //            super.onOptionsItemSelected(item)
 //        }
 //    }
+
+    private fun handleArgumentsFavoriteStation(
+        argRadioStationFavourite: RadioStationPresentation,
+        curCountryCode: String,
+        argCountryCode: String
+    ) {
+
+        if (curCountryCode == argCountryCode && !curCountryCode.endsWith(
+                "_FAV",
+                true
+            )
+        ) {
+            // Одинаковый код страны, но был включен НЕ FAV - Выбор из другого плейлиста. Проблемный момент, если совпадает ещё и станция
+            Log.d(
+                TAG,
+                "PLAYLIST_UPDATE: Выбранный элемент списка: $argRadioStationFavourite. Одинаковый код страны, но был включен НЕ FAV - Выбор из другого плейлиста. Проблемный момент, если совпадает ещё и станция, сountryCode = $argCountryCode"
+            )
+            mainViewModel.showProgressAndDisableClick("Dp")
+
+            mainViewModel.saveNewMediaId(argRadioStationFavourite.stationuuid)
+            mainViewModel.fetchSongs("FAV")
+            mainViewModel.playOrToggleSong(argRadioStationFavourite, false)
+            mainViewModel.notJustLaunchedEnableAutoplay()
+        } else if (!curCountryCode.endsWith("_FAV", true)) {
+            // Был включен НЕ FAV - Выбор из другого плейлиста
+            Log.d(
+                TAG,
+                "PLAYLIST_UPDATE: Выбранный элемент списка: $argRadioStationFavourite. Был включен НЕ FAV - Выбор из другого плейлиста, сountryCode = $argCountryCode"
+            )
+            mainViewModel.showProgressAndDisableClick("Dp")
+
+            mainViewModel.saveNewMediaId(argRadioStationFavourite.stationuuid)
+            mainViewModel.fetchSongs("FAV")
+            mainViewModel.notJustLaunchedEnableAutoplay()
+        } else {
+            // Был включен FAV - Выбор из того же плейлиста
+            Log.d(
+                TAG,
+                "PLAYLIST_UPDATE: Выбранный элемент списка: $argRadioStationFavourite. Выбор из того же плейлиста, сountryCode = $argCountryCode"
+            )
+            mainViewModel.showProgressAndDisableClick("CRSt")
+
+            mainViewModel.saveNewMediaId(argRadioStationFavourite.stationuuid)
+            mainViewModel.playOrToggleSong(argRadioStationFavourite, false)
+            mainViewModel.notJustLaunchedEnableAutoplay()
+        }
+
+    }
 
     // TOOLBAR - Описываем метод из интерфейса ILogOutListener для выхода из аккаунта приложения
     override fun onLogOut() {

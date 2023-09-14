@@ -166,7 +166,6 @@ class MusicService : MediaBrowserServiceCompat() {
         // lambda in this {} will be switched every time, when user chooses a new song
         val musicPlaybackPreparer = MusicPlaybackPreparer(firebaseMusicSource, serviceScope) {
 
-            Log.d(TAG, "PLAYLIST_UPDATE: 5.$TAG, зашли в лямбду musicPlaybackPreparer.")
             if (isPlayerInitialized && it == null) {
                 Log.d(
                     TAG,
@@ -180,6 +179,7 @@ class MusicService : MediaBrowserServiceCompat() {
                 it,
                 true
             )
+            Log.d(TAG, "PLAYLIST_UPDATE: 5.$TAG, MediaMetadataCompat передана, вызываем preparePlayer()")
         }
 
         // Observing notifyChildrenChangedLiveData from firebase in service
@@ -357,13 +357,14 @@ class MusicService : MediaBrowserServiceCompat() {
                                     false
                                 )
                                 isPlayerInitialized = true
+                                Log.d(TAG, "PLAYLIST_UPDATE: 5.$TAG, вызываем preparePlayer() из onLoadChildren()")
                             }
                         } catch (exception: Exception) {
                             // not recommend to notify here , instead notify when you
                             // change existing list in MusicPlaybackPreparer onCommand()
                             notifyChildrenChanged(MEDIA_ROOT_ID)
 
-                            Log.d(TAG, "Exception in fun onLoadChildren(), MEDIA_ROOT_ID")
+                            Log.d(TAG, "PLAYLIST_UPDATE: Exception in fun onLoadChildren(), MEDIA_ROOT_ID")
                             exception.printStackTrace()
                         }
 

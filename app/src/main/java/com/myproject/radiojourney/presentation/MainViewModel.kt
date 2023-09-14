@@ -3,7 +3,6 @@ package com.myproject.radiojourney.presentation
 import android.accounts.AccountsException
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
-import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.MediaMetadataCompat.METADATA_KEY_MEDIA_ID
 import android.util.Log
 import androidx.lifecycle.LiveData
@@ -20,7 +19,6 @@ import com.myproject.radiojourney.other.Event
 import com.myproject.radiojourney.other.Resource
 import com.myproject.radiojourney.utils.exoplayer.MusicServiceConnection
 import com.myproject.radiojourney.utils.exoplayer.State
-import com.myproject.radiojourney.utils.exoplayer.callback.MusicPlaybackPreparer
 import com.myproject.radiojourney.utils.extension.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -103,8 +101,10 @@ class MainViewModel @Inject constructor(
 
     private val _setClickableLiveData = MutableLiveData<Boolean>()
     val setClickableLiveData: LiveData<Boolean> = _setClickableLiveData
-    private val _setNonClickableLiveData = MutableLiveData<Boolean>()
-    val setNonClickableLiveData: LiveData<Boolean> = _setNonClickableLiveData
+    private val _setNonClickableDpLiveData = MutableLiveData<Boolean>()
+    val setNonClickableDpLiveData: LiveData<Boolean> = _setNonClickableDpLiveData
+    private val _setNonClickableCRStLiveData = MutableLiveData<Boolean>()
+    val setNonClickableCRStLiveData: LiveData<Boolean> = _setNonClickableCRStLiveData
 
     // Список лямбд action, которые будут передаваться в метод whenReady(), пока state == STATE_CREATED или state == STATE_INITIALIZING
     private val onReadyListeners = mutableListOf<(Boolean) -> Unit>()
@@ -167,7 +167,10 @@ class MainViewModel @Inject constructor(
                             )
 
 //                            state = State.STATE_INITIALIZED
-                            Log.d(TAG, "PLAYLIST_UPDATE: 3.$TAG, onChildrenLoaded(). Данные загружены, кладём их в mediaItemsListLiveData")
+                            Log.d(
+                                TAG,
+                                "PLAYLIST_UPDATE: 3.$TAG, onChildrenLoaded(). Данные загружены, кладём их в mediaItemsListLiveData"
+                            )
                         }
                     }
                 })
@@ -241,6 +244,24 @@ class MainViewModel @Inject constructor(
 //                                    }
                                     // TODO check, if it's needed ^ after adding a download button
 
+                                    // Нужно, но попробую другое условие
+                                    val isCurCountryCodeFAV =
+                                        curPlayingSongLiveData.value?.description?.subtitle.toString()
+                                            .endsWith("_FAV", true)
+                                    val isToggleCountryCodeFAV =
+                                        mediaItem.countryCode.endsWith("_FAV", true)
+
+                                    if (isCurCountryCodeFAV != isToggleCountryCodeFAV) {
+                                        Log.d(TAG, "Станция одна и та же, но одна из них не из избранного. Cтанция: ${mediaItem.stationName}, код страны: ${mediaItem.countryCode}")
+                                        musicServiceConnection.transportControls.playFromMediaId(
+//                                        mediaItem.urlResolved,
+                                            mediaItem.stationuuid,
+                                            null
+                                        )
+                                        if (toggle) musicServiceConnection.transportControls.pause()
+                                        _switchViewPagerOnceAgainLiveData.postValue(mediaItem)
+                                    }
+
                                     if (toggle) musicServiceConnection.transportControls.pause()
                                 }
 
@@ -278,6 +299,7 @@ class MainViewModel @Inject constructor(
                         )
                         _switchViewPagerOnceAgainLiveData.postValue(mediaItem)
                     }
+
                 }
             } catch (e1: AccountsException) {
                 // AccountsException -> Known direct subclasses: AuthenticatorException, NetworkErrorException, OperationCanceledException
@@ -330,8 +352,12 @@ class MainViewModel @Inject constructor(
 //        _setNonClickableLiveData.call()
     }
 
-    fun showProgressAndDisableClick() {
-        _setNonClickableLiveData.call()
+    fun showProgressAndDisableClick(stringDpOrCRSt: String) {
+        when (stringDpOrCRSt) {
+            "Dp" -> _setNonClickableDpLiveData.call()
+            "CRSt" -> _setNonClickableCRStLiveData.call()
+            else -> Log.d(TAG, "Unknown String in showProgressAndDisableClick()")
+        }
         Log.d(TAG, "BROADCAST: Показываем прогресс, вызван метод showProgressAndDisableClick()")
     }
 

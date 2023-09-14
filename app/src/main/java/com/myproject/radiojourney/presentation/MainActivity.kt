@@ -11,7 +11,6 @@ import android.os.Bundle
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import android.view.View
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.doOnLayout
@@ -117,18 +116,28 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                 positionOffset: Float,
                 positionOffsetPixels: Int
             ) {
+//                if (swipeRadioStationAdapter.radioStationList.isNotEmpty()) {
+//
+//                    if (swipeRadioStationAdapter.radioStationList[position].isStationInFavourite) {
+//                        binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_24_orange)
+//                    } else {
+//                        binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_border_24_orange)
+//                    }
+//
+////                    // Убираем прогресс и делаем кнопки снова кликабельными
+////                    mainViewModel.hideProgressAndSetClickable()
+//
+//                }
+
+                // Тестово добавляю это сюда тоже, т.к. прогресс не всегда убирается - 2
+                // Favorite star
                 if (swipeRadioStationAdapter.radioStationList.isNotEmpty()) {
-
-                    if (swipeRadioStationAdapter.radioStationList[position].isStationInFavourite) {
-                        binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_24_orange)
-                    } else {
-                        binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_border_24_orange)
-                    }
-
-//                    // Убираем прогресс и делаем кнопки снова кликабельными
-//                    mainViewModel.hideProgressAndSetClickable()
-
+                    checkFavoriteStarIfCountryCodeIsRight(
+                        mainViewModel.curPlayingSongLiveData.value?.description?.subtitle.toString(),
+                        swipeRadioStationAdapter.radioStationList[0].countryCode
+                    )
                 }
+
                 super.onPageScrolled(position, positionOffset, positionOffsetPixels)
             }
 
@@ -207,45 +216,10 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
                 // Тестово добавляю это сюда тоже, т.к. прогресс не всегда убирается
                 // Favorite star
-                val countryCodeInVp = swipeRadioStationAdapter.radioStationList[0].countryCode
-                val countryCodeInExoplayer = mainViewModel.curPlayingSongLiveData.value?.description?.subtitle.toString()
-                Log.d(
-                    TAG,
-                    "3. FAV_STAR: Radio station list is not empty = ${swipeRadioStationAdapter.radioStationList.isNotEmpty()}. Countrycode in exoplayer = $countryCodeInExoplayer. Countrycode in vp = $countryCodeInVp"
-                )
-
-                if (swipeRadioStationAdapter.radioStationList.isNotEmpty() && countryCodeInExoplayer == countryCodeInVp) {
-                    Log.d(TAG, "4. FAV_STAR: Entered to check favorite star and hide progress")
-
-                    val currentRadioStationPosition = binding?.vpSong?.currentItem
-
-                    currentRadioStationPosition?.let { curPosition ->
-                        // java.lang.IndexOutOfBoundsException: Index: 14, Size: 4
-                        if (curPosition < swipeRadioStationAdapter.radioStationList.size) {
-                            Log.d(
-                                TAG,
-                                "4. FAV_STAR: Checking favorite star and hiding progress"
-                            )
-
-                            if (swipeRadioStationAdapter.radioStationList[curPosition].isStationInFavourite) {
-                                binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_24_orange)
-                            } else {
-                                binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_border_24_orange)
-                            }
-
-                            // Убираем прогресс и делаем кнопки снова кликабельными
-                            mainViewModel.hideProgressAndSetClickable()
-                            Log.d(
-                                TAG,
-                                "BROADCAST: Прячем прогресс. Вызываем метод hideProgressAndSetClickable() из curPlayingSongLiveData.observe"
-                            )
-                        }
-                    }
-
-                } else {
-                    Log.d(
-                        TAG,
-                        "4. FAV_STAR: DID NOT enter to check favorite star and hide progress"
+                if (swipeRadioStationAdapter.radioStationList.isNotEmpty()) {
+                    checkFavoriteStarIfCountryCodeIsRight(
+                        mainViewModel.curPlayingSongLiveData.value?.description?.subtitle.toString(),
+                        swipeRadioStationAdapter.radioStationList[0].countryCode
                     )
                 }
 
@@ -389,38 +363,42 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                     SUCCESS -> {
 
                         result.data?.let { radioStations ->
-                            swipeRadioStationAdapter.radioStationList = radioStations
-                            // if we had an individual image
+
+                            if (radioStations.isNotEmpty()) {
+                                swipeRadioStationAdapter.radioStationList = radioStations
+                                // if we had an individual image
 //                            if(radioStations.isNotEmpty()) {
 //                                glide.load((curPlayingSong ?: radioStations[0]).imageUrl).into(ivCurSongImage)
 //                            }
 
-                            // Попробуем назначить адаптер после обновления списка радиостанций
-                            binding?.vpSong?.adapter = swipeRadioStationAdapter
+                                // Попробуем назначить адаптер после обновления списка радиостанций
+                                binding?.vpSong?.adapter = swipeRadioStationAdapter
 
-                            mOnPageChangeCallback?.onPageSelected(0)
+                                mOnPageChangeCallback?.onPageSelected(0)
 //                            // TODO почему-то этот метод изредка не вызывается, хотя должен
 
-                            // В этом месте данные в curPlayingRadioStation будут старые, т.е. данные о предыдущей радиостанции. Это нужно для сравнения предыдущей и текущей в дальнейшем в методе mainViewModel.playOrToggleSong()
-                            switchViewPagerToCurrentSong(
-                                curPlayingRadioStation?.stationuuid ?: return@observe,
-                                curPlayingRadioStation?.countryCode ?: return@observe
-                            )
+                                // В этом месте данные в curPlayingRadioStation будут старые, т.е. данные о предыдущей радиостанции. Это нужно для сравнения предыдущей и текущей в дальнейшем в методе mainViewModel.playOrToggleSong()
+                                switchViewPagerToCurrentSong(
+                                    curPlayingRadioStation?.stationuuid ?: return@observe,
+                                    curPlayingRadioStation?.countryCode ?: return@observe
+                                )
 
-                            Log.d(
-                                TAG,
-                                "PLAYLIST_UPDATE: 4.$TAG. Получаем данные из mediaItemsListLiveData"
-                            )
+                                Log.d(
+                                    TAG,
+                                    "PLAYLIST_UPDATE: 4.$TAG. Получаем данные из mediaItemsListLiveData"
+                                )
 
-                            mOnPageChangeCallback?.onPageScrolled(0, 0.0f, 0)
-                            // ??? Если не включать плейер, а просто листать от списка к списку, этот метод перестаёт вызываться на четвертый раз и звезда перестаёт меняться (избранное/не избранное). Поэтому на всякий случай вызываю его дополнительно. Не самый лучший вариант, думаю. Поэтому помечаю на проверку в дальнейшем.
+                                mOnPageChangeCallback?.onPageScrolled(0, 0.0f, 0)
+                                // ??? Если не включать плейер, а просто листать от списка к списку, этот метод перестаёт вызываться на четвертый раз и звезда перестаёт меняться (избранное/не избранное). Поэтому на всякий случай вызываю его дополнительно. Не самый лучший вариант, думаю. Поэтому помечаю на проверку в дальнейшем.
 
-                            // Полоса progressBar, которая заполняется с помощью Broadcast
-                            binding?.progressBarHorizontalDp?.progress = 85
-                            Log.d(
-                                TAG,
-                                "BROADCAST: Заполняем полосу прогресса на 85% в mediaItemsListLiveData.observe()"
-                            )
+                                // Полоса progressBar, которая заполняется с помощью Broadcast
+                                binding?.progressBarHorizontalDp?.progress = 85
+                                Log.d(
+                                    TAG,
+                                    "BROADCAST: Заполняем полосу прогресса на 85% в mediaItemsListLiveData.observe()"
+                                )
+                            }
+
                         }
 
                         mainViewModel.stateInitialized()
@@ -461,42 +439,10 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                     )
 
                     // Favorite star
-                    Log.d(
-                        TAG,
-                        "1. FAV_STAR: Radio station list is not empty = ${swipeRadioStationAdapter.radioStationList.isNotEmpty()}. Countrycode in exoplayer = $countrycode. Countrycode in vp = ${swipeRadioStationAdapter.radioStationList[0].countryCode}"
-                    )
-                    if (swipeRadioStationAdapter.radioStationList.isNotEmpty() && countrycode == swipeRadioStationAdapter.radioStationList[0].countryCode) {
-                        Log.d(TAG, "2. FAV_STAR: Entered to check favorite star and hide progress")
-
-                        val currentRadioStationPosition = binding?.vpSong?.currentItem
-
-                        currentRadioStationPosition?.let { position ->
-                            // java.lang.IndexOutOfBoundsException: Index: 14, Size: 4
-                            if (position < swipeRadioStationAdapter.radioStationList.size) {
-                                Log.d(
-                                    TAG,
-                                    "2. FAV_STAR: Checking favorite star and hiding progress"
-                                )
-
-                                if (swipeRadioStationAdapter.radioStationList[position].isStationInFavourite) {
-                                    binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_24_orange)
-                                } else {
-                                    binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_border_24_orange)
-                                }
-
-                                // Убираем прогресс и делаем кнопки снова кликабельными
-                                mainViewModel.hideProgressAndSetClickable()
-                                Log.d(
-                                    TAG,
-                                    "BROADCAST: Прячем прогресс. Вызываем метод hideProgressAndSetClickable() из curPlayingSongLiveData.observe"
-                                )
-                            }
-                        }
-
-                    } else {
-                        Log.d(
-                            TAG,
-                            "2. FAV_STAR: DID NOT enter to check favorite star and hide progress"
+                    if (swipeRadioStationAdapter.radioStationList.isNotEmpty()) {
+                        checkFavoriteStarIfCountryCodeIsRight(
+                            countrycode,
+                            swipeRadioStationAdapter.radioStationList[0].countryCode
                         )
                     }
 
@@ -651,7 +597,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             }
         }
 
-        mainViewModel.setNonClickableLiveData.observe(this) {
+        mainViewModel.setNonClickableDpLiveData.observe(this) {
             // Изредка не срабатывает логика и кнопки остаются заблокированым. В таком случае нет возможности продолжать пользоваться приложением.
 //            // Запустить отображение прогресс бара + заблокировать нажатия как на HomeRadioFragment, так и проигрыватель в main activity
 //            // MainActivity
@@ -665,6 +611,19 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
             binding?.frameLayoutDp?.isVisible = true
             binding?.text1Dp?.isVisible = true
+            // Возвращаем текст
+            val textForConnecting = getString(R.string.downloading_playlist)
+            binding?.text1Dp?.text = textForConnecting
+            binding?.progressBarHorizontalDp?.isVisible = true
+        }
+        mainViewModel.setNonClickableCRStLiveData.observe(this) {
+            swipeRadioStationAdapter.isClickableRecyclerView = false
+
+            binding?.frameLayoutDp?.isVisible = true
+            binding?.text1Dp?.isVisible = true
+            // Меняем текст
+            val textForConnecting = getString(R.string.downloading_radio_station)
+            binding?.text1Dp?.text = textForConnecting
             binding?.progressBarHorizontalDp?.isVisible = true
         }
         mainViewModel.setClickableLiveData.observe(this) {
@@ -682,6 +641,68 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             binding?.text1Dp?.isVisible = false
             binding?.progressBarHorizontalDp?.isVisible = false
         }
+    }
+
+    private fun checkFavoriteStarIfCountryCodeIsRight(
+        countryCodeInExoplayer: String,
+        countryCodeInVp: String
+    ) {
+        Log.d(
+            TAG,
+            "1. FAV_STAR: Radio station list is not empty = ${swipeRadioStationAdapter.radioStationList.isNotEmpty()}. Countrycode in exoplayer = $countryCodeInExoplayer. Countrycode in vp = $countryCodeInVp"
+        )
+
+        if (swipeRadioStationAdapter.radioStationList.isNotEmpty()) {
+
+            if ((countryCodeInExoplayer.endsWith("_FAV", true)
+                        && countryCodeInVp.endsWith("_FAV", true))
+                || countryCodeInExoplayer == countryCodeInVp
+            ) {
+
+                Log.d(
+                    TAG,
+                    "2. FAV_STAR: Entered to check favorite star and hide progress"
+                )
+
+                val currentRadioStationPosition = binding?.vpSong?.currentItem
+
+                currentRadioStationPosition?.let { position ->
+                    // java.lang.IndexOutOfBoundsException: Index: 14, Size: 4
+                    if (position < swipeRadioStationAdapter.radioStationList.size) {
+                        Log.d(
+                            TAG,
+                            "2. FAV_STAR: Checking favorite star and hiding progress"
+                        )
+
+                        val isStationInFavourite =
+                            swipeRadioStationAdapter.radioStationList[position].isStationInFavourite
+                        Log.d(
+                            TAG, "2. FAV_STAR: isStationInFavourite = $isStationInFavourite"
+                        )
+                        if (isStationInFavourite) {
+                            binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_24_orange)
+                        } else {
+                            binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_border_24_orange)
+                        }
+
+                        // Убираем прогресс и делаем кнопки снова кликабельными
+                        mainViewModel.hideProgressAndSetClickable()
+                        Log.d(
+                            TAG,
+                            "BROADCAST: Прячем прогресс. Вызываем метод hideProgressAndSetClickable() из curPlayingSongLiveData.observe"
+                        )
+                    }
+                }
+
+            } else {
+                Log.d(
+                    TAG,
+                    "2. FAV_STAR: DID NOT enter to check favorite star and hide progress"
+                )
+            }
+
+        }
+
     }
 
     private fun setTheRightStateOfFavourite(isInFavourite: Boolean) {

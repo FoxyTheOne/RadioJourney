@@ -54,7 +54,7 @@
             app:destination="@id/homeRadioFragment">
 
             <argument
-                android:name="radio_station_favourite"
+                android:name="favourite_station"
                 app:argType="com.myproject.radiojourney.entities.presentation.RadioStationPresentation" />
         </action>
     </fragment>
