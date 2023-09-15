@@ -36,8 +36,8 @@ class MainRadioStationRepository @Inject constructor(
 
     override suspend fun getRadioStationUrl(): String? = localRadioDataSource.getRadioStationUrl()
 
-    override suspend fun getRadioStationSaved(radioStationUrlResolved: String): RadioStationLocal? =
-        localRadioDataSource.getRadioStationSaved(radioStationUrlResolved)
+    override suspend fun getRadioStationSaved(radioStationUuidResolved: String): RadioStationLocal? =
+        localRadioDataSource.getRadioStationSaved(radioStationUuidResolved)
 
     // Поменять в Shared Preference setIsRadioStationStored на true. Сохранить в Shared Preference (url)
     override suspend fun saveRadioStationUrl(isStored: Boolean, urlResolved: String) =

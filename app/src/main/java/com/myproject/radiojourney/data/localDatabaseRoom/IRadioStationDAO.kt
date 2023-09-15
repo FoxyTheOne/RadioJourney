@@ -14,6 +14,7 @@ interface IRadioStationDAO {
 
     @Query("SELECT * from RadioStationLocal WHERE url_resolved LIKE:urlResolved")
     suspend fun getRadioStationByUrl(urlResolved: String): RadioStationLocal?
+    // ^ Могут быть сохранены в локальную базу несколько одинаковых станций с разным stationUuid. В таком случае могут возникнуть ошибки, в зависимости от того, какая станция прилетит по запросу
 
     @Query("SELECT * from RadioStationLocal WHERE countrycode LIKE:countryCode")
     fun getRadioStationList(countryCode: String): Flow<List<RadioStationLocal>>

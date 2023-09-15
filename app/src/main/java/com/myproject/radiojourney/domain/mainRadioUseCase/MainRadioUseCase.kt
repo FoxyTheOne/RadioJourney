@@ -1,6 +1,7 @@
 package com.myproject.radiojourney.domain.mainRadioUseCase
 
 import android.support.v4.media.MediaBrowserCompat
+import android.util.Log
 import com.myproject.radiojourney.domain.iRepository.IMainRadioStationRepository
 import com.myproject.radiojourney.entities.local.RadioStationLocal
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
@@ -16,13 +17,17 @@ import javax.inject.Inject
 class MainRadioUseCase @Inject constructor(
     private val mainRadioStationRepository: IMainRadioStationRepository
 ) : IMainRadioUseCase {
+    companion object {
+        private const val TAG = "MainRadioUseCase"
+    }
+
     private suspend fun getRadioStationSaved(radioStationUrlResolved: String): RadioStationLocal? =
         mainRadioStationRepository.getRadioStationSaved(radioStationUrlResolved)
 
     override suspend fun mediaItemChildrenToRadioStationPresentation(children: MutableList<MediaBrowserCompat.MediaItem>) =
         children.map {
             // Ищем, может такая радиостанция уже сохранена в Room
-            val radioStation = getRadioStationSaved(it.description.mediaUri.toString())
+            val radioStation = getRadioStationSaved(it.description.mediaId.toString())
 
             RadioStationPresentation(
                 stationuuid = it.mediaId ?: "",
