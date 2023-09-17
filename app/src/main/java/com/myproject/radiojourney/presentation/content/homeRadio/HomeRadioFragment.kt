@@ -37,6 +37,7 @@ import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.lifecycle.Lifecycle
@@ -49,6 +50,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.other.Status
 import com.myproject.radiojourney.presentation.MainActivity
 import com.myproject.radiojourney.presentation.MainViewModel
+import com.myproject.radiojourney.utils.service.ProgressForegroundService
 
 
 /**
@@ -186,6 +188,31 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                     Manifest.permission.ACCESS_FINE_LOCATION
                 )
             )
+        }
+
+        // Запрос на разрешение Foreground
+        val requestPermissionLauncherForeground =
+            registerForActivityResult(
+                ActivityResultContracts.RequestPermission()
+            ) { isGranted: Boolean ->
+                if (!isGranted) {
+                    Toast.makeText(
+                        requireContext(),
+                        "We don't have permission to start foreground service",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+
+        if (ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.FOREGROUND_SERVICE
+            )!= PackageManager.PERMISSION_GRANTED
+        ) {
+            // Если нет разрешения - вызываем requestPermissionLauncher
+            if (SDK_INT >= Build.VERSION_CODES.P) {
+                requestPermissionLauncherForeground.launch(Manifest.permission.FOREGROUND_SERVICE)
+            }
         }
 
         // 1.2. ViewModel. We bind our viewModel to the lifecycle of our activity, not fragment. We pass our activity as an owner of the lifecycle.
@@ -558,6 +585,16 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             binding?.progressCircularLoadingArguments?.isVisible = false
         }
         mainViewModel.dialogInternetTroubleLiveData.observe(viewLifecycleOwner) {
+            // Возвращаем текст диалогового окна (на случай, если мы делали какие-то изменения во время пользования этим фрагментом)
+            val titleInternetTrouble = getString(R.string.dialogInternetTrouble_title)
+            val textInternetTrouble = getString(R.string.dialogInternetTrouble_text)
+            val titleViewInternetTrouble =
+                dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.title_internetTrouble)
+            val textViewInternetTrouble =
+                dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.text_internetTrouble)
+            titleViewInternetTrouble.text = titleInternetTrouble
+            textViewInternetTrouble.text = textInternetTrouble
+
             dialogInternetTrouble.show()
             mainViewModel.hideProgressAndSetClickable()
         }
@@ -644,6 +681,28 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                                 "Something went wrong. Waiting for database response.",
                                 Toast.LENGTH_LONG
                             ).show()
+
+                            // Меняем текст диалогового окна
+                            val titleInternetTrouble =
+                                getString(R.string.dialogInternetTrouble_title2)
+                            val textInternetTrouble =
+                                getString(R.string.dialogInternetTrouble_text2)
+                            val titleViewInternetTrouble =
+                                dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.title_internetTrouble)
+                            val textViewInternetTrouble =
+                                dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.text_internetTrouble)
+                            titleViewInternetTrouble.text = titleInternetTrouble
+                            textViewInternetTrouble.text = textInternetTrouble
+
+                            dialogInternetTrouble.show()
+
+                            activity?.startService(
+                                Intent(
+                                    activity,
+                                    ProgressForegroundService::class.java
+                                )
+                            )
+
                         }
                     } catch (e: UninitializedPropertyAccessException) {
                         Log.d(TAG, "mMap is not ready yet")

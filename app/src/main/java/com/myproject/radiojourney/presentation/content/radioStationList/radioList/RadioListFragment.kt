@@ -77,6 +77,10 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
         textRadioListTitle.text = countryName
 
         textRadioListSecondTitleSelect = view.findViewById(R.id.text_radioStationDialogTitleSelect)
+        textRadioListSecondTitleSelect.isVisible = true
+        val textLoading = activity?.getString(R.string.radioStationList_title_loading)
+        textRadioListSecondTitleSelect.text = textLoading
+
         textRadioListSecondTitleDownload =
             view.findViewById(R.id.text_radioStationDialogTitleDownload)
 
@@ -212,6 +216,7 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
 
             } else {
                 textRadioStationsEmpty.isVisible = true
+                textRadioListSecondTitleSelect.isVisible = false
                 hideProgress()
                 return@observe
             }
@@ -237,6 +242,9 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
             // И сравниваем с countrycode в плейере
             if (radioCountryCodeFromFragment == radioCountryCodeFromActivity) {
                 textRadioListSecondTitleSelect.isVisible = true
+                val textSelect = activity?.getString(R.string.radioStationList_title_select)
+                textRadioListSecondTitleSelect.text = textSelect
+
                 textRadioListSecondTitleDownload.isVisible = false
                 listRadioStationAdapter.isClickableRecyclerView = true
             } else {

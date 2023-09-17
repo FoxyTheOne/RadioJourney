@@ -28,7 +28,12 @@
     <string name="dialogPleaseWait_title">Пожалуйста, подождите!</string>
     <string name="dialogPleaseWait_text">Пытаюсь подключиться к радиостанции</string>
     <string name="dialog_close">(Нажмите на свободное место, чтобы закрыть окно)</string>
+    <string name="dialogPleaseWait_title2">Что-то пошло не так</string>
+    <string name="dialogPleaseWait_text2">Похоже, что сервер с информацией о радиостанциях временно не работает. Пожалуйста, попробуйте ещё раз позже</string>
+    <string name="dialogInternetTrouble_title2">Повторная попытка кэширования</string>
+    <string name="dialogInternetTrouble_text2">Что-то пошло не так. Пытаюсь подключиться к серверу с информацией о радиостанциях ещё раз.</string>
 
+    <string name="radioStationList_title_loading">Обращение к серверу для получения списка названий радиостанций…</string>
     <string name="radioStationList_title_select">Список радиостанций. Выберите:</string>
     <string name="radioStationList_title_download">Нажмите здесь, чтобы загрузить и включить этот список радиостанций</string>
     <string name="radioStationList_count">Счётчик нажатий: </string>

@@ -186,7 +186,8 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
             lifecycle.repeatOnLifecycle(Lifecycle.State.CREATED) {
 
                 viewModel.countryListFlow.collect {
-                    if (it != listOf<CountryPresentation>()) {
+//                    if (it != listOf<CountryPresentation>()) {
+                    if (it != emptyList<CountryPresentation>()) {
                         binding?.buttonLogIn?.isVisible = true
                         binding?.progressBarHorizontal?.isVisible = false
                     }

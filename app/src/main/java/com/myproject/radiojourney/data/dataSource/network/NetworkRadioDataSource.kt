@@ -46,21 +46,28 @@ class NetworkRadioDataSource @Inject constructor(
                     // И затем делаем запрос getCountryCodeList():
                     countryCodeRemoteList = radioService.getCountryCodeList()
 
-                    countryCodeRemoteList.forEach { result ->
-                        Log.d(TAG, "результат запроса countryCodeRemoteList: $result")
-                    }
-
                     if (countryCodeRemoteList != emptyList<String>()) break
                 } catch (e: SocketTimeoutException) {
-                    Log.d(TAG, "Exception: ${e.message}. Failed to connect to baseURL. Continue searching baseURL in resultDNSIterator")
+                    Log.d(
+                        TAG,
+                        "Exception: ${e.message}. Failed to connect to baseURL. Continue searching baseURL in resultDNSIterator"
+                    )
                     e.printStackTrace()
                     continue
                 } catch (e: IOException) {
-                    Log.d(TAG, "Exception: ${e.message}. Problem with the server. Continue searching baseURL in resultDNSIterator")
+                    Log.d(
+                        TAG,
+                        "Exception: ${e.message}. Problem with the server. Continue searching baseURL in resultDNSIterator"
+                    )
                     e.printStackTrace()
                     continue
                 }
             }
+
+//            countryCodeRemoteList.forEach { result ->
+//                Log.d(TAG, "результат1 запроса countryCodeRemoteList: $result")
+//            }
+            // Обратить внимание, что могут прилететь коды стран, написанные маленькими буквами. При получении результата и переводе в локальные данные, объединить
 
             return countryCodeRemoteList
 
@@ -93,6 +100,10 @@ class NetworkRadioDataSource @Inject constructor(
             // Пробуем перебирать сервера
             var radioStationRemoteList =
                 listOf<RadioStationRemote>() // Пустой массив для результата запроса
+//            var radioStationLowerCaseList =
+//                listOf<RadioStationRemote>()
+//            var radioStationUpperCaseList =
+//                listOf<RadioStationRemote>()
 
             val resultDNSIterator = listDNSResultArray.iterator()
 
@@ -103,27 +114,50 @@ class NetworkRadioDataSource @Inject constructor(
                 try {
                     // radioServiceWrapper - обёртка. Инициализируем retrofit и получаем сервис:
                     val radioService = radioServiceWrapper.getRadioService(baseURL)
-                    // И затем делаем запрос getCountryCodeList():
-                    radioStationRemoteList =
-                        radioService.getRadioStationList(searchTerm = countryCode)
 
-                    if (radioStationRemoteList != emptyList<String>()) {
+//                    // И затем делаем запрос getCountryCodeList():
+//                    radioStationLowerCaseList =
+//                        radioService.getRadioStationList(searchTerm = countryCode.lowercase())
+//                    radioStationUpperCaseList =
+//                        radioService.getRadioStationList(searchTerm = countryCode.uppercase())
+//                    // Нет, двойной запрос делать не нужно! В данном случае, видимо, это предусмотрено. По обоим запросам всегда прилетает одинаковое количество станций
+
+                    radioStationRemoteList =
+                        radioService.getRadioStationList(searchTerm = countryCode.uppercase())
+
+                    if (radioStationRemoteList != emptyList<RadioStationRemote>()) {
                         Log.d(
                             TAG,
-                            "Успешный запрос. Получен результат radioStationRemoteList $radioStationRemoteList, элемент[0]: ${radioStationRemoteList[0]}"
+                            "Успешный запрос. Получен результат radioStationRemoteList.size = ${radioStationRemoteList.size}"
                         )
                         break
                     }
                 } catch (e: SocketTimeoutException) {
-                    Log.d(TAG, "Exception: ${e.message}. Failed to connect to baseURL. Continue searching baseURL in resultDNSIterator")
+                    Log.d(
+                        TAG,
+                        "Exception: ${e.message}. Failed to connect to baseURL. Continue searching baseURL in resultDNSIterator"
+                    )
                     e.printStackTrace()
                     continue
                 } catch (e: IOException) {
-                    Log.d(TAG, "Exception: ${e.message}. Problem with the server. Continue searching baseURL in resultDNSIterator")
+                    Log.d(
+                        TAG,
+                        "Exception: ${e.message}. Problem with the server. Continue searching baseURL in resultDNSIterator"
+                    )
                     e.printStackTrace()
                     continue
                 }
             }
+
+//            if (radioStationLowerCaseList != emptyList<RadioStationRemote>()) {
+//                radioStationLowerCaseList.forEach {
+//                    it.countrycode.uppercase()
+//                }
+//            }
+//            Log.d(TAG, "Произведено преобразование uppercase()")
+//
+//            radioStationRemoteList = radioStationLowerCaseList + radioStationUpperCaseList
+//            Log.d(TAG, "Списки объединены в radioStationRemoteList.size = ${radioStationRemoteList.size}")
 
             return radioStationRemoteList
 
@@ -159,5 +193,11 @@ class NetworkRadioDataSource @Inject constructor(
             updateDNSList()
         }
 
+    }
+
+    private fun <T> merge(first: List<T>, second: List<T>): List<T> {
+        val list: MutableList<T> = ArrayList(first)
+        list.addAll(second)
+        return list
     }
 }

@@ -74,7 +74,7 @@
             android:paddingStart="@dimen/space_beforeOrAfterElement"
             android:paddingEnd="@dimen/space_beforeOrAfterElement"
             android:paddingBottom="@dimen/space_beforeOrAfterElement"
-            android:text="@string/radioStationList_title_select"
+            android:text="@string/radioStationList_title_loading"
             app:layout_constraintBottom_toTopOf="@+id/text_radioStationDialogTitleDownload"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

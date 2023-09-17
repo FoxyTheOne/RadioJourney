@@ -28,7 +28,12 @@
     <string name="dialogPleaseWait_title">Please wait!</string>
     <string name="dialogPleaseWait_text">I\'m trying to connect to the radio station</string>
     <string name="dialog_close">(Click on free space to close the window)</string>
+    <string name="dialogPleaseWait_title2">Something went wrong</string>
+    <string name="dialogPleaseWait_text2">It looks like the radio station information server is down. Please try again later</string>
+    <string name="dialogInternetTrouble_title2">Caching retry</string>
+    <string name="dialogInternetTrouble_text2">Something went wrong. Trying to reconnect to the radio station information server.</string>
 
+    <string name="radioStationList_title_loading">Asking server for a list of radio station names…</string>
     <string name="radioStationList_title_select">Radio station list. Select one:</string>
     <string name="radioStationList_title_download">Click here to download and play this radio station list</string>
     <string name="radioStationList_count">Radio station click count: </string>

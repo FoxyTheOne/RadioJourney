@@ -1,18 +1,26 @@
 package com.myproject.radiojourney.presentation
 
+import android.Manifest
 import android.accounts.AccountsException
+import android.app.ActivityManager
 import android.app.Dialog
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import androidx.appcompat.app.AppCompatActivity
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import android.view.View
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.AppCompatTextView
 import androidx.appcompat.widget.Toolbar
+import androidx.core.content.ContextCompat
 import androidx.core.view.doOnLayout
 import androidx.core.view.isVisible
 import androidx.navigation.findNavController
@@ -27,12 +35,13 @@ import com.myproject.radiojourney.other.Constants.AUDIO_CONNECTING
 import com.myproject.radiojourney.other.Constants.AUDIO_PLAYING
 import com.myproject.radiojourney.other.Constants.AUDIO_STOPPED
 import com.myproject.radiojourney.other.Status.*
-import com.myproject.radiojourney.presentation.content.radioStationList.adapter.SwipeRadioStationAdapter
 import com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioFragmentDirections
+import com.myproject.radiojourney.presentation.content.radioStationList.adapter.SwipeRadioStationAdapter
 import com.myproject.radiojourney.utils.extension.isPlaying
 import com.myproject.radiojourney.utils.service.ProgressForegroundService
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.IOException
+
 
 /**
  * This source code is free for studying purposes but you are not allowed to copy and use it in other applications (projects).
@@ -230,6 +239,31 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         dialogPleaseWait = Dialog(this)
         // Передайте ссылку на разметку
         dialogPleaseWait.setContentView(R.layout.layout_please_wait_dialog)
+
+        // Запрос на разрешение Foreground
+        val requestPermissionLauncherNotification =
+            registerForActivityResult(
+                ActivityResultContracts.RequestPermission()
+            ) { isGranted: Boolean ->
+                if (!isGranted) {
+                    Toast.makeText(
+                        this,
+                        "We don't have permission to show notifications on Android13",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // Если нет разрешения - вызываем requestPermissionLauncher
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                requestPermissionLauncherNotification.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
 
         initListeners()
         subscribeToObservers()
@@ -641,6 +675,17 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             binding?.text1Dp?.isVisible = false
             binding?.progressBarHorizontalDp?.isVisible = false
         }
+
+    }
+
+    private fun isMyServiceRunning(serviceClass: Class<*>): Boolean {
+        val manager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
+        for (service in manager.getRunningServices(Int.MAX_VALUE)) {
+            if (serviceClass.name == service.service.className) {
+                return true
+            }
+        }
+        return false
     }
 
     private fun checkFavoriteStarIfCountryCodeIsRight(
@@ -765,6 +810,8 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         override fun onReceive(context: Context?, intent: Intent) {
             val listSize = intent.getIntExtra(Constants.KEY_BROADCAST_LIST_SIZE_MA, 1)
             val filesAmount = intent.getIntExtra(Constants.KEY_BROADCAST_COUNT_MA, 1)
+            val isCountryCodeRemoteListEmpty =
+                intent.getBooleanExtra(Constants.KEY_BROADCAST_IS_EMPTY_MA, false)
 //            val endOfBroadcast = intent.getIntExtra(Constants.KEY_BROADCAST_END_MA, 1)
             Log.d(TAG, "BROADCAST: Получаем данные в onReceive()")
 
@@ -776,6 +823,19 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                     "BROADCAST: Получаем данные в onReceive(). progress = 70 * $filesAmount / $listSize = $progress%"
                 )
             }
+
+//            // Не тот бродкаст, удалить
+//            if (isCountryCodeRemoteListEmpty) {
+//                // Меняем текст диалогового окна
+//                val tittleSmthWentWrong = getString(R.string.dialogPleaseWait_title2)
+//                val textSmthWentWrong = getString(R.string.dialogPleaseWait_text2)
+//                val tittleViewSmthWentWrong = dialogPleaseWait.findViewById<AppCompatTextView>(R.id.title_pleaseWait)
+//                val textViewSmthWentWrong = dialogPleaseWait.findViewById<AppCompatTextView>(R.id.text_pleaseWait)
+//                tittleViewSmthWentWrong.text = tittleSmthWentWrong
+//                textViewSmthWentWrong.text = textSmthWentWrong
+//
+//                dialogPleaseWait.show()
+//            }
 
 //            // Когда прогресс заканчивается, отправляем об этом Broadcast
 //            val intent =
