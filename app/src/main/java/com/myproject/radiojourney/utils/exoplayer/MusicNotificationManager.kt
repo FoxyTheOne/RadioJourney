@@ -1,9 +1,11 @@
 package com.myproject.radiojourney.utils.exoplayer
 
+import android.Manifest
 import android.app.PendingIntent
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.os.Build
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
@@ -136,7 +138,7 @@ class MusicNotificationManager(
 
             return BitmapFactory.decodeResource(
                 context.resources,
-                R.drawable.radio_clker_free_vector_images_pixabay
+                R.drawable.radio_heissenstein_pixabay
             )
 
             // In case we download image on every song:
