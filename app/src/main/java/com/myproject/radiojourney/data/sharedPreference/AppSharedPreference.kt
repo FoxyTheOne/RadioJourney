@@ -23,6 +23,7 @@ class AppSharedPreference @Inject constructor(@ApplicationContext context: Conte
         private const val PREFERENCE_USER_EMAIL = "PREFERENCE_EMAIL"
         private const val PREFERENCE_USER_PASSWORD = "PREFERENCE_PASSWORD"
         private const val PREFERENCE_USER_TOKEN = "USER_TOKEN"
+        private const val PREFERENCE_IS_FIRST_START = "PREFERENCE_IS_FIRST_START"
         private const val PREFERENCE_RADIO_STATION_URL = "PREFERENCE_RADIO_STATION_URL"
         private const val PREFERENCE_LAST_LISTENED_URL = "PREFERENCE_LAST_LISTENED_URL"
         private const val PREFERENCE_LAST_COUNTRY_CODE = "PREFERENCE_LAST_COUNTRY_CODE"
@@ -95,6 +96,20 @@ class AppSharedPreference @Inject constructor(@ApplicationContext context: Conte
             PREFERENCE_USER_TOKEN,
             ""
         ) ?: ""
+    }
+
+    override fun setIsFirstStart(isFirstStart: Boolean) {
+        sharedPreference?.edit()?.putBoolean(
+            PREFERENCE_IS_FIRST_START,
+            isFirstStart
+        )?.apply()
+    }
+
+    override fun isFirstStart(): Boolean {
+        return sharedPreference?.getBoolean(
+            PREFERENCE_IS_FIRST_START,
+            true
+        ) ?: true
     }
 
     override fun setIsRadioStationStored(isStored: Boolean) {

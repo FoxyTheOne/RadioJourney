@@ -28,9 +28,12 @@ abstract class BaseAuthFragmentAbstract : Fragment() {
         super.onCreate(savedInstanceState)
 
         val tokenForCheck = preference.getToken()
-        Log.d(TAG, "tokenForCheck = $tokenForCheck")
+        Log.d(TAG, "Проверка tokenForCheck = $tokenForCheck")
 
-        if (tokenForCheck.isNotBlank()) {
+        val isFirstStart = preference.isFirstStart()
+        Log.d(TAG, "Проверка isFirstStart = $isFirstStart")
+
+        if (tokenForCheck.isNotBlank() && !isFirstStart) {
             Toast.makeText(
                 context,
                 "Welcome back!",

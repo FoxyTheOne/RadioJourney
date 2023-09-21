@@ -20,6 +20,7 @@ import android.content.Intent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.IntentFilter
+import android.os.Build
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -57,6 +58,34 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Запрос на разрешение Foreground
+        val requestPermissionLauncherForeground =
+            registerForActivityResult(
+                ActivityResultContracts.RequestPermission()
+            ) { isGranted: Boolean ->
+                if (!isGranted) {
+                    Toast.makeText(
+                        requireContext(),
+                        "We don't have permission to start foreground service",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+
+        // Запрос на разрешение notification
+        val requestPermissionLauncherNotification =
+            registerForActivityResult(
+                ActivityResultContracts.RequestPermission()
+            ) { isGranted: Boolean ->
+                if (!isGranted) {
+                    Toast.makeText(
+                        requireContext(),
+                        "We don't have permission to show notifications on your Android",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+
         // Оформим запрос на PERMISSION, если он не был дан в предыдущий раз
         // !!! Т.к. запросов много, а не один, мы пишем .RequestMultiplePermissions() вместо .RequestPermission()
         // Т.обр., в лямбду к нам залетает не boolean, а map. ключом этого map будет string (наши permissions), а второе значение - это boolean
@@ -69,9 +98,33 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
                     ||
                     permissionsMap[Manifest.permission.ACCESS_FINE_LOCATION] == true
                 ) {
+
+                    if (ContextCompat.checkSelfPermission(
+                            requireContext(),
+                            Manifest.permission.FOREGROUND_SERVICE
+                        )!= PackageManager.PERMISSION_GRANTED
+                    ) {
+                        // Если нет разрешения - вызываем requestPermissionLauncher
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                            requestPermissionLauncherForeground.launch(Manifest.permission.FOREGROUND_SERVICE)
+                        }
+                    }
+
+                    if (ContextCompat.checkSelfPermission(
+                            requireContext(),
+                            Manifest.permission.POST_NOTIFICATIONS
+                        ) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        // Если нет разрешения - вызываем requestPermissionLauncher
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            requestPermissionLauncherNotification.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                    }
+
                     // Если дано одно из разрешений, открываем следующий фрагмент
                     this.findNavController()
                         .navigate(R.id.action_firstScreenLoadingFragment_to_homeRadioFragment)
+
                 } else {
                     Toast.makeText(
                         requireContext(),
@@ -94,8 +147,32 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
                     Manifest.permission.ACCESS_FINE_LOCATION
                 ) == PackageManager.PERMISSION_GRANTED
             ) {
+
+                if (ContextCompat.checkSelfPermission(
+                        requireContext(),
+                        Manifest.permission.FOREGROUND_SERVICE
+                    )!= PackageManager.PERMISSION_GRANTED
+                ) {
+                    // Если нет разрешения - вызываем requestPermissionLauncher
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        requestPermissionLauncherForeground.launch(Manifest.permission.FOREGROUND_SERVICE)
+                    }
+                }
+
+                if (ContextCompat.checkSelfPermission(
+                        requireContext(),
+                        Manifest.permission.POST_NOTIFICATIONS
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    // Если нет разрешения - вызываем requestPermissionLauncher
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        requestPermissionLauncherNotification.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                }
+
                 this.findNavController()
                     .navigate(R.id.action_firstScreenLoadingFragment_to_homeRadioFragment)
+
             } else {
                 // Если нет - вызываем requestPermissionLauncher
                 requestPermissionLauncher.launch(
@@ -112,7 +189,33 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
         // Передайте ссылку на разметку
         dialogInternetTrouble.setContentView(R.layout.layout_internet_trouble_dialog)
 
-        initListeners()
+        binding?.buttonLogIn?.setOnClickListener {
+            viewModel.onLoginClicked()
+
+            if (ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    Manifest.permission.FOREGROUND_SERVICE
+                )!= PackageManager.PERMISSION_GRANTED
+            ) {
+                // Если нет разрешения - вызываем requestPermissionLauncher
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    requestPermissionLauncherForeground.launch(Manifest.permission.FOREGROUND_SERVICE)
+                }
+            }
+
+            if (ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                // Если нет разрешения - вызываем requestPermissionLauncher
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    requestPermissionLauncherNotification.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+            }
+        }
+
+//        initListeners()
         subscribeOnLiveData()
 
         // Подписываемся на локальную БД с помощью CountryListFlow (либо CountryListLiveData), аналогично подписке в HomeRadioFragment
@@ -132,11 +235,11 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
         activity?.unregisterReceiver(receiver)
     }
 
-    private fun initListeners() {
-        binding?.buttonLogIn?.setOnClickListener {
-            viewModel.onLoginClicked()
-        }
-    }
+//    private fun initListeners() {
+//        binding?.buttonLogIn?.setOnClickListener {
+//            viewModel.onLoginClicked()
+//        }
+//    }
 
     private fun subscribeOnLiveData() {
         // Показываем или прячем Progress

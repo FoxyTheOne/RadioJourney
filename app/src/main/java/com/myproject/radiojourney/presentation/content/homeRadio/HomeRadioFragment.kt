@@ -190,31 +190,6 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             )
         }
 
-        // Запрос на разрешение Foreground
-        val requestPermissionLauncherForeground =
-            registerForActivityResult(
-                ActivityResultContracts.RequestPermission()
-            ) { isGranted: Boolean ->
-                if (!isGranted) {
-                    Toast.makeText(
-                        requireContext(),
-                        "We don't have permission to start foreground service",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-            }
-
-        if (ContextCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.FOREGROUND_SERVICE
-            )!= PackageManager.PERMISSION_GRANTED
-        ) {
-            // Если нет разрешения - вызываем requestPermissionLauncher
-            if (SDK_INT >= Build.VERSION_CODES.P) {
-                requestPermissionLauncherForeground.launch(Manifest.permission.FOREGROUND_SERVICE)
-            }
-        }
-
         // 1.2. ViewModel. We bind our viewModel to the lifecycle of our activity, not fragment. We pass our activity as an owner of the lifecycle.
         // So, we need to do this way:
         mainViewModel = ViewModelProvider(requireActivity())[MainViewModel::class.java]

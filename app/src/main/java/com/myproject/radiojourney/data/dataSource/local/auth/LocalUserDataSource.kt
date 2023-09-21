@@ -13,6 +13,8 @@ class LocalUserDataSource @Inject constructor(
     override suspend fun onLoginClicked() {
         val token = Math.random() * 1000
         preference.saveToken(token.toInt())
+
+        preference.setIsFirstStart(isFirstStart = false)
     }
 
     override suspend fun getToken() = preference.getToken()

@@ -241,6 +241,31 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         dialogPleaseWait.setContentView(R.layout.layout_please_wait_dialog)
 
         // Запрос на разрешение Foreground
+        val requestPermissionLauncherForeground =
+            registerForActivityResult(
+                ActivityResultContracts.RequestPermission()
+            ) { isGranted: Boolean ->
+                if (!isGranted) {
+                    Toast.makeText(
+                        this,
+                        "We don't have permission to start foreground service",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.FOREGROUND_SERVICE
+            )!= PackageManager.PERMISSION_GRANTED
+        ) {
+            // Если нет разрешения - вызываем requestPermissionLauncher
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                requestPermissionLauncherForeground.launch(Manifest.permission.FOREGROUND_SERVICE)
+            }
+        }
+
+        // Запрос на разрешение notification
         val requestPermissionLauncherNotification =
             registerForActivityResult(
                 ActivityResultContracts.RequestPermission()
@@ -248,7 +273,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                 if (!isGranted) {
                     Toast.makeText(
                         this,
-                        "We don't have permission to show notifications on Android13",
+                        "We don't have permission to show notifications on your Android",
                         Toast.LENGTH_LONG
                     ).show()
                 }
@@ -265,9 +290,6 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             }
         }
 
-        initListeners()
-        subscribeToObservers()
-
         // COUNTRY LIST MARKERS ON MAP -> 1. Получаем список кодов стран, преобразуем в локальные модели, сохраняем в Room.
         // Делается 1 раз, при запуске приложения и по окончанию stopSelf()
         this.startService(
@@ -276,6 +298,9 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                 ProgressForegroundService::class.java
             )
         )
+
+        initListeners()
+        subscribeToObservers()
 
 //        // 1.Broadcast для отображения уведомления (2,3 - в MusicService)
 //        val intentMS =

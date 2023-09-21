@@ -34,28 +34,32 @@ class FirstScreenLoadingViewModel @Inject constructor(
         _errorMessageLiveData // And another LiveData, that equals to previous, so that classes can't change it
 
     // LiveData для открытия диалогового окна
-    val dialogInternetTroubleLiveData = MutableLiveData<Boolean>()
+    private val _dialogInternetTroubleLiveData = MutableLiveData<Boolean>()
+    val dialogInternetTroubleLiveData: MutableLiveData<Boolean> = _dialogInternetTroubleLiveData
 
     // Флаг для проверки на permissions при переходе на следующий fragment
-    val signInLiveData = MutableLiveData<Boolean>()
+    private val _signInLiveData = MutableLiveData<Boolean>()
+    val signInLiveData: MutableLiveData<Boolean> = _signInLiveData
 
     // Подписка на локальную БД, для проверки (Если БД пуста, нужно ждать окончания кеширования)
     val countryListFlow = homeRadioInteractor.subscribeOnCountryList()
 
     // LiveData, которые будут отвечать за отображение прогресса (кружок)
-    val showProgressLiveData = MutableLiveData<Boolean>()
-    val hideProgressLiveData = MutableLiveData<Boolean>()
+    private val _showProgressLiveData = MutableLiveData<Boolean>()
+    val showProgressLiveData: MutableLiveData<Boolean> = _showProgressLiveData
+    private val _hideProgressLiveData = MutableLiveData<Boolean>()
+    val hideProgressLiveData: MutableLiveData<Boolean> = _hideProgressLiveData
 
     fun onLoginClicked() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                showProgressLiveData.call()
+                _showProgressLiveData.call()
                 loginScreenInteractor.onLoginClicked() // Сохраняем токен, чтобы в следующий раз пропустить этот фрагмент
-                signInLiveData.call()
-                hideProgressLiveData.call()
+                _signInLiveData.call()
+                _hideProgressLiveData.call()
             } catch (e1: AccountsException) {
                 e1.printStackTrace()
-                dialogInternetTroubleLiveData.call()
+                _dialogInternetTroubleLiveData.call()
             } catch (e: IOException) {
                 e.printStackTrace()
                 _errorMessageLiveData.postValue(
