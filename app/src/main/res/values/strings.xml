@@ -3,7 +3,7 @@
 
     <string name="first_screen_tittle">Welcome to RadioJourney!</string>
     <string name="first_screen_text1">If it is the first start - please, wait until cashing ends.</string>
-    <string name="first_screen_text2">If cashing failed on the first start, try turn on and then turn off airplane mode, and then restart the program.</string>
+    <string name="first_screen_text2">If cashing failed on the first start, check your internet connection, and then restart the program.</string>
     <string name="first_screen_button">Start journey</string>
 
     <string name="content_description_email">Email</string>
@@ -22,7 +22,7 @@
     <string name="homeRadio_mayNotWork">Also selected radio station may not work right now.</string>
 
     <string name="dialogInternetTrouble_title">Some internet trouble!</string>
-    <string name="dialogInternetTrouble_text_cashing">If it is the first start and cashing didn\'t end - please, try turn on and then turn off airplane mode, and then restart the program.</string>
+    <string name="dialogInternetTrouble_text_cashing">If it is the first start and cashing didn\'t end - please, check your internet connection, and then restart the program.</string>
     <string name="dialogInternetTrouble_text2_cashing">Otherwise, just ignore this message. Repeat your last action if needed.</string>
     <string name="dialogInternetTrouble_text">Some internet or account trouble occurred. Try to repeat last action or check your internet connection.</string>
     <string name="dialogPleaseWait_title">Please wait!</string>
@@ -57,11 +57,10 @@
 
     <string name="settings_tittle">Settings</string>
     <string name="settings_tittle2">About</string>
-    <string name="settings_text">This application is created for listening to Internet radio stations.
-
-Therefor we use database https://www.radio-browser.info/ that contains information about Internet radio stations all over the world.
-
-Just click on the place on the map you are insterested in, chose radiostation from the list and enjoy!</string>
+    <string name="settings_text1">This application is created for listening to Internet radio stations.</string>
+    <string name="settings_text2">Therefor we use database https://www.radio-browser.info/ that contains information about Internet radio stations all over the world.</string>
+    <string name="settings_text3">Just click on the place on the map you are insterested in, chose radiostation from the list and enjoy!</string>
+    <string name="settings_text4">The app also uses images from pixabay.com and country coordinates from https://developers.google.com/public-data/ (sep. 2023)</string>
     <string name="settings_saveToGoogle">Save to Google Drive</string>
     <string name="settings_restoreFromGoogle">Restore from Google Drive</string>
     <string name="settings_saveToLocalStorage">Save to local storage</string>

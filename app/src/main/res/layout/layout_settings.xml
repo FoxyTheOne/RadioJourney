@@ -68,35 +68,62 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="start"
-            android:orientation="horizontal"
+            android:orientation="vertical"
             android:paddingStart="@dimen/space_32"
-            android:paddingEnd="@dimen/space_32"
             android:paddingTop="@dimen/space_small"
+            android:paddingEnd="@dimen/space_32"
             android:paddingBottom="@dimen/space_32"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/linear_settingsTitle">
 
             <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/text_about"
+                android:id="@+id/text_about1"
                 style="@style/login_bottom"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:text="@string/settings_text" />
+                android:paddingBottom="@dimen/space_beforeOrAfterElement"
+                android:text="@string/settings_text1" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/text_about2"
+                style="@style/login_bottom"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:paddingBottom="@dimen/space_beforeOrAfterElement"
+                android:text="@string/settings_text2" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/text_about3"
+                style="@style/login_bottom"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:paddingBottom="@dimen/space_beforeOrAfterElement"
+                android:text="@string/settings_text3" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/text_about4"
+                style="@style/login_bottom"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="@string/settings_text4" />
         </LinearLayout>
 
         <LinearLayout
-            android:visibility="gone"
             android:id="@+id/linear_saveToGoogleSettings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="start"
             android:orientation="horizontal"
             android:paddingStart="@dimen/space_32"
-            android:paddingEnd="@dimen/space_32"
             android:paddingTop="@dimen/space_beforeOrAfterElement"
+            android:paddingEnd="@dimen/space_32"
             android:paddingBottom="@dimen/space_beforeOrAfterElement"
+            android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/linear_textAbout">
@@ -119,7 +146,6 @@
         </LinearLayout>
 
         <LinearLayout
-            android:visibility="gone"
             android:id="@+id/linear_restoreFromGoogleSettings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -128,6 +154,7 @@
             android:paddingStart="@dimen/space_32"
             android:paddingEnd="@dimen/space_32"
             android:paddingBottom="@dimen/space_beforeOrAfterElement"
+            android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/linear_saveToGoogleSettings">
@@ -150,7 +177,6 @@
         </LinearLayout>
 
         <LinearLayout
-            android:visibility="gone"
             android:id="@+id/linear_saveToLocalStorageSettings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -159,6 +185,7 @@
             android:paddingStart="@dimen/space_32"
             android:paddingEnd="@dimen/space_32"
             android:paddingBottom="@dimen/space_beforeOrAfterElement"
+            android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/linear_restoreFromGoogleSettings">
@@ -181,7 +208,6 @@
         </LinearLayout>
 
         <LinearLayout
-            android:visibility="gone"
             android:id="@+id/linear_restoreFromLocalStorageSettings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -190,6 +216,7 @@
             android:paddingStart="@dimen/space_32"
             android:paddingEnd="@dimen/space_32"
             android:paddingBottom="@dimen/space_beforeOrAfterElement"
+            android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/linear_saveToLocalStorageSettings">
@@ -282,7 +309,6 @@
             app:layout_constraintStart_toStartOf="parent" />
 
         <androidx.appcompat.widget.AppCompatTextView
-            android:visibility="gone"
             android:id="@+id/pixabay"
             style="@style/login_bottom_small"
             android:layout_width="wrap_content"
@@ -290,6 +316,7 @@
             android:padding="@dimen/space_beforeOrAfterElement"
             android:text="@string/settings_pixabay"
             android:textAlignment="center"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />

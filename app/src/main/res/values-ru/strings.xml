@@ -3,7 +3,7 @@
 
     <string name="first_screen_tittle">Приветствуем в RadioJourney!</string>
     <string name="first_screen_text1">Если это первый запуск - пожалуйста, дождитесь окончания кеширования.</string>
-    <string name="first_screen_text2">Если кеширование при первом запуске не удалось, попробуйте включить и выключить авиарежим, после чего перезапустить программу.</string>
+    <string name="first_screen_text2">Если кеширование при первом запуске не удалось, проверье ваше интернет соендинение, после чего перезапустите программу.</string>
     <string name="first_screen_button">Начать путешествие</string>
 
     <string name="content_description_email">Email</string>
@@ -22,7 +22,7 @@
     <string name="homeRadio_mayNotWork">Также выбранная радиостанция может не работать в данный момент.</string>
 
     <string name="dialogInternetTrouble_title">Проблема с соединением!</string>
-    <string name="dialogInternetTrouble_text_cashing">Если это первый запуск и кеширование не закончилось - пожалуйста, включите и выключите авиарежим, после чего перезапустите программу.</string>
+    <string name="dialogInternetTrouble_text_cashing">Если это первый запуск и кеширование не закончилось - пожалуйста, проверье ваше интернет соендинение, после чего перезапустите программу.</string>
     <string name="dialogInternetTrouble_text2_cashing">Если же нет, не обращайте внимание на ошибку. Если нужно, повторите последнее действие</string>
     <string name="dialogInternetTrouble_text">Возникла проблема при запросе на сервер. Попробуйте повторить последнее действие или проверье ваше интернет соендинение.</string>
     <string name="dialogPleaseWait_title">Пожалуйста, подождите!</string>
@@ -57,11 +57,10 @@
 
     <string name="settings_tittle">Настройки</string>
     <string name="settings_tittle2">О программе</string>
-    <string name="settings_text">Данное приложение создано для прослушивания интернет радиостанций.
-
-Для этого используется база данных https://www.radio-browser.info/, содержащая информацию об интернет-радиостанциях со всего мира.
-
-Просто нажмите на интересующее место на карте, выберите радиостанцию из появившегося списка и наслаждайтесь!</string>
+    <string name="settings_text1">Данное приложение создано для прослушивания интернет радиостанций.</string>
+    <string name="settings_text2">Для этого используется база данных https://www.radio-browser.info/, содержащая информацию об интернет-радиостанциях со всего мира.</string>
+    <string name="settings_text3">Просто нажмите на интересующее место на карте, выберите радиостанцию из появившегося списка и наслаждайтесь!</string>
+    <string name="settings_text4">В приложении также используются изображения с сайта pixabay.com и координаты стран с сайта https://developers.google.com/public-data/ (сент. 2023)</string>
     <string name="settings_saveToGoogle">Сохранить на Google Drive</string>
     <string name="settings_restoreFromGoogle">Восстановить из Google Drive</string>
     <string name="settings_saveToLocalStorage">Сохранить в локальное хранилище</string>

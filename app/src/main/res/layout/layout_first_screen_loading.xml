@@ -58,7 +58,7 @@
             style="@style/login_bottom_orange"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/space_small"
+            android:paddingBottom="@dimen/space_small"
             android:text="@string/first_screen_text1"
             app:layout_constraintBottom_toTopOf="@+id/text_tittle"
             app:layout_constraintLeft_toLeftOf="@+id/guideline_left"
@@ -117,6 +117,7 @@
             android:padding="@dimen/space_beforeOrAfterElement"
             android:text="@string/settings_pixabay"
             android:textAlignment="center"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
