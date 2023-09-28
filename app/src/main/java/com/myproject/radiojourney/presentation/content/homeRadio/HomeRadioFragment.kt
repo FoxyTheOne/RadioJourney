@@ -786,7 +786,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         customMarkerYouAreHere?.let { customBitmapMarker ->
             marker = mMap.addMarker(
                 MarkerOptions()
-                    .title("You are here")
+                    .title(activity?.getString(R.string.homeRadio_youAreHere))
                     .snippet(null)
                     .position(latLng)
                     .icon(BitmapDescriptorFactory.fromBitmap(customBitmapMarker))
