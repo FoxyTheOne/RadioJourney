@@ -34,18 +34,18 @@ abstract class BaseAuthFragmentAbstract : Fragment() {
         Log.d(TAG, "Проверка isFirstStart = $isFirstStart")
 
         if (tokenForCheck.isNotBlank() && !isFirstStart) {
-            Toast.makeText(
-                context,
-                "Welcome back!",
-                Toast.LENGTH_LONG
-            ).show()
+//            Toast.makeText(
+//                context,
+//                "Welcome back!",
+//                Toast.LENGTH_LONG
+//            ).show()
             findNavController().navigate(R.id.action_global_home_radio_fragment)
         } else {
-            Toast.makeText(
-                context,
-                "Thanks for uploading!",
-                Toast.LENGTH_LONG
-            ).show()
+//            Toast.makeText(
+//                context,
+//                "Thanks for uploading!",
+//                Toast.LENGTH_LONG
+//            ).show()
         }
     }
 }

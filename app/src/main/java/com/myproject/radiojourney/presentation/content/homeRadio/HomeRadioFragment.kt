@@ -330,6 +330,8 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 ////                    mainViewModel.notJustLaunchedEnableAutoplay()
 ////                }
 
+        } else if (mainViewModel.curPlayingSongLiveData.value == null) {
+            mainViewModel.showProgressAndDisableClick("Dp")
         }
 
 //        else {
