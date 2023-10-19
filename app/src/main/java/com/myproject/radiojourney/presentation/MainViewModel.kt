@@ -431,6 +431,12 @@ class MainViewModel @Inject constructor(
         )
     }
 
+    fun markRadioStationAsPopularSendGetRequest(stationUuid: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            mainRadioInteractor.markRadioStationAsPopularSendGetRequest(stationUuid)
+        }
+    }
+
 //    fun checkThePosition(position: Int, radioStationList: List<RadioStationPresentation>) {
 //        viewModelScope.launch(Dispatchers.IO) {
 //            try {

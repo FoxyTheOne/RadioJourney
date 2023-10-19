@@ -63,8 +63,6 @@ import com.myproject.radiojourney.utils.service.ProgressForegroundService
  * LOCATION -> 1.3. Для доступа к местоположению, нужно разрешение. Логика запроса разрешения - в предыдущем фрагменте
  * LOCATION -> 1.4. Получим наш FusedLocationProviderClient. Именно он имеет в себе методы, с помощью которых мы можем определить локацию
  * GOOGLE MAPS -> 2. В инструкции от google всё делается в activity, а у нас - фрагмент. Следовательно, будут небольшие изменения
- *
- * TODO повторить проверку разрешения определения местоположения
  */
 @AndroidEntryPoint
 class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
@@ -209,10 +207,12 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                 TAG,
                 "PLAYLIST_UPDATE: 1. Выбранная из списка станция передана в HomeRadioFragment"
             )
+            var stationUuid = ""
 
             arguments?.parcelable<RadioStationPresentation>("radio_station") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
                 ?.let { radioStation ->
                     Log.d(TAG, "!! PLAYLIST_UPDATE: Передан аргумент с ключом radio_station")
+                    stationUuid = radioStation.stationuuid
                     // Здесь мы получаем выбранную станцию из списка радиостанций по клику. Необходимо передать её в наш новый плейер
 
                     val curCountryCode =
@@ -274,6 +274,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             arguments?.parcelable<RadioStationPresentation>("favourite_station") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
                 ?.let { radioStationFavourite ->
                     Log.d(TAG, "!! PLAYLIST_UPDATE: Передан аргумент с ключом favourite_station")
+                    stationUuid = radioStationFavourite.stationuuid
                     // Здесь мы переходим из фрагмента "Избранное". Стоит загрузить в плейер плейлист избранного.
 
                     val curCountryCode =
@@ -329,6 +330,14 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 ////                    mainViewModel.playOrToggleSong(radioStationFavourite, false)
 ////                    mainViewModel.notJustLaunchedEnableAutoplay()
 ////                }
+
+            // TODO автор API хочет, чтобы вы отправляли запрос /json/url каждый раз, когда пользователь кликает на радиостанцию. Это позволяет отмечать станции как популярные. Ваш запрос должен выглядеть примерно так:
+            // String stationUrl = "https://de1.api.radio-browser.info/json/url/" + stationId;
+            // где stationId - это идентификатор выбранной радиостанции.
+            // !!! Когда пользователь кликает по радиостанции, он попадает сюда - открытие HomeFragment с аргументом, который прилетел из фрагмента с выбором радиостанций. Поэтому попробую строить логику начиная отсюда
+            if (stationUuid.isNotEmpty() && stationUuid.isNotBlank()) {
+                mainViewModel.markRadioStationAsPopularSendGetRequest(stationUuid)
+            }
 
         } else if (mainViewModel.curPlayingSongLiveData.value == null) {
             mainViewModel.showProgressAndDisableClick("Dp")
@@ -530,10 +539,9 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         mainViewModel.setNonClickableDpLiveData.observe(viewLifecycleOwner) {
             // Изредка не срабатывает логика и кнопки остаются заблокированым. В таком случае нет возможности продолжать пользоваться приложением.
 //            // Запустить отображение прогресс бара + заблокировать нажатия как на HomeRadioFragment, так и проигрыватель в main activity
-//            // HomeRadioFragment
             binding?.buttonGoToFavourites?.isClickable = false
             binding?.buttonGoToFavourites?.isEnabled = false
-//            // TODO карта - не проработано (InfoWindow)
+//          Карта - не проработано (InfoWindow). !!Сделала иначе, затемнение экрана при загрузке - ничего нельзя нажать!!
 
             // Progress bar
             showProgress()
@@ -544,7 +552,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 
             binding?.buttonGoToFavourites?.isClickable = false
             binding?.buttonGoToFavourites?.isEnabled = false
-//            // TODO карта - не проработано (InfoWindow)
+//          Карта - не проработано (InfoWindow). !!Сделала иначе, затемнение экрана при загрузке - ничего нельзя нажать!!
 
             // Progress bar
             showProgress()
@@ -555,7 +563,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 //            // HomeRadioFragment
             binding?.buttonGoToFavourites?.isClickable = true
             binding?.buttonGoToFavourites?.isEnabled = true
-//            // TODO карта - не проработано (InfoWindow)
+//          Карта - не проработано (InfoWindow). !!Сделала иначе, затемнение экрана при загрузке, потом его убираем!!
 
             // Progress bar
             hideProgress()

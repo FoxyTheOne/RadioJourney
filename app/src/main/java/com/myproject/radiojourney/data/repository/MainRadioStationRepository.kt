@@ -71,4 +71,12 @@ class MainRadioStationRepository @Inject constructor(
     override suspend fun saveLastUsedRadioStationUrlAndCode(urlResolved: String, countryCode: String) {
         localRadioDataSource.saveLastUsedRadioStationUrlAndCode(urlResolved, countryCode)
     }
+
+    override suspend fun markRadioStationAsPopularSendGetRequest(stationUuid: String) {
+        networkRadioDataSource.sendGetRequestToMarkRadioStationAsPopular(stationUuid)
+        Log.d(
+            TAG,
+            "Делаем запрос, как указано автором API (Send /json/url requests for every click the user makes, this helps to mark stations as popular and makes the database more usefull to other people)"
+        )
+    }
 }

@@ -20,4 +20,5 @@ interface IMainRadioStationRepository {
     suspend fun getRadioStationList(countryCode: String): List<RadioStationLocal>
 
     suspend fun saveLastUsedRadioStationUrlAndCode(urlResolved: String, countryCode: String)
+    suspend fun markRadioStationAsPopularSendGetRequest(stationUuid: String)
 }

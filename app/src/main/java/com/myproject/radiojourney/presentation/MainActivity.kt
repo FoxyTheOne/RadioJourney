@@ -42,7 +42,6 @@ import com.myproject.radiojourney.utils.service.ProgressForegroundService
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.IOException
 
-
 /**
  * This source code is free for studying purposes but you are not allowed to copy and use it in other applications (projects).
  *
@@ -166,7 +165,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                 if (swipeRadioStationList.isNotEmpty() && maxRadioStationListIndex >= position) {
 
                     try {
-                        // TODO Нам нужно вернуться в onPrepareFromMediaId, если мы выбрали песню из другого плейлиста и включить её. НО! Нам не нужно включать станцию сразу при включении программы
+                        // Нам нужно вернуться в onPrepareFromMediaId, если мы выбрали песню из другого плейлиста и включить её. НО! Нам не нужно включать станцию сразу при включении программы
                         val isNotJustLaunched = mainViewModel.isNotJustLaunchedLiveData.value
 
                         // We must check, if player is playing
@@ -434,7 +433,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                                 binding?.vpSong?.adapter = swipeRadioStationAdapter
 
                                 mOnPageChangeCallback?.onPageSelected(0)
-//                            // TODO почему-то этот метод изредка не вызывается, хотя должен
+                                // Почему-то этот метод изредка не вызывается, хотя должен. На всякий случай дублирую вызов здесь
 
                                 // В этом месте данные в curPlayingRadioStation будут старые, т.е. данные о предыдущей радиостанции. Это нужно для сравнения предыдущей и текущей в дальнейшем в методе mainViewModel.playOrToggleSong()
                                 switchViewPagerToCurrentSong(
@@ -662,8 +661,8 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 //            // MainActivity
 //            binding?.imageStar?.isClickable = false
 //            binding?.imageStar?.isEnabled = false
-//            binding?.vpSong?.isClickable = false // TODO не работает
-//            binding?.vpSong?.isEnabled = false // TODO не работает
+//            binding?.vpSong?.isClickable = false // не работает
+//            binding?.vpSong?.isEnabled = false // не работает
 //            binding?.ivPlayPause?.isClickable = false
 //            binding?.ivPlayPause?.isEnabled = false
             swipeRadioStationAdapter.isClickableRecyclerView = false
@@ -690,8 +689,8 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 //            // MainActivity
 //            binding?.imageStar?.isClickable = true
 //            binding?.imageStar?.isEnabled = true
-//            binding?.vpSong?.isClickable = true // TODO не работает
-//            binding?.vpSong?.isEnabled = true // TODO не работает
+//            binding?.vpSong?.isClickable = true // не работает
+//            binding?.vpSong?.isEnabled = true // не работает
 //            binding?.ivPlayPause?.isClickable = true
 //            binding?.ivPlayPause?.isEnabled = true
             swipeRadioStationAdapter.isClickableRecyclerView = true
