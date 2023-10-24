@@ -828,14 +828,14 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         super.onDestroy()
     }
 
-    // 2.Broadcast для горизонтальной полосы прогресса в activity (1 - в ???)
+    // 2.Broadcast для полосы прогресса MainActivity при загрузке плейлиста (1 - в ???)
     // Создадим анонимный класс => не нужно регистрировать в манифесте
     private var receiver: BroadcastReceiver? = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent) {
             val listSize = intent.getIntExtra(Constants.KEY_BROADCAST_LIST_SIZE_MA, 1)
             val filesAmount = intent.getIntExtra(Constants.KEY_BROADCAST_COUNT_MA, 1)
             val isCountryCodeRemoteListEmpty =
-                intent.getBooleanExtra(Constants.KEY_BROADCAST_IS_EMPTY_MA, false)
+                intent.getBooleanExtra(Constants.KEY_BROADCAST_IS_EMPTY_MA, false) // Не тот бродкаст, удалить
 //            val endOfBroadcast = intent.getIntExtra(Constants.KEY_BROADCAST_END_MA, 1)
             Log.d(TAG, "BROADCAST: Получаем данные в onReceive()")
 

@@ -21,6 +21,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.IntentFilter
 import android.os.Build
+import androidx.appcompat.widget.AppCompatTextView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -102,7 +103,7 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
                     if (ContextCompat.checkSelfPermission(
                             requireContext(),
                             Manifest.permission.FOREGROUND_SERVICE
-                        )!= PackageManager.PERMISSION_GRANTED
+                        ) != PackageManager.PERMISSION_GRANTED
                     ) {
                         // Если нет разрешения - вызываем requestPermissionLauncher
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -151,7 +152,7 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
                 if (ContextCompat.checkSelfPermission(
                         requireContext(),
                         Manifest.permission.FOREGROUND_SERVICE
-                    )!= PackageManager.PERMISSION_GRANTED
+                    ) != PackageManager.PERMISSION_GRANTED
                 ) {
                     // Если нет разрешения - вызываем requestPermissionLauncher
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -195,7 +196,7 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
             if (ContextCompat.checkSelfPermission(
                     requireContext(),
                     Manifest.permission.FOREGROUND_SERVICE
-                )!= PackageManager.PERMISSION_GRANTED
+                ) != PackageManager.PERMISSION_GRANTED
             ) {
                 // Если нет разрешения - вызываем requestPermissionLauncher
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -250,6 +251,16 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
             hideProgress()
         }
         viewModel.dialogInternetTroubleLiveData.observe(viewLifecycleOwner) {
+            // Уточняем текст диалогового окна (который по умолчанию)
+            val dialogInternetTroubleTitle = getString(R.string.dialogInternetTrouble_title)
+            val dialogInternetTroubleText = getString(R.string.dialogInternetTrouble_text)
+            val dialogInternetTroubleTitleView =
+                dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.title_internetTrouble)
+            val dialogInternetTroubleTextView =
+                dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.text_internetTrouble)
+            dialogInternetTroubleTitleView.text = dialogInternetTroubleTitle
+            dialogInternetTroubleTextView.text = dialogInternetTroubleText
+
             dialogInternetTrouble.show()
         }
         viewModel.errorMessageLiveData.observe(viewLifecycleOwner) {
@@ -293,6 +304,19 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
                     if (it != emptyList<CountryPresentation>()) {
                         binding?.buttonLogIn?.isVisible = true
                         binding?.progressBarHorizontal?.isVisible = false
+                    } else {
+                        // Показываем диалоговое окно о проблеме с сервером
+                        // Меняем текст диалогового окна
+                        val dialogSmthWentWrongTitle = getString(R.string.dialogPleaseWait_title2)
+                        val dialogSmthWentWrongText = getString(R.string.dialogPleaseWait_text2)
+                        val dialogSmthWentWrongTitleView =
+                            dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.title_internetTrouble)
+                        val dialogSmthWentWrongTextView =
+                            dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.text_internetTrouble)
+                        dialogSmthWentWrongTitleView.text = dialogSmthWentWrongTitle
+                        dialogSmthWentWrongTextView.text = dialogSmthWentWrongText
+
+                        dialogInternetTrouble.show()
                     }
                 }
 

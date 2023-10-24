@@ -16,14 +16,11 @@ import com.google.android.gms.maps.model.LatLng
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.data.dataSource.local.radio.ILocalRadioDataSource
 import com.myproject.radiojourney.data.dataSource.network.INetworkRadioDataSource
-import com.myproject.radiojourney.data.dataSource.network.NetworkRadioDataSource
-import com.myproject.radiojourney.entities.local.CountryCodeAndStationCount
 import com.myproject.radiojourney.entities.local.CountryLocal
 import com.myproject.radiojourney.entities.remote.CountryCodeRemote
 import com.myproject.radiojourney.other.Constants.FILTER_FOR_BROADCAST
 import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_COUNT
 import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_END
-import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_IS_EMPTY_MA
 import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_LIST_SIZE
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
@@ -412,12 +409,20 @@ class ProgressForegroundService @Inject constructor() : Service() {
                     // Для начала, сделаем все  полученные коды станций большими буквами
                     val countryCodeRemoteListUpperCase = mutableListOf<CountryCodeRemote>()
                     countryCodeRemoteList.forEach {
-                        countryCodeRemoteListUpperCase.add(CountryCodeRemote(it.name.uppercase(), it.stationcount))
+                        countryCodeRemoteListUpperCase.add(
+                            CountryCodeRemote(
+                                it.name.uppercase(),
+                                it.stationcount
+                            )
+                        )
                     }
 
                     // Далее суммируем (группируем) количество станций по коду стран
                     val mergedCountryCodeRemoteList: Collection<CountryCodeRemote> =
-                        countryCodeRemoteListUpperCase.groupBy(CountryCodeRemote::name, CountryCodeRemote::stationcount)
+                        countryCodeRemoteListUpperCase.groupBy(
+                            CountryCodeRemote::name,
+                            CountryCodeRemote::stationcount
+                        )
                             .mapValues { (id, stationCount) ->
                                 CountryCodeRemote(id, stationCount.sum())
                             }
@@ -520,8 +525,7 @@ class ProgressForegroundService @Inject constructor() : Service() {
                         TAG,
                         "countryCodeRemoteList size = 0. The server is down. Please, try again later"
                     )
-                    // TODO notification "The server is down. Please, try again later"
-                    intent.putExtra(KEY_BROADCAST_IS_EMPTY_MA, true)
+                    // notification "The server is down. Please, try again later" -> Мы делаем его не здесь, а во фрагментах: в загрузочном фрагменте по результатам пришедшей информации и в HomeFragment
                 }
 
                 // 5.4. Когда прогресс заканчивается, закрываем Foreground, удаляем уведомления, stop service

@@ -24,8 +24,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-// TODO RENAME
-
 // We need time to upload music from firebase or other data
 class FirebaseMusicSource @Inject constructor(
     private val networkRadioDataSource: INetworkRadioDataSource,
@@ -133,7 +131,6 @@ class FirebaseMusicSource @Inject constructor(
                 ) // country code
                 .build()
         }.filter {
-//            !it.description.mediaId.isNullOrEmpty() - TODO mediaId was url_resolved, but I'm changing it to stationuuid. Check if everything will work correct
             it.description.mediaUri.toString().isNotEmpty()
         }
 
@@ -201,7 +198,6 @@ class FirebaseMusicSource @Inject constructor(
                     ) // country code
                     .build()
             }.filter {
-//            !it.description.mediaId.isNullOrEmpty() - TODO mediaId was url_resolved, but I'm changing it to stationuuid. Check if everything will work correct
                 it.description.mediaUri.toString().isNotEmpty()
             }
 
@@ -279,7 +275,6 @@ class FirebaseMusicSource @Inject constructor(
 //    }
 
     // Для формирования плейлиста из нескольких песен/радиостанций. Info for exoplayer to stream songs
-    // TODO составлять список в плейлист из одной, выбранной страны. После того, как переделаем список с сервера в MAP
     fun asMediaSource(dataSourceFactory: DefaultDataSource.Factory): ConcatenatingMediaSource {
         val concatenatingMediaSource = ConcatenatingMediaSource() // empty by default
         radioStations.forEach { radioStation ->

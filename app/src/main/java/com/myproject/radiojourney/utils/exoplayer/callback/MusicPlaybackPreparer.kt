@@ -116,7 +116,7 @@ class MusicPlaybackPreparer(
                                 }
                             } catch (e: IOException) {
                                 e.printStackTrace()
-                                // TODO Fill error message to LiveData
+                                // TODO Fill error message to LiveData, но я не знаю, куда эти данные передавать - нет класса, который следит за этим классом
                             }
                         }
                         job.join()
@@ -218,22 +218,6 @@ class MusicPlaybackPreparer(
 
             // Если выбираем другую страну, в этом месте он не находит радиостанцию и в MusicService (val musicPlaybackPreparer = MusicPlaybackPreparer(firebaseMusicSource, serviceScope) {...}) отправляет null
 
-//            if (mediaId != "null" && itemToPlay == null) {
-//                // Не знаю, как в этом место узнать код страны и скачать новый плейлист.
-//                // Думаю, его нужно скачивать по клику на recycler view при переходе на фрагмент (вызывать метод из mainViewModel)
-//                // TODO А здесь останавливаться до when ready (подсмотреть, как мы это делали). Когда плейлист скачался, ещё раз ищем itemToPlay
-//
-//                // TODO для начала попробовать просто вызывать fetch из вью модели по клику на элемент. Там (т.е. уже здесь, в onCommand) задать логику, если country code совпадает, всё ок. Если нет - скачиваем
-//
-//                firebaseMusicSource.whenReady { isInitialized ->
-//                    if (isInitialized) {
-//                        itemToPlay =
-//                            firebaseMusicSource.radioStations.find { mediaId == it.description.mediaId }
-//                    }
-//                }
-//
-//            }
-
 //            while (mediaId != "null" && itemToPlay == null) {
 //                itemToPlay =
 //                    firebaseMusicSource.radioStations.find { mediaId == it.description.mediaId }
@@ -253,13 +237,10 @@ class MusicPlaybackPreparer(
                             TAG,
                             "PLAYLIST_UPDATE: 2.$TAG, onPrepareFromMediaId(). !!! Вызываем playerPrepared(), itemToPlay = $itemToPlay, из лямбды whenReady"
                         )
-                        playerPrepared(itemToPlay) // TODO Метод иногда не вызывается (см. ниже). Пока что продублировала (проверить, нужно ли удалять его снизу)
+                        playerPrepared(itemToPlay) // Метод иногда не вызывается (см. ниже). Пока что продублировала
                     }
                 }
             }
-
-//            lastCountryCode =
-//                itemToPlay?.description?.subtitle.toString() // Обновляем переменную класса после поиска TODO let?. чтобы обновлять lastCountryCode на не null ????
 
             itemToPlay?.let {
                 lastCountryCode =

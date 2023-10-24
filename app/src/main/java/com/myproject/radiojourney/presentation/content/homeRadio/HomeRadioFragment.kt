@@ -331,7 +331,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 ////                    mainViewModel.notJustLaunchedEnableAutoplay()
 ////                }
 
-            // TODO автор API хочет, чтобы вы отправляли запрос /json/url каждый раз, когда пользователь кликает на радиостанцию. Это позволяет отмечать станции как популярные. Ваш запрос должен выглядеть примерно так:
+            // Автор API хочет, чтобы вы отправляли запрос /json/url каждый раз, когда пользователь кликает на радиостанцию. Это позволяет отмечать станции как популярные. Ваш запрос должен выглядеть примерно так:
             // String stationUrl = "https://de1.api.radio-browser.info/json/url/" + stationId;
             // где stationId - это идентификатор выбранной радиостанции.
             // !!! Когда пользователь кликает по радиостанции, он попадает сюда - открытие HomeFragment с аргументом, который прилетел из фрагмента с выбором радиостанций. Поэтому попробую строить логику начиная отсюда
@@ -663,30 +663,21 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                             showProgress()
                             Toast.makeText(
                                 context,
-                                "Something went wrong. Waiting for database response.",
+                                "Something went wrong. The server is down. Please, try again later",
                                 Toast.LENGTH_LONG
                             ).show()
 
                             // Меняем текст диалогового окна
-                            val titleInternetTrouble =
-                                getString(R.string.dialogInternetTrouble_title2)
-                            val textInternetTrouble =
-                                getString(R.string.dialogInternetTrouble_text2)
-                            val titleViewInternetTrouble =
+                            val dialogSmthWentWrongTitle = getString(R.string.dialogPleaseWait_title2)
+                            val dialogSmthWentWrongText = getString(R.string.dialogPleaseWait_text2)
+                            val dialogSmthWentWrongTitleView =
                                 dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.title_internetTrouble)
-                            val textViewInternetTrouble =
+                            val dialogSmthWentWrongTextView =
                                 dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.text_internetTrouble)
-                            titleViewInternetTrouble.text = titleInternetTrouble
-                            textViewInternetTrouble.text = textInternetTrouble
+                            dialogSmthWentWrongTitleView.text = dialogSmthWentWrongTitle
+                            dialogSmthWentWrongTextView.text = dialogSmthWentWrongText
 
                             dialogInternetTrouble.show()
-
-                            activity?.startService(
-                                Intent(
-                                    activity,
-                                    ProgressForegroundService::class.java
-                                )
-                            )
 
                         }
                     } catch (e: UninitializedPropertyAccessException) {
