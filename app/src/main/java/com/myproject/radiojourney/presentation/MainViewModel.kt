@@ -242,9 +242,9 @@ class MainViewModel @Inject constructor(
 //                                        if (toggle) musicServiceConnection.transportControls.pause()
 //                                        _switchViewPagerOnceAgainLiveData.postValue(mediaItem)
 //                                    }
-                                    // TODO check, if it's needed ^ after adding a download button
+                                    // ^ check, if it's needed after adding a download button
 
-                                    // Нужно, но попробую другое условие
+                                    // Проверила. Нужно, но попробую другое условие:
                                     val isCurCountryCodeFAV =
                                         curPlayingSongLiveData.value?.description?.subtitle.toString()
                                             .endsWith("_FAV", true)
@@ -370,7 +370,7 @@ class MainViewModel @Inject constructor(
         _newMediaIdLiveData.postValue(mediaId)
     }
 
-    // TODO Test version Нужно вызывать метод playOrToggleSong, когда у нас новый плейлист а песня была на паузе. И в то же время не нужно autoplay сразу при запуске программы. Поставим флажок
+    // Test version Нужно вызывать метод playOrToggleSong, когда у нас новый плейлист а песня была на паузе. И в то же время не нужно autoplay сразу при запуске программы. Поставим флажок
     fun notJustLaunchedEnableAutoplay() {
         _isNotJustLaunchedLiveData.postValue(true)
     }
@@ -591,7 +591,7 @@ class MainViewModel @Inject constructor(
                         )
                     }
 
-                    // TODO Нам нужно вернуться в onPrepareFromMediaId, если мы выбрали песню из другого плейлиста и включить её. НО! Нам не нужно включать станцию сразу при включении программы
+                    /** Нам нужно вернуться в onPrepareFromMediaId, если мы выбрали песню из другого плейлиста и включить её. НО! Нам не нужно включать станцию сразу при включении программы **/
                     val isNotJustLaunched = _isNotJustLaunchedLiveData.value
                     isNotJustLaunched?.let {
                         if (it) {

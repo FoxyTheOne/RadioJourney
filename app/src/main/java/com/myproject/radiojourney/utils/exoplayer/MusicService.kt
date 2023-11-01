@@ -101,8 +101,7 @@ class MusicService : MediaBrowserServiceCompat() {
 
         serviceScope.launch {
             try {
-                // TODO узнать, какой country code был у последней радиостанции при последней запуске, если это не первый запуск
-                // если первый запуск - запустить по умолчанию
+                // Узнать, какой country code был у последней радиостанции при последней запуске, если это не первый запуск. Если первый запуск - запустить по умолчанию
                 val lastPlayedCountryCode = preference.getLastUsedRadioStationCountryCode()
                 Log.d(TAG, "Узнаём последний используемый код страны - $lastPlayedCountryCode")
 
@@ -258,7 +257,7 @@ class MusicService : MediaBrowserServiceCompat() {
 //        val testRadioStations = radioStations
 
         // Если мы только что запустили программу, то песня ещё не будет выбрана. Стоит отобразить в плейере ту, что была выбрана последней в предыдущем запуске
-        // TODO Если будет глючить, возможно стоит попробовать ориентироваться на isPlayerInitialized, а не curPlayingSong
+        // Если будет глючить, возможно стоит попробовать ориентироваться на isPlayerInitialized, а не curPlayingSong (Проверила, у меня работало нормально)
         if (curPlayingSong == null) {
             // Находим её mediaId (after updating database, we're looking for url, not mediaId)
             val lastUsedRadioStationUrl = preference.getLastUsedRadioStationUrl()
