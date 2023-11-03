@@ -308,7 +308,7 @@ class MusicService : MediaBrowserServiceCompat() {
                 }
                 Log.d(
                     TAG,
-                    "PLAYLIST_UPDATE: 5.$TAG, preparePlayer(). Вызываем метод мз firebaseMusicSource, чтобы сформировать данные для плейлист"
+                    "PLAYLIST_UPDATE: 5.$TAG, preparePlayer(). Проверяем, заканчивается ли ссылка на .m3u8. Вызываем метод мз firebaseMusicSource, чтобы сформировать данные для плейлист"
                 )
             }
 

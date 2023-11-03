@@ -8,7 +8,6 @@ import android.util.Log
 import androidx.core.content.ContextCompat
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import com.myproject.radiojourney.other.Constants.NOTIFICATION_ID
-import com.myproject.radiojourney.presentation.MainViewModel
 import com.myproject.radiojourney.utils.exoplayer.MusicService
 
 class MusicPlayerNotificationListener(
