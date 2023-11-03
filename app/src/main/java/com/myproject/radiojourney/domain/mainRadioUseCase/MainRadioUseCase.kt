@@ -1,7 +1,6 @@
 package com.myproject.radiojourney.domain.mainRadioUseCase
 
 import android.support.v4.media.MediaBrowserCompat
-import android.util.Log
 import com.myproject.radiojourney.domain.iRepository.IMainRadioStationRepository
 import com.myproject.radiojourney.entities.local.RadioStationLocal
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation

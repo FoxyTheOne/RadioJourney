@@ -2,7 +2,6 @@ package com.myproject.radiojourney.presentation.firstScreen
 
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.myproject.radiojourney.R

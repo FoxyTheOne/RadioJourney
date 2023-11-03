@@ -6,7 +6,6 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.location.Geocoder
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
@@ -52,7 +51,7 @@ class ProgressForegroundService @Inject constructor() : Service() {
     private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
 
     // https://developers.google.com/public-data/docs/canonical/countries_csv
-    val countyCodeAndLatLng: HashMap<String, LatLng> = hashMapOf(
+    private val countyCodeAndLatLng: HashMap<String, LatLng> = hashMapOf(
         "AD" to LatLng(42.546245, 1.601554),
         "AE" to LatLng(23.424076, 53.847818),
         "AF" to LatLng(33.93911, 67.709953),
@@ -333,7 +332,7 @@ class ProgressForegroundService @Inject constructor() : Service() {
         startForeground(5, notificationBuilder?.build())
 
         // 4.3. И далее вызываем метод, который будет обновлять наш notification
-        updateProgress(this)
+        updateProgress()
 
         // Настройки диалогового окна
         dialogInternetTrouble = Dialog(this)
@@ -373,7 +372,7 @@ class ProgressForegroundService @Inject constructor() : Service() {
     }
 
     // FOREGROUND_SERVICE -> 5. Обновляем наш notification
-    private fun updateProgress(context: Context) {
+    private fun updateProgress() {
         // 5.1. Находим NotificationManager
         val notificationManager =
             this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -575,27 +574,27 @@ class ProgressForegroundService @Inject constructor() : Service() {
         }
     }
 
-    // Lambda for getting address from countryName
-    @Suppress("DEPRECATION")
-    private fun Geocoder.getAddress(
-        countryName: String,
-        address: (android.location.Address?) -> Unit
-    ) {
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            getFromLocationName(countryName, 1) { address(it.firstOrNull()) }
-            return
-        }
-
-        // Для старых версий Android:
-        try {
-            address(getFromLocationName(countryName, 1)?.firstOrNull())
-        } catch (e: Exception) {
-            //will catch if there is an internet problem
-            address(null)
-        }
-
-    }
+//    // Lambda for getting address from countryName
+//    @Suppress("DEPRECATION")
+//    private fun Geocoder.getAddress(
+//        countryName: String,
+//        address: (android.location.Address?) -> Unit
+//    ) {
+//
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+//            getFromLocationName(countryName, 1) { address(it.firstOrNull()) }
+//            return
+//        }
+//
+//        // Для старых версий Android:
+//        try {
+//            address(getFromLocationName(countryName, 1)?.firstOrNull())
+//        } catch (e: Exception) {
+//            //will catch if there is an internet problem
+//            address(null)
+//        }
+//
+//    }
 
     // FOREGROUND_SERVICE -> 6. Запустим наш Foreground Service из NotificationFragment
 

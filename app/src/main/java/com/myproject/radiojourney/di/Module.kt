@@ -24,10 +24,10 @@ import com.myproject.radiojourney.data.sharedPreference.AppSharedPreference
 import com.myproject.radiojourney.data.sharedPreference.IAppSharedPreference
 import com.myproject.radiojourney.domain.favouriteListUseCase.FavouriteListUseCase
 import com.myproject.radiojourney.domain.favouriteListUseCase.IFavouriteListUseCase
+import com.myproject.radiojourney.domain.firstScreenLoadingUseCase.ILoginScreenUseCase
+import com.myproject.radiojourney.domain.firstScreenLoadingUseCase.LoginScreenUseCase
 import com.myproject.radiojourney.domain.homeRadioUseCase.HomeRadioUseCase
 import com.myproject.radiojourney.domain.homeRadioUseCase.IHomeRadioUseCase
-import com.myproject.radiojourney.domain.firstScreenLoadingUseCase.LoginScreenUseCase
-import com.myproject.radiojourney.domain.firstScreenLoadingUseCase.ILoginScreenUseCase
 import com.myproject.radiojourney.domain.iRepository.IAuthRepository
 import com.myproject.radiojourney.domain.iRepository.IFavoriteStationRepository
 import com.myproject.radiojourney.domain.iRepository.IMainRadioStationRepository
@@ -48,7 +48,6 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ViewModelComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import okhttp3.Interceptor
 import javax.inject.Singleton
 
 @Module

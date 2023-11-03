@@ -3,7 +3,6 @@ package com.myproject.radiojourney.entities.local
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.google.gson.annotations.SerializedName
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 import com.myproject.radiojourney.entities.remote.RadioStationRemote
 

@@ -7,10 +7,11 @@ import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
-import com.myproject.radiojourney.data.dataSource.network.NetworkRadioDataSource
-import com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioFragment
 import com.myproject.radiojourney.utils.exoplayer.FirebaseMusicSource
-import com.myproject.radiojourney.utils.exoplayer.callback.State.*
+import com.myproject.radiojourney.utils.exoplayer.callback.State.STATE_CREATED
+import com.myproject.radiojourney.utils.exoplayer.callback.State.STATE_ERROR
+import com.myproject.radiojourney.utils.exoplayer.callback.State.STATE_INITIALIZED
+import com.myproject.radiojourney.utils.exoplayer.callback.State.STATE_INITIALIZING
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.io.IOException

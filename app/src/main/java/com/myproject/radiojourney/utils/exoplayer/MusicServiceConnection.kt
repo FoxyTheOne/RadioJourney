@@ -2,33 +2,27 @@ package com.myproject.radiojourney.utils.exoplayer
 
 import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
-import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.Handler
-import android.os.IBinder
 import android.os.Looper
 import android.os.ResultReceiver
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.myproject.radiojourney.other.Constants.NETWORK_ERROR
 import com.myproject.radiojourney.other.Event
 import com.myproject.radiojourney.other.Resource
-import com.myproject.radiojourney.presentation.MainViewModel
-import com.myproject.radiojourney.utils.service.ProgressForegroundService
 
 /**
  * A class for connection between activity or fragment with MusicService
  */
 class MusicServiceConnection(context: Context) {
-    companion object {
-        private const val TAG = "MusicServiceConnection"
-    }
+//    companion object {
+//        private const val TAG = "MusicServiceConnection"
+//    }
 
     // LiveData for our Service, where we will keep data (data for our fragments to update if server changes)
     private val _isConnectedLiveData =

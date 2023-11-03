@@ -4,11 +4,9 @@ import android.content.Context
 import android.os.Build
 import android.text.TextUtils
 import com.myproject.radiojourney.BuildConfig
-import dagger.hilt.android.qualifiers.ActivityContext
 import okhttp3.Interceptor
 import okhttp3.Response
 import java.io.IOException
-import javax.inject.Inject
 
 
 class UserAgentInterceptor (context: Context) : Interceptor {
