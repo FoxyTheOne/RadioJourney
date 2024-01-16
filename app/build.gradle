@@ -98,7 +98,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 
     // Material design
-    implementation 'com.google.android.material:material:1.10.0'
+    implementation 'com.google.android.material:material:1.11.0'
 
     // Architectural components (ViewModel)
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2"
@@ -120,9 +120,9 @@ dependencies {
     kapt "com.google.dagger:hilt-android-compiler:2.45"
 
     // Room
-    implementation "androidx.room:room-runtime:2.6.0"
-    kapt "androidx.room:room-compiler:2.6.0"
-    implementation "androidx.room:room-ktx:2.6.0"
+    implementation "androidx.room:room-runtime:2.6.1"
+    kapt "androidx.room:room-compiler:2.6.1"
+    implementation "androidx.room:room-ktx:2.6.1"
 
     // Retrofit & OkHttp
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
@@ -141,23 +141,24 @@ dependencies {
     annotationProcessor 'com.github.bumptech.glide:compiler:4.12.0'
 
     // Navigation
-    implementation 'androidx.navigation:navigation-fragment-ktx:2.7.5'
-    implementation 'androidx.navigation:navigation-ui-ktx:2.7.5'
+    implementation 'androidx.navigation:navigation-fragment-ktx:2.7.6'
+    implementation 'androidx.navigation:navigation-ui-ktx:2.7.6'
 
     // Location
-    implementation 'com.google.android.gms:play-services-location:19.0.1'
+    implementation 'com.google.android.gms:play-services-location:21.0.1'
     // Google maps
-    implementation 'com.google.android.gms:play-services-maps:18.0.0'
-
-    // Music Player on Notification
-    implementation 'androidx.media:media:1.6.0'
+    implementation 'com.google.android.gms:play-services-maps:18.2.0'
 
     // ExoPlayer
     implementation 'com.google.android.exoplayer:exoplayer-core:2.19.1'
     implementation 'com.google.android.exoplayer:exoplayer-ui:2.19.1'
     implementation 'com.google.android.exoplayer:extension-mediasession:2.19.1'
+
     // HlsMediaSource for playing .m3u8
     implementation 'com.google.android.exoplayer:exoplayer-hls:2.19.1'
+
+    // Music Player on Notification
+    implementation 'androidx.media:media:1.7.0'
 
     // com.google.android.exoplayer2 is deprecated. Please migrate to androidx.media3 (which contains the same ExoPlayer code)
 
