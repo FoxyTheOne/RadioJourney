@@ -274,27 +274,58 @@ class FirebaseMusicSource @Inject constructor(
 //        return concatenatingMediaSource
 //    }
 
-    // Для формирования плейлиста из нескольких песен/радиостанций. Info for exoplayer to stream songs
-    fun asMediaSource(dataSourceFactory: DefaultDataSource.Factory): ConcatenatingMediaSource {
-        val concatenatingMediaSource = ConcatenatingMediaSource() // empty by default
-        radioStations.forEach { radioStation ->
-            val mediaItem =
-                MediaItem.fromUri(radioStation.getString(METADATA_KEY_MEDIA_URI).toUri())
-            val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
-                .createMediaSource(mediaItem)
-            concatenatingMediaSource.addMediaSource(mediaSource) // Add one by one to our concatenatingMediaSource
-        }
-        return concatenatingMediaSource
-    }
+//    fun asMediaSource(dataSourceFactory: DefaultDataSource.Factory): ConcatenatingMediaSource {
+//        val concatenatingMediaSource = ConcatenatingMediaSource() // empty by default
+//        radioStations.forEach { radioStation ->
+//            val mediaItem =
+//                MediaItem.fromUri(radioStation.getString(METADATA_KEY_MEDIA_URI).toUri())
+//            val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
+//                .createMediaSource(mediaItem)
+//            concatenatingMediaSource.addMediaSource(mediaSource) // Add one by one to our concatenatingMediaSource
+//        }
+//        return concatenatingMediaSource
+//    }
+//
+//    fun asHlsMediaSource(httpDataSourceFactory: DefaultHttpDataSource.Factory): ConcatenatingMediaSource {
+//        val concatenatingMediaSource = ConcatenatingMediaSource() // empty by default
+//        radioStations.forEach { radioStation ->
+//            val mediaItem =
+//                MediaItem.fromUri(radioStation.getString(METADATA_KEY_MEDIA_URI).toUri())
+//            val mediaSource = HlsMediaSource.Factory(httpDataSourceFactory)
+//                .createMediaSource(mediaItem)
+//            concatenatingMediaSource.addMediaSource(mediaSource) // Add one by one to our concatenatingMediaSource
+//        }
+//        return concatenatingMediaSource
+//    }
 
-    fun asHlsMediaSource(httpDataSourceFactory: DefaultHttpDataSource.Factory): ConcatenatingMediaSource {
+    // Для формирования плейлиста из нескольких песен/радиостанций. Info for exoplayer to stream songs
+    fun asMediaSourcePlaylist(httpDataSourceFactory: DefaultHttpDataSource.Factory, dataSourceFactory: DefaultDataSource.Factory): ConcatenatingMediaSource {
         val concatenatingMediaSource = ConcatenatingMediaSource() // empty by default
         radioStations.forEach { radioStation ->
-            val mediaItem =
-                MediaItem.fromUri(radioStation.getString(METADATA_KEY_MEDIA_URI).toUri())
-            val mediaSource = HlsMediaSource.Factory(httpDataSourceFactory)
-                .createMediaSource(mediaItem)
-            concatenatingMediaSource.addMediaSource(mediaSource) // Add one by one to our concatenatingMediaSource
+
+            val mediaUri = radioStation.description.mediaUri.toString()
+
+            if (mediaUri.endsWith(".m3u8")
+            ) {
+                // .m3u8 -> .asHlsMediaSource(httpDataSourceFactory)
+                val mediaItem =
+                    MediaItem.fromUri(radioStation.getString(METADATA_KEY_MEDIA_URI).toUri())
+                val mediaSource = HlsMediaSource.Factory(httpDataSourceFactory)
+                    .createMediaSource(mediaItem)
+                concatenatingMediaSource.addMediaSource(mediaSource) // Add one by one to our concatenatingMediaSource
+            } else {
+                // else -> .asMediaSource(dataSourceFactory)
+                val mediaItem =
+                    MediaItem.fromUri(radioStation.getString(METADATA_KEY_MEDIA_URI).toUri())
+                val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
+                    .createMediaSource(mediaItem)
+                concatenatingMediaSource.addMediaSource(mediaSource) // Add one by one to our concatenatingMediaSource
+            }
+            Log.d(
+                TAG,
+                "PLAYLIST_UPDATE: 5.$TAG, asMediaSourceTest(). Проверяем, заканчивается ли ссылка на .m3u8. Формируем данные для плейлиста"
+            )
+
         }
         return concatenatingMediaSource
     }
