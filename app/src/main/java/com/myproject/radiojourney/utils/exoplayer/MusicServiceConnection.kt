@@ -10,6 +10,7 @@ import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.myproject.radiojourney.other.Constants.NETWORK_ERROR
@@ -20,9 +21,9 @@ import com.myproject.radiojourney.other.Resource
  * A class for connection between activity or fragment with MusicService
  */
 class MusicServiceConnection(context: Context) {
-//    companion object {
-//        private const val TAG = "MusicServiceConnection"
-//    }
+    companion object {
+        private const val TAG = "MusicServiceConnection"
+    }
 
     // LiveData for our Service, where we will keep data (data for our fragments to update if server changes)
     private val _isConnectedLiveData =
@@ -169,7 +170,13 @@ class MusicServiceConnection(context: Context) {
         }
 
         override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
-            _curPlayingSongLiveData.postValue(metadata) // Getting new meta data (put it into LiveData)
+//            _curPlayingSongLiveData.postValue(metadata) // Getting new meta data (put it into LiveData)
+            val oldMetadata = _curPlayingSongLiveData.value
+            Log.d(TAG, "oldMetadata = ${oldMetadata?.description?.title}, ${oldMetadata?.description?.subtitle}, ${oldMetadata?.description?.mediaId} newMetadata = ${metadata?.description?.title},${metadata?.description?.subtitle}, ${metadata?.description?.mediaId}")
+            if (metadata != oldMetadata) {
+                Log.d(TAG, "metadata != oldMetadata")
+                _curPlayingSongLiveData.postValue(metadata)
+            }
         }
 
         // Send custom events from our service to this connection callback. We will use it to notify when there is a network error

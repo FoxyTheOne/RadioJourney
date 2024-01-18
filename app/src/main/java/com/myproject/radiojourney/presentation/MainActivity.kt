@@ -337,6 +337,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         binding?.ivPlayPause?.setOnClickListener {
             curPlayingRadioStation?.let {
                 mainViewModel.playOrToggleSong(it, true) // true, because now we want to autoplay
+                mainViewModel.notJustLaunchedEnableAutoplay()
             }
         }
 
