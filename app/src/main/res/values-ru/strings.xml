@@ -61,7 +61,7 @@
     <string name="settings_text1">Данное приложение создано для прослушивания интернет радиостанций.</string>
     <string name="settings_text2">Для этого используется база данных https://www.radio-browser.info/, содержащая информацию об интернет-радиостанциях со всего мира.</string>
     <string name="settings_text3">Просто нажмите на интересующее место на карте, выберите радиостанцию из появившегося списка и наслаждайтесь!</string>
-    <string name="settings_text4">В приложении также используются изображения с сайта pixabay.com и координаты стран с сайта https://developers.google.com/public-data/ (сент. 2023)</string>
+    <string name="settings_text4">В приложении также используются изображения с сайта pixabay.com и координаты стран с сайта https://developers.google.com/public-data/ (сент. 2023). Названия стран взяты из внешних источников и могут не соответствовать современным реалиям.</string>
     <string name="settings_saveToGoogle">Сохранить на Google Drive</string>
     <string name="settings_restoreFromGoogle">Восстановить из Google Drive</string>
     <string name="settings_saveToLocalStorage">Сохранить в локальное хранилище</string>

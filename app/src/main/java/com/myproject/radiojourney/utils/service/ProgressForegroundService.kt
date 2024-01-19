@@ -67,6 +67,10 @@ class ProgressForegroundService @Inject constructor() : Service() {
         "AT" to LatLng(47.516231, 14.550072),
         "AU" to LatLng(-25.274398, 133.775136),
         "AW" to LatLng(12.52111, -69.968338),
+        "AX" to LatLng(
+            60.187691,
+            380.321455
+        ), // wikipedia.org, .latlong.net - Åland, автономия в составе Финляндии
         "AZ" to LatLng(40.143105, 47.576927),
         "BA" to LatLng(43.915886, 17.679076),
         "BB" to LatLng(13.193887, -59.543198),
@@ -261,6 +265,7 @@ class ProgressForegroundService @Inject constructor() : Service() {
         "SN" to LatLng(14.497401, -14.452362),
         "SO" to LatLng(5.152149, 46.199616),
         "SR" to LatLng(3.919305, -56.027783),
+        "SS" to LatLng(6.876992, 31.306978), // countryName: South Sudan, https://www.latlong.net/
         "ST" to LatLng(0.18636, 6.613081),
         "SV" to LatLng(13.794185, -88.89653),
         "SY" to LatLng(34.802075, 38.996815),
