@@ -1,10 +1,20 @@
 package com.myproject.radiojourney.presentation.content.settingsFragment
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import android.view.*
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
 import com.myproject.radiojourney.IAppSettings
 import com.myproject.radiojourney.R
@@ -12,11 +22,6 @@ import com.myproject.radiojourney.databinding.LayoutSettingsBinding
 import com.myproject.radiojourney.presentation.content.base.BaseContentFragmentAbstract
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
-import android.content.Intent
-import android.net.Uri
-import androidx.core.view.MenuHost
-import androidx.core.view.MenuProvider
-import androidx.lifecycle.Lifecycle
 
 /**
  * Страница настроек.
@@ -97,6 +102,10 @@ class SettingsFragment : BaseContentFragmentAbstract() {
                     .navigate(R.id.action_settingsFragment_to_homeRadioFragment)
             }
         }
+        binding?.linearForCoffee?.setOnClickListener {
+            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://boosty.to/foxynest/donate"))
+            startActivity(browserIntent)
+        }
         binding?.mail?.setOnClickListener {
             val subject = "RadioJourney app"
             val message = "Input your message"
@@ -118,8 +127,6 @@ class SettingsFragment : BaseContentFragmentAbstract() {
                 )
             )
         }
-
-        // TODO click on coffee
     }
 
     private fun subscribeOnLiveData() {

@@ -110,7 +110,16 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
+                android:paddingBottom="@dimen/space_beforeOrAfterElement"
                 android:text="@string/settings_text4" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/text_about5"
+                style="@style/login_bottom"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="@string/settings_text5" />
         </LinearLayout>
 
         <LinearLayout
