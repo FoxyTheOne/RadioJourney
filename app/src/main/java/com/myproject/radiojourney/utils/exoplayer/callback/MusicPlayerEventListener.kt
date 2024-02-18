@@ -7,6 +7,8 @@ import android.widget.Toast
 import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.source.UnrecognizedInputFormatException
+import com.google.android.exoplayer2.upstream.HttpDataSource
+import com.google.android.exoplayer2.upstream.HttpDataSource.HttpDataSourceException
 import com.myproject.radiojourney.utils.exoplayer.MusicService
 
 class MusicPlayerEventListener(
@@ -64,20 +66,34 @@ class MusicPlayerEventListener(
 
     // TODO onPlayerError - обработать
     override fun onPlayerError(error: PlaybackException) {
-        if (error.cause is UnrecognizedInputFormatException) {
-            Log.d(
-                TAG,
-                "UnrecognizedInputFormatException is caught. PrintStackTrace:"
-            )
-            Toast.makeText(musicService, "Exoplayer can't read the stream", Toast.LENGTH_LONG)
-                .show()
-            musicService.testMethodForError()
-        } else {
-            Log.d(
-                TAG,
-                "Not UnrecognizedInputFormatException is caught. PrintStackTrace:"
-            )
-            Toast.makeText(musicService, "An unknown error occurred", Toast.LENGTH_LONG).show()
+        when (error.cause) {
+            is UnrecognizedInputFormatException -> {
+                Log.d(
+                    TAG,
+                    "An error occurred in onPlayerError. UnrecognizedInputFormatException is caught. PrintStackTrace:"
+                )
+                Toast.makeText(musicService, "Exoplayer can't read the stream", Toast.LENGTH_LONG)
+                    .show()
+                musicService.testMethodForError() // Пустой, написать, если нужно
+            }
+
+            is HttpDataSourceException -> {
+                Log.d(
+                    TAG,
+                    "An error occurred in onPlayerError. HttpDataSourceException is caught. PrintStackTrace:"
+                )
+                Toast.makeText(musicService, "Exoplayer can't read this url", Toast.LENGTH_LONG)
+                    .show()
+                musicService.testMethodForError() // Пустой, написать, если нужно
+            }
+
+            else -> {
+                Log.d(
+                    TAG,
+                    "An unknown error occurred in onPlayerError. Not UnrecognizedInputFormatException is caught. PrintStackTrace:"
+                )
+                Toast.makeText(musicService, "An unknown error occurred", Toast.LENGTH_LONG).show()
+            }
         }
         error.printStackTrace()
 //        when (error.type) {

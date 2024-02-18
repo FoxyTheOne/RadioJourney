@@ -94,6 +94,8 @@ class NetworkRadioDataSource @Inject constructor(
 //            }
             // Обратить внимание, что могут прилететь коды стран, написанные маленькими буквами. При получении результата и переводе в локальные данные, объединить
 
+//            countryCodeRemoteList =
+//                listOf<CountryCodeRemote>()
             return countryCodeRemoteList
 
         } catch (e: HttpException) {

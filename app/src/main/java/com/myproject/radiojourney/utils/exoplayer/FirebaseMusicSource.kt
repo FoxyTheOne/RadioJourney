@@ -92,7 +92,7 @@ class FirebaseMusicSource @Inject constructor(
         var radioStationsCount = 0
         var percentCount = 10
 
-        Log.d(TAG, "Загружаем метаданные fetchMediaData - $countryCode")
+        Log.d(TAG, "Загружаем метаданные fetchMediaData - $countryCode, listSize = $listSize")
         radioStations = countryCodeRadioStations.map { radioStationRemote ->
 
             // Подсчёт для Broadcast
@@ -150,7 +150,7 @@ class FirebaseMusicSource @Inject constructor(
         var radioStationsCount = 0
         var percentCount = 10
 
-        Log.d(TAG, "Загружаем метаданные fetchMediaData - FAV")
+        Log.d(TAG, "Загружаем метаданные fetchMediaData - FAV, listSize = $listSize")
         if (favouriteRadioStations.isNotEmpty()) {
             isFavoriteEmpty = false
 

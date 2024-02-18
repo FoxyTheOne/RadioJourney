@@ -113,10 +113,16 @@ class MusicService : MediaBrowserServiceCompat() {
                     Log.d(TAG, "Загружаем метаданные fetchMediaData - FAV")
                 } else {
                     firebaseMusicSource.fetchMediaData(
-                        if (lastPlayedCountryCode != "null" && lastPlayedCountryCode.isNotBlank()) lastPlayedCountryCode
-                        else "AD"
+                        if (lastPlayedCountryCode.isNotBlank() && lastPlayedCountryCode != "null") {
+                            lastPlayedCountryCode
+                        } else {
+                            "AQ" // Antarctica
+                        }
                     )
-                    Log.d(TAG, "Загружаем метаданные fetchMediaData - $lastPlayedCountryCode")
+                    Log.d(
+                        TAG,
+                        "Загружаем метаданные, fetchMediaData - $lastPlayedCountryCode. Если lastPlayedCountryCode пуст, то загружается AQ"
+                    )
                 }
 
             } catch (e: SocketTimeoutException) {
@@ -313,7 +319,14 @@ class MusicService : MediaBrowserServiceCompat() {
 //                    "PLAYLIST_UPDATE: 5.$TAG, preparePlayer(). Проверяем, заканчивается ли ссылка на .m3u8. Вызываем метод мз firebaseMusicSource, чтобы сформировать данные для плейлист"
 //                )
 
-                exoPlayer.setMediaSource(firebaseMusicSource.asMediaSourcePlaylist(httpDataSourceFactory, dataSourceFactory))
+                httpDataSourceFactory.setAllowCrossProtocolRedirects(true)
+
+                exoPlayer.setMediaSource(
+                    firebaseMusicSource.asMediaSourcePlaylist(
+                        httpDataSourceFactory,
+                        dataSourceFactory
+                    )
+                )
             }
 
             exoPlayer.seekTo(

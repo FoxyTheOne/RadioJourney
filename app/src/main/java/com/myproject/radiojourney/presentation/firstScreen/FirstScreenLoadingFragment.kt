@@ -21,18 +21,22 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.IntentFilter
 import android.os.Build
+import android.os.Looper
+import android.util.Log
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.entities.presentation.CountryPresentation
+import com.myproject.radiojourney.other.Constants
 import com.myproject.radiojourney.other.Constants.FILTER_FOR_BROADCAST
 import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_COUNT
 import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_END
 import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_LIST_SIZE
 import com.myproject.radiojourney.other.Status
 import kotlinx.coroutines.launch
+import okhttp3.internal.wait
 
 /**
  * Фрагмент для загрузки и входа в приложение.
@@ -40,6 +44,12 @@ import kotlinx.coroutines.launch
  */
 @AndroidEntryPoint
 class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
+    companion object {
+        private const val TAG = "FirstScreenLoading"
+    }
+
+    private var countryList = emptyList<CountryPresentation>()
+    private var countryListIsNotEmpty = false
 
     // VIEW BINDING -> 1. Объявляем переменную. This property is only valid between onCreateView and onDestroyView
     private var binding: LayoutFirstScreenLoadingBinding? = null
@@ -123,8 +133,12 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
                     }
 
                     // Если дано одно из разрешений, открываем следующий фрагмент
-                    this.findNavController()
-                        .navigate(R.id.action_firstScreenLoadingFragment_to_homeRadioFragment)
+//                    this.findNavController()
+//                        .navigate(R.id.action_firstScreenLoadingFragment_to_homeRadioFragment)
+                    if (this.findNavController().currentDestination?.id == R.id.firstScreenLoadingFragment) {
+                        this.findNavController()
+                            .navigate(R.id.action_firstScreenLoadingFragment_to_homeRadioFragment)
+                    }
 
                 } else {
                     Toast.makeText(
@@ -171,8 +185,12 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
                     }
                 }
 
-                this.findNavController()
-                    .navigate(R.id.action_firstScreenLoadingFragment_to_homeRadioFragment)
+//                this.findNavController()
+//                    .navigate(R.id.action_firstScreenLoadingFragment_to_homeRadioFragment)
+                if (this.findNavController().currentDestination?.id == R.id.firstScreenLoadingFragment) {
+                    this.findNavController()
+                        .navigate(R.id.action_firstScreenLoadingFragment_to_homeRadioFragment)
+                }
 
             } else {
                 // Если нет - вызываем requestPermissionLauncher
@@ -191,29 +209,50 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
         dialogInternetTrouble.setContentView(R.layout.layout_internet_trouble_dialog)
 
         binding?.buttonLogIn?.setOnClickListener {
-            viewModel.onLoginClicked()
 
-            if (ContextCompat.checkSelfPermission(
-                    requireContext(),
-                    Manifest.permission.FOREGROUND_SERVICE
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                // Если нет разрешения - вызываем requestPermissionLauncher
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    requestPermissionLauncherForeground.launch(Manifest.permission.FOREGROUND_SERVICE)
+            if (countryList.isEmpty()) {
+                Log.d(TAG, "При нажатии на кнопку обнаружилось, что список кодов стран пустой")
+                // Показываем диалоговое окно о проблеме с сервером
+                // Меняем текст диалогового окна
+                val dialogSmthWentWrongTitle = getString(R.string.dialogPleaseWait_title2)
+                val dialogSmthWentWrongText = getString(R.string.dialogPleaseWait_text2)
+                val dialogSmthWentWrongTitleView =
+                    dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.title_internetTrouble)
+                val dialogSmthWentWrongTextView =
+                    dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.text_internetTrouble)
+                dialogSmthWentWrongTitleView.text = dialogSmthWentWrongTitle
+                dialogSmthWentWrongTextView.text = dialogSmthWentWrongText
+
+                dialogInternetTrouble.show()
+
+            } else {
+
+                viewModel.onLoginClicked()
+
+                if (ContextCompat.checkSelfPermission(
+                        requireContext(),
+                        Manifest.permission.FOREGROUND_SERVICE
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    // Если нет разрешения - вызываем requestPermissionLauncher
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        requestPermissionLauncherForeground.launch(Manifest.permission.FOREGROUND_SERVICE)
+                    }
                 }
+
+                if (ContextCompat.checkSelfPermission(
+                        requireContext(),
+                        Manifest.permission.POST_NOTIFICATIONS
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    // Если нет разрешения - вызываем requestPermissionLauncher
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        requestPermissionLauncherNotification.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                }
+
             }
 
-            if (ContextCompat.checkSelfPermission(
-                    requireContext(),
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                // Если нет разрешения - вызываем requestPermissionLauncher
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    requestPermissionLauncherNotification.launch(Manifest.permission.POST_NOTIFICATIONS)
-                }
-            }
         }
 
 //        initListeners()
@@ -227,7 +266,15 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
     // 3.Broadcast для горизонтальной полосы прогресса в фрагменте (1 - в сервисе)
     override fun onResume() {
         super.onResume()
-        activity?.registerReceiver(receiver, IntentFilter(FILTER_FOR_BROADCAST))
+        activity?.let {
+            ContextCompat.registerReceiver(
+                it,
+                receiver,
+                IntentFilter(FILTER_FOR_BROADCAST),
+                ContextCompat.RECEIVER_NOT_EXPORTED
+            )
+        }
+//        activity?.registerReceiver(receiver, IntentFilter(FILTER_FOR_BROADCAST))
     }
 
     // 3.Broadcast - регистрируем в onResume и отписываемся в onPause
@@ -301,23 +348,56 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
 
                 viewModel.countryListFlow.collect {
 //                    if (it != listOf<CountryPresentation>()) {
-                    if (it != emptyList<CountryPresentation>()) {
+//                    if (it != emptyList<CountryPresentation>()) {
+                    if (it.isNotEmpty()) {
+                        dialogInternetTrouble.hide()
+                        Log.d(
+                            TAG,
+                            "При сборе данных в viewModel.countryListFlow.collect список кодов стран НЕ пустой"
+                        )
+
+                        countryList = it
+                        countryListIsNotEmpty = true
+
                         binding?.buttonLogIn?.isVisible = true
                         binding?.progressBarHorizontal?.isVisible = false
                     } else {
-                        // Показываем диалоговое окно о проблеме с сервером
-                        // Меняем текст диалогового окна
-                        val dialogSmthWentWrongTitle = getString(R.string.dialogPleaseWait_title2)
-                        val dialogSmthWentWrongText = getString(R.string.dialogPleaseWait_text2)
-                        val dialogSmthWentWrongTitleView =
-                            dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.title_internetTrouble)
-                        val dialogSmthWentWrongTextView =
-                            dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.text_internetTrouble)
-                        dialogSmthWentWrongTitleView.text = dialogSmthWentWrongTitle
-                        dialogSmthWentWrongTextView.text = dialogSmthWentWrongText
+                        android.os.Handler(Looper.getMainLooper()).postDelayed({
 
-                        dialogInternetTrouble.show()
+                            Log.d(
+                                TAG,
+                                "При сборе данных в viewModel.countryListFlow.collect обнаружилось, что список кодов стран пустой"
+                            )
+                            // После задержки проверяем, может что-то поменялось
+                            if (countryListIsNotEmpty) {
+                                Log.d(
+                                    TAG,
+                                    "При сборе данных в viewModel.countryListFlow.collect в следующий раз список кодов стран заполнился, диалоговое окно не вызываем"
+                                )
+                            } else {
+                                Log.d(
+                                    TAG,
+                                    "При сборе данных в viewModel.countryListFlow.collect список кодов стран всё ещё пустой, вызываем диалоговое окно"
+                                )
+                                // Показываем диалоговое окно о проблеме с сервером
+                                // Меняем текст диалогового окна
+                                val dialogSmthWentWrongTitle =
+                                    getString(R.string.dialogPleaseWait_title2)
+                                val dialogSmthWentWrongText =
+                                    getString(R.string.dialogPleaseWait_text2)
+                                val dialogSmthWentWrongTitleView =
+                                    dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.title_internetTrouble)
+                                val dialogSmthWentWrongTextView =
+                                    dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.text_internetTrouble)
+                                dialogSmthWentWrongTitleView.text = dialogSmthWentWrongTitle
+                                dialogSmthWentWrongTextView.text = dialogSmthWentWrongText
+
+                                dialogInternetTrouble.show()
+                            }
+
+                        }, 10000)
                     }
+
                 }
 
             }

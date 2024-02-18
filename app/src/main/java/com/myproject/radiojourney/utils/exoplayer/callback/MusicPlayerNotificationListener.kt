@@ -3,6 +3,7 @@ package com.myproject.radiojourney.utils.exoplayer.callback
 import android.app.Notification
 import android.app.Service
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.os.Build
 import android.util.Log
 import androidx.core.content.ContextCompat
@@ -71,10 +72,25 @@ class MusicPlayerNotificationListener(
                         this,
                         Intent(applicationContext, this::class.java)
                     )
-                    startForeground(NOTIFICATION_ID, notification)
+
+                    // Начиная с Android14 нужно указывать тип ForegroundService
+//                    startForeground(NOTIFICATION_ID, notification)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
+                    } else {
+                        startForeground(NOTIFICATION_ID, notification)
+                    }
+
                     isForegroundService = true
                 } else {
-                    startForeground(NOTIFICATION_ID, notification)
+                    // Начиная с Android14 нужно указывать тип ForegroundService
+//                    startForeground(NOTIFICATION_ID, notification)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
+                    } else {
+                        startForeground(NOTIFICATION_ID, notification)
+                    }
+
                 }
 
             } else {

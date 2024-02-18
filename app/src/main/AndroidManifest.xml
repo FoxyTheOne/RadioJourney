@@ -17,6 +17,12 @@
     Разрешение для Foreground Service:
      -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"
+        android:minSdkVersion="34" />
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+        android:minSdkVersion="34" />
     <!--
         Разрешение для Alert Window:
     -->
@@ -38,7 +44,8 @@
         tools:targetApi="m"> <!-- Added android:usesCleartextTraffic="true" because of HttpDataSource$HttpDataSourceException: Unable to connect -->
         <service
             android:name=".utils.exoplayer.MusicService"
-            android:exported="false">
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback">
             <intent-filter>
                 <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>
@@ -47,7 +54,7 @@
             android:name=".presentation.MainActivity"
             android:configChanges="orientation"
             android:exported="true"
-            android:screenOrientation="portrait">
+            android:screenOrientation="portrait"><!-- Здесь android:exported="true" позволяет запускать Activity из лаунчера -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -58,14 +65,22 @@
         <!--
          2. Декларируем Foreground Service:
           -->
-        <service android:name=".utils.service.ProgressForegroundService" />
+        <service
+            android:name=".utils.service.ProgressForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
         <!--
          И другие компоненты
           -->
-        <receiver android:name=".utils.oldMusicPlayer.NotificationActionBroadcast" />
-
-        <service android:name=".utils.oldMusicPlayer.MusicPlayerBoundService" />
-        <service android:name=".utils.oldMusicPlayer.ForegroundNotificationService" />
+        <receiver
+            android:name=".utils.oldMusicPlayer.NotificationActionBroadcast"
+            android:exported="false" />
+        <service
+            android:name=".utils.oldMusicPlayer.MusicPlayerBoundService"
+            android:exported="false" />
+        <service
+            android:name=".utils.oldMusicPlayer.ForegroundNotificationService"
+            android:exported="false" />
         <!--
         Google maps:
          -->

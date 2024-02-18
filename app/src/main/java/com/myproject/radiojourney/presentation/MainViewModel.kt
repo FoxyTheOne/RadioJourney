@@ -223,7 +223,7 @@ class MainViewModel @Inject constructor(
                     ) {
                         Log.d(
                             TAG,
-                            "Включаем/выключаем ту же самую песню ${mediaItem.stationName}"
+                            "Включаем/выключаем ту же самую песню ${mediaItem.stationName}, url = ${mediaItem.urlResolved}"
                         )
 
                         playbackStateLiveData.value?.let { playbackState ->
@@ -288,7 +288,7 @@ class MainViewModel @Inject constructor(
                     } else {
                         // Создадим уведомление (Snackbar.make)
 //                      _messageLiveData.postValue(AUDIO_CONNECTING) -> вместо этого у нас полоса прогресса на экране
-                        Log.d(TAG, "Включаем другую песню ${mediaItem.stationName}")
+                        Log.d(TAG, "Включаем другую песню ${mediaItem.stationName}, url = ${mediaItem.urlResolved}")
 
                         musicServiceConnection.transportControls.playFromMediaId(
                             mediaItem.stationuuid,

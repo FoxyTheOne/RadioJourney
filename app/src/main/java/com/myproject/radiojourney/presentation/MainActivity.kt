@@ -217,6 +217,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                         e1.printStackTrace()
                         mainViewModel.dialogInternetTroubleCall()
                     } catch (e2: IOException) {
+                        Log.d(TAG, "An unknown error occurred in onPageSelected")
                         e2.printStackTrace()
                         mainViewModel.errorMessagePost("An unknown error occurred")
                     }
@@ -257,7 +258,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         if (ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.FOREGROUND_SERVICE
-            )!= PackageManager.PERMISSION_GRANTED
+            ) != PackageManager.PERMISSION_GRANTED
         ) {
             // Если нет разрешения - вызываем requestPermissionLauncher
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -316,7 +317,13 @@ class MainActivity : AppCompatActivity(), IAppSettings {
     // 3.Broadcast для горизонтальной полосы прогресса в activity (1 - в ???)
     override fun onResume() {
         super.onResume()
-        registerReceiver(receiver, IntentFilter(Constants.FILTER_FOR_BROADCAST_MA))
+        ContextCompat.registerReceiver(
+            this,
+            receiver,
+            IntentFilter(Constants.FILTER_FOR_BROADCAST_MA),
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
+//        registerReceiver(receiver, IntentFilter(Constants.FILTER_FOR_BROADCAST_MA))
         Log.d(TAG, "BROADCAST: Регистрируемся в onResume()")
     }
 
@@ -541,7 +548,11 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             it?.getContentIfNotHandled()?.let { result ->
                 when (result.status) {
                     // If everything is ok, we don't want to show anything. Only if smth went wrong
-                    ERROR ->
+                    ERROR -> {
+                        Log.d(
+                            TAG,
+                            "An unknown error occurred in mainViewModel.isConnectedLiveData.observe"
+                        )
                         binding?.let { nonNullBinding ->
                             Snackbar.make(
                                 nonNullBinding.rootLayout.rootView,
@@ -552,6 +563,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                             // Убираем прогресс и делаем кнопки снова кликабельными
                             mainViewModel.hideProgressAndSetClickable()
                         }
+                    }
 
                     else -> Unit
                 }
@@ -563,7 +575,11 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             it?.getContentIfNotHandled()?.let { result ->
                 when (result.status) {
                     // If everything is ok, we don't want to show anything. Only if smth went wrong
-                    ERROR ->
+                    ERROR -> {
+                        Log.d(
+                            TAG,
+                            "An unknown error occurred in mainViewModel.networkErrorLiveData.observe"
+                        )
                         binding?.let { nonNullBinding ->
                             Snackbar.make(
                                 nonNullBinding.rootLayout.rootView,
@@ -574,6 +590,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                             // Убираем прогресс и делаем кнопки снова кликабельными
                             mainViewModel.hideProgressAndSetClickable()
                         }
+                    }
 
                     else -> Unit
                 }
@@ -584,7 +601,11 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             it?.getContentIfNotHandled()?.let { result ->
                 when (result.status) {
                     // If everything is ok, we don't want to show anything. Only if smth went wrong
-                    ERROR ->
+                    ERROR -> {
+                        Log.d(
+                            TAG,
+                            "An unknown error occurred in mainViewModel.errorMessageLiveData.observe"
+                        )
                         binding?.let { nonNullBinding ->
                             Snackbar.make(
                                 nonNullBinding.rootLayout.rootView,
@@ -595,6 +616,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                             // Убираем прогресс и делаем кнопки снова кликабельными
                             mainViewModel.hideProgressAndSetClickable()
                         }
+                    }
 
                     else -> Unit
                 }
@@ -836,9 +858,14 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         override fun onReceive(context: Context?, intent: Intent) {
             val listSize = intent.getIntExtra(Constants.KEY_BROADCAST_LIST_SIZE_MA, 1)
             val filesAmount = intent.getIntExtra(Constants.KEY_BROADCAST_COUNT_MA, 1)
+
             val isCountryCodeRemoteListEmpty =
-                intent.getBooleanExtra(Constants.KEY_BROADCAST_IS_EMPTY_MA, false) // Не тот бродкаст, удалить
+                intent.getBooleanExtra(
+                    Constants.KEY_BROADCAST_IS_EMPTY_MA,
+                    false
+                ) // Не тот бродкаст, удалить
 //            val endOfBroadcast = intent.getIntExtra(Constants.KEY_BROADCAST_END_MA, 1)
+
             Log.d(TAG, "BROADCAST: Получаем данные в onReceive()")
 
             if (filesAmount <= listSize) {

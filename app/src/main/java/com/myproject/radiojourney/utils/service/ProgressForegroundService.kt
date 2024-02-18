@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
@@ -334,7 +335,14 @@ class ProgressForegroundService @Inject constructor() : Service() {
 
         // 4.2. Для того, чтобы Service из обычного перешел в Foreground, нам нужно вызвать метод startForeground() внутри этого сервиса
         // Между вызовом StartForegroundService и startForeground должно быть не более 5 секунд
-        startForeground(5, notificationBuilder?.build())
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val dataSyncNotification = notificationBuilder?.build()
+            dataSyncNotification?.let {
+                startForeground(5, it, FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+            }
+        } else {
+            startForeground(5, notificationBuilder?.build())
+        }
 
         // 4.3. И далее вызываем метод, который будет обновлять наш notification
         updateProgress()
@@ -529,7 +537,7 @@ class ProgressForegroundService @Inject constructor() : Service() {
                         TAG,
                         "countryCodeRemoteList size = 0. The server is down. Please, try again later"
                     )
-                    // notification "The server is down. Please, try again later" -> Мы делаем его не здесь, а во фрагментах: в загрузочном фрагменте по результатам пришедшей информации и в HomeFragment
+                    // TODO notification "The server is down. Please, try again later" -> Мы делаем его не здесь, а во фрагментах: в загрузочном фрагменте по результатам пришедшей информации и в HomeFragment
                 }
 
                 // 5.4. Когда прогресс заканчивается, закрываем Foreground, удаляем уведомления, stop service
