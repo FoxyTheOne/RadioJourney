@@ -18,6 +18,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.AppCompatTextView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.core.view.doOnLayout
@@ -107,6 +108,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
     private val swipeRadioStationAdapter = SwipeRadioStationAdapter()
 
     private lateinit var dialogPleaseWait: Dialog
+    private var isInternetAvailable = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -342,6 +344,23 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
         // Click listener (on play image)
         binding?.ivPlayPause?.setOnClickListener {
+
+            // Проверяем подключение к интернету
+            isInternetAvailable = mainViewModel.isInternetAvailable(this)
+            if (!isInternetAvailable) {
+                // Диалоговое окно при отсутствии интернета
+                val titleInternetTrouble = getString(R.string.dialogInternetTrouble_title)
+                val textInternetTrouble = getString(R.string.dialogInternetTrouble_text3)
+                val titleViewInternetTrouble =
+                    dialogPleaseWait.findViewById<AppCompatTextView>(R.id.title_pleaseWait)
+                val textViewInternetTrouble =
+                    dialogPleaseWait.findViewById<AppCompatTextView>(R.id.text_pleaseWait)
+                titleViewInternetTrouble.text = titleInternetTrouble
+                textViewInternetTrouble.text = textInternetTrouble
+
+                dialogPleaseWait.show()
+            }
+
             curPlayingRadioStation?.let {
                 mainViewModel.playOrToggleSong(it, true) // true, because now we want to autoplay
                 mainViewModel.notJustLaunchedEnableAutoplay()

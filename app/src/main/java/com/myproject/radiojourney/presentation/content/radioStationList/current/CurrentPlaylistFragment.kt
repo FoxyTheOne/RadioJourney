@@ -1,5 +1,6 @@
 package com.myproject.radiojourney.presentation.content.radioStationList.current
 
+import android.app.Dialog
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -44,6 +45,8 @@ class CurrentPlaylistFragment : BaseRadioListFragmentAbstract() {
     private lateinit var radioListAdapter: RadioListAdapter
     private lateinit var recyclerViewRadioStationList: RecyclerView
     private lateinit var textPlaylistEmpty: TextView
+    private lateinit var dialogInternetTrouble: Dialog
+    private var isInternetAvailable = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -65,6 +68,24 @@ class CurrentPlaylistFragment : BaseRadioListFragmentAbstract() {
         // 1.2. ViewModel. We bind our viewModel to the lifecycle of our activity, not fragment. We pass our activity as an owner of the lifecycle.
         // So, we need to do this way:
         mainViewModel = ViewModelProvider(requireActivity())[MainViewModel::class.java]
+
+        // Настройки диалогового окна
+        dialogInternetTrouble = Dialog(requireContext())
+        // Передайте ссылку на разметку
+        dialogInternetTrouble.setContentView(R.layout.layout_internet_trouble_dialog)
+
+        activity?.let{
+            isInternetAvailable = mainViewModel.isInternetAvailable(it)
+            if (!isInternetAvailable) {
+                // Диалоговое окно при отсутствии интернета
+                val textInternetTrouble = getString(R.string.dialogInternetTrouble_text3)
+                val textViewInternetTrouble =
+                    dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.text_internetTrouble)
+                textViewInternetTrouble.text = textInternetTrouble
+
+                dialogInternetTrouble.show()
+            }
+        }
 
         radioStationPlaylist = mainViewModel.mediaItemsListLiveData.value?.data ?: emptyList()
 

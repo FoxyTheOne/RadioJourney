@@ -48,6 +48,7 @@ class FavouriteListFragment : BaseRadioListFragmentAbstract() {
     private lateinit var frameLayout: FrameLayout
     private lateinit var progressCircular: ProgressBar
     private lateinit var radioCountryCodeFromActivity: String
+    private var isInternetAvailable = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -77,6 +78,19 @@ class FavouriteListFragment : BaseRadioListFragmentAbstract() {
         dialogInternetTrouble = Dialog(requireContext())
         // Передайте ссылку на разметку
         dialogInternetTrouble.setContentView(R.layout.layout_internet_trouble_dialog)
+
+        activity?.let{
+            isInternetAvailable = mainViewModel.isInternetAvailable(it)
+            if (!isInternetAvailable) {
+                // Диалоговое окно при отсутствии интернета
+                val textInternetTrouble = getString(R.string.dialogInternetTrouble_text3)
+                val textViewInternetTrouble =
+                    dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.text_internetTrouble)
+                textViewInternetTrouble.text = textInternetTrouble
+
+                dialogInternetTrouble.show()
+            }
+        }
 
         initListeners()
         subscribeOnLiveData()
@@ -116,6 +130,16 @@ class FavouriteListFragment : BaseRadioListFragmentAbstract() {
             hideProgress()
         }
         viewModel.dialogInternetTroubleLiveData.observe(viewLifecycleOwner) {
+            // Возвращаем текст диалогового окна (на случай, если мы делали какие-то изменения во время пользования этим фрагментом)
+            val titleInternetTrouble = getString(R.string.dialogInternetTrouble_title)
+            val textInternetTrouble = getString(R.string.dialogInternetTrouble_text)
+            val titleViewInternetTrouble =
+                dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.title_internetTrouble)
+            val textViewInternetTrouble =
+                dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.text_internetTrouble)
+            titleViewInternetTrouble.text = titleInternetTrouble
+            textViewInternetTrouble.text = textInternetTrouble
+
             dialogInternetTrouble.show()
         }
         viewModel.errorMessageLiveData.observe(viewLifecycleOwner) {

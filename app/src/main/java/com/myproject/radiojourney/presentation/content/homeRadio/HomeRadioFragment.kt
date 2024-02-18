@@ -95,6 +95,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
     //        Place(name = "Minsk", latLng = LatLng(53.90580039557321, 27.562806971874416))
     //    )
     private var countryList = listOf<CountryPresentation>()
+    private var isInternetAvailable = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -191,6 +192,23 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         dialogInternetTrouble = Dialog(requireContext())
         // Передайте ссылку на разметку
         dialogInternetTrouble.setContentView(R.layout.layout_internet_trouble_dialog)
+
+        activity?.let{
+            isInternetAvailable = mainViewModel.isInternetAvailable(it)
+            if (!isInternetAvailable) {
+                // Диалоговое окно при отсутствии интернета
+                val titleInternetTrouble = getString(R.string.dialogInternetTrouble_title)
+                val textInternetTrouble = getString(R.string.dialogInternetTrouble_text3)
+                val titleViewInternetTrouble =
+                    dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.title_internetTrouble)
+                val textViewInternetTrouble =
+                    dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.text_internetTrouble)
+                titleViewInternetTrouble.text = titleInternetTrouble
+                textViewInternetTrouble.text = textInternetTrouble
+
+                dialogInternetTrouble.show()
+            }
+        }
 
         // LOCATION -> 1.4. Получим наш FusedLocationProviderClient. Именно он имеет в себе методы, с помощью которых мы можем определить локацию
         fusedLocationProviderClient =
