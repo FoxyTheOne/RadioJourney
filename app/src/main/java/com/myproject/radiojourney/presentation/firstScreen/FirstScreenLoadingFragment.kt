@@ -395,7 +395,7 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
                                 dialogInternetTrouble.show()
                             }
 
-                        }, 10000)
+                        }, 7000)
                     }
 
                 }

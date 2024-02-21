@@ -40,4 +40,10 @@ object Constants {
     const val KEY_BROADCAST_COUNT_MA = "KEY_BROADCAST_COUNT_MA"
     const val KEY_BROADCAST_END_MA = "KEY_BROADCAST_END_MA"
     const val KEY_BROADCAST_IS_EMPTY_MA = "KEY_BROADCAST_IS_EMPTY_MA"
+
+    const val SERVER_IS_DOWN = "SERVER_IS_DOWN"
+
+    // Broadcast для ошибки HttpException при обращении к серверу (FirebaseMusicSource to MainActivity)
+    const val FILTER_FOR_BROADCAST_MA_SERVER = "FILTER_FOR_BROADCAST_MA_SERVER"
+    const val KEY_BROADCAST_SERVER_IS_DOWN = "KEY_BROADCAST_SERVER_IS_DOWN"
 }

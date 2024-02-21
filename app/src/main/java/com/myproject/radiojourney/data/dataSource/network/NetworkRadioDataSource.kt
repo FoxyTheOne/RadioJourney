@@ -5,7 +5,11 @@ import android.util.Log
 import com.myproject.radiojourney.data.dataSource.network.service.IRadioServiceWrapper
 import com.myproject.radiojourney.entities.remote.RadioStationRemote
 import com.myproject.radiojourney.entities.remote.StreamInfoResult
+import com.myproject.radiojourney.other.Constants.SERVER_IS_DOWN
+import com.myproject.radiojourney.other.Resource
+import okhttp3.ResponseBody
 import retrofit2.HttpException
+import retrofit2.Response
 import java.io.IOException
 import java.net.InetAddress
 import java.net.SocketTimeoutException
@@ -46,6 +50,7 @@ class NetworkRadioDataSource @Inject constructor(
 
     // API -> Для того, чтобы воспользоваться API радиостанций, нужно выполнить несколько шагов.
     // These steps should be done in your APP or program.
+//    override suspend fun getCountryCodeList(): List<CountryCodeRemote> {
     override suspend fun getCountryCodeList(): List<CountryCodeRemote> {
         try {
 
@@ -114,7 +119,8 @@ class NetworkRadioDataSource @Inject constructor(
 
     // API -> Для того, чтобы воспользоваться API радиостанций, нужно выполнить несколько шагов.
     // These steps should be done in your APP or program.
-    override suspend fun getRadioStationList(countryCode: String): List<RadioStationRemote> {
+    override suspend fun getRadioStationList(countryCode: String): Resource<List<RadioStationRemote>> {
+//    override suspend fun getRadioStationList(countryCode: String): List<RadioStationRemote> {
         try {
 
             // 1. Get a list of available servers.
@@ -162,14 +168,14 @@ class NetworkRadioDataSource @Inject constructor(
                 } catch (e: SocketTimeoutException) {
                     Log.d(
                         TAG,
-                        "Exception: ${e.message}. Failed to connect to baseURL. Continue searching baseURL in resultDNSIterator"
+                        "Попытка связаться с сервером. Exception: ${e.message}. Failed to connect to baseURL. Continue searching baseURL in resultDNSIterator"
                     )
                     e.printStackTrace()
                     continue
                 } catch (e: IOException) {
                     Log.d(
                         TAG,
-                        "Exception: ${e.message}. Problem with the server. Continue searching baseURL in resultDNSIterator"
+                        "Попытка связаться с сервером. Exception: ${e.message}. Problem with the server. Continue searching baseURL in resultDNSIterator"
                     )
                     e.printStackTrace()
                     continue
@@ -186,20 +192,22 @@ class NetworkRadioDataSource @Inject constructor(
 //            radioStationRemoteList = radioStationLowerCaseList + radioStationUpperCaseList
 //            Log.d(TAG, "Списки объединены в radioStationRemoteList.size = ${radioStationRemoteList.size}")
 
-            return radioStationRemoteList
+//            throwHttpException() // for testing
+            return Resource.success(radioStationRemoteList)
 
         } catch (e: HttpException) {
-            Log.d(TAG, "Exception: ${e.message}. The server is down")
+            Log.d(TAG, "Попытка связаться с сервером. Exception: ${e.message}. The server is down")
             e.printStackTrace()
-            return listOf()
+            return Resource.error(SERVER_IS_DOWN, listOf())
         }
     }
 
     // API -> Для того, чтобы воспользоваться API радиостанций, нужно выполнить несколько шагов.
     // These steps should be done in your APP or program.
-    override suspend fun sendGetRequestToMarkRadioStationAsPopular(stationUuid: String) {
-        try {
+    override suspend fun sendGetRequestToMarkRadioStationAsPopular(stationUuid: String) : Boolean {
+        var isServerDown = false
 
+        try {
             // 1. Get a list of available servers.
             // Do a DNS-lookup of 'all.api.radio-browser.info'. This gives you a list of all available servers.
             val listDNSResultArray = updateDNSList()
@@ -250,8 +258,10 @@ class NetworkRadioDataSource @Inject constructor(
         } catch (e: HttpException) {
             Log.d(TAG, "Exception: ${e.message}. The server is down")
             e.printStackTrace()
+            isServerDown = true
         }
 
+        return isServerDown
     }
 
     // do the DNS request
@@ -272,6 +282,10 @@ class NetworkRadioDataSource @Inject constructor(
         listDNSResultArray.forEach { result ->
             Log.d(TAG, "результат listDNSResultArray: $result")
         }
+//        listDNSResultArray.clear()
+//        listDNSResultArray.add("https://de1.api.radio-broser.info/")
+//        listDNSResultArray.add("https://de1.api.radio-brower.info/")
+//        listDNSResultArray.add("https://de1.api.radio-browsr.info/")
 
         return if (listDNSResultArray != emptyList<String>()) {
             listDNSResultArray
@@ -285,5 +299,26 @@ class NetworkRadioDataSource @Inject constructor(
         val list: MutableList<T> = ArrayList(first)
         list.addAll(second)
         return list
+    }
+
+    private fun throwHttpException() {
+        Log.d(TAG, "Попытка вызвать ошибку The server is down")
+        // Создаем объект HttpException с указанием кода ошибки HTTP
+//            Код ошибки HTTP, который вы должны указать в statusCode, зависит от конкретной ошибки, которую вы хотите имитировать.
+//
+//            Некоторые наиболее распространенные коды ошибок HTTP:
+//
+//            - 400 Bad Request: ошибка запроса клиента (неверный синтаксис, неправильные параметры и т. д.)
+//            - 401 Unauthorized: требуется аутентификация пользователя для доступа к ресурсу
+//            - 403 Forbidden: доступ к ресурсу запрещен, у клиента нет прав доступа
+//            - 404 Not Found: ресурс не найден
+//            - 500 Internal Server Error: ошибка сервера, общая внутренняя ошибка
+//            - Если вам нужно имитировать случай, когда сервер недоступен, вы можете использовать код ошибки HTTP 503 Service Unavailable. Этот код ошибки указывает, что сервер не может обработать запрос в данный момент из-за временной недоступности.
+        val statusCode = 503
+
+        val response = Response.error<Any>(statusCode, ResponseBody.create(null, "error message"))
+        val httpException = HttpException(response)
+
+        throw httpException
     }
 }

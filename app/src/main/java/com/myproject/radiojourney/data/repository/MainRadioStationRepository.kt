@@ -7,6 +7,9 @@ import com.myproject.radiojourney.data.dataSource.network.INetworkRadioDataSourc
 import com.myproject.radiojourney.domain.iRepository.IMainRadioStationRepository
 import com.myproject.radiojourney.entities.local.CountryLocal
 import com.myproject.radiojourney.entities.local.RadioStationLocal
+import com.myproject.radiojourney.other.Constants
+import com.myproject.radiojourney.other.Resource
+import com.myproject.radiojourney.other.Status
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
@@ -48,35 +51,74 @@ class MainRadioStationRepository @Inject constructor(
         localRadioDataSource.saveRadioStationInRoom(radioStationLocal)
     }
 
-    override suspend fun getRadioStationList(countryCode: String): List<RadioStationLocal> {
-        // Получаем список радиостанций из networkRadioDataSource
-        val radioStationRemoteList = networkRadioDataSource.getRadioStationList(countryCode)
+    override suspend fun getRadioStationList(countryCode: String): Resource<List<RadioStationLocal>> {
+        // Получаем список радиостанций из networkRadioDataSource в формате Resource чтобы знать ответ с сервера
+        val radioStationRemoteListResource = networkRadioDataSource.getRadioStationList(countryCode)
 
-        // Преобразуем модельки remote -> local
-        val radioStationLocalList = mutableListOf<RadioStationLocal>()
+        // Если была ошибка HttpException, обозначаем по умолчанию
+        var radioStationLocalListResource: Resource<List<RadioStationLocal>> =
+            Resource.error(Constants.SERVER_IS_DOWN, listOf())
 
-        radioStationRemoteList.forEach { radioStationRemote ->
-            val radioStationLocal = RadioStationLocal.fromRemoteToLocal(radioStationRemote)
-            radioStationLocalList.add(radioStationLocal)
+        // Далее проверяем и если ошибки HttpException не было - меняем значение
+        radioStationRemoteListResource.let { result ->
+            when (result.status) {
+                Status.SUCCESS -> {
+                    result.data?.let { radioStationRemoteList ->
+
+                        // Преобразуем модельки remote -> local
+                        val radioStationLocalList = mutableListOf<RadioStationLocal>()
+
+                        radioStationRemoteList.forEach { radioStationRemote ->
+                            val radioStationLocal =
+                                RadioStationLocal.fromRemoteToLocal(radioStationRemote)
+                            radioStationLocalList.add(radioStationLocal)
+                        }
+
+                        Log.d(
+                            TAG,
+                            "Успешный запрос; результат запроса радиостанций $radioStationRemoteList"
+                        )
+
+                        radioStationLocalListResource =
+                            Resource.success(radioStationLocalList.toList())
+                    }
+                }
+
+                Status.ERROR -> Unit // we don't need this
+                Status.LOADING -> Unit // we don't need this
+            }
         }
 
-        Log.d(
-            TAG,
-            "Успешный запрос; результат запроса радиостанций $radioStationRemoteList"
-        )
+//        val radioStationRemoteList = networkRadioDataSource.getRadioStationList(countryCode)
+//
+//        // Преобразуем модельки remote -> local
+//        val radioStationLocalList = mutableListOf<RadioStationLocal>()
+//
+//        radioStationRemoteList.forEach { radioStationRemote ->
+//            val radioStationLocal = RadioStationLocal.fromRemoteToLocal(radioStationRemote)
+//            radioStationLocalList.add(radioStationLocal)
+//        }
+//
+//        Log.d(
+//            TAG,
+//            "Успешный запрос; результат запроса радиостанций $radioStationRemoteList"
+//        )
 
-        return radioStationLocalList.toList()
+        return radioStationLocalListResource
     }
 
-    override suspend fun saveLastUsedRadioStationUrlAndCode(urlResolved: String, countryCode: String) {
+    override suspend fun saveLastUsedRadioStationUrlAndCode(
+        urlResolved: String,
+        countryCode: String
+    ) {
         localRadioDataSource.saveLastUsedRadioStationUrlAndCode(urlResolved, countryCode)
     }
 
-    override suspend fun markRadioStationAsPopularSendGetRequest(stationUuid: String) {
-        networkRadioDataSource.sendGetRequestToMarkRadioStationAsPopular(stationUuid)
+    override suspend fun markRadioStationAsPopularSendGetRequest(stationUuid: String): Boolean {
         Log.d(
             TAG,
             "Делаем запрос, как указано автором API (Send /json/url requests for every click the user makes, this helps to mark stations as popular and makes the database more usefull to other people)"
         )
+        return networkRadioDataSource.sendGetRequestToMarkRadioStationAsPopular(stationUuid)
     }
 }

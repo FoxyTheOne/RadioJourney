@@ -52,7 +52,7 @@ class MainRadioUseCase @Inject constructor(
         mainRadioStationRepository.saveLastUsedRadioStationUrlAndCode(urlResolved, countryCode)
     }
 
-    override suspend fun markRadioStationAsPopularSendGetRequest(stationUuid: String) {
-        mainRadioStationRepository.markRadioStationAsPopularSendGetRequest(stationUuid)
+    override suspend fun markRadioStationAsPopularSendGetRequest(stationUuid: String): Boolean {
+        return mainRadioStationRepository.markRadioStationAsPopularSendGetRequest(stationUuid)
     }
 }

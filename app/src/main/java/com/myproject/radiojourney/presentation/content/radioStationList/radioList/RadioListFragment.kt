@@ -100,16 +100,11 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
         // Передайте ссылку на разметку
         dialogInternetTrouble.setContentView(R.layout.layout_internet_trouble_dialog)
 
-        activity?.let{
+        activity?.let {
             isInternetAvailable = mainViewModel.isInternetAvailable(it)
             if (!isInternetAvailable) {
                 // Диалоговое окно при отсутствии интернета
-                val textInternetTrouble = getString(R.string.dialogInternetTrouble_text3)
-                val textViewInternetTrouble =
-                    dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.text_internetTrouble)
-                textViewInternetTrouble.text = textInternetTrouble
-
-                dialogInternetTrouble.show()
+                showCustomDialog(R.string.dialogInternetTrouble_title, R.string.dialogInternetTrouble_text3)
             }
         }
 
@@ -150,16 +145,7 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
         }
         viewModel.dialogInternetTroubleLiveData.observe(viewLifecycleOwner) {
             // Возвращаем текст диалогового окна (на случай, если мы делали какие-то изменения во время пользования этим фрагментом)
-            val titleInternetTrouble = getString(R.string.dialogInternetTrouble_title)
-            val textInternetTrouble = getString(R.string.dialogInternetTrouble_text)
-            val titleViewInternetTrouble =
-                dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.title_internetTrouble)
-            val textViewInternetTrouble =
-                dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.text_internetTrouble)
-            titleViewInternetTrouble.text = titleInternetTrouble
-            textViewInternetTrouble.text = textInternetTrouble
-
-            dialogInternetTrouble.show()
+            showCustomDialog(R.string.dialogInternetTrouble_title, R.string.dialogInternetTrouble_text)
         }
         viewModel.errorMessageLiveData.observe(viewLifecycleOwner) {
             it?.getContentIfNotHandled()?.let { result ->
@@ -177,6 +163,10 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
                     else -> Unit
                 }
             }
+        }
+        viewModel.serverIsDownLiveData.observe(viewLifecycleOwner) {
+            // Диалоговое окно при ошибке сервера
+            showCustomDialog(R.string.dialogInternetTrouble_title4, R.string.dialogInternetTrouble_text4)
         }
         viewModel.radioStationListLiveData.observe(viewLifecycleOwner) { radioStationPresentationList ->
             radioStationList = radioStationPresentationList
@@ -281,6 +271,20 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
             // List is empty
             textRadioListSecondTitleDownload.isVisible = false
         }
+    }
+
+    private fun showCustomDialog(titleId: Int, textId: Int) {
+        val titleInternetTrouble = getString(titleId)
+        val titleViewInternetTrouble =
+            dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.title_internetTrouble)
+        titleViewInternetTrouble.text = titleInternetTrouble
+
+        val textInternetTrouble = getString(textId)
+        val textViewInternetTrouble =
+            dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.text_internetTrouble)
+        textViewInternetTrouble.text = textInternetTrouble
+
+        dialogInternetTrouble.show()
     }
 
     private fun showProgress() {

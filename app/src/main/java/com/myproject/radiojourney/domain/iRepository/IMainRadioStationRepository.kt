@@ -2,6 +2,7 @@ package com.myproject.radiojourney.domain.iRepository
 
 import com.myproject.radiojourney.entities.local.CountryLocal
 import com.myproject.radiojourney.entities.local.RadioStationLocal
+import com.myproject.radiojourney.other.Resource
 import kotlinx.coroutines.flow.Flow
 
 interface IMainRadioStationRepository {
@@ -17,8 +18,9 @@ interface IMainRadioStationRepository {
     // И сохранить радиостанцию в Room
     suspend fun saveRadioStationInRoom(radioStationLocal: RadioStationLocal)
 
-    suspend fun getRadioStationList(countryCode: String): List<RadioStationLocal>
+//    suspend fun getRadioStationList(countryCode: String): List<RadioStationLocal>
+    suspend fun getRadioStationList(countryCode: String): Resource<List<RadioStationLocal>>
 
     suspend fun saveLastUsedRadioStationUrlAndCode(urlResolved: String, countryCode: String)
-    suspend fun markRadioStationAsPopularSendGetRequest(stationUuid: String)
+    suspend fun markRadioStationAsPopularSendGetRequest(stationUuid: String): Boolean
 }

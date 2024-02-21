@@ -98,26 +98,26 @@ class HomeRadioUseCase @Inject constructor(
         mainRadioStationRepository.saveRadioStationInRoom(currentRadioStationLocal)
     }
 
-    override suspend fun setRecommendedRadioStations(recommendedList: Map<String, String>) {
-        recommendedList.forEach {
-            val radioStation =
-                mainRadioStationRepository.getRadioStationSaved(it.key) // Ищем, может такая радиостанция уже сохранена в Room
-
-            if (radioStation != null) { // Если станция уже сохранена, меняем в ней isStationInRecommended = true
-                radioStation.isStationInRecommended = true
-                mainRadioStationRepository.saveRadioStationInRoom(radioStation)
-            } else {
-                // Если нет, скачиваем список радиостанций по нужной стране и в списке ищем нужную радиостанцию
-                val countryRadioStationsList =
-                    mainRadioStationRepository.getRadioStationList(it.value)
-                countryRadioStationsList.forEach { radioStationLocal ->
-                    if (radioStationLocal.urlResolved == it.key) {
-                        radioStationLocal.isStationInRecommended = true
-                        mainRadioStationRepository.saveRadioStationInRoom(radioStationLocal)
-                    }
-                }
-            }
-        }
-    }
+//    override suspend fun setRecommendedRadioStations(recommendedList: Map<String, String>) {
+//        recommendedList.forEach {
+//            val radioStation =
+//                mainRadioStationRepository.getRadioStationSaved(it.key) // Ищем, может такая радиостанция уже сохранена в Room
+//
+//            if (radioStation != null) { // Если станция уже сохранена, меняем в ней isStationInRecommended = true
+//                radioStation.isStationInRecommended = true
+//                mainRadioStationRepository.saveRadioStationInRoom(radioStation)
+//            } else {
+//                // Если нет, скачиваем список радиостанций по нужной стране и в списке ищем нужную радиостанцию
+//                val countryRadioStationsList =
+//                    mainRadioStationRepository.getRadioStationList(it.value)
+//                countryRadioStationsList.forEach { radioStationLocal ->
+//                    if (radioStationLocal.urlResolved == it.key) {
+//                        radioStationLocal.isStationInRecommended = true
+//                        mainRadioStationRepository.saveRadioStationInRoom(radioStationLocal)
+//                    }
+//                }
+//            }
+//        }
+//    }
 
 }

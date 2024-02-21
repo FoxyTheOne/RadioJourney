@@ -101,6 +101,10 @@ class MainViewModel @Inject constructor(
     val errorMessageLiveData: LiveData<Event<Resource<Boolean>>> =
         _errorMessageLiveData // And another LiveData, that equals to previous, so that classes can't change it
 
+    private var _isServerDown = false
+    val isServerDown : Boolean
+        get () = _isServerDown
+
     private val _dialogInternetTroubleLiveData = MutableLiveData<Boolean>()
     val dialogInternetTroubleLiveData: LiveData<Boolean> =
         _dialogInternetTroubleLiveData
@@ -367,9 +371,10 @@ class MainViewModel @Inject constructor(
         Log.d(TAG, "BROADCAST: Показываем прогресс, вызван метод showProgressAndDisableClick()")
     }
 
-    fun hideProgressAndSetClickable() {
+    fun hideProgressAndSetClickable(isServerDown: Boolean = false) {
         _setClickableLiveData.call()
         Log.d(TAG, "BROADCAST: Прячем прогресс, вызван метод hideProgressAndSetClickable()")
+        _isServerDown = isServerDown
     }
 
     fun saveNewMediaId(mediaId: String) {
@@ -439,7 +444,9 @@ class MainViewModel @Inject constructor(
 
     fun markRadioStationAsPopularSendGetRequest(stationUuid: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            mainRadioInteractor.markRadioStationAsPopularSendGetRequest(stationUuid)
+            val isServerDown = mainRadioInteractor.markRadioStationAsPopularSendGetRequest(stationUuid)
+            _isServerDown = isServerDown
+            // Этот метод не влияет на работоспособность приложения (Вызывается попросьбе автора API)
         }
     }
 

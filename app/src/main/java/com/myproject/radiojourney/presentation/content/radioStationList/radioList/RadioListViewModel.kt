@@ -10,6 +10,7 @@ import com.myproject.radiojourney.utils.extension.call
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 import com.myproject.radiojourney.other.Event
 import com.myproject.radiojourney.other.Resource
+import com.myproject.radiojourney.other.Status
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -51,13 +52,23 @@ class RadioListViewModel @Inject constructor(
     // LiveData для открытия диалогового окна
     private val _dialogInternetTroubleLiveData = MutableLiveData<Boolean>()
     val dialogInternetTroubleLiveData: MutableLiveData<Boolean> = _dialogInternetTroubleLiveData
+    private val _serverIsDownLiveData = MutableLiveData<Boolean>()
+    val serverIsDownLiveData: MutableLiveData<Boolean> = _serverIsDownLiveData
 
     fun getRadioStationList(countryCode: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val radioStationPresentation: List<RadioStationPresentation> =
+                val radioStationPresentationRecourse =
                     radioListInteractor.getRadioStationList(countryCode)
-                _radioStationListLiveData.postValue(radioStationPresentation)
+
+                if (radioStationPresentationRecourse.status == Status.ERROR) {
+                    _serverIsDownLiveData.call()
+                } else {
+                    radioStationPresentationRecourse.data?.let {
+                        val radioStationPresentation: List<RadioStationPresentation> = it
+                        _radioStationListLiveData.postValue(radioStationPresentation)
+                    }
+                }
             } catch (e1: AccountsException) {
                 // AccountsException -> Known direct subclasses: AuthenticatorException, NetworkErrorException, OperationCanceledException
                 e1.printStackTrace()

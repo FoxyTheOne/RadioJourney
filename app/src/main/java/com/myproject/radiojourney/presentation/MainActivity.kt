@@ -23,6 +23,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.core.view.doOnLayout
 import androidx.core.view.isVisible
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.findNavController
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.snackbar.Snackbar
@@ -34,6 +35,8 @@ import com.myproject.radiojourney.other.Constants
 import com.myproject.radiojourney.other.Constants.AUDIO_CONNECTING
 import com.myproject.radiojourney.other.Constants.AUDIO_PLAYING
 import com.myproject.radiojourney.other.Constants.AUDIO_STOPPED
+import com.myproject.radiojourney.other.Constants.FILTER_FOR_BROADCAST_MA_SERVER
+import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_SERVER_IS_DOWN
 import com.myproject.radiojourney.other.Status.ERROR
 import com.myproject.radiojourney.other.Status.LOADING
 import com.myproject.radiojourney.other.Status.SUCCESS
@@ -316,6 +319,18 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
     }
 
+    override fun onStart() {
+        super.onStart()
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+            receiverServerIsDown,
+            IntentFilter(FILTER_FOR_BROADCAST_MA_SERVER)
+        )
+        Log.d(
+            TAG,
+            "LocalBroadcastManager.BROADCAST: Регистрируемся в onStart() - когда получаем нулевой список, обычный бродкаст не работает (зависает полоса прогресса)"
+        )
+    }
+
     // 3.Broadcast для горизонтальной полосы прогресса в activity (1 - в ???)
     override fun onResume() {
         super.onResume()
@@ -336,6 +351,12 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         Log.d(TAG, "BROADCAST: Отписываемся в onPause()")
     }
 
+    override fun onStop() {
+        super.onStop()
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(receiverServerIsDown)
+        Log.d(TAG, "LocalBroadcastManager.BROADCAST: Отписываемся в onStop()")
+    }
+
     private fun initListeners() {
         // To detect if it is swiped
         mOnPageChangeCallback?.let {
@@ -349,16 +370,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             isInternetAvailable = mainViewModel.isInternetAvailable(this)
             if (!isInternetAvailable) {
                 // Диалоговое окно при отсутствии интернета
-                val titleInternetTrouble = getString(R.string.dialogInternetTrouble_title)
-                val textInternetTrouble = getString(R.string.dialogInternetTrouble_text3)
-                val titleViewInternetTrouble =
-                    dialogPleaseWait.findViewById<AppCompatTextView>(R.id.title_pleaseWait)
-                val textViewInternetTrouble =
-                    dialogPleaseWait.findViewById<AppCompatTextView>(R.id.text_pleaseWait)
-                titleViewInternetTrouble.text = titleInternetTrouble
-                textViewInternetTrouble.text = textInternetTrouble
-
-                dialogPleaseWait.show()
+                showCustomDialog(R.string.dialogInternetTrouble_title, R.string.dialogInternetTrouble_text3)
             }
 
             curPlayingRadioStation?.let {
@@ -483,6 +495,9 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                                     TAG,
                                     "BROADCAST: Заполняем полосу прогресса на 85% в mediaItemsListLiveData.observe()"
                                 )
+                            } else {
+                                // Список radioStations пуст. Бродкаст на это не срабатывает
+                                // TODO а если это список избранного? Ему можно быть пустым
                             }
 
                         }
@@ -831,6 +846,20 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         }
     }
 
+    private fun showCustomDialog(titleId: Int, textId: Int) {
+        val titleInternetTrouble = getString(titleId)
+        val titleViewInternetTrouble =
+            dialogPleaseWait.findViewById<AppCompatTextView>(R.id.title_pleaseWait)
+        titleViewInternetTrouble.text = titleInternetTrouble
+
+        val textInternetTrouble = getString(textId)
+        val textViewInternetTrouble =
+            dialogPleaseWait.findViewById<AppCompatTextView>(R.id.text_pleaseWait)
+        textViewInternetTrouble.text = textInternetTrouble
+
+        dialogPleaseWait.show()
+    }
+
     // function for hiding our bottom bar
     private fun hideBottomBar() {
         binding?.imageStar?.isVisible = false
@@ -875,17 +904,13 @@ class MainActivity : AppCompatActivity(), IAppSettings {
     // Создадим анонимный класс => не нужно регистрировать в манифесте
     private var receiver: BroadcastReceiver? = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent) {
-            val listSize = intent.getIntExtra(Constants.KEY_BROADCAST_LIST_SIZE_MA, 1)
-            val filesAmount = intent.getIntExtra(Constants.KEY_BROADCAST_COUNT_MA, 1)
-
-            val isCountryCodeRemoteListEmpty =
-                intent.getBooleanExtra(
-                    Constants.KEY_BROADCAST_IS_EMPTY_MA,
-                    false
-                ) // Не тот бродкаст, удалить
-//            val endOfBroadcast = intent.getIntExtra(Constants.KEY_BROADCAST_END_MA, 1)
 
             Log.d(TAG, "BROADCAST: Получаем данные в onReceive()")
+
+            // Общее количество станций
+            val listSize = intent.getIntExtra(Constants.KEY_BROADCAST_LIST_SIZE_MA, 1)
+            // Какая по счету обрабатывается сейчас в FirebaseMusicSource
+            val filesAmount = intent.getIntExtra(Constants.KEY_BROADCAST_COUNT_MA, 1)
 
             if (filesAmount <= listSize) {
                 val progress = 70 * filesAmount / listSize
@@ -896,33 +921,20 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                 )
             }
 
-//            // Не тот бродкаст, удалить
-//            if (isCountryCodeRemoteListEmpty) {
-//                // Меняем текст диалогового окна
-//                val tittleSmthWentWrong = getString(R.string.dialogPleaseWait_title2)
-//                val textSmthWentWrong = getString(R.string.dialogPleaseWait_text2)
-//                val tittleViewSmthWentWrong = dialogPleaseWait.findViewById<AppCompatTextView>(R.id.title_pleaseWait)
-//                val textViewSmthWentWrong = dialogPleaseWait.findViewById<AppCompatTextView>(R.id.text_pleaseWait)
-//                tittleViewSmthWentWrong.text = tittleSmthWentWrong
-//                textViewSmthWentWrong.text = textSmthWentWrong
-//
-//                dialogPleaseWait.show()
-//            }
+        }
+    }
 
-//            // Когда прогресс заканчивается, отправляем об этом Broadcast
-//            val intent =
-//                Intent(Constants.FILTER_FOR_BROADCAST_MA) // FILTER is a string to identify this intent
-//            intent.putExtra(Constants.KEY_BROADCAST_END_MA, 100)
-//            Log.d(
-//                TAG,
-//                "BROADCAST: Отправляем в MainActivity сигнал об окончании бродкаста (95%)"
-//            )
-//            sendBroadcast(intent)
+    private val receiverServerIsDown: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent) {
+            // Ваш код обработки сообщения
+            Log.d(TAG, "BROADCAST: Получаем данные в onReceive() receiverServerIsDown")
 
-//            if (endOfBroadcast == 100) {
-//                binding?.progressBarHorizontalDp?.progress = 100
-//                Log.d(TAG, "BROADCAST: endOfBroadcast == 100, заполняем полосу полностью")
-//            }
+            val isServerDown = intent.getBooleanExtra(KEY_BROADCAST_SERVER_IS_DOWN, false)
+
+            if (isServerDown) {
+                showCustomDialog(R.string.dialogInternetTrouble_title4, R.string.dialogInternetTrouble_text4)
+                mainViewModel.hideProgressAndSetClickable(true)
+            }
         }
     }
 }

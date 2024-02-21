@@ -10,6 +10,7 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.lifecycle.Observer
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.media.MediaBrowserServiceCompat
 import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlayer
@@ -22,6 +23,7 @@ import com.myproject.radiojourney.data.sharedPreference.IAppSharedPreference
 import com.myproject.radiojourney.other.Constants
 import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_COUNT_MA
 import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_LIST_SIZE_MA
+import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_SERVER_IS_DOWN
 import com.myproject.radiojourney.other.Constants.MEDIA_ROOT_ID
 import com.myproject.radiojourney.other.Constants.NETWORK_ERROR
 import com.myproject.radiojourney.utils.exoplayer.callback.MusicPlaybackPreparer
@@ -86,10 +88,13 @@ class MusicService : MediaBrowserServiceCompat() {
 
     private lateinit var notifyChildrenChangedLiveDataObserver: Observer<Boolean>
 
-    val intent =
+    private val intent =
         Intent(Constants.FILTER_FOR_BROADCAST_MA) // FILTER is a string to identify this intent
     private lateinit var listSizeLiveDataObserver: Observer<Int>
     private lateinit var radioStationsCountLiveDataObserver: Observer<Int>
+    private val intentServerIsDown =
+        Intent(Constants.FILTER_FOR_BROADCAST_MA_SERVER) // FILTER is a string to identify this intent
+    private lateinit var serverIsDownLiveDataObserver: Observer<Boolean>
 
     companion object {
         private const val TAG = "MusicService"
@@ -212,7 +217,10 @@ class MusicService : MediaBrowserServiceCompat() {
         listSizeLiveDataObserver = Observer {
             //Live data value has changed
             intent.putExtra(KEY_BROADCAST_LIST_SIZE_MA, it)
-            Log.d(TAG, "BROADCAST: Отправляем в MainActivity данные из listSizeLiveDataObserver")
+            Log.d(
+                TAG,
+                "BROADCAST: Отправляем в MainActivity данные из listSizeLiveDataObserver. it = $it"
+            )
             sendBroadcast(intent)
         }
         firebaseMusicSource.listSizeLiveData.observeForever(listSizeLiveDataObserver)
@@ -229,6 +237,29 @@ class MusicService : MediaBrowserServiceCompat() {
         }
         firebaseMusicSource.radioStationsCountLiveData.observeForever(
             radioStationsCountLiveDataObserver
+        )
+
+        // Вызывается в случае ошибки HttpException при обращении к серверу
+        serverIsDownLiveDataObserver = Observer {
+            //Live data value has changed
+//            intentServerIsDown.putExtra(KEY_BROADCAST_SERVER_IS_DOWN, it)
+//            Log.d(
+//                TAG,
+//                "BROADCAST: Отправляем в MainActivity данные из serverIsDownLiveDataObserver"
+//            )
+//            sendBroadcast(intentServerIsDown)
+
+            intentServerIsDown.apply {
+                putExtra(KEY_BROADCAST_SERVER_IS_DOWN, it)
+            }
+            Log.d(
+                TAG,
+                "LocalBroadcastManager.BROADCAST: Отправляем в MainActivity данные из serverIsDownLiveDataObserver, it = $it"
+            )
+            LocalBroadcastManager.getInstance(this).sendBroadcast(intentServerIsDown)
+        }
+        firebaseMusicSource.serverIsDownLiveData.observeForever(
+            serverIsDownLiveDataObserver
         )
 
         mediaSessionConnector = MediaSessionConnector(mediaSession)

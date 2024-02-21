@@ -193,20 +193,14 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         // Передайте ссылку на разметку
         dialogInternetTrouble.setContentView(R.layout.layout_internet_trouble_dialog)
 
-        activity?.let{
+        activity?.let {
             isInternetAvailable = mainViewModel.isInternetAvailable(it)
             if (!isInternetAvailable) {
                 // Диалоговое окно при отсутствии интернета
-                val titleInternetTrouble = getString(R.string.dialogInternetTrouble_title)
-                val textInternetTrouble = getString(R.string.dialogInternetTrouble_text3)
-                val titleViewInternetTrouble =
-                    dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.title_internetTrouble)
-                val textViewInternetTrouble =
-                    dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.text_internetTrouble)
-                titleViewInternetTrouble.text = titleInternetTrouble
-                textViewInternetTrouble.text = textInternetTrouble
-
-                dialogInternetTrouble.show()
+                showCustomDialog(
+                    R.string.dialogInternetTrouble_title,
+                    R.string.dialogInternetTrouble_text3
+                )
             }
         }
 
@@ -254,7 +248,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                         mainViewModel.saveNewMediaId(radioStation.stationuuid)
                         mainViewModel.playOrToggleSong(radioStation, false)
                         mainViewModel.notJustLaunchedEnableAutoplay()
-                    } else if (curCountryCode == argCountryCode && !curCountryCode.endsWith(
+                    } else if (curCountryCode == argCountryCode && curCountryCode.endsWith(
                             "_FAV",
                             true
                         )
@@ -353,7 +347,15 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             }
 
         } else if (mainViewModel.curPlayingSongLiveData.value == null) {
-            mainViewModel.showProgressAndDisableClick("Dp")
+            if (!mainViewModel.isServerDown) {
+                Log.d(
+                    TAG,
+                    "Аргументы равны нулю arguments = $arguments, curPlayingSong = null, сервер доступен isServerDown = ${mainViewModel.isServerDown} показываем полосу прогресса"
+                )
+                mainViewModel.showProgressAndDisableClick("Dp")
+            } else {
+                showCustomDialog(R.string.dialogPleaseWait_title2, R.string.dialogPleaseWait_text5)
+            }
         }
 
 //        else {
@@ -584,16 +586,10 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         }
         mainViewModel.dialogInternetTroubleLiveData.observe(viewLifecycleOwner) {
             // Возвращаем текст диалогового окна (на случай, если мы делали какие-то изменения во время пользования этим фрагментом)
-            val titleInternetTrouble = getString(R.string.dialogInternetTrouble_title)
-            val textInternetTrouble = getString(R.string.dialogInternetTrouble_text)
-            val titleViewInternetTrouble =
-                dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.title_internetTrouble)
-            val textViewInternetTrouble =
-                dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.text_internetTrouble)
-            titleViewInternetTrouble.text = titleInternetTrouble
-            textViewInternetTrouble.text = textInternetTrouble
-
-            dialogInternetTrouble.show()
+            showCustomDialog(
+                R.string.dialogInternetTrouble_title,
+                R.string.dialogInternetTrouble_text
+            )
             mainViewModel.hideProgressAndSetClickable()
         }
         viewModel.errorMessageLiveData.observe(viewLifecycleOwner) {
@@ -681,17 +677,10 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                             ).show()
 
                             // Меняем текст диалогового окна
-                            val dialogSmthWentWrongTitle = getString(R.string.dialogPleaseWait_title2)
-                            val dialogSmthWentWrongText = getString(R.string.dialogPleaseWait_text2)
-                            val dialogSmthWentWrongTitleView =
-                                dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.title_internetTrouble)
-                            val dialogSmthWentWrongTextView =
-                                dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.text_internetTrouble)
-                            dialogSmthWentWrongTitleView.text = dialogSmthWentWrongTitle
-                            dialogSmthWentWrongTextView.text = dialogSmthWentWrongText
-
-                            dialogInternetTrouble.show()
-
+                            showCustomDialog(
+                                R.string.dialogPleaseWait_title2,
+                                R.string.dialogPleaseWait_text2
+                            )
                         }
                     } catch (e: UninitializedPropertyAccessException) {
                         Log.d(TAG, "mMap is not ready yet")
@@ -963,6 +952,20 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             mainViewModel.notJustLaunchedEnableAutoplay()
         }
 
+    }
+
+    private fun showCustomDialog(titleId: Int, textId: Int) {
+        val titleInternetTrouble = getString(titleId)
+        val titleViewInternetTrouble =
+            dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.title_internetTrouble)
+        titleViewInternetTrouble.text = titleInternetTrouble
+
+        val textInternetTrouble = getString(textId)
+        val textViewInternetTrouble =
+            dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.text_internetTrouble)
+        textViewInternetTrouble.text = textInternetTrouble
+
+        dialogInternetTrouble.show()
     }
 
     // TOOLBAR - Описываем метод из интерфейса ILogOutListener для выхода из аккаунта приложения

@@ -3,7 +3,7 @@
 
     <string name="first_screen_tittle">Приветствуем в RadioJourney!</string>
     <string name="first_screen_text1">Если это первый запуск - пожалуйста, дождитесь окончания кеширования.</string>
-    <string name="first_screen_text2">Если кеширование при первом запуске не удалось, проверье ваше интернет соендинение, после чего перезапустите программу.</string>
+    <string name="first_screen_text2">Если кеширование при первом запуске не удалось, проверье ваше интернет соединение, после чего перезапустите программу.</string>
     <string name="first_screen_button">Начать путешествие</string>
 
     <string name="content_description_email">Email</string>
@@ -23,15 +23,18 @@
     <string name="homeRadio_youAreHere">Вы здесь</string>
 
     <string name="dialogInternetTrouble_title">Проблема с соединением!</string>
-    <string name="dialogInternetTrouble_text_cashing">Если это первый запуск и кеширование не закончилось - пожалуйста, проверье ваше интернет соендинение, после чего перезапустите программу.</string>
+    <string name="dialogInternetTrouble_title4">В ответ на запрос получен пустой список</string>
+    <string name="dialogInternetTrouble_text_cashing">Если это первый запуск и кеширование не закончилось - пожалуйста, проверье ваше интернет соединение, после чего перезапустите программу.</string>
     <string name="dialogInternetTrouble_text2_cashing">Если же нет, не обращайте внимание на ошибку. Если нужно, повторите последнее действие</string>
-    <string name="dialogInternetTrouble_text">Возникла проблема при запросе на сервер. Попробуйте повторить последнее действие или проверье ваше интернет соендинение.</string>
-    <string name="dialogInternetTrouble_text3">Пожалуйста, проверье ваше интернет соендинение.</string>
+    <string name="dialogInternetTrouble_text">Возникла проблема при запросе на сервер. Попробуйте повторить последнее действие или проверье ваше интернет соединение.</string>
+    <string name="dialogInternetTrouble_text3">Пожалуйста, проверье ваше интернет соединение.</string>
+    <string name="dialogInternetTrouble_text4">Похоже, что сервер с информацией о радиостанциях временно не работает. Пожалуйста, попробуйте ещё раз позже или проверье ваше интернет соединение.</string>
     <string name="dialogPleaseWait_title">Пожалуйста, подождите!</string>
     <string name="dialogPleaseWait_text">Пытаюсь подключиться к радиостанции</string>
     <string name="dialog_close">(Нажмите на свободное место, чтобы закрыть окно)</string>
     <string name="dialogPleaseWait_title2">Что-то пошло не так</string>
     <string name="dialogPleaseWait_text2">Похоже, что сервер с информацией о радиостанциях временно не работает. Пожалуйста, попробуйте ещё раз позже</string>
+    <string name="dialogPleaseWait_text5">Во время последнего запроса сервер с информацией о радиостанциях был недоступен. Вы можете попробовать повторить запрос или зайти в программу позже</string>
     <string name="dialogInternetTrouble_title2">Повторная попытка кэширования</string>
     <string name="dialogInternetTrouble_text2">Что-то пошло не так. Пытаюсь подключиться к серверу с информацией о радиостанциях ещё раз.</string>
 
