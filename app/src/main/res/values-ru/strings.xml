@@ -4,6 +4,8 @@
     <string name="first_screen_tittle">Приветствуем в RadioJourney!</string>
     <string name="first_screen_text1">Если это первый запуск - пожалуйста, дождитесь окончания кеширования.</string>
     <string name="first_screen_text2">Если кеширование при первом запуске не удалось, проверье ваше интернет соединение, после чего перезапустите программу.</string>
+    <string name="first_screen_text1_2">Если это первый запуск - пожалуйста, дождитесь окончания кеширования. В случае ошибки проверье ваше интернет соединение, после чего перезапустите программу.</string>
+    <string name="first_screen_text3">Работоспособность программы зависит от доступности сервера, откуда берется информация о радиостанциях.</string>
     <string name="first_screen_button">Начать путешествие</string>
 
     <string name="content_description_email">Email</string>

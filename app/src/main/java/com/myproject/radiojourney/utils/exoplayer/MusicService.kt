@@ -280,8 +280,18 @@ class MusicService : MediaBrowserServiceCompat() {
     // Передавать данные в сервис можно так же с помощью startService(intent),
     // новый сервис запускаться при этом не будет, а у запущенного сервиса будет вызван onStartCommand.
 
-    fun testMethodForError() {
-
+    fun testMethodForError(errorCause: String) {
+        when (errorCause) {
+            "UnrecognizedInputFormatException" -> {
+                Log.d(TAG, "")
+            }
+            "HttpDataSourceException" -> {
+                Log.d(TAG, "")
+            }
+            else -> {
+                Log.d(TAG, "")
+            }
+        }
     }
 
     // Let's prepare our exoplayer

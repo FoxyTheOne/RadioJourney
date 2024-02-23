@@ -363,9 +363,9 @@ class MainViewModel @Inject constructor(
     }
 
     fun showProgressAndDisableClick(stringDpOrCRSt: String) {
-        when (stringDpOrCRSt) {
-            "Dp" -> _setNonClickableDpLiveData.call()
-            "CRSt" -> _setNonClickableCRStLiveData.call()
+        when (stringDpOrCRSt.lowercase()) {
+            "dp" -> _setNonClickableDpLiveData.call()
+            "crst" -> _setNonClickableCRStLiveData.call()
             else -> Log.d(TAG, "Unknown String in showProgressAndDisableClick()")
         }
         Log.d(TAG, "BROADCAST: Показываем прогресс, вызван метод showProgressAndDisableClick()")

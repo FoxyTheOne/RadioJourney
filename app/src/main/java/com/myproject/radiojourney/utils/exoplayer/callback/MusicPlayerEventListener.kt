@@ -64,7 +64,7 @@ class MusicPlayerEventListener(
 
     }
 
-    // TODO onPlayerError - обработать
+    // TODO onPlayerError - обработать /  Обрабатывала в другом месте - проверить, нужно ли
     override fun onPlayerError(error: PlaybackException) {
         when (error.cause) {
             is UnrecognizedInputFormatException -> {
@@ -74,7 +74,7 @@ class MusicPlayerEventListener(
                 )
                 Toast.makeText(musicService, "Exoplayer can't read the stream", Toast.LENGTH_LONG)
                     .show()
-                musicService.testMethodForError() // Пустой, написать, если нужно
+                musicService.testMethodForError("UnrecognizedInputFormatException") // Пустой, написать, если нужно
             }
 
             is HttpDataSourceException -> {
@@ -84,7 +84,7 @@ class MusicPlayerEventListener(
                 )
                 Toast.makeText(musicService, "Exoplayer can't read this url", Toast.LENGTH_LONG)
                     .show()
-                musicService.testMethodForError() // Пустой, написать, если нужно
+                musicService.testMethodForError("HttpDataSourceException") // Пустой, написать, если нужно
             }
 
             else -> {

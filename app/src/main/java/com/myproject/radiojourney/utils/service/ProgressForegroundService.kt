@@ -10,6 +10,7 @@ import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.google.android.gms.maps.model.LatLng
@@ -345,7 +346,7 @@ class ProgressForegroundService @Inject constructor() : Service() {
         }
 
         // 4.3. И далее вызываем метод, который будет обновлять наш notification
-        updateProgress()
+        updateProgress(this)
 
         // Настройки диалогового окна
         dialogInternetTrouble = Dialog(this)
@@ -385,7 +386,7 @@ class ProgressForegroundService @Inject constructor() : Service() {
     }
 
     // FOREGROUND_SERVICE -> 5. Обновляем наш notification
-    private fun updateProgress() {
+    private fun updateProgress(context: Context) {
         // 5.1. Находим NotificationManager
         val notificationManager =
             this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -566,6 +567,8 @@ class ProgressForegroundService @Inject constructor() : Service() {
                 e.printStackTrace()
 
                 // TODO notification "Cashing failed"
+                Toast.makeText(context, "Cashing failed", Toast.LENGTH_LONG)
+                    .show()
 //                serviceScope.launch(Dispatchers.Main) {
 //                    dialogInternetTrouble.show()
 //                }

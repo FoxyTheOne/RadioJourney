@@ -164,12 +164,12 @@ class MusicPlaybackPreparer(
                                         "PLAYLIST_UPDATE: 2.$TAG, onCommand(). Не получилось скачать плейлист. Exception: ${e.message}. Problem occurred in method onCommand."
                                     )
                                     e.printStackTrace()
-                                    firebaseMusicSource.fetchMediaData("AD")
+                                    firebaseMusicSource.fetchMediaData("AQ")
                                     Log.d(
                                         TAG,
-                                        "PLAYLIST_UPDATE: 2.$TAG, onCommand(). Запускаем метод для скачивания списка радиостанций в exoplayer с кодом AD"
+                                        "PLAYLIST_UPDATE: 2.$TAG, onCommand(). Запускаем метод для скачивания списка радиостанций в exoplayer с кодом AQ"
                                     )
-                                    // TODO Была такая ошибка из-за проблемы с интернетом. Сделать высвечивание сообщения об ошибке, чтобы понимали, почему скачался и включился не тот плейлист
+                                    // TODO Была такая ошибка из-за проблемы с интернетом. Сделать высвечивание сообщения об ошибке, чтобы понимали, почему скачался и включился не тот плейлист /  Сделала сообщение, проверить
                                 }
                             }
                             job.join()

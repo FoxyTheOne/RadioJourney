@@ -72,8 +72,7 @@
             android:gravity="start"
             android:orientation="vertical"
             android:paddingTop="@dimen/space_beforeOrAfterElement"
-            android:paddingBottom="@dimen/space_beforeOrAfterElement"
-            app:layout_constraintBottom_toTopOf="@+id/linear_radioStationButtons"
+            app:layout_constraintBottom_toTopOf="@+id/linear_up"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/home_toolbar">
@@ -86,7 +85,7 @@
                 android:layout_gravity="start"
                 android:paddingStart="@dimen/space_beforeOrAfterElement"
                 android:paddingEnd="@dimen/space_beforeOrAfterElement"
-                android:text="@string/homeRadio_canTakeTime" />
+                android:text="@string/first_screen_text3" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/text_mayNotWork"
@@ -101,16 +100,58 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/linear_up"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/background_transparent"
+            android:gravity="center"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toTopOf="@+id/linear_radioStationButtons"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/linear_saveToGoogleSettings">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/button_hide"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_baseline_keyboard_arrow_up_24"
+                android:visibility="visible" />
+
+            <!--androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/button_show"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_baseline_keyboard_arrow_down_24"
+                android:visibility="visible"
+                app:layout_constraintBottom_toBottomOf="@+id/linear_radioStationButtons"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent" /-->
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/line_hide"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_baseline_horizontal_rule_24"
+                android:visibility="visible" />
+
+        </LinearLayout>
+
+        <LinearLayout
             android:id="@+id/linear_radioStationButtons"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/background_transparent"
             android:gravity="end"
             android:orientation="horizontal"
+            android:paddingTop="@dimen/space_beforeOrAfterElement"
             android:paddingBottom="@dimen/space_beforeOrAfterElement"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linear_saveToGoogleSettings">
+            app:layout_constraintTop_toBottomOf="@+id/linear_up">
 
             <!-- Don't need Recommended any more, but need to do another button here later -->
             <!-- androidx.appcompat.widget.AppCompatButton
@@ -126,13 +167,15 @@
                 android:textStyle="bold"
                 app:backgroundTint="@null" / -->
 
+            <!-- До того, как добавила кнопку "скрыть", было: -->
+            <!-- android:layout_marginTop="@dimen/space_small"-->
+            <!-- А в свойствах LinearLayout графы paddingTop не было -->
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/button_goToFavourites"
                 style="@style/Widget.AppCompat.ActionButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/space_beforeOrAfterElement"
-                android:layout_marginTop="@dimen/space_small"
                 android:background="@drawable/button_rounded_corners"
                 android:text="@string/homeRadio_goToFavourites"
                 android:textColor="@color/white"
@@ -141,17 +184,30 @@
                 app:backgroundTint="@null" />
         </LinearLayout>
 
+
+        <!-- До того, как добавила кнопку "скрыть", было: -->
+        <!-- android:layout_marginBottom="@dimen/space_small" -->
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/image_settings"
             android:layout_width="56dp"
             android:layout_height="56dp"
             android:layout_marginStart="@dimen/space_small"
-            android:layout_marginBottom="@dimen/space_small"
             android:scaleType="centerCrop"
             android:src="@drawable/outline_info_24"
             app:layout_constraintBottom_toBottomOf="@+id/linear_radioStationButtons"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@+id/linear_radioStationButtons" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/button_show"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_baseline_keyboard_arrow_down_24"
+            android:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="@+id/linear_radioStationButtons"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
 
         <Button
             android:id="@+id/button_zoomPlus"
@@ -184,9 +240,9 @@
             style="@style/Widget.MaterialComponents.Button.TextButton.Icon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:contentDescription="@string/homeRadio_youAreHere"
             android:layout_marginEnd="@dimen/space_beforeOrAfterElement"
             android:layout_marginBottom="@dimen/space_beforeOrAfterElement"
+            android:contentDescription="@string/homeRadio_youAreHere"
             app:backgroundTint="@color/orange_transparent"
             app:icon="@drawable/marker"
             app:iconGravity="textStart"
@@ -233,8 +289,8 @@
             android:id="@+id/progressCircularLoadingArguments"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:visibility="gone"
             android:indeterminateTint="@color/orange"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintLeft_toLeftOf="parent"

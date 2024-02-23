@@ -42,6 +42,7 @@ import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 import com.myproject.radiojourney.other.Status
 import com.myproject.radiojourney.presentation.MainViewModel
 import com.myproject.radiojourney.presentation.content.base.BaseContentFragmentAbstract
+import com.myproject.radiojourney.utils.extension.call
 import com.myproject.radiojourney.utils.oldMusicPlayer.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
@@ -183,6 +184,8 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                 )
             )
         }
+
+        hideOrShowInfo("show")
 
         // 1.2. ViewModel. We bind our viewModel to the lifecycle of our activity, not fragment. We pass our activity as an owner of the lifecycle.
         // So, we need to do this way:
@@ -516,12 +519,22 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
     }
 
     private fun initListeners() {
-        // Кнопки на карте
-        binding?.buttonZoomPlus?.setOnClickListener {
-            mMap.animateCamera(CameraUpdateFactory.zoomIn())
-        }
-        binding?.buttonZoomMinus?.setOnClickListener {
-            mMap.animateCamera(CameraUpdateFactory.zoomOut())
+        binding?.apply {
+            // Кнопки на карте
+            buttonZoomPlus.setOnClickListener {
+                mMap.animateCamera(CameraUpdateFactory.zoomIn())
+            }
+            buttonZoomMinus.setOnClickListener {
+                mMap.animateCamera(CameraUpdateFactory.zoomOut())
+            }
+
+            // Спрятать или показать текст
+            buttonHide.setOnClickListener {
+                hideOrShowInfo("hide")
+            }
+            buttonShow.setOnClickListener {
+                hideOrShowInfo("show")
+            }
         }
         binding?.imageSettings?.setOnClickListener {
             if (this.findNavController().currentDestination?.id == R.id.homeRadioFragment) {
@@ -966,6 +979,32 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         textViewInternetTrouble.text = textInternetTrouble
 
         dialogInternetTrouble.show()
+    }
+
+    private fun hideOrShowInfo(hideOrShow: String) {
+        when (hideOrShow.lowercase()) {
+            "hide" -> {
+                binding?.apply {
+                    linearSaveToGoogleSettings.isVisible = false
+//                    buttonHide.isVisible = false
+//                    lineHide.isVisible = false
+                    linearUp.isVisible = false
+                    buttonShow.isVisible = true
+                }
+            }
+
+            "show" -> {
+                binding?.apply {
+                    linearSaveToGoogleSettings.isVisible = true
+//                    buttonHide.isVisible = true
+//                    lineHide.isVisible = true
+                    linearUp.isVisible = true
+                    buttonShow.isVisible = false
+                }
+            }
+
+            else -> Log.d(TAG, "Unknown String in hideOrShowInfo()")
+        }
     }
 
     // TOOLBAR - Описываем метод из интерфейса ILogOutListener для выхода из аккаунта приложения
