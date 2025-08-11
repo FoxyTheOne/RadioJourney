@@ -41,8 +41,16 @@ class LocalRadioDataSource @Inject constructor(
         Log.d(TAG, "результат Метод для сохранения стран в Room завершён")
     }
 
-    override suspend fun saveLastUsedRadioStationUrlAndCode(urlResolved: String, countryCode: String) {
+    override suspend fun saveLastUsedRadioStationUrlAndCode(
+        urlResolved: String,
+        countryCode: String
+    ) {
         preference.saveLastUsedRadioStationUrl(urlResolved)
         preference.saveLastUsedRadioStationCountryCode(countryCode)
     }
+
+    override suspend fun setIsHideInfoClicked(isHideInfoClicked: Boolean) =
+        preference.setIsHideInfoClicked(isHideInfoClicked)
+
+    override suspend fun isHideInfoClicked(): Boolean = preference.isHideInfoClicked()
 }

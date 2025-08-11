@@ -46,7 +46,9 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
     )
 
     private lateinit var dialogInternetTrouble: Dialog
-    private lateinit var countryCode: String
+    private lateinit var _countryCode: String
+    val countryCode: String
+        get() = _countryCode
     private lateinit var countryName: String
     private lateinit var textRadioListTitle: AppCompatTextView
     private lateinit var textRadioListSecondTitleSelect: AppCompatTextView
@@ -66,7 +68,7 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
         // Получаем результат с предыдущей страницы
         arguments?.getString("country_code")?.let { country_code_string ->
             val resultArray = country_code_string.split("||")
-            countryCode = resultArray[0]
+            _countryCode = resultArray[0]
             countryName = resultArray[1]
         }
 
@@ -93,7 +95,7 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
 
         // Получаем список радиостанций, преобразуем. Сохранять в Room не будем. Радиостанций очень много, будет занимать много места на телефоне.
         // Кроме того, списки на сервере постоянно обновляются. Возможно какой-то радиостанции в списке уже не будет, а в локальной БД она ещё осталась. Пользователь выберет её и будет ошибка.
-        viewModel.getRadioStationList(countryCode)
+        viewModel.getRadioStationList(_countryCode)
 
         // Настройки диалогового окна
         dialogInternetTrouble = Dialog(requireContext())

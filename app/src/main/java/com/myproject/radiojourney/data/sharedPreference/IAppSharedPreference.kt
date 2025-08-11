@@ -29,4 +29,7 @@ interface IAppSharedPreference {
     fun getLastUsedRadioStationUrl(): String
     fun saveLastUsedRadioStationCountryCode(countryCode: String)
     fun getLastUsedRadioStationCountryCode(): String
+
+    fun setIsHideInfoClicked(isHideInfoClicked: Boolean)
+    fun isHideInfoClicked(): Boolean
 }

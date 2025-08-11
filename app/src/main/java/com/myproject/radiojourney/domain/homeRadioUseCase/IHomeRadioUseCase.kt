@@ -20,5 +20,8 @@ interface IHomeRadioUseCase {
     suspend fun addStationInRoomToFavourites(currentRadioStation: RadioStationPresentation)
     suspend fun deleteStationInRoomFromFavourite(currentRadioStation: RadioStationPresentation)
 
+    suspend fun setIsHideInfoClicked(isHideInfoClicked: Boolean)
+    suspend fun isHideInfoClicked(): Boolean
+
 //    suspend fun setRecommendedRadioStations(recommendedList: Map<String, String>)
 }

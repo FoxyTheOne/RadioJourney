@@ -18,9 +18,12 @@ interface IMainRadioStationRepository {
     // И сохранить радиостанцию в Room
     suspend fun saveRadioStationInRoom(radioStationLocal: RadioStationLocal)
 
-//    suspend fun getRadioStationList(countryCode: String): List<RadioStationLocal>
+    //    suspend fun getRadioStationList(countryCode: String): List<RadioStationLocal>
     suspend fun getRadioStationList(countryCode: String): Resource<List<RadioStationLocal>>
 
     suspend fun saveLastUsedRadioStationUrlAndCode(urlResolved: String, countryCode: String)
     suspend fun markRadioStationAsPopularSendGetRequest(stationUuid: String): Boolean
+
+    suspend fun setIsHideInfoClicked(isHideInfoClicked: Boolean)
+    suspend fun isHideInfoClicked(): Boolean
 }

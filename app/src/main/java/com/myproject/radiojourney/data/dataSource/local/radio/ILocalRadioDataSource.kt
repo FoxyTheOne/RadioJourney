@@ -17,4 +17,8 @@ interface ILocalRadioDataSource {
     suspend fun saveCountryList(countryLocalList: MutableList<CountryLocal>)
 
     suspend fun saveLastUsedRadioStationUrlAndCode(urlResolved: String, countryCode: String)
+
+    suspend fun setIsHideInfoClicked(isHideInfoClicked: Boolean)
+
+    suspend fun isHideInfoClicked(): Boolean
 }

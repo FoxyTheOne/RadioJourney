@@ -121,4 +121,10 @@ class MainRadioStationRepository @Inject constructor(
         )
         return networkRadioDataSource.sendGetRequestToMarkRadioStationAsPopular(stationUuid)
     }
+
+
+    override suspend fun setIsHideInfoClicked(isHideInfoClicked: Boolean) =
+        localRadioDataSource.setIsHideInfoClicked(isHideInfoClicked)
+
+    override suspend fun isHideInfoClicked(): Boolean = localRadioDataSource.isHideInfoClicked()
 }

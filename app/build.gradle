@@ -1,8 +1,8 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
-    // Hilt
     id 'kotlin-kapt'
+    // Hilt
     id 'dagger.hilt.android.plugin'
     // Navigation pass data
     id 'androidx.navigation.safeargs'
@@ -15,6 +15,7 @@ plugins {
 
 android {
     compileSdk 34
+    dataBinding { enabled = true }
 
     defaultConfig {
         applicationId "com.myproject.radiojourney"
@@ -141,11 +142,11 @@ dependencies {
     annotationProcessor 'com.github.bumptech.glide:compiler:4.12.0'
 
     // Navigation
-    implementation 'androidx.navigation:navigation-fragment-ktx:2.7.6'
-    implementation 'androidx.navigation:navigation-ui-ktx:2.7.6'
+    implementation 'androidx.navigation:navigation-fragment-ktx:2.7.7'
+    implementation 'androidx.navigation:navigation-ui-ktx:2.7.7'
 
     // Location
-    implementation 'com.google.android.gms:play-services-location:21.0.1'
+    implementation 'com.google.android.gms:play-services-location:21.1.0'
     // Google maps
     implementation 'com.google.android.gms:play-services-maps:18.2.0'
 

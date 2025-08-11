@@ -27,6 +27,7 @@ class AppSharedPreference @Inject constructor(@ApplicationContext context: Conte
         private const val PREFERENCE_RADIO_STATION_URL = "PREFERENCE_RADIO_STATION_URL"
         private const val PREFERENCE_LAST_LISTENED_URL = "PREFERENCE_LAST_LISTENED_URL"
         private const val PREFERENCE_LAST_COUNTRY_CODE = "PREFERENCE_LAST_COUNTRY_CODE"
+        private const val PREFERENCE_IS_HIDE_INFO_CLICKED = "PREFERENCE_IS_HIDE_INFO_CLICKED"
     }
 
     // У нас будет один общий файл, поэтому .getSharedPreferences()
@@ -170,5 +171,20 @@ class AppSharedPreference @Inject constructor(@ApplicationContext context: Conte
             PREFERENCE_LAST_COUNTRY_CODE,
             ""
         ) ?: ""
+    }
+
+
+    override fun setIsHideInfoClicked(isHideInfoClicked: Boolean) {
+        sharedPreference?.edit()?.putBoolean(
+            PREFERENCE_IS_HIDE_INFO_CLICKED,
+            isHideInfoClicked
+        )?.apply()
+    }
+
+    override fun isHideInfoClicked(): Boolean {
+        return sharedPreference?.getBoolean(
+            PREFERENCE_IS_HIDE_INFO_CLICKED,
+            false
+        ) ?: false
     }
 }

@@ -1,5 +1,8 @@
 package com.myproject.radiojourney.presentation.content.homeRadio
 
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.Drawable
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -7,17 +10,14 @@ import androidx.lifecycle.viewModelScope
 import com.myproject.radiojourney.domain.homeRadioUseCase.IHomeRadioUseCase
 import com.myproject.radiojourney.domain.logOutUseCase.ILogOutUseCase
 import com.myproject.radiojourney.entities.presentation.CountryPresentation
-import com.myproject.radiojourney.utils.extension.call
 import com.myproject.radiojourney.other.Event
 import com.myproject.radiojourney.other.Resource
+import com.myproject.radiojourney.utils.extension.call
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.drawable.Drawable
 
 
 /**
@@ -29,12 +29,15 @@ import android.graphics.drawable.Drawable
 @HiltViewModel
 class HomeRadioViewModel @Inject constructor(
     private val logOutInteractor: ILogOutUseCase,
-    homeRadioInteractor: IHomeRadioUseCase
+    private val homeRadioInteractor: IHomeRadioUseCase
 ) : ViewModel() {
 
 //    companion object {
 //        private const val TAG = "HomeRadioViewModel"
 //    }
+
+    private val _hideOrShowInfoLiveData = MutableLiveData<String>()
+    val hideOrShowInfoLiveData: MutableLiveData<String> = _hideOrShowInfoLiveData
 
     // Подписка на локальную БД
     private val _countryListFlow = homeRadioInteractor.subscribeOnCountryList()
@@ -113,6 +116,23 @@ class HomeRadioViewModel @Inject constructor(
         } catch (e: OutOfMemoryError) {
             // Handle the error
             null
+        }
+    }
+
+    fun setIsHideInfoClicked(isHideInfoClicked: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            homeRadioInteractor.setIsHideInfoClicked(isHideInfoClicked)
+        }
+    }
+
+    fun hideOrShowInfoWhenFragmentCreated() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val isHideInfoClickedInPreference = homeRadioInteractor.isHideInfoClicked()
+            if (isHideInfoClickedInPreference) {
+                _hideOrShowInfoLiveData.postValue("hide")
+            } else {
+                _hideOrShowInfoLiveData.postValue("show")
+            }
         }
     }
 

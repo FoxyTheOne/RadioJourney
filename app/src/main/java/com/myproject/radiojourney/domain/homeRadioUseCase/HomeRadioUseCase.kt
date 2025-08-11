@@ -98,6 +98,12 @@ class HomeRadioUseCase @Inject constructor(
         mainRadioStationRepository.saveRadioStationInRoom(currentRadioStationLocal)
     }
 
+    override suspend fun setIsHideInfoClicked(isHideInfoClicked: Boolean) =
+        mainRadioStationRepository.setIsHideInfoClicked(isHideInfoClicked)
+
+    override suspend fun isHideInfoClicked(): Boolean =
+        mainRadioStationRepository.isHideInfoClicked()
+
 //    override suspend fun setRecommendedRadioStations(recommendedList: Map<String, String>) {
 //        recommendedList.forEach {
 //            val radioStation =

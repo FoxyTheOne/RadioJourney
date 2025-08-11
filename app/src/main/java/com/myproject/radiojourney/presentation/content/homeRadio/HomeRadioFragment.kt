@@ -185,7 +185,8 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             )
         }
 
-        hideOrShowInfo("show")
+//        hideOrShowInfo("show")
+        viewModel.hideOrShowInfoWhenFragmentCreated()
 
         // 1.2. ViewModel. We bind our viewModel to the lifecycle of our activity, not fragment. We pass our activity as an owner of the lifecycle.
         // So, we need to do this way:
@@ -564,6 +565,11 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         viewModel.hideProgressLiveData.observe(viewLifecycleOwner) {
             hideProgress()
         }
+
+        viewModel.hideOrShowInfoLiveData.observe(viewLifecycleOwner) { hideOrShowInfo ->
+            hideOrShowInfo(hideOrShowInfo)
+        }
+
         mainViewModel.setNonClickableDpLiveData.observe(viewLifecycleOwner) {
             // Изредка не срабатывает логика и кнопки остаются заблокированым. В таком случае нет возможности продолжать пользоваться приложением.
 //            // Запустить отображение прогресс бара + заблокировать нажатия как на HomeRadioFragment, так и проигрыватель в main activity
@@ -991,6 +997,8 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                     linearUp.isVisible = false
                     buttonShow.isVisible = true
                 }
+                // Так же запишем в preference, что информацию нужно скрывать в дальнейшем
+                viewModel.setIsHideInfoClicked(true)
             }
 
             "show" -> {
@@ -1001,6 +1009,8 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                     linearUp.isVisible = true
                     buttonShow.isVisible = false
                 }
+                // Так же запишем в preference
+                viewModel.setIsHideInfoClicked(false)
             }
 
             else -> Log.d(TAG, "Unknown String in hideOrShowInfo()")
