@@ -1,6 +1,8 @@
 package com.myproject.radiojourney.other
 
 object Constants {
+    const val MAX_STATIONS_COUNT = 500
+
     // К каждой группе NOTIFICATION мы создаём свой CHANNEL_ID
     const val NOTIFICATION_MUSIC_CHANNEL_ID = "CHANNEL_ID"
 

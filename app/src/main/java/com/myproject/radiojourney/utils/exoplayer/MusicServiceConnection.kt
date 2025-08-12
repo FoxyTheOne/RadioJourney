@@ -172,9 +172,18 @@ class MusicServiceConnection(context: Context) {
         override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
 //            _curPlayingSongLiveData.postValue(metadata) // Getting new meta data (put it into LiveData)
             val oldMetadata = _curPlayingSongLiveData.value
-            Log.d(TAG, "oldMetadata = ${oldMetadata?.description?.title}, ${oldMetadata?.description?.subtitle}, ${oldMetadata?.description?.mediaId} newMetadata = ${metadata?.description?.title},${metadata?.description?.subtitle}, ${metadata?.description?.mediaId}")
-            if (metadata != oldMetadata) {
-                Log.d(TAG, "metadata != oldMetadata")
+            Log.d(
+                TAG,
+                "oldMetadata = ${oldMetadata?.description?.title}, ${oldMetadata?.description?.subtitle}, ${oldMetadata?.description?.mediaId} newMetadata = ${metadata?.description?.title},${metadata?.description?.subtitle}, ${metadata?.description?.mediaId}"
+            )
+//            if (metadata != oldMetadata) {
+            if (metadata?.description?.mediaUri != oldMetadata?.description?.mediaUri
+                || metadata?.description?.extras != oldMetadata?.description?.extras
+            ) {
+                Log.d(
+                    TAG,
+                    "metadata?.description?.mediaUri != oldMetadata?.description?.mediaUri || metadata?.description?.extras != oldMetadata?.description?.extras"
+                )
                 _curPlayingSongLiveData.postValue(metadata)
             }
         }

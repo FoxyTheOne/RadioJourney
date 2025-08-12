@@ -1,10 +1,11 @@
 package com.myproject.radiojourney.data.dataSource.network
 
-import com.myproject.radiojourney.entities.remote.CountryCodeRemote
 import android.util.Log
 import com.myproject.radiojourney.data.dataSource.network.service.IRadioServiceWrapper
+import com.myproject.radiojourney.entities.remote.CountryCodeRemote
 import com.myproject.radiojourney.entities.remote.RadioStationRemote
 import com.myproject.radiojourney.entities.remote.StreamInfoResult
+import com.myproject.radiojourney.other.Constants.MAX_STATIONS_COUNT
 import com.myproject.radiojourney.other.Constants.SERVER_IS_DOWN
 import com.myproject.radiojourney.other.Resource
 import okhttp3.ResponseBody
@@ -14,8 +15,9 @@ import java.io.IOException
 import java.net.InetAddress
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
-import java.util.*
+import java.util.Vector
 import javax.inject.Inject
+
 
 /**
  * These steps should be done in your APP or program.
@@ -193,7 +195,52 @@ class NetworkRadioDataSource @Inject constructor(
 //            Log.d(TAG, "Списки объединены в radioStationRemoteList.size = ${radioStationRemoteList.size}")
 
 //            throwHttpException() // for testing
-            return Resource.success(radioStationRemoteList)
+
+            // !!! ПРОБЛЕМА:
+            // Иногда получаем слишком длинный список радиостанций, из-за чего программа зависает.
+            // РЕШЕНИЕ:
+            // 1. Пагинация - не получилась, переходим к следующему варианту решения.
+            // 2. Уменьшить количество станций:
+            // - Упорядочить список по количеству прослушиваний.
+            // - Затем оставить 1000 самых популярных.
+            // - Упорядочить по алфавиту и затем передать как результат выполнение метода
+
+            // ! Операции работают с пустым списком корректно
+            // compareBy<RadioStationRemote> сортирует по возрастанию, а вам нужно по убыванию популярности
+            // Для больших списков лучше использовать последовательную обработку:
+            try {
+                val clickSortedStationsRemote = radioStationRemoteList
+                    .asSequence()
+                    .sortedByDescending { it.clickcount }
+                    .take(MAX_STATIONS_COUNT)
+                    .toList()  // Конвертируем в List для логирования
+
+                // Логируем ТОП-3 по популярности
+                if (clickSortedStationsRemote.size >= 3) {
+                    Log.d(
+                        TAG,
+                        "TOP by clicks: ${clickSortedStationsRemote[0].clickcount}, ${clickSortedStationsRemote[1].clickcount}, ${clickSortedStationsRemote[2].clickcount}"
+                    )
+                }
+
+                val resultStationsRemote = clickSortedStationsRemote
+                    .asSequence()
+                    .sortedBy { it.name.trim().lowercase() }
+                    .toList()
+
+                // Логируем ТОП-3 по алфавиту
+                if (resultStationsRemote.size >= 3) {
+                    Log.d(
+                        TAG,
+                        "TOP by name: ${resultStationsRemote[0].name}, ${resultStationsRemote[1].name}, ${resultStationsRemote[2].name}"
+                    )
+                }
+
+                return Resource.success(resultStationsRemote)
+            } catch (e: Exception) {
+                Resource.error("Ошибка обработки списка станций", null)
+                return Resource.success(radioStationRemoteList.take(MAX_STATIONS_COUNT))
+            }
 
         } catch (e: HttpException) {
             Log.d(TAG, "Попытка связаться с сервером. Exception: ${e.message}. The server is down")
@@ -204,7 +251,7 @@ class NetworkRadioDataSource @Inject constructor(
 
     // API -> Для того, чтобы воспользоваться API радиостанций, нужно выполнить несколько шагов.
     // These steps should be done in your APP or program.
-    override suspend fun sendGetRequestToMarkRadioStationAsPopular(stationUuid: String) : Boolean {
+    override suspend fun sendGetRequestToMarkRadioStationAsPopular(stationUuid: String): Boolean {
         var isServerDown = false
 
         try {
