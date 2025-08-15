@@ -209,31 +209,34 @@ class NetworkRadioDataSource @Inject constructor(
             // compareBy<RadioStationRemote> сортирует по возрастанию, а вам нужно по убыванию популярности
             // Для больших списков лучше использовать последовательную обработку:
             try {
-                val clickSortedStationsRemote = radioStationRemoteList
+                val resultStationsRemote = radioStationRemoteList
                     .asSequence()
+                    // Фильтрация невалидных станций
+                    .filter { station ->
+                        station.name.isNotBlank() && station.url.isNotBlank()
+                    }
                     .sortedByDescending { it.clickcount }
                     .take(MAX_STATIONS_COUNT)
-                    .toList()  // Конвертируем в List для логирования
-
-                // Логируем ТОП-3 по популярности
-                if (clickSortedStationsRemote.size >= 3) {
-                    Log.d(
-                        TAG,
-                        "TOP by clicks: ${clickSortedStationsRemote[0].clickcount}, ${clickSortedStationsRemote[1].clickcount}, ${clickSortedStationsRemote[2].clickcount}"
-                    )
-                }
-
-                val resultStationsRemote = clickSortedStationsRemote
-                    .asSequence()
-                    .sortedBy { it.name.trim().lowercase() }
+                    .sortedBy { station ->
+                        station.name.trim().lowercase()
+                    }
                     .toList()
 
-                // Логируем ТОП-3 по алфавиту
+                // Логирование для отладки
                 if (resultStationsRemote.size >= 3) {
+                    Log.d(
+                        TAG,
+                        "TOP by clicks: ${resultStationsRemote[0].clickcount}, ${resultStationsRemote[1].clickcount}, ${resultStationsRemote[2].clickcount}"
+                    )
+
                     Log.d(
                         TAG,
                         "TOP by name: ${resultStationsRemote[0].name}, ${resultStationsRemote[1].name}, ${resultStationsRemote[2].name}"
                     )
+                } else if (resultStationsRemote.isNotEmpty()) {
+                    Log.d(TAG, "Processed ${resultStationsRemote.size} stations")
+                } else {
+                    Log.w(TAG, "No valid stations after filtering!")
                 }
 
                 return Resource.success(resultStationsRemote)
