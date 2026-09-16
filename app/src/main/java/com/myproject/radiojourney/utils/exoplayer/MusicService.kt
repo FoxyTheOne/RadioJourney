@@ -27,6 +27,7 @@ import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_LIST_SIZE_MA
 import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_SERVER_IS_DOWN
 import com.myproject.radiojourney.other.Constants.MEDIA_ROOT_ID
 import com.myproject.radiojourney.other.Constants.NETWORK_ERROR
+import com.myproject.radiojourney.other.Constants.PAUSED_NOTIFICATION_TIMEOUT
 import com.myproject.radiojourney.utils.exoplayer.callback.MusicPlaybackPreparer
 import com.myproject.radiojourney.utils.exoplayer.callback.MusicPlayerEventListener
 import com.myproject.radiojourney.utils.exoplayer.callback.MusicPlayerNotificationListener
@@ -35,6 +36,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.IOException
 import java.net.SocketTimeoutException
@@ -93,17 +95,65 @@ class MusicService : MediaBrowserServiceCompat() {
 // название в плейере новое, а играет старая станция
     private var preparedPlaylist = emptyList<MediaMetadataCompat>()
 
-    // Уведомление убирается, когда приложение закрывают (onTaskRemoved). Если после этого снова включат воспроизведение
-    // (сервис ещё жив, например приложение открыли заново), уведомление нужно показать снова
-    private var isNotificationShown = true
-    private val restoreNotificationListener = object : Player.Listener {
-        override fun onPlaybackStateChanged(playbackState: Int) {
-            if (!isNotificationShown && (playbackState == Player.STATE_BUFFERING || playbackState == Player.STATE_READY)) {
+//    // Уведомление убирается, когда приложение закрывают (onTaskRemoved). Если после этого снова включат воспроизведение
+//    // (сервис ещё жив, например приложение открыли заново), уведомление нужно показать снова
+//    private var isNotificationShown = true
+//    private val restoreNotificationListener = object : Player.Listener {
+//        override fun onPlaybackStateChanged(playbackState: Int) {
+//            if (!isNotificationShown && (playbackState == Player.STATE_BUFFERING || playbackState == Player.STATE_READY)) {
+//                musicNotificationManager.showNotification(exoPlayer)
+//                isNotificationShown = true
+//            }
+//        }
+//    }
+
+    // Уведомление показываем, только когда радио играет (или начинает играть), и тогда сервис - foreground.
+    // Радио на паузе (или остановлено ошибкой) - через PAUSED_NOTIFICATION_TIMEOUT уведомление убираем, плейер останавливаем.
+    // Так уведомление никогда не остаётся без живого сервиса: иначе Xiaomi (MIUI) убивал процесс при смахивании приложения,
+    // а уведомление оставалось висеть - не убиралось, кнопки в нём не работали
+    private var isNotificationShown = false
+    private var pauseTimeoutJob: Job? = null
+    private val notificationLifecycleListener = object : Player.Listener {
+        override fun onPlaybackStateChanged(playbackState: Int) = updateNotification()
+        override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) =
+            updateNotification()
+    }
+
+    private fun isPlayingOrStarting(): Boolean =
+        exoPlayer.playWhenReady &&
+                (exoPlayer.playbackState == Player.STATE_BUFFERING || exoPlayer.playbackState == Player.STATE_READY)
+
+    private fun updateNotification() {
+        if (isPlayingOrStarting()) {
+            pauseTimeoutJob?.cancel()
+            pauseTimeoutJob = null
+            if (!isNotificationShown) {
                 musicNotificationManager.showNotification(exoPlayer)
                 isNotificationShown = true
             }
+        } else if (isNotificationShown && pauseTimeoutJob == null) {
+            pauseTimeoutJob = serviceScope.launch {
+                delay(PAUSED_NOTIFICATION_TIMEOUT)
+                Log.d(
+                    TAG,
+                    "Радио на паузе дольше $PAUSED_NOTIFICATION_TIMEOUT мс - убираем уведомление"
+                )
+                exoPlayer.stop() // освобождаем поток. Нажатие play в приложении подготовит станцию заново
+                removeNotificationAndStopService()
+            }
         }
     }
+
+    private fun removeNotificationAndStopService() {
+        pauseTimeoutJob?.cancel()
+        pauseTimeoutJob = null
+        if (isNotificationShown) {
+            musicNotificationManager.cancelNotifications() // -> MusicPlayerNotificationListener.onNotificationCancelled -> stopForeground
+            isNotificationShown = false
+        }
+        stopSelf() // если приложение открыто (к сервису подключено), сервис продолжит работать
+    }
+
 //    001-6 claude -->
 
     private lateinit var musicPlayerEventListener: MusicPlayerEventListener
@@ -206,28 +256,29 @@ class MusicService : MediaBrowserServiceCompat() {
 
         // lambda in this {} will be switched every time, when user chooses a new song
         // <!-- 006 claude
-        val musicPlaybackPreparer = MusicPlaybackPreparer(firebaseMusicSource, serviceScope, { exoPlayer.prepare() }) {
+        val musicPlaybackPreparer =
+            MusicPlaybackPreparer(firebaseMusicSource, serviceScope, { exoPlayer.prepare() }) {
 //        val musicPlaybackPreparer = MusicPlaybackPreparer(firebaseMusicSource, serviceScope) {
-            // 006 claude -->
+                // 006 claude -->
 
-            if (isPlayerInitialized && it == null) {
+                if (isPlayerInitialized && it == null) {
+                    Log.d(
+                        TAG,
+                        "PLAYLIST_UPDATE: 5.$TAG, MediaMetadataCompat == null, выходим из лямбды musicPlaybackPreparer."
+                    )
+                    return@MusicPlaybackPreparer // Если isPlayerInitialized == true, значит это точно не первый запуск. Если isPlayerInitialized && it == null - значит сюда передан результат раньше, чем скачался плейлист (Было curPlayingSong != null && it == null, работает с нюансами)
+                }
+                curPlayingSong = it
+                preparePlayer(
+                    firebaseMusicSource.radioStations,
+                    it,
+                    true
+                )
                 Log.d(
                     TAG,
-                    "PLAYLIST_UPDATE: 5.$TAG, MediaMetadataCompat == null, выходим из лямбды musicPlaybackPreparer."
+                    "PLAYLIST_UPDATE: 5.$TAG, MediaMetadataCompat передана, вызываем preparePlayer()"
                 )
-                return@MusicPlaybackPreparer // Если isPlayerInitialized == true, значит это точно не первый запуск. Если isPlayerInitialized && it == null - значит сюда передан результат раньше, чем скачался плейлист (Было curPlayingSong != null && it == null, работает с нюансами)
             }
-            curPlayingSong = it
-            preparePlayer(
-                firebaseMusicSource.radioStations,
-                it,
-                true
-            )
-            Log.d(
-                TAG,
-                "PLAYLIST_UPDATE: 5.$TAG, MediaMetadataCompat передана, вызываем preparePlayer()"
-            )
-        }
 
         // Observing notifyChildrenChangedLiveData from firebase in service
         notifyChildrenChangedLiveDataObserver = Observer<Boolean> {
@@ -302,8 +353,14 @@ class MusicService : MediaBrowserServiceCompat() {
 
         musicPlayerEventListener = MusicPlayerEventListener(this)
         exoPlayer.addListener(musicPlayerEventListener)
-        exoPlayer.addListener(restoreNotificationListener) // 006 claude
-        musicNotificationManager.showNotification(exoPlayer)
+
+//        exoPlayer.addListener(restoreNotificationListener) // 006 claude
+//        musicNotificationManager.showNotification(exoPlayer)
+
+        exoPlayer.addListener(notificationLifecycleListener)
+        // Уведомление показывается, когда радио начинает играть (notificationLifecycleListener), а не сразу при запуске:
+        // пока ничего не играло, висящее уведомление без foreground-сервиса MIUI оставлял "мёртвым" после закрытия приложения
+
 
 //        // 3.Broadcast для завершения сервиса (1 - в MainActivity)
 //        registerReceiver(receiver, IntentFilter(FILTER_FOR_BROADCAST_MS))
@@ -373,7 +430,7 @@ class MusicService : MediaBrowserServiceCompat() {
 
 //<!-- 001 claude
 //            if (radioStations.isNotEmpty() && curSongIndex < firebaseMusicSource.radioStations.size) {
-                if (radioStations.isNotEmpty() && curSongIndex < radioStations.size) {
+            if (radioStations.isNotEmpty() && curSongIndex < radioStations.size) {
 //                    001 claude -->
 
 //                // Проверить, заканчивается ли ссылка на .m3u8
@@ -401,9 +458,9 @@ class MusicService : MediaBrowserServiceCompat() {
 
                 httpDataSourceFactory.setAllowCrossProtocolRedirects(true)
 
-                    //<!-- 001 claude
+                //<!-- 001 claude
 // Источник строим из того же списка, по которому посчитан curSongIndex, и запоминаем его как preparedPlaylist
-                    preparedPlaylist = radioStations
+                preparedPlaylist = radioStations
 //                    001 claude -->
 
                 exoPlayer.setMediaSource(
@@ -431,7 +488,7 @@ class MusicService : MediaBrowserServiceCompat() {
         }
     }
 
-// media root id - is the id to the very first media item (what should be shown first)
+    // media root id - is the id to the very first media item (what should be shown first)
 // here we also can deny clients connect to a specific id
     override fun onGetRoot(
         clientPackageName: String,
@@ -502,19 +559,32 @@ class MusicService : MediaBrowserServiceCompat() {
         }
     }
 
-    // when the task of the service has been removed (when the intent has been removed)
+    //    // when the task of the service has been removed (when the intent has been removed)
+//    override fun onTaskRemoved(rootIntent: Intent?) {
+//        exoPlayer.stop()
+//
+//        // <!-- 006 claude
+//        // Приложение закрыли (смахнули из недавних). Плейер остановлен, поэтому убираем и уведомление.
+//        // Раньше оно оставалось висеть: его нельзя было смахнуть, а кнопка play в нём ничего не делала
+//        musicNotificationManager.cancelNotifications() // -> MusicPlayerNotificationListener.onNotificationCancelled -> stopSelf()
+//        isNotificationShown = false
+//        // 006 claude -->
+//
+//        super.onTaskRemoved(rootIntent)
+//    }
+
+// when the task of the service has been removed (when the intent has been removed)
     override fun onTaskRemoved(rootIntent: Intent?) {
-        exoPlayer.stop()
-
-        // <!-- 006 claude
-        // Приложение закрыли (смахнули из недавних). Плейер остановлен, поэтому убираем и уведомление.
-        // Раньше оно оставалось висеть: его нельзя было смахнуть, а кнопка play в нём ничего не делала
-        musicNotificationManager.cancelNotifications() // -> MusicPlayerNotificationListener.onNotificationCancelled -> stopSelf()
-        isNotificationShown = false
-        // 006 claude -->
-
+        // Приложение закрыли (смахнули из недавних).
+        // Радио играет - продолжаем играть, уведомление остаётся (на паузе оно уберётся само через PAUSED_NOTIFICATION_TIMEOUT).
+        // Радио не играет - останавливаем плейер и сразу убираем уведомление
+        if (!isPlayingOrStarting()) {
+            exoPlayer.stop()
+            removeNotificationAndStopService()
+        }
         super.onTaskRemoved(rootIntent)
     }
+
 
     override fun onDestroy() {
         Log.d(TAG, "MUSIC SERVICE IS DESTROYED -> вызван метод onDestroy()")
@@ -522,7 +592,8 @@ class MusicService : MediaBrowserServiceCompat() {
         serviceScope.cancel()
 
         exoPlayer.removeListener(musicPlayerEventListener)
-        exoPlayer.removeListener(restoreNotificationListener) // 006 claude
+//        exoPlayer.removeListener(restoreNotificationListener) // 006 claude
+        exoPlayer.removeListener(notificationLifecycleListener)
         exoPlayer.release()
         firebaseMusicSource.notifyChildrenChangedLiveData.removeObserver(
             notifyChildrenChangedLiveDataObserver

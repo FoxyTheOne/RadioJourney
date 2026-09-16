@@ -76,7 +76,11 @@ class MusicPlayerNotificationListener(
                     // Начиная с Android14 нужно указывать тип ForegroundService
 //                    startForeground(NOTIFICATION_ID, notification)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
+                        startForeground(
+                            NOTIFICATION_ID,
+                            notification,
+                            ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+                        )
                     } else {
                         startForeground(NOTIFICATION_ID, notification)
                     }
@@ -86,26 +90,44 @@ class MusicPlayerNotificationListener(
                     // Начиная с Android14 нужно указывать тип ForegroundService
 //                    startForeground(NOTIFICATION_ID, notification)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
+                        startForeground(
+                            NOTIFICATION_ID,
+                            notification,
+                            ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+                        )
                     } else {
                         startForeground(NOTIFICATION_ID, notification)
                     }
 
                 }
 
-            } else {
+//            } else {
+//
+//                musicService.apply {
+//                    // stopForeground(false) - deprecated
+//                    // STOP_FOREGROUND_DETACH if set, the notification previously supplied to startForeground(int, Notification) will be detached from the service's lifecycle.
+//                    // The notification will remain shown even after the service is stopped and destroyed.
+//                    // STOP_FOREGROUND_REMOVE if supplied, the notification previously supplied to startForeground(int, Notification) will be cancelled and removed from display.
+//                    @Suppress("DEPRECATION")
+//                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+//                        stopForeground(Service.STOP_FOREGROUND_DETACH) // than we stop foreground but notification must stay
+//                    } else {
+//                        stopForeground(false) // than we stop foreground but notification must stay
+//                    }
 
-                musicService.apply {
-                    // stopForeground(false) - deprecated
-                    // STOP_FOREGROUND_DETACH if set, the notification previously supplied to startForeground(int, Notification) will be detached from the service's lifecycle.
-                    // The notification will remain shown even after the service is stopped and destroyed.
-                    // STOP_FOREGROUND_REMOVE if supplied, the notification previously supplied to startForeground(int, Notification) will be cancelled and removed from display.
-                    @Suppress("DEPRECATION")
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        stopForeground(Service.STOP_FOREGROUND_DETACH) // than we stop foreground but notification must stay
-                    } else {
-                        stopForeground(false) // than we stop foreground but notification must stay
-                    }
+            } else if (isForegroundService) {
+                // Пауза. Раньше здесь вызывался stopForeground(DETACH): сервис переставал быть foreground, и Xiaomi (MIUI) при смахивании
+                // приложения убивал процесс, а уведомление оставалось "мёртвым" - не убиралось, кнопки не работали.
+                // Теперь сервис остаётся foreground (только обновляем уведомление), а убирается оно само через
+                // PAUSED_NOTIFICATION_TIMEOUT (MusicService) или сразу, если смахнуть приложение на паузе
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    startForeground(
+                        NOTIFICATION_ID,
+                        notification,
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+                    )
+                } else {
+                    startForeground(NOTIFICATION_ID, notification)
                 }
 
             }

@@ -59,6 +59,8 @@ object Constants {
     // Должно быть больше, чем может занять перебор серверов: SERVER_SEARCH_TIME + последний запрос (NETWORK_CALL_TIMEOUT) + запас
     const val PROGRESS_TIMEOUT = SERVER_SEARCH_TIME + NETWORK_CALL_TIMEOUT + 20_000L
 
+    // Через сколько убрать уведомление, если радио стоит на паузе (или остановлено ошибкой)
+    const val PAUSED_NOTIFICATION_TIMEOUT = 5 * 60_000L
 
     // Broadcast для ошибки HttpException при обращении к серверу (FirebaseMusicSource to MainActivity)
     const val FILTER_FOR_BROADCAST_MA_SERVER = "FILTER_FOR_BROADCAST_MA_SERVER"

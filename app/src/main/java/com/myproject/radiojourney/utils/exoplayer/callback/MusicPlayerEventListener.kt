@@ -19,50 +19,55 @@ class MusicPlayerEventListener(
         private const val TAG = "MusicPlayerEventLis-r"
     }
 
-    private var playWhenReadySaved = true
-
-    // default void onPlayerStateChanged(boolean playWhenReady, @State int playbackState) {} is DEPRECATED.
-    // Use onPlaybackStateChanged(int) and onPlayWhenReadyChanged(boolean, int) instead:
-    // - default void onPlaybackStateChanged(@State int playbackState) {}
-    // - default void onPlayWhenReadyChanged(
-    //        boolean playWhenReady, @PlayWhenReadyChangeReason int reason) {}
-    //
-//    override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
-//        super.onPlayerStateChanged(playWhenReady, playbackState)
+//    private var playWhenReadySaved = true
+//
+//    // default void onPlayerStateChanged(boolean playWhenReady, @State int playbackState) {} is DEPRECATED.
+//    // Use onPlaybackStateChanged(int) and onPlayWhenReadyChanged(boolean, int) instead:
+//    // - default void onPlaybackStateChanged(@State int playbackState) {}
+//    // - default void onPlayWhenReadyChanged(
+//    //        boolean playWhenReady, @PlayWhenReadyChangeReason int reason) {}
+//    //
+////    override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
+////        super.onPlayerStateChanged(playWhenReady, playbackState)
+////        // if everything is ready and prepared AND we shouldn't play it automatically
+////        if (playbackState == Player.STATE_READY && !playWhenReady) {
+////            musicService.stopForeground(false) // than we stop foreground but notification must stay
+////        }
+////    }
+//
+//    override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+//        super.onPlayWhenReadyChanged(playWhenReady, reason)
+//
+//        playWhenReadySaved = playWhenReady
+//    }
+//
+//    override fun onPlaybackStateChanged(playbackState: Int) {
+//        super.onPlaybackStateChanged(playbackState)
+//
 //        // if everything is ready and prepared AND we shouldn't play it automatically
-//        if (playbackState == Player.STATE_READY && !playWhenReady) {
-//            musicService.stopForeground(false) // than we stop foreground but notification must stay
+//        if (playbackState == Player.STATE_READY && !playWhenReadySaved) {
+//
+//            musicService.apply {
+//                // stopForeground(false) - deprecated
+//                // STOP_FOREGROUND_DETACH if set, the notification previously supplied to startForeground(int, Notification) will be detached from the service's lifecycle.
+//                // The notification will remain shown even after the service is stopped and destroyed.
+//                // STOP_FOREGROUND_REMOVE if supplied, the notification previously supplied to startForeground(int, Notification) will be cancelled and removed from display.
+//                @Suppress("DEPRECATION")
+//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+//                    stopForeground(Service.STOP_FOREGROUND_DETACH) // than we stop foreground but notification must stay
+//                } else {
+//                    stopForeground(false) // than we stop foreground but notification must stay
+//                }
+//            }
+//
 //        }
+//
 //    }
 
-    override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
-        super.onPlayWhenReadyChanged(playWhenReady, reason)
+    // !!!!!!!!!!!!!! Раньше здесь при паузе вызывался stopForeground(). Сервис переставал быть foreground, и Xiaomi (MIUI) при смахивании
+    // приложения сразу убивал процесс: уведомление оставалось висеть "мёртвым" - не смахивалось, кнопки не работали.
+    // Теперь на паузе сервис остаётся foreground, а уведомление убирается само через PAUSED_NOTIFICATION_TIMEOUT (MusicService) !!!!!!!!!!!!
 
-        playWhenReadySaved = playWhenReady
-    }
-
-    override fun onPlaybackStateChanged(playbackState: Int) {
-        super.onPlaybackStateChanged(playbackState)
-
-        // if everything is ready and prepared AND we shouldn't play it automatically
-        if (playbackState == Player.STATE_READY && !playWhenReadySaved) {
-
-            musicService.apply {
-                // stopForeground(false) - deprecated
-                // STOP_FOREGROUND_DETACH if set, the notification previously supplied to startForeground(int, Notification) will be detached from the service's lifecycle.
-                // The notification will remain shown even after the service is stopped and destroyed.
-                // STOP_FOREGROUND_REMOVE if supplied, the notification previously supplied to startForeground(int, Notification) will be cancelled and removed from display.
-                @Suppress("DEPRECATION")
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    stopForeground(Service.STOP_FOREGROUND_DETACH) // than we stop foreground but notification must stay
-                } else {
-                    stopForeground(false) // than we stop foreground but notification must stay
-                }
-            }
-
-        }
-
-    }
 
     // TODO onPlayerError - обработать /  Обрабатывала в другом месте - проверить, нужно ли
     override fun onPlayerError(error: PlaybackException) {
