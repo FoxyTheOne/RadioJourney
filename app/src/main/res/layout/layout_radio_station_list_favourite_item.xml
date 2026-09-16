@@ -27,6 +27,8 @@
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/text_radioStationName"
+            android:ellipsize="end"
+            android:maxLines="2"
             style="@style/login_bottom_orange"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

@@ -36,6 +36,7 @@ import com.google.android.gms.tasks.OnTokenCanceledListener
 import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.IAppSettings
 import com.myproject.radiojourney.R
+import com.myproject.radiojourney.other.Constants.MAX_STATIONS_COUNT
 import com.myproject.radiojourney.databinding.LayoutHomeRadioBinding
 import com.myproject.radiojourney.entities.presentation.CountryPresentation
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
@@ -96,6 +97,13 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
     //        Place(name = "Minsk", latLng = LatLng(53.90580039557321, 27.562806971874416))
     //    )
     private var countryList = listOf<CountryPresentation>()
+
+//    // <!-- 004 claude
+//    // Код страны, плейлист которой только что выбрали: карту двигаем к ней, а не к маркеру "вы здесь"
+//    private var countryCodeToShow: String? = null
+//    private var isCountryShownOnMap = false
+//    // 004 claude -->
+
     private var isInternetAvailable = false
 
     override fun onCreateView(
@@ -185,7 +193,6 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             )
         }
 
-//        hideOrShowInfo("show")
         viewModel.hideOrShowInfoWhenFragmentCreated()
 
         // 1.2. ViewModel. We bind our viewModel to the lifecycle of our activity, not fragment. We pass our activity as an owner of the lifecycle.
@@ -220,11 +227,19 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             )
             var stationUuid = ""
 
-            arguments?.parcelable<RadioStationPresentation>("radio_station") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
+            // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций. Определяем это по ключу "radio_station"
+            arguments?.parcelable<RadioStationPresentation>("radio_station")
                 ?.let { radioStation ->
                     Log.d(TAG, "!! PLAYLIST_UPDATE: Передан аргумент с ключом radio_station")
-                    stationUuid = radioStation.stationuuid
+                    Log.d("UI_DEBUG", "PLAYER_DEBUG: Country selected: ${radioStation.countryCode}")
                     // Здесь мы получаем выбранную станцию из списка радиостанций по клику. Необходимо передать её в наш новый плейер
+                    stationUuid = radioStation.stationuuid
+//                    countryCodeToShow = radioStation.countryCode.takeUnless {
+//                        it.endsWith(
+//                            "_FAV",
+//                            true
+//                        )
+//                    } // 004 claude
 
                     val curCountryCode =
                         mainViewModel.curPlayingSongLiveData.value?.description?.subtitle.toString()
@@ -248,6 +263,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                             "PLAYLIST_UPDATE: Выбранный элемент списка: $radioStation. Одинаковый код страны и был включен не FAV - Выбор из того же плейлиста, сountryCode = $argCountryCode"
                         )
                         mainViewModel.showProgressAndDisableClick("CRSt")
+//                        mainViewModel.showProgressAndDisableClick()
 
                         mainViewModel.saveNewMediaId(radioStation.stationuuid)
                         mainViewModel.playOrToggleSong(radioStation, false)
@@ -263,6 +279,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                             "PLAYLIST_UPDATE: Выбранный элемент списка: $radioStation. Одинаковый код страны, но был включен FAV - Значит загрузка нового плейлиста. Проблемный момент, если совпадает ещё и станция, сountryCode = $argCountryCode"
                         )
                         mainViewModel.showProgressAndDisableClick("Dp")
+//                        mainViewModel.showProgressAndDisableClick()
 
                         mainViewModel.saveNewMediaId(radioStation.stationuuid)
                         mainViewModel.fetchSongs(radioStation.countryCode)
@@ -275,6 +292,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                             "PLAYLIST_UPDATE: Выбранный элемент списка: $radioStation. Другой код страны, загрузка нового плейлиста, сountryCode = $argCountryCode"
                         )
                         mainViewModel.showProgressAndDisableClick("Dp")
+//                        mainViewModel.showProgressAndDisableClick()
 
                         mainViewModel.saveNewMediaId(radioStation.stationuuid)
                         mainViewModel.fetchSongs(radioStation.countryCode)
@@ -282,11 +300,16 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                     }
                 }
 
-            arguments?.parcelable<RadioStationPresentation>("favourite_station") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
+            // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка избранных радиостанций
+            arguments?.parcelable<RadioStationPresentation>("favourite_station")
                 ?.let { radioStationFavourite ->
                     Log.d(TAG, "!! PLAYLIST_UPDATE: Передан аргумент с ключом favourite_station")
-                    stationUuid = radioStationFavourite.stationuuid
+                    Log.d(
+                        "UI_DEBUG",
+                        "PLAYER_DEBUG: Country selected: ${radioStationFavourite.countryCode}"
+                    )
                     // Здесь мы переходим из фрагмента "Избранное". Стоит загрузить в плейер плейлист избранного.
+                    stationUuid = radioStationFavourite.stationuuid
 
                     val curCountryCode =
                         mainViewModel.curPlayingSongLiveData.value?.description?.subtitle.toString()
@@ -299,49 +322,6 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                     )
                 }
 
-
-//            mainViewModel.showProgressAndDisableClick()
-//            Log.d(
-//                TAG,
-//                "PLAYLIST_UPDATE: 1. Выбранная из списка станция передана в HomeRadioFragment"
-//            )
-//
-//            // arguments?.getParcelable<RadioStationPresentation>("radio_station") is deprecated. For lesser code, let's write inline lambda for < and >= Build.VERSION_CODES.TIRAMISU (parcelable instead of getParcelable)
-//
-//            arguments?.parcelable<RadioStationPresentation>("radio_station") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
-//                ?.let { radioStation ->
-//                    Log.d(TAG, "Выбранный элемент списка: $radioStation")
-//
-//                    // Здесь мы получаем выбранную станцию из списка радиостанций по клику. Необходимо передать её в наш новый плейер
-//                    mainViewModel.saveNewMediaId(radioStation.stationuuid)
-//                    mainViewModel.fetchSongs(radioStation.countryCode)
-//                    mainViewModel.playOrToggleSong(radioStation, false)
-//                    mainViewModel.notJustLaunchedEnableAutoplay()
-//                }
-//
-//            arguments?.parcelable<RadioStationPresentation>("radio_station_favourite") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
-//                ?.let { radioStationFavourite ->
-//                    Log.d(TAG, "Выбранный элемент списка: $radioStationFavourite")
-//
-//                    // Здесь мы переходим из фрагмента "Избранное". Стоит загрузить в плейер плейлист избранного.
-//                    mainViewModel.saveNewMediaId(radioStationFavourite.stationuuid)
-//                    mainViewModel.fetchSongs("FAV")
-//                    mainViewModel.playOrToggleSong(radioStationFavourite, false)
-//                    mainViewModel.notJustLaunchedEnableAutoplay()
-//                }
-//
-//            // Второй раз одно и то же? Закомментирую
-////            arguments?.parcelable<RadioStationPresentation>("radio_station_favourite") // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций
-////                ?.let { radioStationFavourite ->
-////                    Log.d(TAG, "Выбранный элемент списка: $radioStationFavourite")
-////
-////                    // Здесь мы переходим из фрагмента "Избранное". Стоит загрузить в плейер плейлист избранного.
-////                    mainViewModel.saveNewMediaId(radioStationFavourite.stationuuid)
-////                    mainViewModel.fetchSongs("FAV")
-////                    mainViewModel.playOrToggleSong(radioStationFavourite, false)
-////                    mainViewModel.notJustLaunchedEnableAutoplay()
-////                }
-
             // Автор API хочет, чтобы вы отправляли запрос /json/url каждый раз, когда пользователь кликает на радиостанцию. Это позволяет отмечать станции как популярные. Ваш запрос должен выглядеть примерно так:
             // String stationUrl = "https://de1.api.radio-browser.info/json/url/" + stationId;
             // где stationId - это идентификатор выбранной радиостанции.
@@ -350,6 +330,14 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                 mainViewModel.markRadioStationAsPopularSendGetRequest(stationUuid)
             }
 
+            // <!-- 006 claude
+            // Аргумент обрабатываем один раз. Фрагмент остаётся в стеке навигации, и при возвращении на него кнопкой "Назад"
+            // (например, из текущего плейлиста) onViewCreated вызывается снова с теми же аргументами - станция включалась
+            // заново, даже если пользователь поставил плейер на паузу
+            arguments?.remove("radio_station")
+            arguments?.remove("favourite_station")
+            // 006 claude -->
+
         } else if (mainViewModel.curPlayingSongLiveData.value == null) {
             if (!mainViewModel.isServerDown) {
                 Log.d(
@@ -357,6 +345,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                     "Аргументы равны нулю arguments = $arguments, curPlayingSong = null, сервер доступен isServerDown = ${mainViewModel.isServerDown} показываем полосу прогресса"
                 )
                 mainViewModel.showProgressAndDisableClick("Dp")
+//                mainViewModel.showProgressAndDisableClick()
             } else {
                 showCustomDialog(R.string.dialogPleaseWait_title2, R.string.dialogPleaseWait_text5)
             }
@@ -482,7 +471,13 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         }
 
         // LOCATION -> 1.5. Создадим метод для получения Current location либо Last location
-        getCurrentOrLastLocation()
+
+        // <!-- 004-6 claude
+//        getCurrentOrLastLocation()
+
+        // Если пользователь уже двигал карту (позиция сохранена), не уводим её к маркеру "вы здесь" - к нему можно вернуться кнопкой
+        getCurrentOrLastLocation(moveCamera = mainViewModel.mapCameraPosition == null)
+        // 004-6 claude -->
         // Получить локацию нужно разово, при открытии фрагмента. Обновлять не нужно.
 
         binding?.buttonYouAreHere?.setOnClickListener {
@@ -592,6 +587,15 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             showProgress()
             binding?.progressCircularLoadingArguments?.isVisible = true
         }
+//        mainViewModel.setNonClickableLiveData.observe(viewLifecycleOwner) {
+////            // Запустить отображение прогресс бара + заблокировать нажатия как на HomeRadioFragment, так и проигрыватель в main activity
+//            binding?.buttonGoToFavourites?.isClickable = false
+//            binding?.buttonGoToFavourites?.isEnabled = false
+//
+//            // Progress bar
+//            showProgress()
+//            binding?.progressCircularLoadingArguments?.isVisible = true
+//        }
         mainViewModel.setClickableLiveData.observe(viewLifecycleOwner) {
 //            // Убрать отображение прогресс бара + разблокировать нажатия как на HomeRadioFragment, так и проигрыватель в main activity
 //            // HomeRadioFragment
@@ -686,6 +690,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                             addMarkersOnMap(countryPresentation)
                         }
                         hideProgress()
+//                        showSelectedCountryOnMap() // 004 claude, 006 comment
 
                         if (countryPresentationList == emptyList<CountryPresentation>()) { // Мы переходим на эту страницу только если БД не пуста. Если массив пустой - что-то пошло не так
                             showProgress()
@@ -749,7 +754,12 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
     // Т.к. на этот фрагмент мы попадаем только при согласии на получение местоположения, значит здесь разрешение у нас точно есть
     // Используем инициализированный fusedLocationProviderClient для доступа к методам
     @SuppressLint("MissingPermission")
-    private fun getCurrentOrLastLocation() {
+
+    // <!-- 004 claude
+//    private fun getCurrentOrLastLocation() {
+
+    private fun getCurrentOrLastLocation(moveCamera: Boolean = true) {
+        // 004 claude -->
         // Last location
         fusedLocationProviderClient.lastLocation.addOnSuccessListener { location: Location? ->
             location
@@ -760,7 +770,11 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             ) // Проверяем получение ширины и долготы в логе
 
             // GOOGLE MAPS -> 2.4. Покажем на карте, где мы находимся (один раз). Создадим метод showMyLocation() и передадим туда текущее местоположение
-            showMyLocation(LatLng(location.latitude, location.longitude))
+            // <!-- 004 claude
+//            showMyLocation(LatLng(location.latitude, location.longitude))
+
+            showMyLocation(LatLng(location.latitude, location.longitude), moveCamera)
+            // 004 claude -->
         }
 
         // Current location
@@ -792,12 +806,22 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             )
 
             // GOOGLE MAPS -> 2.4. Покажем на карте, где мы находимся (один раз). Создадим метод showMyLocation() и передадим туда текущее местоположение
-            showMyLocation(LatLng(location.latitude, location.longitude))
+
+            // <!-- 004 claude
+//            showMyLocation(LatLng(location.latitude, location.longitude))
+
+            showMyLocation(LatLng(location.latitude, location.longitude), moveCamera)
+            // 004 claude -->
         }
     }
 
     // GOOGLE MAPS -> 2.5. Покажем на карте, где мы находимся. Создадим метод showMyLocation() и передадим туда текущее местоположение
-    private fun showMyLocation(latLng: LatLng) {
+    // <!-- 004 claude
+//    private fun showMyLocation(latLng: LatLng) {
+
+    private fun showMyLocation(latLng: LatLng, moveCamera: Boolean = true) {
+        // 004 claude -->
+
         Log.d(
             TAG,
             "Метод showMyLocation вызван: latitude = ${latLng.latitude}, longitude = ${latLng.longitude}"
@@ -813,7 +837,11 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             )
         }
         // И передвинем камеру
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 5f))
+        // <!-- 004 claude
+//        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 5f))
+
+        if (moveCamera) mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 5f))
+        // 004 claude -->
     }
 
     // ADD MARKERS TO MAP -> 3. Здесь мы добавляем метки городов на карту
@@ -836,6 +864,21 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 //        }
 //    }
 
+//    // <!-- 004 claude
+//    // Двигаем карту к стране, плейлист которой только что выбрали (маркеры не меняем). Один раз за открытие фрагмента.
+//    // Вызывается и после загрузки списка стран, и в onMapReady - что из них случится позже, тот и сработает
+//    private fun showSelectedCountryOnMap() {
+//        if (isCountryShownOnMap || !::mMap.isInitialized) return
+//        val countryCode = countryCodeToShow ?: return
+//        val country = countryList.find { it.countryCode.equals(countryCode, true) } ?: return
+//
+//        // Зум оставляем как есть, но не меньше 4, чтобы страну было видно
+//        val zoom = maxOf(mMap.cameraPosition.zoom, 5f)
+//        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(country.countryLocation, zoom))
+//        isCountryShownOnMap = true
+//    }
+//    // 004 claude -->
+
     private fun addMarkersOnMap(countryPresentation: CountryPresentation) {
 //        Log.d(
 //            TAG,
@@ -845,7 +888,8 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             val marker = mMap.addMarker(
                 MarkerOptions()
                     .title(countryPresentation.countryName)
-                    .snippet("Список радиостанций (${countryPresentation.stationCount})")
+//                    .snippet("Список радиостанций (${countryPresentation.stationCount})")
+                    .snippet("Список радиостанций (${minOf(countryPresentation.stationCount, MAX_STATIONS_COUNT)})") // 004 claude // загружается не больше MAX_STATIONS_COUNT станций
                     .position(countryPresentation.countryLocation)
                     .icon(BitmapDescriptorFactory.fromBitmap(customBitmapMarker))
             )
@@ -861,6 +905,19 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
     // !!! This method passes a GoogleMap instance to you, which you can then use to perform various operations on the map.
     override fun onMapReady(map: GoogleMap) {
         this.mMap = map
+//        showSelectedCountryOnMap() // 004 claude // если список стран уже загружен раньше карты // comment 006
+
+        // <!-- 006 claude
+        // Фрагмент создаётся заново при каждом возвращении на главный экран. Чтобы карта не "загружалась заново",
+        // возвращаем её туда, где пользователь её оставил (позиция хранится в MainViewModel, пока приложение открыто)
+        mainViewModel.mapCameraPosition?.let { savedPosition ->
+            mMap.moveCamera(CameraUpdateFactory.newCameraPosition(savedPosition))
+        }
+        mMap.setOnCameraIdleListener {
+            mainViewModel.mapCameraPosition = mMap.cameraPosition
+        }
+        // 006 claude -->
+
         // Далее по документации здесь делают некоторые действия, однако мы сделаем их в отдельном методе
 
         // Обработка клика по InfoWindow маркера
@@ -884,6 +941,12 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                         TAG,
                         "Результат - выбран маркер: $latLon = ${country.countryLocation}, ${country.countryName}"
                     )
+
+                    // <!-- 006 claude
+                    // Когда вернёмся на главный экран (посмотрев список, загрузив плейлист или просто назад), карта будет на этой стране
+                    mainViewModel.mapCameraPosition =
+                        CameraPosition.fromLatLngZoom(country.countryLocation, mMap.cameraPosition.zoom)
+                    // 006 claude -->
 
                     // Перенесём countryCode на RadioListFragment для запроса списка станций
                     val direction =
@@ -942,6 +1005,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                 "PLAYLIST_UPDATE: Выбранный элемент списка: $argRadioStationFavourite. Одинаковый код страны, но был включен НЕ FAV - Выбор из другого плейлиста. Проблемный момент, если совпадает ещё и станция, сountryCode = $argCountryCode"
             )
             mainViewModel.showProgressAndDisableClick("Dp")
+//            mainViewModel.showProgressAndDisableClick()
 
             mainViewModel.saveNewMediaId(argRadioStationFavourite.stationuuid)
             mainViewModel.fetchSongs("FAV")
@@ -954,6 +1018,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                 "PLAYLIST_UPDATE: Выбранный элемент списка: $argRadioStationFavourite. Был включен НЕ FAV - Выбор из другого плейлиста, сountryCode = $argCountryCode"
             )
             mainViewModel.showProgressAndDisableClick("Dp")
+//            mainViewModel.showProgressAndDisableClick()
 
             mainViewModel.saveNewMediaId(argRadioStationFavourite.stationuuid)
             mainViewModel.fetchSongs("FAV")
@@ -965,6 +1030,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                 "PLAYLIST_UPDATE: Выбранный элемент списка: $argRadioStationFavourite. Выбор из того же плейлиста, сountryCode = $argCountryCode"
             )
             mainViewModel.showProgressAndDisableClick("CRSt")
+//            mainViewModel.showProgressAndDisableClick()
 
             mainViewModel.saveNewMediaId(argRadioStationFavourite.stationuuid)
             mainViewModel.playOrToggleSong(argRadioStationFavourite, false)

@@ -3,8 +3,10 @@ package com.myproject.radiojourney.data.dataSource.network.service
 import com.myproject.radiojourney.entities.remote.CountryCodeRemote
 import com.myproject.radiojourney.entities.remote.RadioStationRemote
 import com.myproject.radiojourney.entities.remote.StreamInfoResult
+import com.myproject.radiojourney.other.Constants.MAX_STATIONS_COUNT
 import retrofit2.http.GET
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 /**
  * Retrofit2
@@ -24,18 +26,36 @@ interface IRadioService {
         private const val URL_PATH = "url"
     }
 
-    // Пример - http://de1.api.radio-browser.info/json/countrycodes
+    // Пример - http://de1.api.radio-browser.info/json/countrycodes?hidebroken=true
     @GET("$BASE_PATH/{countrycodes}")
     suspend fun getCountryCodeList(
-        @Path("countrycodes") countryCodes: String = COUNTRY_CODE_PATH
+        @Path("countrycodes") countryCodes: String = COUNTRY_CODE_PATH,
+
+        // <!-- 004 claude
+        // Считать только работающие станции (как и в списке станций ниже)
+        @Query("hidebroken") hideBroken: Boolean = true
+        // 004 claude -->
+
     ): List<CountryCodeRemote>
 
     // Пример - http://de1.api.radio-browser.info/{format}/stations/bycountrycodeexact/{searchterm}
+    // Пример - http://de1.api.radio-browser.info/json/stations/bycountrycodeexact/US?hidebroken=true&order=clickcount&reverse=true&limit=500
     @GET("$BASE_PATH/{stations}/{bycountrycodeexact}/{searchterm}")
     suspend fun getRadioStationList(
         @Path("stations") stations: String = STATIONS_PATH,
         @Path("bycountrycodeexact") byCountryCodeExact: String = BY_COUNTRY_CODE_EXACT_PATH,
-        @Path("searchterm") searchTerm: String
+        @Path("searchterm") searchTerm: String,
+
+        // <!-- 004 claude
+        // Не присылать станции, которые не прошли последнюю проверку сервера radio-browser (lastcheckok = 0)
+        @Query("hidebroken") hideBroken: Boolean = true,
+        // Сортировка и лимит - на сервере. Без них сервер отдаёт максимум 1000 станций в произвольном порядке
+        // (у US их больше 8000), и "самые популярные" выбирались только из этой случайной 1000
+        @Query("order") order: String = "clickcount",
+        @Query("reverse") reverse: Boolean = true,
+        @Query("limit") limit: Int = MAX_STATIONS_COUNT
+        // 004 claude -->
+
     ): List<RadioStationRemote>
 
     //    Station click counter

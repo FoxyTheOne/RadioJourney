@@ -14,6 +14,7 @@ import com.myproject.radiojourney.utils.extension.call
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.IOException
 import javax.inject.Inject
 
@@ -35,12 +36,19 @@ class RecommendedListViewModel @Inject constructor(
         _radioStationRecommendedListLiveData
 
     // Favorite
-    private val _stationSavedInFavouritesLiveData = MutableLiveData<Boolean>()
-    val stationSavedInFavouritesLiveData: MutableLiveData<Boolean> =
-        _stationSavedInFavouritesLiveData
-    private val _stationDeletedFromFavouritesLiveData = MutableLiveData<Boolean>()
-    val stationDeletedFromFavouritesLiveData: MutableLiveData<Boolean> =
-        _stationDeletedFromFavouritesLiveData
+    // <!-- 007 claude
+//    private val _stationSavedInFavouritesLiveData = MutableLiveData<Boolean>()
+//    val stationSavedInFavouritesLiveData: MutableLiveData<Boolean> =
+//        _stationSavedInFavouritesLiveData
+//    private val _stationDeletedFromFavouritesLiveData = MutableLiveData<Boolean>()
+//    val stationDeletedFromFavouritesLiveData: MutableLiveData<Boolean> =
+//        _stationDeletedFromFavouritesLiveData
+
+    // Звезду нажали в этом списке и изменение сохранено в базе. Внутри - станция с новым значением isStationInFavourite
+    private val _stationFavouriteChangedLiveData = MutableLiveData<Event<RadioStationPresentation>>()
+    val stationFavouriteChangedLiveData: LiveData<Event<RadioStationPresentation>> =
+        _stationFavouriteChangedLiveData
+    // 007 claude -->
 
     // LiveData, которые будут отвечать за отображение прогресса (кружок)
     private val _showProgressLiveData = MutableLiveData<Boolean>()
@@ -92,37 +100,76 @@ class RecommendedListViewModel @Inject constructor(
         }
     }
 
+    // <!-- 007 claude
+//    fun checkIsStationInFavouritesAndChangeTheStar(radioStationOnStarClick: RadioStationPresentation) {
+//        viewModelScope.launch(Dispatchers.IO) {
+//            try {
+//                if (radioStationOnStarClick.isStationInFavourite) {
+//                    // Если станция есть в избранном и нажали на звезду, нужно из избранного удалить и убрать звезду
+//                    recommendedListInteractor.deleteStationInRoomFromFavourite(
+//                        radioStationOnStarClick
+//                    )
+//                    _stationDeletedFromFavouritesLiveData.call()
+//                    // В случае успеха, так же ставим false в объекте текущей радиостанции
+//                    _radioStationRecommendedListLiveData.value.apply {
+//                        this?.forEach {
+//                            if (it.urlResolved == radioStationOnStarClick.urlResolved) {
+//                                it.isStationInFavourite = false
+//                            }
+//                        }
+//                    }
+//                } else {
+//                    // Если станции в избранном нет, нужно добавить её в избранное и поставить звезду
+//                    recommendedListInteractor.addStationInRoomToFavourites(
+//                        radioStationOnStarClick
+//                    )
+//                    _stationSavedInFavouritesLiveData.call()
+//                    // В случае успеха, так же ставим true в объекте текущей радиостанции
+//                    _radioStationRecommendedListLiveData.value.apply {
+//                        this?.forEach {
+//                            if (it.urlResolved == radioStationOnStarClick.urlResolved) {
+//                                it.isStationInFavourite = true
+//                            }
+//                        }
+//                    }
+//                }
+//            } catch (e1: AccountsException) {
+//                // AccountsException -> Known direct subclasses: AuthenticatorException, NetworkErrorException, OperationCanceledException
+//                e1.printStackTrace()
+//                _dialogInternetTroubleLiveData.call()
+//            } catch (e: IOException) {
+//                e.printStackTrace()
+//                _errorMessageLiveData.postValue(
+//                    Event(
+//                        Resource.error(
+//                            "Failed connecting to the local database",
+//                            null
+//                        )
+//                    )
+//                )
+//            }
+//        }
+//    }
+
     fun checkIsStationInFavouritesAndChangeTheStar(radioStationOnStarClick: RadioStationPresentation) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                if (radioStationOnStarClick.isStationInFavourite) {
-                    // Если станция есть в избранном и нажали на звезду, нужно из избранного удалить и убрать звезду
-                    recommendedListInteractor.deleteStationInRoomFromFavourite(
-                        radioStationOnStarClick
-                    )
-                    _stationDeletedFromFavouritesLiveData.call()
-                    // В случае успеха, так же ставим false в объекте текущей радиостанции
-                    _radioStationRecommendedListLiveData.value.apply {
-                        this?.forEach {
-                            if (it.urlResolved == radioStationOnStarClick.urlResolved) {
-                                it.isStationInFavourite = false
-                            }
-                        }
-                    }
-                } else {
+                val isFavourite = !radioStationOnStarClick.isStationInFavourite
+                if (isFavourite) {
                     // Если станции в избранном нет, нужно добавить её в избранное и поставить звезду
-                    recommendedListInteractor.addStationInRoomToFavourites(
-                        radioStationOnStarClick
-                    )
-                    _stationSavedInFavouritesLiveData.call()
-                    // В случае успеха, так же ставим true в объекте текущей радиостанции
-                    _radioStationRecommendedListLiveData.value.apply {
-                        this?.forEach {
-                            if (it.urlResolved == radioStationOnStarClick.urlResolved) {
-                                it.isStationInFavourite = true
-                            }
-                        }
+                    recommendedListInteractor.addStationInRoomToFavourites(radioStationOnStarClick)
+                } else {
+                    // Если станция есть в избранном и нажали на звезду, нужно из избранного удалить и убрать звезду
+                    recommendedListInteractor.deleteStationInRoomFromFavourite(radioStationOnStarClick)
+                }
+
+                withContext(Dispatchers.Main) {
+                    // Сначала меняем признак в списке (по stationuuid), потом сообщаем экрану
+                    _radioStationRecommendedListLiveData.value?.forEach {
+                        if (it.stationuuid == radioStationOnStarClick.stationuuid) it.isStationInFavourite = isFavourite
                     }
+                    _stationFavouriteChangedLiveData.value =
+                        Event(radioStationOnStarClick.copy(isStationInFavourite = isFavourite))
                 }
             } catch (e1: AccountsException) {
                 // AccountsException -> Known direct subclasses: AuthenticatorException, NetworkErrorException, OperationCanceledException
@@ -141,5 +188,6 @@ class RecommendedListViewModel @Inject constructor(
             }
         }
     }
+    // 007 claude -->
 
 }

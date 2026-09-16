@@ -7,9 +7,11 @@ import android.view.View
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.appcompat.widget.AppCompatTextView
+import androidx.core.view.doOnLayout
 import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
@@ -34,8 +36,8 @@ class CurrentPlaylistFragment : BaseRadioListFragmentAbstract() {
     // 1.1. ViewModel. We bind our viewModel to the cycle of our activity, not fragment. So, we need to do this way:
     private lateinit var mainViewModel: MainViewModel
 
-    @Inject
-    lateinit var musicServiceConnection: MusicServiceConnection
+//    @Inject
+//    lateinit var musicServiceConnection: MusicServiceConnection // comment - 006 claude
 
     private var radioStationPlaylist: List<RadioStationPresentation> = emptyList()
     private lateinit var textRadioListTitle: AppCompatTextView
@@ -91,7 +93,14 @@ class CurrentPlaylistFragment : BaseRadioListFragmentAbstract() {
 
         if (radioStationPlaylist.isNotEmpty()) {
 //        if (!radioStationPlaylist.isNullOrEmpty()) {
-            radioListAdapter = RadioListAdapter(radioStationPlaylist) { radioStationPresentationOnClick ->
+
+            // <!-- 005 claude
+//            radioListAdapter = RadioListAdapter(radioStationPlaylist) { radioStationPresentationOnClick ->
+
+            val currentStationUuid = mainViewModel.curPlayingSongLiveData.value?.description?.mediaId
+            radioListAdapter = RadioListAdapter(radioStationPlaylist, currentStationUuid) { radioStationPresentationOnClick ->
+            // 005 claude -->
+
                 Log.d(TAG, "Выбранный элемент списка: $radioStationPresentationOnClick")
 
                 // Открываем по клику другой фрагмент, передаём туда нашу радиостанцию
@@ -102,20 +111,51 @@ class CurrentPlaylistFragment : BaseRadioListFragmentAbstract() {
             }
 
             recyclerViewRadioStationList.adapter = radioListAdapter
+
+            // <!-- 005 claude
+            // Открываем список там, где сейчас играющая станция (порядок станций не меняется)
+            scrollToStation(radioListAdapter.indexOf(currentStationUuid))
+
+            // Если станция переключилась, пока список открыт (например, кнопкой в уведомлении), переносим выделение
+            mainViewModel.curPlayingSongLiveData.observe(viewLifecycleOwner) { metadata ->
+                radioListAdapter.setCurrentStation(metadata?.description?.mediaId)
+            }
+            // 005 claude -->
+
         } else {
             textPlaylistEmpty.isVisible = true
         }
 
-        // TODO Этому здесь не место. Если будет так оставлять, нужно перенести в корутины. Хотя с другой стороны - нам нужно, чтобы пока не заиграет станция, ничего не нажималось. Пока что всё и так работает хорошо
-        val isPlayerPrepared = mainViewModel.playbackStateLiveData.value?.isPrepared ?: false
-        mainViewModel.playbackStateLiveData.value?.let { playbackState ->
-            if (isPlayerPrepared && playbackState.isPlayEnabled) {
-                musicServiceConnection.transportControls.play()
-            }
+        // <!-- 006 claude
+//        // TODO Этому здесь не место. Если будет так оставлять, нужно перенести в корутины. Хотя с другой стороны - нам нужно, чтобы пока не заиграет станция, ничего не нажималось. Пока что всё и так работает хорошо
+//        val isPlayerPrepared = mainViewModel.playbackStateLiveData.value?.isPrepared ?: false
+//        mainViewModel.playbackStateLiveData.value?.let { playbackState ->
+//            if (isPlayerPrepared && playbackState.isPlayEnabled) {
+//                musicServiceConnection.transportControls.play()
+//            }
+//
+//        }
 
-        }
+        // Раньше здесь плейер автоматически включался при открытии списка (обходили глюки переключения станций).
+        // Теперь, если плейер на паузе, он остаётся на паузе
+        // 006 claude -->
+
         initListeners()
     }
+
+    // <!-- 005 claude
+    // Прокручиваем список к станции. Станцию показываем примерно на трети высоты списка, чтобы были видны и соседние
+    private fun scrollToStation(position: Int) {
+        if (position < 0) return
+        // post: прокрутка, вызванная прямо во время первой отрисовки списка, игнорируется
+        recyclerViewRadioStationList.doOnLayout {
+            recyclerViewRadioStationList.post {
+                (recyclerViewRadioStationList.layoutManager as? LinearLayoutManager)
+                    ?.scrollToPositionWithOffset(position, recyclerViewRadioStationList.height / 3)
+            }
+        }
+    }
+    // 005 claude -->
 
     private fun initListeners() {
         imageArrowBack.setOnClickListener {

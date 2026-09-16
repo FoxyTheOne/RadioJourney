@@ -21,6 +21,7 @@ import com.google.android.exoplayer2.upstream.DefaultDataSource
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
 import com.myproject.radiojourney.data.sharedPreference.IAppSharedPreference
 import com.myproject.radiojourney.other.Constants
+import com.myproject.radiojourney.other.Constants.DEFAULT_COUNTRY_CODE
 import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_COUNT_MA
 import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_LIST_SIZE_MA
 import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_SERVER_IS_DOWN
@@ -84,6 +85,27 @@ class MusicService : MediaBrowserServiceCompat() {
     private var curPlayingSong: MediaMetadataCompat? = null
     private var isPlayerInitialized = false
 
+    //    <!-- 001-6 claude
+// Плейлист, с которым реально подготовлен exoPlayer.
+// firebaseMusicSource.radioStations заменяется сразу после скачивания нового плейлиста, а exoPlayer продолжает играть старый,
+// пока его не подготовят заново (preparePlayer). Поэтому описания для MusicQueueNavigator (а значит и метаданные сессии)
+// нужно брать отсюда, иначе индекс текущей станции из старого плейлиста накладывается на новый список:
+// название в плейере новое, а играет старая станция
+    private var preparedPlaylist = emptyList<MediaMetadataCompat>()
+
+    // Уведомление убирается, когда приложение закрывают (onTaskRemoved). Если после этого снова включат воспроизведение
+    // (сервис ещё жив, например приложение открыли заново), уведомление нужно показать снова
+    private var isNotificationShown = true
+    private val restoreNotificationListener = object : Player.Listener {
+        override fun onPlaybackStateChanged(playbackState: Int) {
+            if (!isNotificationShown && (playbackState == Player.STATE_BUFFERING || playbackState == Player.STATE_READY)) {
+                musicNotificationManager.showNotification(exoPlayer)
+                isNotificationShown = true
+            }
+        }
+    }
+//    001-6 claude -->
+
     private lateinit var musicPlayerEventListener: MusicPlayerEventListener
 
     private lateinit var notifyChildrenChangedLiveDataObserver: Observer<Boolean>
@@ -121,7 +143,7 @@ class MusicService : MediaBrowserServiceCompat() {
                         if (lastPlayedCountryCode.isNotBlank() && lastPlayedCountryCode != "null") {
                             lastPlayedCountryCode
                         } else {
-                            "AQ" // Antarctica
+                            DEFAULT_COUNTRY_CODE
                         }
                     )
                     Log.d(
@@ -183,7 +205,10 @@ class MusicService : MediaBrowserServiceCompat() {
         }
 
         // lambda in this {} will be switched every time, when user chooses a new song
-        val musicPlaybackPreparer = MusicPlaybackPreparer(firebaseMusicSource, serviceScope) {
+        // <!-- 006 claude
+        val musicPlaybackPreparer = MusicPlaybackPreparer(firebaseMusicSource, serviceScope, { exoPlayer.prepare() }) {
+//        val musicPlaybackPreparer = MusicPlaybackPreparer(firebaseMusicSource, serviceScope) {
+            // 006 claude -->
 
             if (isPlayerInitialized && it == null) {
                 Log.d(
@@ -265,11 +290,19 @@ class MusicService : MediaBrowserServiceCompat() {
         mediaSessionConnector = MediaSessionConnector(mediaSession)
         mediaSessionConnector.setPlaybackPreparer(musicPlaybackPreparer) // 11.
         mediaSessionConnector.setQueueNavigator(MusicQueueNavigator()) // 14.2
+
+//        <!-- 001 claude
+        // Не пересылать клиентам метаданные, если они не изменились. По умолчанию дедупликация выключена, и onMetadataChanged()
+        // приходил при каждом изменении Timeline (например, при каждом обновлении live-плейлиста HLS станции), даже если станция та же
+        mediaSessionConnector.setMetadataDeduplicationEnabled(true)
+//        001 claude -->
+
         mediaSessionConnector.setPlayer(exoPlayer)
 
 
         musicPlayerEventListener = MusicPlayerEventListener(this)
         exoPlayer.addListener(musicPlayerEventListener)
+        exoPlayer.addListener(restoreNotificationListener) // 006 claude
         musicNotificationManager.showNotification(exoPlayer)
 
 //        // 3.Broadcast для завершения сервиса (1 - в MainActivity)
@@ -285,9 +318,11 @@ class MusicService : MediaBrowserServiceCompat() {
             "UnrecognizedInputFormatException" -> {
                 Log.d(TAG, "")
             }
+
             "HttpDataSourceException" -> {
                 Log.d(TAG, "")
             }
+
             else -> {
                 Log.d(TAG, "")
             }
@@ -336,7 +371,11 @@ class MusicService : MediaBrowserServiceCompat() {
 
         serviceScope.launch {
 
-            if (radioStations.isNotEmpty() && curSongIndex < firebaseMusicSource.radioStations.size) {
+//<!-- 001 claude
+//            if (radioStations.isNotEmpty() && curSongIndex < firebaseMusicSource.radioStations.size) {
+                if (radioStations.isNotEmpty() && curSongIndex < radioStations.size) {
+//                    001 claude -->
+
 //                // Проверить, заканчивается ли ссылка на .m3u8
 //                // Если да, нам нужно использовать HlsMediaSource
 //                val mediaUri =
@@ -362,8 +401,14 @@ class MusicService : MediaBrowserServiceCompat() {
 
                 httpDataSourceFactory.setAllowCrossProtocolRedirects(true)
 
+                    //<!-- 001 claude
+// Источник строим из того же списка, по которому посчитан curSongIndex, и запоминаем его как preparedPlaylist
+                    preparedPlaylist = radioStations
+//                    001 claude -->
+
                 exoPlayer.setMediaSource(
                     firebaseMusicSource.asMediaSourcePlaylist(
+                        radioStations, // 001 claude
                         httpDataSourceFactory,
                         dataSourceFactory
                     )
@@ -386,7 +431,7 @@ class MusicService : MediaBrowserServiceCompat() {
         }
     }
 
-    // media root id - is the id to the very first media item (what should be shown first)
+// media root id - is the id to the very first media item (what should be shown first)
 // here we also can deny clients connect to a specific id
     override fun onGetRoot(
         clientPackageName: String,
@@ -436,7 +481,7 @@ class MusicService : MediaBrowserServiceCompat() {
 
                             Log.d(
                                 TAG,
-                                "PLAYLIST_UPDATE: Exception in fun onLoadChildren(), MEDIA_ROOT_ID"
+                                "PLAYLIST_UPDATE: Exception in fun onLoadChildren(), calling notifyChildrenChanged(MEDIA_ROOT_ID)"
                             )
                             exception.printStackTrace()
                         }
@@ -460,6 +505,14 @@ class MusicService : MediaBrowserServiceCompat() {
     // when the task of the service has been removed (when the intent has been removed)
     override fun onTaskRemoved(rootIntent: Intent?) {
         exoPlayer.stop()
+
+        // <!-- 006 claude
+        // Приложение закрыли (смахнули из недавних). Плейер остановлен, поэтому убираем и уведомление.
+        // Раньше оно оставалось висеть: его нельзя было смахнуть, а кнопка play в нём ничего не делала
+        musicNotificationManager.cancelNotifications() // -> MusicPlayerNotificationListener.onNotificationCancelled -> stopSelf()
+        isNotificationShown = false
+        // 006 claude -->
+
         super.onTaskRemoved(rootIntent)
     }
 
@@ -469,6 +522,7 @@ class MusicService : MediaBrowserServiceCompat() {
         serviceScope.cancel()
 
         exoPlayer.removeListener(musicPlayerEventListener)
+        exoPlayer.removeListener(restoreNotificationListener) // 006 claude
         exoPlayer.release()
         firebaseMusicSource.notifyChildrenChangedLiveData.removeObserver(
             notifyChildrenChangedLiveDataObserver
@@ -486,16 +540,43 @@ class MusicService : MediaBrowserServiceCompat() {
             player: Player,
             windowIndex: Int
         ): MediaDescriptionCompat {
-//            return firebaseMusicSource.radioStations[windowIndex].description // windowIndex - index of the song that is now playing
+////            return firebaseMusicSource.radioStations[windowIndex].description // windowIndex - index of the song that is now playing
+//
 
-            // TODO Иногда выдаёт ошибку, например java.lang.IndexOutOfBoundsException: Index: 14, Size: 4. Пока сделаю так, не знаю как исправить, null передать нельзя
-            return if (windowIndex < firebaseMusicSource.radioStations.size) {
-                firebaseMusicSource.radioStations[windowIndex].description // windowIndex - index of the song that is now playing
+//            <!-- 001 claude
+
+////            // TODO Иногда выдаёт ошибку, например java.lang.IndexOutOfBoundsException: Index: 14, Size: 4. Пока сделаю так, не знаю как исправить, null передать нельзя
+////            return if (windowIndex < firebaseMusicSource.radioStations.size) {
+////                firebaseMusicSource.radioStations[windowIndex].description // windowIndex - index of the song that is now playing
+////            } else {
+////                firebaseMusicSource.radioStations[0].description
+////            }
+//
+//            return when {
+//                windowIndex < 0 -> firebaseMusicSource.radioStations.firstOrNull()?.description
+//                    ?: MediaDescriptionCompat.Builder().build()
+//
+//                windowIndex < firebaseMusicSource.radioStations.size ->
+//                    firebaseMusicSource.radioStations[windowIndex].description
+//
+//                else -> firebaseMusicSource.radioStations.lastOrNull()?.description
+//                    ?: MediaDescriptionCompat.Builder().build()
+//            }
+//        }
+//    }
+
+            // Описание берём из preparedPlaylist - того же списка, из которого собран источник exoPlayer, поэтому windowIndex всегда ему соответствует.
+            // Раньше брали из firebaseMusicSource.radioStations: после скачивания нового плейлиста индекс из старого накладывался на новый список -
+            // отсюда и IndexOutOfBoundsException (Index: 14, Size: 4), и название новой станции при звуке старой
+            val playlist = preparedPlaylist
+            return if (windowIndex in playlist.indices) {
+                playlist[windowIndex].description // windowIndex - index of the song that is now playing
             } else {
-                firebaseMusicSource.radioStations[0].description
+                playlist.firstOrNull()?.description ?: MediaDescriptionCompat.Builder().build()
             }
         }
     }
+//            001 claude -->
 
 //    // 2.Broadcast для управления уведомлением из Activity (1 - в MainActivity)
 //    // Создадим анонимный класс => не нужно регистрировать в манифесте

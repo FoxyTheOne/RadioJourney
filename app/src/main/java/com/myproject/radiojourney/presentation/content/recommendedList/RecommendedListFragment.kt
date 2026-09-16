@@ -13,10 +13,12 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
+import androidx.lifecycle.ViewModelProvider
 import com.myproject.radiojourney.IAppSettings
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.LayoutRadioStationListRecommendedBinding
 import com.myproject.radiojourney.other.Status
+import com.myproject.radiojourney.presentation.MainViewModel
 import com.myproject.radiojourney.presentation.content.base.BaseContentFragmentAbstract
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -180,12 +182,24 @@ class RecommendedListFragment : BaseContentFragmentAbstract() {
 
             hideProgress()
         }
-        viewModel.stationSavedInFavouritesLiveData.observe(viewLifecycleOwner) {
+
+        // <!-- 007 claude
+//        viewModel.stationSavedInFavouritesLiveData.observe(viewLifecycleOwner) {
+//            binding?.recyclerViewRecommendedRadioStationList?.adapter?.notifyDataSetChanged()
+//        }
+//        viewModel.stationDeletedFromFavouritesLiveData.observe(viewLifecycleOwner) {
+//            binding?.recyclerViewRecommendedRadioStationList?.adapter?.notifyDataSetChanged()
+//        }
+
+        viewModel.stationFavouriteChangedLiveData.observe(viewLifecycleOwner) { event ->
             binding?.recyclerViewRecommendedRadioStationList?.adapter?.notifyDataSetChanged()
+            // Сообщаем плейеру и списку избранного, какая станция изменилась (раньше плейер об этом не узнавал)
+            event.getContentIfNotHandled()?.let { station ->
+                ViewModelProvider(requireActivity())[MainViewModel::class.java]
+                    .notifyFavouriteChanged(station, station.isStationInFavourite)
+            }
         }
-        viewModel.stationDeletedFromFavouritesLiveData.observe(viewLifecycleOwner) {
-            binding?.recyclerViewRecommendedRadioStationList?.adapter?.notifyDataSetChanged()
-        }
+        // 007 claude -->
     }
 
     private fun showProgress() {

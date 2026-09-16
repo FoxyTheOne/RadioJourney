@@ -7,18 +7,25 @@ import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
+import com.myproject.radiojourney.other.Constants
+import com.myproject.radiojourney.other.Constants.COUNTRY_CODE_ID
+import com.myproject.radiojourney.other.Constants.DEFAULT_COUNTRY_CODE
+import com.myproject.radiojourney.other.Constants.CANCEL_PLAYLIST_DOWNLOAD
+import com.myproject.radiojourney.other.Constants.PLAYLIST_ID
 import com.myproject.radiojourney.utils.exoplayer.FirebaseMusicSource
 import com.myproject.radiojourney.utils.exoplayer.callback.State.STATE_CREATED
 import com.myproject.radiojourney.utils.exoplayer.callback.State.STATE_ERROR
 import com.myproject.radiojourney.utils.exoplayer.callback.State.STATE_INITIALIZED
 import com.myproject.radiojourney.utils.exoplayer.callback.State.STATE_INITIALIZING
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.io.IOException
 
 class MusicPlaybackPreparer(
     private val firebaseMusicSource: FirebaseMusicSource,
     private val serviceScope: CoroutineScope,
+    private val onPrepareRequested: () -> Unit, // 006 claude // подготовить плейер заново (он остановлен, но плейлист в нём остался)
     private val playerPrepared: (MediaMetadataCompat?) -> Unit // lambda, that can be called when our player is prepared
 ) : MediaSessionConnector.PlaybackPreparer {
 
@@ -27,6 +34,25 @@ class MusicPlaybackPreparer(
     }
 
     private var lastCountryCode: String? = null
+
+    // <!-- 005 claude
+    // Код страны плейлиста, который сейчас скачивается (защита от двух одновременных загрузок одного и того же плейлиста)
+    private var downloadingCountryCode: String? = null
+
+    // Текущая загрузка плейлиста (команда "Add Songs"), чтобы её можно было отменить
+    private var downloadJob: Job? = null
+
+    // Отменяет загрузку плейлиста, если она идёт. Вызывается в главном потоке (onCommand)
+    private fun cancelPlaylistDownload() {
+        if (downloadJob?.isActive == true) {
+            downloadJob?.cancel() // вложенные загрузки (launch внутри) отменятся вместе с ней
+            downloadingCountryCode = null
+            // Текущий плейлист остаётся рабочим - разблокируем лямбды whenReady()
+            state = STATE_INITIALIZED
+        }
+        downloadJob = null
+    }
+    // 005 claude -->
 
     // Список лямбд action, которые будут передаваться в метод whenReady(), пока state == STATE_CREATED или state == STATE_INITIALIZING
 //    private var onReadyListener : ((Boolean) -> Unit)? = null // нам нужна одна лямбда, самая последняя
@@ -39,7 +65,13 @@ class MusicPlaybackPreparer(
                 synchronized(onReadyListeners) { // synchronized for save change
                     field = value // sign a new value to the field
 //                        it(state == STATE_INITIALIZED)
-                    onReadyListeners.forEach { listener ->
+                    // <!--001 Claude
+//                    onReadyListeners.forEach { listener ->
+// Каждая лямбда должна сработать один раз, иначе при следующей загрузке плейлиста снова вызовется playerPrepared() со старым mediaId
+                    val listeners = onReadyListeners.toList()
+                    onReadyListeners.clear()
+                    listeners.forEach { listener ->
+                        // 001 Claude -->
                         listener(state == STATE_INITIALIZED) // go through list and call needed lambda function. If there will be STATE_ERROR instead STATE_INITIALIZED, we will get "false". So we can check, if it was successful or not
                     }
                 }
@@ -77,47 +109,83 @@ class MusicPlaybackPreparer(
     ): Boolean {
         when (command) {
 
-            //edit data or fetch more data from api
+            // Edit data or fetch more data from api
             "Add Songs" -> {
 
-                serviceScope.launch {
+                // <!-- 005 claude
+//                serviceScope.launch {
+
+//                    state = STATE_INITIALIZING
+
+                    // Достаём country code и далее сравниваем его. Если коды разные, скачиваем новый плейлист
+                    val countryCode = extras?.getString(COUNTRY_CODE_ID)
+
+//                    <!-- 001 claude
+                    // fetchSongs() вызывается два раза подряд (RadioListFragment и HomeRadioFragment). Если этот плейлист уже скачивается,
+                    // вторую загрузку не запускаем, иначе две параллельные загрузки дважды перезаписывают плейлист
+                    if (countryCode != null && countryCode == downloadingCountryCode) {
+                        Log.d(
+                            TAG,
+                            "PLAYLIST_UPDATE: Плейлист countryCode = $countryCode уже скачивается, повторную загрузку не запускаем"
+                        )
+//                        return@launch
+                        return false
+                    }
+
+
+                // Если ещё скачивается ДРУГОЙ плейлист - отменяем его. Иначе старая загрузка могла закончиться позже новой
+                // и перезаписать плейлист, или показать ошибку "получен пустой список", которая относится уже не к этому запросу
+                cancelPlaylistDownload()
+
+                    downloadingCountryCode = countryCode
+//                    001 claude -->
+
+                downloadJob = serviceScope.launch {
+//                    005 claude -->
+
                     state = STATE_INITIALIZING
-
-                    val countryCode =
-                        extras?.getString("nRecNo") // Достаём country code и далее сравниваем его. Если коды разные, скачиваем новый плейлист
-
                     if (countryCode == "FAV") {
 
-                        val job = serviceScope.launch {
-                            try {
-//                                // Скачиваем список избранного
-//                                firebaseMusicSource.fetchFavouriteMediaData()
-//                                Log.d(
-//                                    TAG,
-//                                    "PLAYLIST_UPDATE: 5. FAV_STAR: Запускаем метод для скачивания списка избранного в exoplayer"
-//                                )
+//                        <!-- 005 claude
+//                        val job = serviceScope.launch {
+                            val job = launch { // дочерняя корутина downloadJob - отменяется вместе с ней
+//                          005 claude -->
 
-
+                                try {
                                 // Чтобы проверить, может быть такой плейлист уже скачан и сейчас используется, обновим переменную
                                 if (firebaseMusicSource.radioStations.isNotEmpty()) {
                                     lastCountryCode =
                                         firebaseMusicSource.radioStations[0].description.subtitle.toString()
                                 }
-                                Log.d(TAG, "PLAYLIST_UPDATE: Проверяем список в exoplayer, lastCountryCode = $lastCountryCode")
+                                Log.d(
+                                    TAG,
+                                    "PLAYLIST_UPDATE: Проверяем список в exoplayer, lastCountryCode = $lastCountryCode"
+                                )
 
-                                val isLastCountryCodeFavorite = lastCountryCode.toString().endsWith("_FAV")
-                                Log.d(TAG, "PLAYLIST_UPDATE: 5. FAV_STAR: Проверяем список в exoplayer, isLastCountryCodeFavorite = $isLastCountryCodeFavorite")
+                                val isLastCountryCodeFavorite =
+                                    lastCountryCode.toString().endsWith("_FAV")
+                                Log.d(
+                                    TAG,
+                                    "PLAYLIST_UPDATE: 5. FAV_STAR: Проверяем список в exoplayer, isLastCountryCodeFavorite = $isLastCountryCodeFavorite"
+                                )
 
                                 if (!isLastCountryCodeFavorite) {
                                     // Скачиваем список избранного
                                     firebaseMusicSource.fetchFavouriteMediaData()
-                                    Log.d(TAG, "PLAYLIST_UPDATE: 5. FAV_STAR: Запускаем метод для скачивания списка избранного в exoplayer")
+                                    Log.d(
+                                        TAG,
+                                        "PLAYLIST_UPDATE: 5. FAV_STAR: Запускаем метод для скачивания списка избранного в exoplayer"
+                                    )
                                 } else {
-                                    Log.d(TAG, "!! PLAYLIST_UPDATE: 5. FAV_STAR: Список избранного уже скачан в exoplayer")
+                                    Log.d(
+                                        TAG,
+                                        "!! PLAYLIST_UPDATE: 5. FAV_STAR: Список избранного уже скачан в exoplayer"
+                                    )
                                 }
                             } catch (e: IOException) {
                                 e.printStackTrace()
                                 // TODO Fill error message to LiveData, но я не знаю, куда эти данные передавать - нет класса, который следит за этим классом
+                                Log.d(TAG, "!! PLAYLIST_UPDATE: IOException !!")
                             }
                         }
                         job.join()
@@ -135,7 +203,11 @@ class MusicPlaybackPreparer(
                         // Если оставлять lastCountryCode != null, сюда не заходит, если программу включили и выбрали станцию из другого плейлиста, не включая перед этим плейер ни разу
                         // Вместо этого проверим (выше), скачан ли уже такой плей лист и сравнивать будем с такой переменной:
 
-                        if (lastCountryCode != countryCode || lastCountryCode?.endsWith("_FAV", true) == true) {
+                        if (lastCountryCode != countryCode || lastCountryCode?.endsWith(
+                                "_FAV",
+                                true
+                            ) == true
+                        ) {
                             Log.d(
                                 TAG,
                                 "PLAYLIST_UPDATE: 2.$TAG, onCommand(). Запускаем метод для скачивания списка радиостанций в exoplayer, т.к. $lastCountryCode != $countryCode . Если $countryCode пуст или равен нулю, будет скачиваться список по коду AD"
@@ -149,13 +221,17 @@ class MusicPlaybackPreparer(
 //                                countryCode = newCountryCode
 //                            }
 
-                            val job = serviceScope.launch {
+                            // <!-- 005 claude
+//                            val job = serviceScope.launch {
+                            val job = launch { // дочерняя корутина downloadJob - отменяется вместе с ней
+                                // 005 claude -->
+
                                 try {
                                     firebaseMusicSource.fetchMediaData(
                                         if (countryCode.toString() != "null" && countryCode.toString()
                                                 .isNotBlank()
                                         ) countryCode.toString()
-                                        else "AD"
+                                        else DEFAULT_COUNTRY_CODE
                                     )
                                 } catch (e: IOException) {
                                     // Когда сохранён не верный CountryCode, по запросу такого не найдёт и выдаст ошибку retrofit2.HttpException: HTTP 404
@@ -164,10 +240,10 @@ class MusicPlaybackPreparer(
                                         "PLAYLIST_UPDATE: 2.$TAG, onCommand(). Не получилось скачать плейлист. Exception: ${e.message}. Problem occurred in method onCommand."
                                     )
                                     e.printStackTrace()
-                                    firebaseMusicSource.fetchMediaData("AQ")
+                                    firebaseMusicSource.fetchMediaData(DEFAULT_COUNTRY_CODE)
                                     Log.d(
                                         TAG,
-                                        "PLAYLIST_UPDATE: 2.$TAG, onCommand(). Запускаем метод для скачивания списка радиостанций в exoplayer с кодом AQ"
+                                        "PLAYLIST_UPDATE: 2.$TAG, onCommand(). Запускаем метод для скачивания списка радиостанций в exoplayer с кодом DEFAULT_COUNTRY_CODE"
                                     )
                                     // TODO Была такая ошибка из-за проблемы с интернетом. Сделать высвечивание сообщения об ошибке, чтобы понимали, почему скачался и включился не тот плейлист /  Сделала сообщение, проверить
                                 }
@@ -183,10 +259,28 @@ class MusicPlaybackPreparer(
                                 TAG,
                                 "PLAYLIST_UPDATE: Список countryCode = $countryCode уже скачан в exoplayer"
                             )
+
+//                            <!--001 claude
+                            // Плейлист уже скачан - значит всё готово. Иначе state навсегда остаётся STATE_INITIALIZING (выставлен в начале команды),
+                            // и лямбды из onPrepareFromMediaId, добавленные через whenReady(), не вызываются до следующей загрузки
+                            state = STATE_INITIALIZED
+//                            001 claude -->
+
                         }
                     }
 
+                    downloadingCountryCode = null // 001 claude
                 }
+
+                // <!-- 005 claude
+            }
+
+            // Полоса загрузки висела слишком долго (MainViewModel, PROGRESS_TIMEOUT): отменяем загрузку,
+            // чтобы её результат (например, ошибка) не появился позже, когда пользователь уже делает что-то другое
+            CANCEL_PLAYLIST_DOWNLOAD -> {
+                Log.d(TAG, "PLAYLIST_UPDATE: Загрузка плейлиста $downloadingCountryCode отменена по таймауту")
+                cancelPlaylistDownload()
+            // 005 claude -->
 
             }
 
@@ -202,8 +296,18 @@ class MusicPlaybackPreparer(
                 PlaybackStateCompat.ACTION_PLAY_FROM_MEDIA_ID
     }
 
-    // we won't implement now
-    override fun onPrepare(playWhenReady: Boolean) = Unit
+    // <!-- 006 claude
+//    // we won't implement now
+//    override fun onPrepare(playWhenReady: Boolean) = Unit
+
+    // Вызывается, когда нажали play, а плейер остановлен (STATE_IDLE): после ошибки воспроизведения или stop().
+    // Раньше метод был пустым, и кнопка play в уведомлении в таком состоянии ничего не делала.
+    // play() MediaSessionConnector вызовет сам после этого метода
+    override fun onPrepare(playWhenReady: Boolean) {
+        Log.d(TAG, "onPrepare(): плейер остановлен, готовим его заново")
+        onPrepareRequested()
+    }
+    // 006 claude -->
 
     // function for preparing song that user selected
     override fun onPrepareFromMediaId(mediaId: String, playWhenReady: Boolean, extras: Bundle?) {

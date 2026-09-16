@@ -1,13 +1,16 @@
 package com.myproject.radiojourney.data.dataSource.network
 
+import android.os.SystemClock
 import android.util.Log
 import com.myproject.radiojourney.data.dataSource.network.service.IRadioServiceWrapper
 import com.myproject.radiojourney.entities.remote.CountryCodeRemote
 import com.myproject.radiojourney.entities.remote.RadioStationRemote
 import com.myproject.radiojourney.entities.remote.StreamInfoResult
 import com.myproject.radiojourney.other.Constants.MAX_STATIONS_COUNT
+import com.myproject.radiojourney.other.Constants.SERVER_SEARCH_TIME
 import com.myproject.radiojourney.other.Constants.SERVER_IS_DOWN
 import com.myproject.radiojourney.other.Resource
+import kotlinx.coroutines.delay
 import okhttp3.ResponseBody
 import retrofit2.HttpException
 import retrofit2.Response
@@ -48,6 +51,11 @@ class NetworkRadioDataSource @Inject constructor(
 ) : INetworkRadioDataSource {
     companion object {
         private const val TAG = "NetworkRadioDataSource"
+
+        //        <!-- 004 claude
+        private const val DNS_RETRY_DELAY = 1_000L
+        private const val FALLBACK_SERVER = "de1.api.radio-browser.info"
+        // 004 claude -->
     }
 
     // API -> Для того, чтобы воспользоваться API радиостанций, нужно выполнить несколько шагов.
@@ -140,11 +148,29 @@ class NetworkRadioDataSource @Inject constructor(
 //            var radioStationUpperCaseList =
 //                listOf<RadioStationRemote>()
 
-            val resultDNSIterator = listDNSResultArray.iterator()
+            // <!-- 003-6 claude
+//            val resultDNSIterator = listDNSResultArray.iterator()
 
-            while (resultDNSIterator.hasNext()) {
-                val baseURL = "https://${resultDNSIterator.next()}"
-                Log.d(TAG, "результат baseURL = $baseURL")
+            // Перебираем серверы по кругу, пока один из них не ответит. distinct() - DNS возвращает одно и то же имя сервера для каждого его IP-адреса.
+            // Первый круг проходим всегда целиком (каждый сервер пробуем хотя бы раз), следующие круги - пока не прошло SERVER_SEARCH_TIME.
+            // Полоса загрузки (PROGRESS_TIMEOUT) рассчитана так, чтобы не пропасть раньше, чем закончится перебор
+            val servers = listDNSResultArray.distinct()
+            val searchStartTime = SystemClock.elapsedRealtime()
+            var attempt = 0
+            // 003 claude -->
+
+//            while (resultDNSIterator.hasNext()) {
+//                val baseURL = "https://${resultDNSIterator.next()}"
+//                Log.d(TAG, "результат baseURL = $baseURL")
+
+            while (servers.isNotEmpty() &&
+                (attempt < servers.size || SystemClock.elapsedRealtime() - searchStartTime < SERVER_SEARCH_TIME)
+            ) {
+                val baseURL = "https://${servers[attempt % servers.size]}"
+                attempt++
+                Log.d(TAG, "результат baseURL = $baseURL, попытка $attempt")
+
+                // 003 claude -->
 
                 try {
                     // radioServiceWrapper - обёртка. Инициализируем retrofit и получаем сервис:
@@ -167,12 +193,21 @@ class NetworkRadioDataSource @Inject constructor(
                         )
                         break
                     }
+
+                    // <!-- 005 claude
+                    // Сервер ответил, но прислал пустой список. Раньше следующая попытка в этом случае шла сразу, без паузы,
+                    // и все попытки заканчивались за доли секунды
+                    Log.d(TAG, "Попытка связаться с сервером: получен пустой список. Continue searching baseURL in resultDNSIterator")
+                    delay(1_000L) // небольшая пауза перед следующей попыткой
+                    // 005 claude -->
+
                 } catch (e: SocketTimeoutException) {
                     Log.d(
                         TAG,
                         "Попытка связаться с сервером. Exception: ${e.message}. Failed to connect to baseURL. Continue searching baseURL in resultDNSIterator"
                     )
                     e.printStackTrace()
+                    delay(1_000L) // небольшая пауза перед следующей попыткой // 003 claude
                     continue
                 } catch (e: IOException) {
                     Log.d(
@@ -180,7 +215,21 @@ class NetworkRadioDataSource @Inject constructor(
                         "Попытка связаться с сервером. Exception: ${e.message}. Problem with the server. Continue searching baseURL in resultDNSIterator"
                     )
                     e.printStackTrace()
+                    delay(1_000L) // небольшая пауза перед следующей попыткой // 003 claude
                     continue
+
+                    // <!-- 004 claude
+                } catch (e: HttpException) {
+                    // Сервер ответил ошибкой (например, 502/503). Раньше это исключение ловилось только снаружи цикла:
+                    // повторных попыток не было, и сразу (без ожидания) открывался пустой список
+                    Log.d(
+                        TAG,
+                        "Попытка связаться с сервером. HttpException: ${e.code()} ${e.message()}. Continue searching baseURL in resultDNSIterator"
+                    )
+                    delay(1_000L) // небольшая пауза перед следующей попыткой
+                    continue
+                    // 004 claude -->
+
                 }
             }
 
@@ -213,7 +262,14 @@ class NetworkRadioDataSource @Inject constructor(
                     .asSequence()
                     // Фильтрация невалидных станций
                     .filter { station ->
-                        station.name.isNotBlank() && station.url.isNotBlank()
+
+                        // <!-- 004 claude
+//                        station.name.isNotBlank() && station.url.isNotBlank()
+
+                        station.name.isNotBlank() && station.url.isNotBlank() &&
+                                station.lastcheckok == 1 // на случай, если сервер не учёл hidebroken
+                        // 004 claude -->
+
                     }
                     .sortedByDescending { it.clickcount }
                     .take(MAX_STATIONS_COUNT)
@@ -315,14 +371,26 @@ class NetworkRadioDataSource @Inject constructor(
     }
 
     // do the DNS request
-    private fun updateDNSList(): MutableList<String> {
+    // <!-- 003 claude
+//    private fun updateDNSList(): MutableList<String> {
+
+    private fun updateDNSList(attemptsLeft: Int = 3): MutableList<String> {
+        // 003 claude -->
 
         val listDNSResult = Vector<String>()
         try {
             // add all round robin servers one by one to select them separately
             val list = InetAddress.getAllByName("all.api.radio-browser.info")
             for (item in list) {
-                listDNSResult.add(item.canonicalHostName)
+
+                // <!-- 004 claude
+//                listDNSResult.add(item.canonicalHostName)
+
+                // canonicalHostName делает обратный DNS-запрос. Если он не удался, вместо имени сервера возвращается IP-адрес,
+                // а https-запрос по IP не пройдёт (сертификат выдан на имя) - такие результаты пропускаем
+                val hostName = item.canonicalHostName
+                if (hostName != item.hostAddress) listDNSResult.add(hostName)
+                // 004 claude -->
             }
         } catch (e: UnknownHostException) {
             e.printStackTrace()
@@ -337,11 +405,27 @@ class NetworkRadioDataSource @Inject constructor(
 //        listDNSResultArray.add("https://de1.api.radio-brower.info/")
 //        listDNSResultArray.add("https://de1.api.radio-browsr.info/")
 
-        return if (listDNSResultArray != emptyList<String>()) {
+        // <!-- 003 claude
+//        return if (listDNSResultArray != emptyList<String>()) {
+//            listDNSResultArray
+//        } else {
+//            updateDNSList()
+//        }
+
+        // Раньше здесь была бесконечная рекурсия: без интернета DNS не отвечает, updateDNSList() вызывал сам себя,
+        // пока приложение не падало со StackOverflowError. Теперь несколько попыток, а потом пустой список -
+        // вызывающий код переберёт 0 серверов и вернёт пустой результат (он обрабатывается как ошибка загрузки)
+        return if (listDNSResultArray.isNotEmpty()) {
             listDNSResultArray
+        } else if (attemptsLeft > 1) {
+            Thread.sleep(DNS_RETRY_DELAY) // метод вызывается в Dispatchers.IO
+            updateDNSList(attemptsLeft - 1)
         } else {
-            updateDNSList()
+            // Имена серверов так и не получили - пробуем сервер, известный из документации radio-browser
+            Log.d(TAG, "Список серверов не получен, используем $FALLBACK_SERVER")
+            mutableListOf(FALLBACK_SERVER)
         }
+        // 003 claude -->
 
     }
 

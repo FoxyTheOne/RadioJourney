@@ -13,6 +13,7 @@ import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.myproject.radiojourney.other.Constants
 import com.myproject.radiojourney.other.Constants.NETWORK_ERROR
 import com.myproject.radiojourney.other.Event
 import com.myproject.radiojourney.other.Resource
@@ -170,22 +171,29 @@ class MusicServiceConnection(context: Context) {
         }
 
         override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
-//            _curPlayingSongLiveData.postValue(metadata) // Getting new meta data (put it into LiveData)
-            val oldMetadata = _curPlayingSongLiveData.value
-            Log.d(
-                TAG,
-                "oldMetadata = ${oldMetadata?.description?.title}, ${oldMetadata?.description?.subtitle}, ${oldMetadata?.description?.mediaId} newMetadata = ${metadata?.description?.title},${metadata?.description?.subtitle}, ${metadata?.description?.mediaId}"
-            )
-//            if (metadata != oldMetadata) {
-            if (metadata?.description?.mediaUri != oldMetadata?.description?.mediaUri
-                || metadata?.description?.extras != oldMetadata?.description?.extras
-            ) {
-                Log.d(
-                    TAG,
-                    "metadata?.description?.mediaUri != oldMetadata?.description?.mediaUri || metadata?.description?.extras != oldMetadata?.description?.extras"
-                )
-                _curPlayingSongLiveData.postValue(metadata)
-            }
+
+//            <!-- 001 claude
+////            _curPlayingSongLiveData.postValue(metadata) // Getting new meta data (put it into LiveData)
+//            val oldMetadata = _curPlayingSongLiveData.value
+//            Log.d(
+//                TAG,
+//                "oldMetadata = ${oldMetadata?.description?.title}, ${oldMetadata?.description?.subtitle}, ${oldMetadata?.description?.mediaId} newMetadata = ${metadata?.description?.title},${metadata?.description?.subtitle}, ${metadata?.description?.mediaId}"
+//            )
+////            if (metadata != oldMetadata) {
+//            if (metadata?.description?.mediaUri != oldMetadata?.description?.mediaUri
+//                || metadata?.description?.title != oldMetadata?.description?.title
+//                || metadata?.description?.extras != oldMetadata?.description?.extras
+//            ) {
+//                Log.d(TAG, "metadata != oldMetadata")
+//                _curPlayingSongLiveData.postValue(metadata)
+//            }
+
+            // MediaMetadataCompat не переопределяет equals(), а каждый вызов приходит через Parcel (всегда новый объект),
+            // поэтому metadata != oldMetadata всегда true. Одинаковые метаданные теперь отсекает сам MediaSessionConnector
+            // (setMetadataDeduplicationEnabled(true) в MusicService), так что сюда приходят только реальные изменения
+
+            _curPlayingSongLiveData.postValue(metadata) // Getting new meta data (put it into LiveData)
+//            001 claude -->
         }
 
         // Send custom events from our service to this connection callback. We will use it to notify when there is a network error

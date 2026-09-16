@@ -33,37 +33,59 @@ class FavouriteListUseCase @Inject constructor(
         return radioStationFavouriteListPresentation
     }
 
+    // <!-- 007 claude
+//    override suspend fun addStationInRoomToFavourites(currentRadioStation: RadioStationPresentation) {
+//        if (currentRadioStation.countryCode.endsWith("_FAV")) {
+//            val str: String = currentRadioStation.countryCode
+//            val n = 4 // "_FAV" -> 4 chars
+//
+//            val newCountryCode = str.removeLastNchars(str, n)
+//
+//            currentRadioStation.countryCode = newCountryCode.toString()
+//        }
+//
+//        val currentRadioStationLocal = RadioStationLocal.fromPresentationToLocal(
+//            currentRadioStation,
+//            isStationInFavourite = true
+//        )
+//        mainRadioStationRepository.saveRadioStationInRoom(currentRadioStationLocal)
+//    }
+
     override suspend fun addStationInRoomToFavourites(currentRadioStation: RadioStationPresentation) {
-        if (currentRadioStation.countryCode.endsWith("_FAV")) {
-            val str: String = currentRadioStation.countryCode
-            val n = 4 // "_FAV" -> 4 chars
-
-            val newCountryCode = str.removeLastNchars(str, n)
-
-            currentRadioStation.countryCode = newCountryCode.toString()
-        }
-
+        // В базу сохраняем код страны без "_FAV". Делаем копию: раньше менялся countryCode у самого объекта станции,
+        // и станция в плейлисте избранного переставала считаться станцией из избранного
         val currentRadioStationLocal = RadioStationLocal.fromPresentationToLocal(
-            currentRadioStation,
+            currentRadioStation.copy(countryCode = currentRadioStation.countryCode.removeSuffix("_FAV")),
             isStationInFavourite = true
         )
         mainRadioStationRepository.saveRadioStationInRoom(currentRadioStationLocal)
     }
 
+//    override suspend fun deleteStationInRoomFromFavourite(currentRadioStation: RadioStationPresentation) {
+//        if (currentRadioStation.countryCode.endsWith("_FAV")) {
+//            val str: String = currentRadioStation.countryCode
+//            val n = 4 // "_FAV" -> 4 chars
+//
+//            val newCountryCode = str.removeLastNchars(str, n)
+//
+//            currentRadioStation.countryCode = newCountryCode.toString()
+//        }
+//
+//        val currentRadioStationLocal = RadioStationLocal.fromPresentationToLocal(
+//            currentRadioStation,
+//            isStationInFavourite = false
+//        )
+//        mainRadioStationRepository.saveRadioStationInRoom(currentRadioStationLocal)
+//    }
+
     override suspend fun deleteStationInRoomFromFavourite(currentRadioStation: RadioStationPresentation) {
-        if (currentRadioStation.countryCode.endsWith("_FAV")) {
-            val str: String = currentRadioStation.countryCode
-            val n = 4 // "_FAV" -> 4 chars
-
-            val newCountryCode = str.removeLastNchars(str, n)
-
-            currentRadioStation.countryCode = newCountryCode.toString()
-        }
-
+        // В базу сохраняем код страны без "_FAV". Делаем копию: раньше менялся countryCode у самого объекта станции,
+        // и станция в плейлисте избранного переставала считаться станцией из избранного
         val currentRadioStationLocal = RadioStationLocal.fromPresentationToLocal(
-            currentRadioStation,
+            currentRadioStation.copy(countryCode = currentRadioStation.countryCode.removeSuffix("_FAV")),
             isStationInFavourite = false
         )
         mainRadioStationRepository.saveRadioStationInRoom(currentRadioStationLocal)
     }
+    // 007 claude -->
 }

@@ -6,6 +6,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.Bundle
+import android.os.SystemClock
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat.METADATA_KEY_MEDIA_ID
 import android.util.Log
@@ -13,11 +14,17 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.maps.model.CameraPosition
 import com.myproject.radiojourney.domain.homeRadioUseCase.IHomeRadioUseCase
 import com.myproject.radiojourney.domain.mainRadioUseCase.IMainRadioUseCase
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
+import com.myproject.radiojourney.other.Constants
 import com.myproject.radiojourney.other.Constants.ADD_SONGS
+import com.myproject.radiojourney.other.Constants.COUNTRY_CODE_ID
 import com.myproject.radiojourney.other.Constants.MEDIA_ROOT_ID
+import com.myproject.radiojourney.other.Constants.PROGRESS_TIMEOUT
+import com.myproject.radiojourney.other.Constants.PLAYLIST_ID
+import com.myproject.radiojourney.other.Constants.CANCEL_PLAYLIST_DOWNLOAD
 import com.myproject.radiojourney.other.Event
 import com.myproject.radiojourney.other.Resource
 import com.myproject.radiojourney.utils.exoplayer.MusicServiceConnection
@@ -28,6 +35,8 @@ import com.myproject.radiojourney.utils.extension.isPlaying
 import com.myproject.radiojourney.utils.extension.isPrepared
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.IOException
 import javax.inject.Inject
@@ -57,6 +66,17 @@ class MainViewModel @Inject constructor(
     val mediaItemsListLiveData: LiveData<Resource<List<RadioStationPresentation>>> =
         _mediaItemsListLiveData
 
+//    // Indicates that exoplayer is ready
+//    private val _exoplayerPlaylistLoadFinished = MutableLiveData<Boolean>()
+//    val exoplayerPlaylistLoadFinished: LiveData<Boolean> = _exoplayerPlaylistLoadFinished
+//
+//    // LiveData для состояния загрузки (exoplayer И viewpager)
+//    private val _playlistLoadState = MutableLiveData<PlaylistLoadState>()
+//    val playlistLoadState: LiveData<PlaylistLoadState> = _playlistLoadState
+
+//    var currentPlaylistId = 0
+//        private set
+
     // Saved to shared preference
     private val _dataSavedSuccessfulLiveData = MutableLiveData<Boolean>()
     val dataSavedSuccessfulLiveData: LiveData<Boolean> = _dataSavedSuccessfulLiveData
@@ -71,19 +91,55 @@ class MainViewModel @Inject constructor(
     val isNotJustLaunchedLiveData: LiveData<Boolean> = _isNotJustLaunchedLiveData
 
     // Favourites
-    private val _stationSavedInFavouritesLiveData = MutableLiveData<Boolean>()
-    val stationSavedInFavouritesLiveData: LiveData<Boolean> = _stationSavedInFavouritesLiveData
-    private val _stationDeletedFromFavouritesLiveData = MutableLiveData<Boolean>()
-    val stationDeletedFromFavouritesLiveData: LiveData<Boolean> =
-        _stationDeletedFromFavouritesLiveData
+    // <!-- 007 claude
+//    private val _stationSavedInFavouritesLiveData = MutableLiveData<Boolean>()
+//    val stationSavedInFavouritesLiveData: LiveData<Boolean> = _stationSavedInFavouritesLiveData
+//    private val _stationDeletedFromFavouritesLiveData = MutableLiveData<Boolean>()
+//    val stationDeletedFromFavouritesLiveData: LiveData<Boolean> =
+//        _stationDeletedFromFavouritesLiveData
+//
+//    private val _changeTheStarLiveData = MutableLiveData<Boolean>()
+//    val changeTheStarLiveData: LiveData<Boolean> =
+//        _changeTheStarLiveData
+//    private val _addAStationToFavouriteListIfItIsNotThereLiveData =
+//        MutableLiveData<RadioStationPresentation>()
+//    val addAStationToFavouriteListIfItIsNotThereLiveData: LiveData<RadioStationPresentation> =
+//        _addAStationToFavouriteListIfItIsNotThereLiveData
 
-    private val _changeTheStarLiveData = MutableLiveData<Boolean>()
-    val changeTheStarLiveData: LiveData<Boolean> =
-        _changeTheStarLiveData
-    private val _addAStationToFavouriteListIfItIsNotThereLiveData =
-        MutableLiveData<RadioStationPresentation>()
-    val addAStationToFavouriteListIfItIsNotThereLiveData: LiveData<RadioStationPresentation> =
-        _addAStationToFavouriteListIfItIsNotThereLiveData
+    // Одно общее событие "станция добавлена в избранное / убрана из избранного" - где бы ни нажали звезду
+    // (плейер, список избранного, рекомендованные). В нём есть КАКАЯ станция изменилась: раньше плейер получал только
+    // "звезда да/нет" и менял звезду у своей станции, даже если в списке избранного нажали на другую.
+    // id растёт с каждым изменением: подписчик, появившийся позже (например, заново открытый список избранного),
+    // пропускает изменения, которые были до него. LiveData повторяет новому подписчику последнее значение,
+    // и раньше при открытии списка избранного старое событие заново ставило/убирало звезду у играющей станции
+    data class FavouriteChange(
+        val id: Long,
+        val station: RadioStationPresentation,
+        val isFavourite: Boolean
+    )
+
+    private var lastFavouriteChangeId = 0L
+    private val _favouriteChangeLiveData = MutableLiveData<FavouriteChange>()
+    val favouriteChangeLiveData: LiveData<FavouriteChange> = _favouriteChangeLiveData
+
+    // id последнего уже случившегося изменения - подписчик пропускает события с id не больше этого
+    val lastFavouriteChangeIdForNewObserver: Long
+        get() = _favouriteChangeLiveData.value?.id ?: 0L
+
+    // Сообщить всем экранам, что станция добавлена в избранное или убрана из него (изменение в базе уже сделано)
+    fun notifyFavouriteChanged(station: RadioStationPresentation, isFavourite: Boolean) {
+        // setValue в главном потоке, а не postValue: postValue из двух быстрых изменений доставляет только последнее
+        viewModelScope.launch(Dispatchers.Main) {
+            lastFavouriteChangeId++
+            _favouriteChangeLiveData.value = FavouriteChange(
+                lastFavouriteChangeId,
+                // В плейлисте избранного код страны с суффиксом "_FAV" - в самом событии он не нужен (по нему список избранного показывает страну)
+                station.copy(isStationInFavourite = isFavourite, countryCode = station.countryCode.removeSuffix("_FAV")),
+                isFavourite
+            )
+        }
+    }
+    // 007 claude -->
 
     private val _switchViewPagerOnceAgainLiveData = MutableLiveData<RadioStationPresentation>()
     val switchViewPagerOnceAgainLiveData: LiveData<RadioStationPresentation> =
@@ -102,8 +158,19 @@ class MainViewModel @Inject constructor(
         _errorMessageLiveData // And another LiveData, that equals to previous, so that classes can't change it
 
     private var _isServerDown = false
-    val isServerDown : Boolean
-        get () = _isServerDown
+    val isServerDown: Boolean
+        get() = _isServerDown
+
+    private var progressTimeoutJob: Job? = null // 003 claude
+
+    // Время (SystemClock.elapsedRealtime), когда показали полосу "Connecting to radio station". null - сейчас не показана
+    @Volatile
+    var connectingProgressShownAt: Long? = null
+        private set
+
+    // Позиция карты на главном экране. HomeRadioFragment создаётся заново при каждом возвращении на него,
+    // поэтому храним позицию здесь (MainViewModel живёт, пока открыта MainActivity)
+    var mapCameraPosition: CameraPosition? = null // 006 claude
 
     private val _dialogInternetTroubleLiveData = MutableLiveData<Boolean>()
     val dialogInternetTroubleLiveData: LiveData<Boolean> =
@@ -111,6 +178,8 @@ class MainViewModel @Inject constructor(
 
     private val _setClickableLiveData = MutableLiveData<Boolean>()
     val setClickableLiveData: LiveData<Boolean> = _setClickableLiveData
+//    private val _setNonClickableLiveData = MutableLiveData<Boolean>()
+//    val setNonClickableLiveData: LiveData<Boolean> = _setNonClickableLiveData
     private val _setNonClickableDpLiveData = MutableLiveData<Boolean>()
     val setNonClickableDpLiveData: LiveData<Boolean> = _setNonClickableDpLiveData
     private val _setNonClickableCRStLiveData = MutableLiveData<Boolean>()
@@ -152,6 +221,7 @@ class MainViewModel @Inject constructor(
             // Here we start query media items, so let's put it into LiveData:
             _mediaItemsListLiveData.postValue(Resource.loading(null)) // Resource data loading status. Null as default - we don't have any data here yet. Т.е. мы кладём в _mediaItems LiveData значение - объект класса Resource с нужным нам флагом и данными
 
+            // Назначение: Этот метод предоставляет список радиостанций после загрузки плейлиста. Он необходим для обновления UI (например, ViewPager).
             musicServiceConnection.subscribe(
                 MEDIA_ROOT_ID,
                 object : MediaBrowserCompat.SubscriptionCallback() {
@@ -262,7 +332,10 @@ class MainViewModel @Inject constructor(
                                         mediaItem.countryCode.endsWith("_FAV", true)
 
                                     if (isCurCountryCodeFAV != isToggleCountryCodeFAV) {
-                                        Log.d(TAG, "Станция одна и та же, но одна из них не из избранного. Cтанция: ${mediaItem.stationName}, код страны: ${mediaItem.countryCode}")
+                                        Log.d(
+                                            TAG,
+                                            "Станция одна и та же, но одна из них не из избранного. Cтанция: ${mediaItem.stationName}, код страны: ${mediaItem.countryCode}"
+                                        )
                                         musicServiceConnection.transportControls.playFromMediaId(
 //                                        mediaItem.urlResolved,
                                             mediaItem.stationuuid,
@@ -296,7 +369,10 @@ class MainViewModel @Inject constructor(
                     } else {
                         // Создадим уведомление (Snackbar.make)
 //                      _messageLiveData.postValue(AUDIO_CONNECTING) -> вместо этого у нас полоса прогресса на экране
-                        Log.d(TAG, "Включаем другую песню ${mediaItem.stationName}, url = ${mediaItem.urlResolved}")
+                        Log.d(
+                            TAG,
+                            "Включаем другую песню ${mediaItem.stationName}, url = ${mediaItem.urlResolved}"
+                        )
 
                         musicServiceConnection.transportControls.playFromMediaId(
                             mediaItem.stationuuid,
@@ -355,23 +431,58 @@ class MainViewModel @Inject constructor(
 
     // To change a playlist
     fun fetchSongs(countryCode: String) {
-        val args = Bundle()
-        args.putString("nRecNo", countryCode)
+        val args = Bundle().apply {
+            putString(COUNTRY_CODE_ID, countryCode)
+        }
+
         musicServiceConnection.sendCommand(ADD_SONGS, args)
 
 //        _setNonClickableLiveData.call()
     }
 
     fun showProgressAndDisableClick(stringDpOrCRSt: String) {
+
+        // <!-- 004 claude
+    // Запоминаем, когда показали "Connecting to radio station": её нужно спрятать по первому же ответу плейера (см. MainActivity)
+        connectingProgressShownAt =
+            if (stringDpOrCRSt.lowercase() == "crst") SystemClock.elapsedRealtime() else null
+
+        // 004 claude -->
+
         when (stringDpOrCRSt.lowercase()) {
             "dp" -> _setNonClickableDpLiveData.call()
             "crst" -> _setNonClickableCRStLiveData.call()
             else -> Log.d(TAG, "Unknown String in showProgressAndDisableClick()")
         }
         Log.d(TAG, "BROADCAST: Показываем прогресс, вызван метод showProgressAndDisableClick()")
+
+        // <!-- 003 claude
+        // Страховка: полоса загрузки перекрывает весь экран, и если по какой-то причине её не убрали,
+        // приложением невозможно пользоваться. Через PROGRESS_TIMEOUT прячем её сами и показываем ошибку
+        progressTimeoutJob?.cancel()
+        progressTimeoutJob = viewModelScope.launch {
+            delay(PROGRESS_TIMEOUT)
+            Log.d(TAG, "BROADCAST: Прогресс висит дольше $PROGRESS_TIMEOUT мс - прячем его и показываем ошибку")
+            errorMessagePost("Loading is taking too long. Please check your internet connection and try again")
+            if (connectingProgressShownAt == null) {
+                // Это была полоса "Downloading playlist": отменяем загрузку в сервисе, чтобы её результат
+                // (например, диалог "получен пустой список") не появился позже, когда пользователь уже делает что-то другое
+                musicServiceConnection.sendCommand(CANCEL_PLAYLIST_DOWNLOAD, null)
+            }
+            hideProgressAndSetClickable()
+        }
+        // 003 claude -->
+
     }
 
+//    fun showProgressAndDisableClick() {
+//        _setNonClickableLiveData.call()
+//        Log.d(TAG, "BROADCAST: Показываем прогресс, вызван метод showProgressAndDisableClick()")
+//    }
+
     fun hideProgressAndSetClickable(isServerDown: Boolean = false) {
+        progressTimeoutJob?.cancel() // 003 claude
+        connectingProgressShownAt = null // 004 claude
         _setClickableLiveData.call()
         Log.d(TAG, "BROADCAST: Прячем прогресс, вызван метод hideProgressAndSetClickable()")
         _isServerDown = isServerDown
@@ -394,12 +505,14 @@ class MainViewModel @Inject constructor(
                     // Если станция есть в избранном и нажали на звезду, нужно из избранного удалить и убрать звезду
                     // Меняем isStationInFavourite = false в Room для последующих обращений к БД
                     homeRadioInteractor.deleteStationInRoomFromFavourite(currentRadioStation)
-                    _stationDeletedFromFavouritesLiveData.call()
+//                    _stationDeletedFromFavouritesLiveData.call() // claude 007
+                    notifyFavouriteChanged(currentRadioStation, isFavourite = false) // claude 007
                 } else {
                     // Если станции в избранном нет, нужно добавить её в избранное и поставить звезду
                     // Меняем isStationInFavourite = true в Room для последующих обращений к БД
                     homeRadioInteractor.addStationInRoomToFavourites(currentRadioStation)
-                    _stationSavedInFavouritesLiveData.call()
+//                    _stationSavedInFavouritesLiveData.call() // 007 claude
+                    notifyFavouriteChanged(currentRadioStation, isFavourite = true) // claude 007
                 }
             } catch (e1: AccountsException) {
                 // AccountsException -> Known direct subclasses: AuthenticatorException, NetworkErrorException, OperationCanceledException
@@ -419,13 +532,15 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun changeTheStar(isFavourite: Boolean) {
-        _changeTheStarLiveData.postValue(isFavourite)
-    }
-
-    fun addAStationToFavouriteListIfItIsNotThere(radioStationFavourite: RadioStationPresentation) {
-        _addAStationToFavouriteListIfItIsNotThereLiveData.postValue(radioStationFavourite)
-    }
+    // <!-- 007 claude
+//    fun changeTheStar(isFavourite: Boolean) {
+//        _changeTheStarLiveData.postValue(isFavourite)
+//    }
+//
+//    fun addAStationToFavouriteListIfItIsNotThere(radioStationFavourite: RadioStationPresentation) {
+//        _addAStationToFavouriteListIfItIsNotThereLiveData.postValue(radioStationFavourite)
+//    }
+    // 007 claude -->
 
     fun dialogInternetTroubleCall() {
         _dialogInternetTroubleLiveData.call()
@@ -444,7 +559,8 @@ class MainViewModel @Inject constructor(
 
     fun markRadioStationAsPopularSendGetRequest(stationUuid: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val isServerDown = mainRadioInteractor.markRadioStationAsPopularSendGetRequest(stationUuid)
+            val isServerDown =
+                mainRadioInteractor.markRadioStationAsPopularSendGetRequest(stationUuid)
             _isServerDown = isServerDown
             // Этот метод не влияет на работоспособность приложения (Вызывается попросьбе автора API)
         }

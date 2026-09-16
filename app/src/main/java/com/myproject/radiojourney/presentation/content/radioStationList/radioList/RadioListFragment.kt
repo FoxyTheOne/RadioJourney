@@ -21,6 +21,7 @@ import com.myproject.radiojourney.other.Status
 import com.myproject.radiojourney.presentation.MainViewModel
 import com.myproject.radiojourney.presentation.content.radioStationList.adapter.ListRadioStationAdapter
 import com.myproject.radiojourney.presentation.content.radioStationList.base.BaseRadioListFragmentAbstract
+import com.myproject.radiojourney.utils.extension.startStationIndex
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
@@ -220,11 +221,21 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
                     // Иногда после скачивания нового плейлиста экзоплейер не обновляется. Поэтому перед тем, как включить первую станцию нового плейлиста, укажем явно, что его нужно скачать
                     mainViewModel.fetchSongs(radioStationPresentationList[0].countryCode)
 
-                    // Открываем по клику другой фрагмент, передаём туда нашу радиостанцию
+//                    <!-- 006 claude
+//                    // Открываем по клику другой фрагмент, передаём туда нашу радиостанцию
+//                    val direction =
+//                        RadioListFragmentDirections.actionRadioListFragmentToHomeRadioFragment(
+//                            radioStationPresentationList[0]
+//                        )
+
+                    // Открываем по клику другой фрагмент, передаём туда станцию, с которой начнётся плейлист (самую популярную -
+                    // ту же выберет MainActivity). Для неё же отправляется отметка "популярная" на сервер radio-browser
                     val direction =
                         RadioListFragmentDirections.actionRadioListFragmentToHomeRadioFragment(
-                            radioStationPresentationList[0]
+                            radioStationPresentationList[radioStationPresentationList.startStationIndex()]
                         )
+// 006 claude -->
+
                     if (this.findNavController().currentDestination?.id == R.id.radioListFragment) {
                         this.findNavController().navigate(direction)
                     }

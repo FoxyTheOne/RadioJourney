@@ -11,6 +11,7 @@ import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 // 1.1. ОБРАБОТКА КЛИКА -> передадим в конструктор анонимную функцию (как класса Adapter, так и вложенного класса). Затем отдаём эту лямбду каждому ViewHolder
 class RadioListAdapter(
     private val radioStationList: List<RadioStationPresentation>,
+    private var currentStationUuid: String? = null, // 005 claude // сейчас играющая станция - выделяется цветом
     private val onItemClicked: (RadioStationPresentation) -> Unit
 ) :
     RecyclerView.Adapter<RadioListAdapter.RadioListViewHolder>() {
@@ -34,6 +35,22 @@ class RadioListAdapter(
     // Возвращает количество элементов списка
     override fun getItemCount(): Int =
         radioStationList.size
+
+    // <!-- 005 claude
+    // Меняем выделенную станцию (например, станция переключилась, пока список открыт) - перерисовываем только старую и новую
+    fun setCurrentStation(stationUuid: String?) {
+        if (stationUuid == currentStationUuid) return
+        val oldPosition = indexOf(currentStationUuid)
+        currentStationUuid = stationUuid
+        if (oldPosition != -1) notifyItemChanged(oldPosition)
+        val newPosition = indexOf(stationUuid)
+        if (newPosition != -1) notifyItemChanged(newPosition)
+    }
+
+    // Позиция станции в списке, -1 если её нет
+    fun indexOf(stationUuid: String?): Int =
+        if (stationUuid == null) -1 else radioStationList.indexOfFirst { it.stationuuid == stationUuid }
+    // 005 claude -->
 
     inner class RadioListViewHolder(
         itemView: View,
@@ -65,6 +82,13 @@ class RadioListAdapter(
 
             textRadioStationName.text = radioStation.stationName
             textRadioStationClickCount.text = radioStation.clickCount.toString()
+
+            // <!-- 005 claude
+            // Сейчас играющая станция выделена фоном, чтобы её сразу было видно
+            itemView.setBackgroundResource(
+                if (radioStation.stationuuid == currentStationUuid) R.color.white_transparent_20 else R.color.background
+            )
+            //            005 claude -->
         }
     }
 

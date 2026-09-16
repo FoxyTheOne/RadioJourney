@@ -1,6 +1,7 @@
 package com.myproject.radiojourney.utils.exoplayer
 
 import android.os.Bundle
+import android.os.SystemClock
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaBrowserCompat.MediaItem.FLAG_PLAYABLE
 import android.support.v4.media.MediaDescriptionCompat
@@ -14,6 +15,7 @@ import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.source.hls.HlsMediaSource
+import com.google.android.exoplayer2.source.ShuffleOrder
 import com.google.android.exoplayer2.upstream.DefaultDataSource
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
 import com.myproject.radiojourney.data.dataSource.network.INetworkRadioDataSource
@@ -21,8 +23,11 @@ import com.myproject.radiojourney.data.localDatabaseRoom.IRadioStationDAO
 import com.myproject.radiojourney.other.Status
 import com.myproject.radiojourney.utils.exoplayer.State.*
 import com.myproject.radiojourney.utils.extension.call
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
+import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 
 // We need time to upload music from firebase or other data
@@ -53,6 +58,9 @@ class FirebaseMusicSource @Inject constructor(
     // Список, куда будут сохраняться метаданные по каждой радиостанции с помощью метода fetchMediaData()
     var radioStations = emptyList<MediaMetadataCompat>() // meta info about radioStations
 
+    // 005 CLAUDE // Номер последней начатой загрузки: отменённая загрузка не должна менять state, если после неё уже началась следующая
+    private val fetchGeneration = AtomicInteger(0)
+
     // Список лямбд action, которые будут передаваться в метод whenReady(), пока state == STATE_CREATED или state == STATE_INITIALIZING
     private val onReadyListeners = mutableListOf<(Boolean) -> Unit>()
 
@@ -65,7 +73,16 @@ class FirebaseMusicSource @Inject constructor(
             if (value == STATE_INITIALIZED || value == STATE_ERROR) {
                 synchronized(onReadyListeners) { // synchronized for save change
                     field = value // sign a new value to the field
-                    onReadyListeners.forEach { listener ->
+
+//                    <!-- 001 claude
+//                    onReadyListeners.forEach { listener ->
+                    // Каждая лямбда должна сработать один раз. Раньше список не очищался, и при каждой загрузке нового плейлиста
+                    // заново вызывались все старые лямбды (повторный result.sendResult() в onLoadChildren, повторный playerPrepared() со старым mediaId)
+                    val listeners = onReadyListeners.toList()
+                    onReadyListeners.clear()
+                    listeners.forEach { listener ->
+//                        001 claude -->
+
                         listener(state == STATE_INITIALIZED) // go through list and call needed lambda function. If there will be STATE_ERROR instead STATE_INITIALIZED, we will get "false". So we can check, if it was successful or not
                     }
                 }
@@ -87,16 +104,53 @@ class FirebaseMusicSource @Inject constructor(
 
     // Метод для СОХРАНЕНИЯ МЕТАДАННЫХ по каждой радиостанции. Создаём список MediaMetadataCompat
     suspend fun fetchMediaData(countryCode: String) = withContext(Dispatchers.IO) {
+
+        // <!-- 005 claude
+        val generation = fetchGeneration.incrementAndGet()
+        val startTime = SystemClock.elapsedRealtime()
+        // 005 claude -->
+
         state = STATE_INITIALIZING
 //        val allRadioStations = networkRadioDataSource.getAllRadioStationsList()
 
         // Получаем ответ с сервера в виде Resource с данными
-        val countryCodeRadioStationsResource =
-            networkRadioDataSource.getRadioStationList(countryCode)
+        // <!-- 005 claude
+//        val countryCodeRadioStationsResource =
+//            networkRadioDataSource.getRadioStationList(countryCode)
 
-        // И сначала проверяем, не было ли ошибки HttpException при обращении к серверу
-        if (countryCodeRadioStationsResource.status == Status.ERROR) {
+        val countryCodeRadioStationsResource = try {
+            // ensureActive(): если загрузку отменили, пока шёл запрос, полученный результат не применяем
+            networkRadioDataSource.getRadioStationList(countryCode).also { ensureActive() }
+        } catch (e: CancellationException) {
+            // Загрузку отменили (выбран другой плейлист или полоса загрузки висела слишком долго). Текущий плейлист остаётся рабочим.
+            // state возвращаем, только если после этой загрузки не началась новая - она сама выставит state, когда закончит
+            Log.d(TAG, "PLAYLIST_UPDATE: Загрузка плейлиста $countryCode отменена, текущий плейлист не меняем")
+            if (generation == fetchGeneration.get()) state = STATE_INITIALIZED
+            throw e
+        }
+        // 005 claude -->
+
+        // И сначала проверяем, не было ли ошибки HttpException при обращении к серверу.
+        // Пустой список - тоже ошибка: NetworkRadioDataSource возвращает его, если ни один сервер не ответил
+        // (на карте есть только те страны, где радиостанции есть)
+
+        // <!-- 003 claude
+//        if (countryCodeRadioStationsResource.status == Status.ERROR) {
+//            _serverIsDownLiveData.call()
+
+        if (countryCodeRadioStationsResource.status == Status.ERROR || countryCodeRadioStationsResource.data.isNullOrEmpty()) {
+//            Log.d(TAG, "PLAYLIST_UPDATE: Не удалось скачать плейлист $countryCode, текущий плейлист не меняем")
+            Log.d(
+                TAG,
+                "PLAYLIST_UPDATE: Не удалось скачать плейлист $countryCode за ${SystemClock.elapsedRealtime() - startTime} мс, текущий плейлист не меняем"
+            )
+            // radioStations не трогаем: плейер продолжает играть текущий плейлист, список в плейере остаётся прежним.
+            // MainActivity покажет диалог и уберёт полосу загрузки
             _serverIsDownLiveData.call()
+            // Раньше state оставался STATE_INITIALIZING навсегда, и лямбды whenReady() (в т.ч. из onLoadChildren) больше не вызывались
+            state = STATE_INITIALIZED
+            // 003 claude -->
+
         } else {
             countryCodeRadioStationsResource.data?.let { radioStationRemoteList ->
                 // А затем уже, если такой ошибки не было, обрабатываем полученные данные
@@ -168,6 +222,7 @@ class FirebaseMusicSource @Inject constructor(
 
     // Метод для СОХРАНЕНИЯ МЕТАДАННЫХ по каждой радиостанции. Создаём список MediaMetadataCompat
     suspend fun fetchFavouriteMediaData() = withContext(Dispatchers.IO) {
+        fetchGeneration.incrementAndGet() // 005 claude
         state = STATE_INITIALIZING
         val favouriteRadioStations = radioStationDAO.getFavoriteRadioStationList(true)
 
@@ -330,11 +385,25 @@ class FirebaseMusicSource @Inject constructor(
 
     // Для формирования плейлиста из нескольких песен/радиостанций. Info for exoplayer to stream songs
     fun asMediaSourcePlaylist(
+        playlist: List<MediaMetadataCompat>, // 001 claude
         httpDataSourceFactory: DefaultHttpDataSource.Factory,
         dataSourceFactory: DefaultDataSource.Factory
     ): ConcatenatingMediaSource {
-        val concatenatingMediaSource = ConcatenatingMediaSource() // empty by default
-        radioStations.forEach { radioStation ->
+
+//        <!-- 001 claude
+//        val concatenatingMediaSource = ConcatenatingMediaSource() // empty by default
+//        radioStations.forEach { radioStation ->
+        // useLazyPreparation = true: источник станции готовится только когда до неё доходит очередь.
+        // По умолчанию (ConcatenatingMediaSource()) сразу готовятся ВСЕ станции плейлиста (до 500), и каждая HLS (.m3u8) станция
+        // постоянно перезагружает свой live-плейлист -> Timeline постоянно меняется -> MediaSessionConnector постоянно
+        // пересылает метаданные (onMetadataChanged) + лишний интернет-трафик
+        val concatenatingMediaSource = ConcatenatingMediaSource(
+            /* isAtomic = */ false,
+            /* useLazyPreparation = */ true,
+            ShuffleOrder.DefaultShuffleOrder(0)
+        ) // empty by default
+        playlist.forEach { radioStation ->
+//            001 claude 001 -->
 
             val mediaUri = radioStation.description.mediaUri.toString()
 

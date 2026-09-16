@@ -48,6 +48,7 @@
 
     <string name="downloading_playlist">Загрузка плейлиста</string>
     <string name="downloading_radio_station">Подключение к радиостанции</string>
+    <string name="connecting">Обращение к серверу…</string>
 
     <string name="foregroundNotification_name">Кеширование локаций</string>
     <string name="foregroundNotification_description">Кеширование… </string>

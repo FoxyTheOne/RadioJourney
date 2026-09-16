@@ -43,6 +43,7 @@ import com.myproject.radiojourney.other.Status.SUCCESS
 import com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioFragmentDirections
 import com.myproject.radiojourney.presentation.content.radioStationList.adapter.SwipeRadioStationAdapter
 import com.myproject.radiojourney.utils.extension.isPlaying
+import com.myproject.radiojourney.utils.extension.startStationIndex
 import com.myproject.radiojourney.utils.service.ProgressForegroundService
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.IOException
@@ -112,6 +113,9 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
     private lateinit var dialogPleaseWait: Dialog
     private var isInternetAvailable = false
+
+//    // 1. PROGRESS Текущий актуальный ID загрузки
+//    private var currentPlaylistId = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -370,7 +374,10 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             isInternetAvailable = mainViewModel.isInternetAvailable(this)
             if (!isInternetAvailable) {
                 // Диалоговое окно при отсутствии интернета
-                showCustomDialog(R.string.dialogInternetTrouble_title, R.string.dialogInternetTrouble_text3)
+                showCustomDialog(
+                    R.string.dialogInternetTrouble_title,
+                    R.string.dialogInternetTrouble_text3
+                )
             }
 
             curPlayingRadioStation?.let {
@@ -417,6 +424,10 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         val curPlayingMediaId = mainViewModel.curPlayingSongLiveData.value?.description?.mediaId
         if (mediaId != curPlayingMediaId) return
 
+        Log.d(
+            TAG,
+            "PLAYLIST_UPDATE: 4.$TAG, switchViewPagerToCurrentSong() вызван"
+        )
         var radioStationNeedToFind: RadioStationPresentation? = null
 
         if (swipeRadioStationAdapter.radioStationList.isNotEmpty()) {
@@ -457,44 +468,101 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         // LIVEDATA: to fill our widget.ViewPager2 with correct items, display right ones WHEN WE LAUNCH OUR APP
         mainViewModel.mediaItemsListLiveData.observe(this) {
             it?.let { result ->
+                Log.d(
+                    "UI_DEBUG",
+                    "PLAYER_DEBUG: MediaItems update. Status: ${result.status}, data size: ${result.data?.size}"
+                )
                 when (result.status) {
                     SUCCESS -> {
 
                         result.data?.let { radioStations ->
+                            Log.d(
+                                "UI_DEBUG",
+                                "PLAYER_DEBUG: Updating ViewPager with ${radioStations.size} stations"
+                            )
 
                             if (radioStations.isNotEmpty()) {
-                                swipeRadioStationAdapter.radioStationList = radioStations
-                                // if we had an individual image
+
+//                                <!-- 002 claude
+//                                swipeRadioStationAdapter.radioStationList = radioStations
+
+                                // Всё, что ниже, выполняем только после того, как адаптер применит новый список.
+                                // Раньше onPageSelected(0) вызывался сразу после присваивания radioStationList, но AsyncListDiffer
+                                // ещё возвращал СТАРЫЙ список -> playOrToggleSong() получал первую станцию старого плейлиста,
+                                // считал её "той же самой" и новую станцию не включал. Срабатывало, только если текущая станция была
+                                // не первой: тогда ViewPager сам вызывал onPageSelected(0) позже, когда новый список уже применён
+                                swipeRadioStationAdapter.submitRadioStationList(radioStations) {
+//                                002 claude -->
+
+                                    // if we had an individual image
 //                            if(radioStations.isNotEmpty()) {
 //                                glide.load((curPlayingSong ?: radioStations[0]).imageUrl).into(ivCurSongImage)
 //                            }
 
-                                // Попробуем назначить адаптер после обновления списка радиостанций
-                                binding?.vpSong?.adapter = swipeRadioStationAdapter
+                                    // Попробуем назначить адаптер после обновления списка радиостанций
+                                    binding?.vpSong?.adapter = swipeRadioStationAdapter
 
-                                mOnPageChangeCallback?.onPageSelected(0)
-                                // Почему-то этот метод изредка не вызывается, хотя должен. На всякий случай дублирую вызов здесь
+//                                    <!-- 006 claude
+//                                    mOnPageChangeCallback?.onPageSelected(0)
+//                                    // Почему-то этот метод изредка не вызывается, хотя должен. На всякий случай дублирую вызов здесь
 
-                                // В этом месте данные в curPlayingRadioStation будут старые, т.е. данные о предыдущей радиостанции. Это нужно для сравнения предыдущей и текущей в дальнейшем в методе mainViewModel.playOrToggleSong()
-                                switchViewPagerToCurrentSong(
-                                    curPlayingRadioStation?.stationuuid ?: return@observe,
-                                    curPlayingRadioStation?.countryCode ?: return@observe
-                                )
+                                    // !!! Новый плейлист начинаем не с первой по алфавиту станции (во многих странах это одни и те же
+                                    // станции вроде ".Quran" или "# TOP 100 ..."), а с самой популярной
+                                    val startPosition = radioStations.startStationIndex()
+                                    val vpSong = binding?.vpSong
+                                    if (vpSong != null && vpSong.currentItem != startPosition) {
+                                        vpSong.setCurrentItem(
+                                            startPosition,
+                                            false
+                                        ) // ViewPager сам вызовет onPageSelected(startPosition)
+                                    } else {
+                                        mOnPageChangeCallback?.onPageSelected(startPosition)
+                                        // Почему-то этот метод изредка не вызывается, хотя должен. На всякий случай дублирую вызов здесь
+                                    }
+                                    // 006 claude -->
 
-                                Log.d(
-                                    TAG,
-                                    "PLAYLIST_UPDATE: 4.$TAG. Получаем данные из mediaItemsListLiveData"
-                                )
+//                                <!-- 002 claude
+//                                // В этом месте данные в curPlayingRadioStation будут старые, т.е. данные о предыдущей радиостанции. Это нужно для сравнения предыдущей и текущей в дальнейшем в методе mainViewModel.playOrToggleSong()
+//                                switchViewPagerToCurrentSong(
+//                                    curPlayingRadioStation?.stationuuid ?: return@observe,
+//                                    curPlayingRadioStation?.countryCode ?: return@observe
+//                                )
 
-                                mOnPageChangeCallback?.onPageScrolled(0, 0.0f, 0)
-                                // ??? Если не включать плейер, а просто листать от списка к списку, этот метод перестаёт вызываться на четвертый раз и звезда перестаёт меняться (избранное/не избранное). Поэтому на всякий случай вызываю его дополнительно. Не самый лучший вариант, думаю. Поэтому помечаю на проверку в дальнейшем.
+                                    // Полоса progressBar, которая заполняется с помощью Broadcast
+                                    binding?.progressBarHorizontalDp?.progress = 85
+                                    Log.d(
+                                        TAG,
+                                        "BROADCAST: Заполняем полосу прогресса на 85% в mediaItemsListLiveData.observe()"
+                                    )
+//                                002 claude -->
 
-                                // Полоса progressBar, которая заполняется с помощью Broadcast
-                                binding?.progressBarHorizontalDp?.progress = 85
-                                Log.d(
-                                    TAG,
-                                    "BROADCAST: Заполняем полосу прогресса на 85% в mediaItemsListLiveData.observe()"
-                                )
+                                    Log.d(
+                                        TAG,
+                                        "PLAYLIST_UPDATE: 4.$TAG. Получаем данные из mediaItemsListLiveData"
+                                    )
+
+                                    mOnPageChangeCallback?.onPageScrolled(0, 0.0f, 0)
+                                    // ??? Если не включать плейер, а просто листать от списка к списку, этот метод перестаёт вызываться на четвертый раз и звезда перестаёт меняться (избранное/не избранное). Поэтому на всякий случай вызываю его дополнительно. Не самый лучший вариант, думаю. Поэтому помечаю на проверку в дальнейшем.
+
+//                                <!-- 002 claude
+//                                // Полоса progressBar, которая заполняется с помощью Broadcast
+//                                binding?.progressBarHorizontalDp?.progress = 85
+//                                Log.d(
+//                                    TAG,
+//                                    "BROADCAST: Заполняем полосу прогресса на 85% в mediaItemsListLiveData.observe()"
+//                                )
+
+                                    // Возвращаем ViewPager на станцию, которая сейчас в плейере. Берём её из метаданных, а не из curPlayingRadioStation:
+                                    // onPageSelected(0) выше уже записал туда первую станцию списка, и при повторной доставке того же списка
+                                    // (при запуске он приходит дважды) плейер внизу показывал первую станцию вместо той, что на паузе/играет
+                                    val curPlayingSong = mainViewModel.curPlayingSongLiveData.value
+                                    switchViewPagerToCurrentSong(
+                                        curPlayingSong?.description?.mediaId
+                                            ?: return@submitRadioStationList,
+                                        curPlayingSong.description?.subtitle.toString()
+                                    )
+                                }
+//                                002 claude -->
                             } else {
                                 // Список radioStations пуст. Бродкаст на это не срабатывает
                                 // TODO а если это список избранного? Ему можно быть пустым
@@ -511,6 +579,32 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                 }
             }
         }
+
+//        // 3. PROGRESS Подписываемся на состояние загрузки
+//        mainViewModel.playlistLoadState.observe(this) { state ->
+//            Log.d("UI_DEBUG", "PLAYER_DEBUG: LoadState update. Loading: ${state.loading}, playerReady: ${state.playerReady}, playlistId: ${state.playlistId}")
+//            // Проверяем, что состояние актуально
+//            if (state.playlistId != currentPlaylistId && currentPlaylistId != -1) {
+//                return@observe
+//            }
+//
+//            // Обновляем UI в соответствии с состоянием
+////            binding.frameLayoutDp.isVisible = state.loading
+////            binding.progressBarHorizontalDp.isVisible = state.loading
+////            swipeRadioStationAdapter.isClickableRecyclerView = !state.loading
+//
+//            if (state.loading){
+//                mainViewModel.showProgressAndDisableClick() //TODO сделать тест просто "Загрузка..."
+//            } else{
+//                mainViewModel.hideProgressAndSetClickable()
+//            }
+//
+//            // Если загрузка завершена и плеер готов
+//            if (!state.loading && state.playerReady) {
+//                // Дополнительные действия после успешной загрузки
+//                Log.d("UI_DEBUG", "PLAYER_DEBUG: Player ready! Should be playing now.")
+//            }
+//        }
 
         // LIVEDATA: every time we have new info about currently playing song (when the song switches)
         mainViewModel.curPlayingSongLiveData.observe(this) {
@@ -573,6 +667,23 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             binding?.ivPlayPause?.setImageResource(
                 if (playbackState?.isPlaying == true) R.drawable.ic_pause_orange else R.drawable.ic_play_arrow_orange
             )
+
+//            <!-- 004 claude
+            // "Connecting to radio station" прячем, как только плейер после её показа начал играть или сообщил об ошибке
+            // (ошибка - это тот же момент, когда сервис показывает toast). Ждать смены метаданных нельзя:
+            // при повторном выборе той же станции (например, после ошибки) метаданные не меняются, и полоса висела до таймаута
+            val connectingShownAt = mainViewModel.connectingProgressShownAt
+            if (connectingShownAt != null && it != null && it.lastPositionUpdateTime >= connectingShownAt &&
+                (it.state == PlaybackStateCompat.STATE_PLAYING || it.state == PlaybackStateCompat.STATE_ERROR)
+            ) {
+                Log.d(
+                    TAG,
+                    "BROADCAST: Прячем Connecting to radio station, состояние плейера = ${it.state}"
+                )
+                mainViewModel.hideProgressAndSetClickable()
+            }
+
+            // 004 claude -->
 
         }
 
@@ -693,25 +804,46 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         }
 
         // Favourites
-        mainViewModel.stationSavedInFavouritesLiveData.observe(this) {
-            binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_24_orange)
-            // Так же ставим true в объекте текущей радиостанции
-            setTheRightStateOfFavourite(true)
-        }
-        mainViewModel.stationDeletedFromFavouritesLiveData.observe(this) {
-            binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_border_24_orange)
-            // Так же ставим false в объекте текущей радиостанции
-            setTheRightStateOfFavourite(false)
-        }
+        // <!-- 007 claude
+//        mainViewModel.stationSavedInFavouritesLiveData.observe(this) {
+//            binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_24_orange)
+//            // Так же ставим true в объекте текущей радиостанции
+//            setTheRightStateOfFavourite(true)
+//        }
+//        mainViewModel.stationDeletedFromFavouritesLiveData.observe(this) {
+//            binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_border_24_orange)
+//            // Так же ставим false в объекте текущей радиостанции
+//            setTheRightStateOfFavourite(false)
+//        }
+//
+//        // Если изменение было в FavouriteListFragment, здесь тоже нужно это отобразить:
+//        mainViewModel.changeTheStarLiveData.observe(this) {
+//            if (it) {
+//                binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_24_orange)
+//            } else {
+//                binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_border_24_orange)
+//            }
+//        }
 
-        // Если изменение было в FavouriteListFragment, здесь тоже нужно это отобразить:
-        mainViewModel.changeTheStarLiveData.observe(this) {
-            if (it) {
-                binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_24_orange)
-            } else {
-                binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_border_24_orange)
+        // Favourites: звезда нажата где угодно (в плейере, списке избранного, рекомендованных).
+        // Меняем признак у ЭТОЙ станции в плейлисте плейера, а звезду в плейере - только если показана именно она
+        val skipFavouriteChangesUpToId = mainViewModel.lastFavouriteChangeIdForNewObserver
+        mainViewModel.favouriteChangeLiveData.observe(this) { change ->
+            if (change.id <= skipFavouriteChangesUpToId) return@observe
+
+            val radioStationList = swipeRadioStationAdapter.radioStationList
+            radioStationList.forEach {
+                if (it.stationuuid == change.station.stationuuid) it.isStationInFavourite = change.isFavourite
+            }
+
+            val shownStation = radioStationList.getOrNull(binding?.vpSong?.currentItem ?: -1)
+            if (shownStation?.stationuuid == change.station.stationuuid) {
+                binding?.imageStar?.setImageResource(
+                    if (change.isFavourite) R.drawable.ic_baseline_star_24_orange else R.drawable.ic_baseline_star_border_24_orange
+                )
             }
         }
+        // 007 claude -->
 
         mainViewModel.setNonClickableDpLiveData.observe(this) {
             // Изредка не срабатывает логика и кнопки остаются заблокированым. В таком случае нет возможности продолжать пользоваться приложением.
@@ -742,6 +874,16 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             binding?.text1Dp?.text = textForConnecting
             binding?.progressBarHorizontalDp?.isVisible = true
         }
+//        mainViewModel.setNonClickableLiveData.observe(this) {
+//            swipeRadioStationAdapter.isClickableRecyclerView = false
+//
+//            binding?.frameLayoutDp?.isVisible = true
+//            binding?.text1Dp?.isVisible = true
+//            // Возвращаем текст
+//            val textForConnecting = getString(R.string.connecting)
+//            binding?.text1Dp?.text = textForConnecting
+//            binding?.progressBarHorizontalDp?.isVisible = true
+//        }
         mainViewModel.setClickableLiveData.observe(this) {
 //            // Убрать отображение прогресс бара + разблокировать нажатия как на HomeRadioFragment, так и проигрыватель в main activity
 //            // MainActivity
@@ -832,19 +974,21 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
     }
 
-    private fun setTheRightStateOfFavourite(isInFavourite: Boolean) {
-        if (swipeRadioStationAdapter.radioStationList.isNotEmpty()) {
-            val currentRadioStationPosition = binding?.vpSong?.currentItem
-
-            currentRadioStationPosition?.let {
-                swipeRadioStationAdapter.radioStationList[it].isStationInFavourite = isInFavourite
-
-                if (isInFavourite) {
-                    mainViewModel.addAStationToFavouriteListIfItIsNotThere(swipeRadioStationAdapter.radioStationList[it])
-                }
-            }
-        }
-    }
+    // <!-- 007 claude
+//    private fun setTheRightStateOfFavourite(isInFavourite: Boolean) {
+//        if (swipeRadioStationAdapter.radioStationList.isNotEmpty()) {
+//            val currentRadioStationPosition = binding?.vpSong?.currentItem
+//
+//            currentRadioStationPosition?.let {
+//                swipeRadioStationAdapter.radioStationList[it].isStationInFavourite = isInFavourite
+//
+//                if (isInFavourite) {
+//                    mainViewModel.addAStationToFavouriteListIfItIsNotThere(swipeRadioStationAdapter.radioStationList[it])
+//                }
+//            }
+//        }
+//    }
+    // 007 claude -->
 
     private fun showCustomDialog(titleId: Int, textId: Int) {
         val titleInternetTrouble = getString(titleId)
@@ -932,7 +1076,10 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             val isServerDown = intent.getBooleanExtra(KEY_BROADCAST_SERVER_IS_DOWN, false)
 
             if (isServerDown) {
-                showCustomDialog(R.string.dialogInternetTrouble_title4, R.string.dialogInternetTrouble_text4)
+                showCustomDialog(
+                    R.string.dialogInternetTrouble_title4,
+                    R.string.dialogInternetTrouble_text4
+                )
                 mainViewModel.hideProgressAndSetClickable(true)
             }
         }

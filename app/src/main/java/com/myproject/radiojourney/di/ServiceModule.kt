@@ -6,6 +6,7 @@ import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.upstream.DefaultDataSource
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
+import com.google.android.exoplayer2.util.Util
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -43,12 +44,33 @@ object ServiceModule {
 //        @ApplicationContext context: Context
 //    ) = DefaultDataSourceFactory(context, Util.getUserAgent(context, "RadioJourney"))@ServiceScoped
 
+
+    // <!-- 004 claude
+//    @Provides
+//    fun provideDataSourceFactory(
+//        @ApplicationContext context: Context
+//    ) = DefaultDataSource.Factory(context)
+//
+//    @Provides
+//    fun provideHttpDataSource() = DefaultHttpDataSource.Factory()
+
+    // Для обычных (не HLS) потоков. Раньше DefaultDataSource.Factory(context) создавал внутри свой http-источник -
+    // без User-Agent и без редиректов между http и https (см. provideHttpDataSource)
     @Provides
     fun provideDataSourceFactory(
-        @ApplicationContext context: Context
-    ) = DefaultDataSource.Factory(context)
+        @ApplicationContext context: Context,
+        httpDataSourceFactory: DefaultHttpDataSource.Factory
+    ) = DefaultDataSource.Factory(context, httpDataSourceFactory)
 
+    // User-Agent: без него отправляется "Dalvik/2.1.0 (Linux; ...)", и часть серверов (например, streaming.live365.com)
+    // отвечает 403 -> toast "Exoplayer can't read this url".
+    // setAllowCrossProtocolRedirects: некоторые станции перенаправляют с http на https, а по умолчанию ExoPlayer такой редирект не выполняет
     @Provides
-    fun provideHttpDataSource() = DefaultHttpDataSource.Factory()
+    fun provideHttpDataSource(
+        @ApplicationContext context: Context
+    ): DefaultHttpDataSource.Factory = DefaultHttpDataSource.Factory()
+        .setUserAgent(Util.getUserAgent(context, "RadioJourney"))
+        .setAllowCrossProtocolRedirects(true)
+    // 004 claude -->
 
 }

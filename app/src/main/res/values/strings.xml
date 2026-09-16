@@ -48,6 +48,7 @@
 
     <string name="downloading_playlist">Downloading playlist</string>
     <string name="downloading_radio_station">Connecting to the radio station</string>
+    <string name="connecting">Connecting to the server…</string>
 
     <string name="foregroundNotification_name">Cashing. Please, wait. </string>
     <string name="foregroundNotification_description">Cashing… </string>

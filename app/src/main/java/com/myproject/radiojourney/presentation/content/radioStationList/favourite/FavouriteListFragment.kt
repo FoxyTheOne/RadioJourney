@@ -232,40 +232,63 @@ class FavouriteListFragment : BaseRadioListFragmentAbstract() {
 
             hideProgress()
         }
-        viewModel.stationSavedInFavouritesLiveData.observe(viewLifecycleOwner) {
+
+        // <!-- 007 claude
+//        viewModel.stationSavedInFavouritesLiveData.observe(viewLifecycleOwner) {
+//            recyclerViewRadioStationList.adapter?.notifyDataSetChanged()
+//            // Нужно так же сообщить это плейеру в activity
+//            mainViewModel.changeTheStar(true)
+//        }
+//        viewModel.stationDeletedFromFavouritesLiveData.observe(viewLifecycleOwner) {
+//            recyclerViewRadioStationList.adapter?.notifyDataSetChanged()
+//            // Нужно так же сообщить это плейеру в activity
+//            mainViewModel.changeTheStar(false)
+//        }
+
+        viewModel.listRedrawLiveData.observe(viewLifecycleOwner) {
             recyclerViewRadioStationList.adapter?.notifyDataSetChanged()
-            // Нужно так же сообщить это плейеру в activity
-            mainViewModel.changeTheStar(true)
         }
-        viewModel.stationDeletedFromFavouritesLiveData.observe(viewLifecycleOwner) {
-            recyclerViewRadioStationList.adapter?.notifyDataSetChanged()
-            // Нужно так же сообщить это плейеру в activity
-            mainViewModel.changeTheStar(false)
+        // Звезду нажали в этом списке - сообщаем плейеру (и остальным экранам), какая именно станция изменилась
+        viewModel.stationFavouriteChangedLiveData.observe(viewLifecycleOwner) { event ->
+            event.getContentIfNotHandled()?.let { station ->
+                mainViewModel.notifyFavouriteChanged(station, station.isStationInFavourite)
+            }
         }
 
-        // Если изменение было в activity, и открыт этот фрагмент, здесь тоже нужно это отобразить:
-        mainViewModel.stationSavedInFavouritesLiveData.observe(viewLifecycleOwner) {
-            recyclerViewRadioStationList.adapter?.notifyDataSetChanged()
-            viewModel.changeTheStar(
-                mainViewModel.curPlayingSongLiveData.value?.description?.mediaId,
-                true
-            )
+//        // Если изменение было в activity, и открыт этот фрагмент, здесь тоже нужно это отобразить:
+//        mainViewModel.stationSavedInFavouritesLiveData.observe(viewLifecycleOwner) {
+//            recyclerViewRadioStationList.adapter?.notifyDataSetChanged()
+//            viewModel.changeTheStar(
+//                mainViewModel.curPlayingSongLiveData.value?.description?.mediaId,
+//                true
+//            )
+//        }
+//        // Если мы добавили звезду в плейере, то в список в FavouriteListFragment нужно добавить не просто звезду, а всю позицию - на случай, если её там не было
+//        mainViewModel.addAStationToFavouriteListIfItIsNotThereLiveData.observe(viewLifecycleOwner) {
+//            viewModel.addAStationToFavouriteListIfItIsNotThere(it)
+//        }
+
+        // Звезду нажали в плейере, пока открыт этот список: меняем звезду у той же станции или добавляем станцию в список.
+        // Изменения, случившиеся до открытия списка, пропускаем - список и так загружается из базы уже с ними
+        val skipFavouriteChangesUpToId = mainViewModel.lastFavouriteChangeIdForNewObserver
+        mainViewModel.favouriteChangeLiveData.observe(viewLifecycleOwner) { change ->
+            if (change.id <= skipFavouriteChangesUpToId) return@observe
+            viewModel.applyFavouriteChangeFromOutside(change.station, change.isFavourite)
         }
-        // Если мы добавили звезду в плейере, то в список в FavouriteListFragment нужно добавить не просто звезду, а всю позицию - на случай, если её там не было
-        mainViewModel.addAStationToFavouriteListIfItIsNotThereLiveData.observe(viewLifecycleOwner) {
-            viewModel.addAStationToFavouriteListIfItIsNotThere(it)
-        }
+
         // Если добавляем первую станцию в пустой список, нужно убрать надпись
         viewModel.addingAStationToAnEmptyListLiveData.observe(viewLifecycleOwner) {
             textFavouritesEmpty.isVisible = false
         }
-        mainViewModel.stationDeletedFromFavouritesLiveData.observe(viewLifecycleOwner) {
-            recyclerViewRadioStationList.adapter?.notifyDataSetChanged()
-            viewModel.changeTheStar(
-                mainViewModel.curPlayingSongLiveData.value?.description?.mediaId,
-                false
-            )
-        }
+//        mainViewModel.stationDeletedFromFavouritesLiveData.observe(viewLifecycleOwner) {
+//            recyclerViewRadioStationList.adapter?.notifyDataSetChanged()
+//            viewModel.changeTheStar(
+//                mainViewModel.curPlayingSongLiveData.value?.description?.mediaId,
+//                false
+//            )
+//        }
+        // 007 claude -->
+
     }
 
     private fun changeTextDownloadOrNothing() {
