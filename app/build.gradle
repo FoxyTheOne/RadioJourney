@@ -1,7 +1,8 @@
 plugins {
     id 'com.android.application'
-    id 'kotlin-android'
-    id 'kotlin-kapt'
+    // Kotlin с AGP 9 встроен в Android Gradle plugin: плагины 'kotlin-android' / 'org.jetbrains.kotlin.android' больше не нужны
+    // KSP вместо kapt для Hilt и Room (kapt не работал на JDK 21 со старым Kotlin и гораздо медленнее)
+    id 'com.google.devtools.ksp'
     // Hilt
     id 'dagger.hilt.android.plugin'
     // Navigation pass data
@@ -9,37 +10,22 @@ plugins {
     // Google maps
     id 'com.google.android.libraries.mapsplatform.secrets-gradle-plugin'
     // Parcelable implementation generator
-    id 'kotlin-parcelize'
-    id 'org.jetbrains.kotlin.android'
+    id 'org.jetbrains.kotlin.plugin.parcelize'
 }
 
 android {
     namespace 'com.myproject.radiojourney'
-    compileSdk 35
-    dataBinding { enabled = true }
+    compileSdk 36
 
     defaultConfig {
         applicationId "com.myproject.radiojourney"
-        minSdk 21
-        targetSdk 35
+        // Новые версии AndroidX и Google Play services поддерживают Android 6.0 (API 23) и выше
+        minSdk 23
+        targetSdk 36
         versionCode 3
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-
-        multiDexEnabled true
-
-        javaCompileOptions {
-            annotationProcessorOptions {
-                arguments += ["room.schemaLocation": "$projectDir/schemas".toString()]
-            }
-        }
-
-//        kapt {
-//            arguments {
-//                arg("room.schemaLocation", "$projectDir/schemas")
-//            }
-//        }
     }
 
     buildTypes {
@@ -47,39 +33,12 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
-
-        // Название файла
-        applicationVariants.all { variant ->
-            variant.outputs.all { output ->
-
-                def APP_TITLE = "RadioJourney"
-                def SEPARATOR = "_"
-
-                // какой билд (зависит от того, какой выбрали в Active Build Variant)
-                def buildType = variant.buildType.name
-                // versionName, который мы указали в defaultConfig -> versionName
-                def version = variant.versionName
-                // инициализация объекта даты
-                def date = new Date()
-                // указываем формат даты типа "09.11.21"
-                def formattedDate = date.format('dd.MM.yy')
-
-                // объединяем все в одну строчку
-                def apkName = APP_TITLE + SEPARATOR + version + SEPARATOR + buildType + SEPARATOR + formattedDate + ".apk"
-
-                // создем APK файл с названием $apkName
-                outputFileName = new File(apkName)
-            }
-        }
     }
 
     compileOptions {
+        // Байткод для Java 17. Собирать можно на JDK 21 (JDK из Android Studio)
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
-    }
-
-    kotlinOptions {
-        jvmTarget = "17"
     }
 
     buildFeatures {
@@ -88,67 +47,74 @@ android {
     }
 }
 
+// Название APK: RadioJourney_1.0_16.09.26-debug.apk (тип сборки Gradle добавляет в конце сам).
+// Раньше имя задавалось через android.applicationVariants, но в AGP 9 этого API больше нет
+base {
+    archivesName = "RadioJourney_${android.defaultConfig.versionName}_${new Date().format('dd.MM.yy')}"
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+    }
+}
+
+ksp {
+    // Room сохраняет схемы базы данных в app/schemas (нужны для миграций)
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
+
 dependencies {
-    implementation 'androidx.core:core-ktx:1.16.0'// Also needed for doOnLayout
-    implementation 'androidx.appcompat:appcompat:1.7.1'
-    implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
-    testImplementation 'junit:junit:4.+'
-    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
+    implementation 'androidx.core:core-ktx:1.18.0' // Also needed for doOnLayout
+    implementation 'androidx.appcompat:appcompat:1.8.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.2'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.3.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
 
     // Material design
-    implementation 'com.google.android.material:material:1.12.0'
+    implementation 'com.google.android.material:material:1.14.0'
 
-    // Architectural components (ViewModel)
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0'
-
-    // Lifecycle
-    implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
-    implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.7.0"
-    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.7.0"
-
-//    // Coroutines ?
-//    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9'
-//    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.9'
-//
-//    // Activity KTX for viewModels() ?
-//    implementation 'androidx.activity:activity-ktx:1.1.0'
+    // Architectural components (ViewModel) & Lifecycle
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.11.0'
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.11.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.11.0'
 
     // Hilt
-    implementation "com.google.dagger:hilt-android:2.45"
-    kapt "com.google.dagger:hilt-android-compiler:2.45"
-//    implementation "com.google.dagger:hilt-android:2.51.1"
-//    kapt "com.google.dagger:hilt-android-compiler:2.51.1"
+    implementation "com.google.dagger:hilt-android:$hilt_version"
+    ksp "com.google.dagger:hilt-android-compiler:$hilt_version"
 
     // Room
-    implementation "androidx.room:room-runtime:2.6.1"
-    kapt "androidx.room:room-compiler:2.6.1"
-    implementation "androidx.room:room-ktx:2.6.1"
+    implementation "androidx.room:room-runtime:2.8.5"
+    ksp "androidx.room:room-compiler:2.8.5"
+    implementation "androidx.room:room-ktx:2.8.5"
 
     // Retrofit & OkHttp
-    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
-    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+    implementation 'com.squareup.retrofit2:retrofit:3.0.0'
+    implementation 'com.squareup.retrofit2:converter-gson:3.0.0'
 
     // For activityViewModels working:
     // Java language implementation, Kotlin
-    implementation "androidx.fragment:fragment-ktx:1.8.8"
+    implementation "androidx.fragment:fragment-ktx:1.9.0"
     // Testing Fragments in Isolation
-    debugImplementation "androidx.fragment:fragment-testing:1.8.8"
+    debugImplementation "androidx.fragment:fragment-testing:1.9.0"
 
-    //  Glide
-    implementation 'com.github.bumptech.glide:glide:4.12.0'
-    annotationProcessor 'com.github.bumptech.glide:compiler:4.12.0'
+//    //  Glide
+//    implementation 'com.github.bumptech.glide:glide:4.12.0'
+//    annotationProcessor 'com.github.bumptech.glide:compiler:4.12.0'
 
     // Navigation
-    implementation 'androidx.navigation:navigation-fragment-ktx:2.8.9'
-    implementation 'androidx.navigation:navigation-ui-ktx:2.8.9'
+    implementation 'androidx.navigation:navigation-fragment-ktx:2.9.8'
+    implementation 'androidx.navigation:navigation-ui-ktx:2.9.8'
 
     // Location
-    implementation 'com.google.android.gms:play-services-location:21.1.0'
+    implementation 'com.google.android.gms:play-services-location:21.4.0'
     // Google maps
-    implementation 'com.google.android.gms:play-services-maps:18.2.0'
+    implementation 'com.google.android.gms:play-services-maps:20.0.0'
 
     // ExoPlayer
+    // com.google.android.exoplayer2 устарел (последняя версия 2.19.1). Переход на androidx.media3 - отдельная большая задача
     implementation 'com.google.android.exoplayer:exoplayer-core:2.19.1'
     implementation 'com.google.android.exoplayer:exoplayer-ui:2.19.1'
     implementation 'com.google.android.exoplayer:extension-mediasession:2.19.1'
@@ -156,20 +122,12 @@ dependencies {
     // HlsMediaSource for playing .m3u8
     implementation 'com.google.android.exoplayer:exoplayer-hls:2.19.1'
 
-    // Music Player on Notification
-    implementation 'androidx.media:media:1.7.0'
+    // LocalBroadcastManager (раньше подключался неявно через устаревший lifecycle-extensions)
+    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
 
-    // com.google.android.exoplayer2 is deprecated. Please migrate to androidx.media3 (which contains the same ExoPlayer code)
+    // Music Player on Notification
+    implementation 'androidx.media:media:1.8.0'
 
     // Interceptor
-    implementation 'com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.2'
-}
-
-kapt {
-    // Дополнит. настройка, чтобы hilt показывал корректные сообщения об ошибке во время компиляции
-    correctErrorTypes = true
-}
-
-kotlin {
-    jvmToolchain(17)
+    implementation 'com.squareup.okhttp3:logging-interceptor:5.4.0'
 }

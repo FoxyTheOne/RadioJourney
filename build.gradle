@@ -1,30 +1,36 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     ext {
-        agp_version = '8.6.1'
+        // AGP 9.2 - самая новая версия, которую поддерживает Android Studio Panda 4 (2025.3.4).
+        // Более новая AGP потребует обновить Android Studio
+        agp_version = '9.2.1'
+        // С AGP 9 Kotlin встроен в Android Gradle plugin; здесь задаём его версию
+        kotlin_version = '2.3.21'
+        hilt_version = '2.60.1'
     }
     repositories {
         google()
         mavenCentral()
+        gradlePluginPortal()
     }
     dependencies {
         classpath "com.android.tools.build:gradle:$agp_version"
-//        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.20'
-//        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.22'
-        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.0'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
 
+        // KSP - генерация кода для Hilt и Room (вместо kapt)
+        classpath "com.google.devtools.ksp:symbol-processing-gradle-plugin:2.3.12"
         // Hilt
-        classpath "com.google.dagger:hilt-android-gradle-plugin:2.45"
+        classpath "com.google.dagger:hilt-android-gradle-plugin:$hilt_version"
         // Navigation pass data
-        classpath "androidx.navigation:navigation-safe-args-gradle-plugin:2.9.0"
+        classpath "androidx.navigation:navigation-safe-args-gradle-plugin:2.9.8"
         // Google maps
         classpath "com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin:2.0.1"
     }
 }
 
-task clean(type: Delete) {
-    delete rootProject.buildDir
+tasks.register('clean', Delete) {
+    delete rootProject.layout.buildDirectory
 }

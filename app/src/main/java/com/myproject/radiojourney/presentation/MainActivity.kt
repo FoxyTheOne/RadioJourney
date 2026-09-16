@@ -11,6 +11,9 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.LayerDrawable
+import android.view.Gravity
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import android.view.View
@@ -21,8 +24,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.doOnLayout
 import androidx.core.view.isVisible
+import androidx.core.view.updatePadding
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.findNavController
 import androidx.viewpager2.widget.ViewPager2
@@ -125,6 +132,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         binding = ActivityMainBinding.inflate(layoutInflater)
         val view: View = binding!!.root
         setContentView(view)
+        applySystemBarInsets(view)
 
         binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_border_24_orange)
 
@@ -900,6 +908,35 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             binding?.progressBarHorizontalDp?.isVisible = false
         }
 
+    }
+
+    // Начиная с targetSdk 35, на Android 15+ окно всегда рисуется под строкой состояния и панелью навигации (edge-to-edge),
+    // а цвет строки состояния из темы (android:statusBarColor) не применяется: заголовок заходил под часы,
+    // а плеер внизу - под полоску жестов. Добавляем отступы на размер системных панелей и сами рисуем
+    // оранжевый фон под строкой состояния, как было раньше. На старых версиях Android отступы равны 0
+    private fun applySystemBarInsets(rootView: View) {
+        val statusBarColor = ContextCompat.getColor(this, R.color.orange)
+        val backgroundColor = ContextCompat.getColor(this, R.color.background)
+
+        ViewCompat.setOnApplyWindowInsetsListener(rootView) { v, insets ->
+            val bars = insets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+            )
+            v.updatePadding(left = bars.left, top = bars.top, right = bars.right, bottom = bars.bottom)
+
+            // Фон: сверху полоса цвета строки состояния, остальное - тёмный фон приложения
+            v.background = LayerDrawable(arrayOf(ColorDrawable(backgroundColor), ColorDrawable(statusBarColor))).apply {
+                setLayerGravity(1, Gravity.TOP or Gravity.FILL_HORIZONTAL)
+                setLayerHeight(1, bars.top)
+            }
+            WindowInsetsCompat.CONSUMED
+        }
+
+        // Светлые значки на оранжевой строке состояния и тёмной панели навигации
+        WindowCompat.getInsetsController(window, rootView).apply {
+            isAppearanceLightStatusBars = false
+            isAppearanceLightNavigationBars = false
+        }
     }
 
     private fun isMyServiceRunning(serviceClass: Class<*>): Boolean {

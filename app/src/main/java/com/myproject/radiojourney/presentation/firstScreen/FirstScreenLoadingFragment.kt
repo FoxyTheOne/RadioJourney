@@ -2,41 +2,39 @@ package com.myproject.radiojourney.presentation.firstScreen
 
 import android.Manifest
 import android.app.Dialog
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.os.Looper
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
-import androidx.navigation.fragment.findNavController
-import com.myproject.radiojourney.R
-import com.myproject.radiojourney.databinding.LayoutFirstScreenLoadingBinding
-import dagger.hilt.android.AndroidEntryPoint
-import android.content.Intent
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.IntentFilter
-import android.os.Build
-import android.os.Looper
-import android.util.Log
-import androidx.appcompat.widget.AppCompatTextView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
+import com.myproject.radiojourney.R
+import com.myproject.radiojourney.databinding.LayoutFirstScreenLoadingBinding
 import com.myproject.radiojourney.entities.presentation.CountryPresentation
-import com.myproject.radiojourney.other.Constants
 import com.myproject.radiojourney.other.Constants.FILTER_FOR_BROADCAST
 import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_COUNT
 import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_END
 import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_LIST_SIZE
 import com.myproject.radiojourney.other.Status
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import okhttp3.internal.wait
 
 /**
  * Фрагмент для загрузки и входа в приложение.
