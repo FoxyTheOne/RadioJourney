@@ -1,9 +1,10 @@
 package com.myproject.radiojourney.domain.mainRadioUseCase
 
-import android.support.v4.media.MediaBrowserCompat
+import androidx.media3.common.MediaItem
 import com.myproject.radiojourney.domain.iRepository.IMainRadioStationRepository
 import com.myproject.radiojourney.entities.local.RadioStationLocal
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
+import com.myproject.radiojourney.utils.exoplayer.FirebaseMusicSource
 import javax.inject.Inject
 
 /**
@@ -23,21 +24,22 @@ class MainRadioUseCase @Inject constructor(
     private suspend fun getRadioStationSaved(radioStationUrlResolved: String): RadioStationLocal? =
         mainRadioStationRepository.getRadioStationSaved(radioStationUrlResolved)
 
-    override suspend fun mediaItemChildrenToRadioStationPresentation(children: MutableList<MediaBrowserCompat.MediaItem>) =
+    override suspend fun mediaItemChildrenToRadioStationPresentation(children: List<MediaItem>) =
         children.map {
             // Ищем, может такая радиостанция уже сохранена в Room
-            val radioStation = getRadioStationSaved(it.description.mediaId.toString())
+            val radioStation = getRadioStationSaved(it.mediaId)
+            // Адрес потока, число прослушиваний и страна - в extras (media3 не передаёт адрес потока из сервиса на экран)
+            val extras = it.mediaMetadata.extras
 
             RadioStationPresentation(
-                stationuuid = it.mediaId ?: "",
-                stationName = it.description.title.toString(),
-//                urlResolved = it.mediaId ?: "",
-                urlResolved = it.description.mediaUri.toString(),
-                clickCount = it.description.extras?.getLong("ClickCount")
+                stationuuid = it.mediaId,
+                stationName = it.mediaMetadata.title.toString(),
+                urlResolved = extras?.getString(FirebaseMusicSource.EXTRA_URL_RESOLVED) ?: "",
+                clickCount = extras?.getLong(FirebaseMusicSource.EXTRA_CLICK_COUNT)
                     ?.toInt()
                     ?: 0,
-                countryCode = it.description.subtitle.toString(),
-                country = it.description.extras?.getString("Country")
+                countryCode = it.mediaMetadata.subtitle.toString(),
+                country = extras?.getString(FirebaseMusicSource.EXTRA_COUNTRY)
                     ?: "",
                 // Мы получили новые, скачанные из интернета файлы в FirebaseMusicSource.fetchMediaData(), преобразованные в asMediaItems(), переданные из MusicService: result.sendResult() в MainViewModel: musicServiceConnection.subscribe()
                 // Т.е. мы не знаем, есть они в Избранном/Рекомендуемом или нет. Нужно проверять и проставлять здесь

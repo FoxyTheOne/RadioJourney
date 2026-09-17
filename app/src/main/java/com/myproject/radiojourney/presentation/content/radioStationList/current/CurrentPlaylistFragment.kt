@@ -19,8 +19,6 @@ import com.myproject.radiojourney.presentation.MainViewModel
 import com.myproject.radiojourney.presentation.content.radioStationList.adapter.old.RadioListAdapter
 import com.myproject.radiojourney.presentation.content.radioStationList.base.BaseRadioListFragmentAbstract
 import com.myproject.radiojourney.utils.exoplayer.MusicServiceConnection
-import com.myproject.radiojourney.utils.extension.isPlayEnabled
-import com.myproject.radiojourney.utils.extension.isPrepared
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -57,7 +55,8 @@ class CurrentPlaylistFragment : BaseRadioListFragmentAbstract() {
         textRadioListTitle.text = resources.getText(R.string.currentPlaylist_title)
 
         textRadioListSecondTitleSelect = view.findViewById(R.id.text_radioStationDialogTitleSelect)
-        textRadioListSecondTitleDownload = view.findViewById(R.id.text_radioStationDialogTitleDownload)
+        textRadioListSecondTitleDownload =
+            view.findViewById(R.id.text_radioStationDialogTitleDownload)
         textRadioListSecondTitleSelect.isVisible = false
         textRadioListSecondTitleDownload.isVisible = false
 
@@ -76,7 +75,7 @@ class CurrentPlaylistFragment : BaseRadioListFragmentAbstract() {
         // Передайте ссылку на разметку
         dialogInternetTrouble.setContentView(R.layout.layout_internet_trouble_dialog)
 
-        activity?.let{
+        activity?.let {
             isInternetAvailable = mainViewModel.isInternetAvailable(it)
             if (!isInternetAvailable) {
                 // Диалоговое окно при отсутствии интернета
@@ -97,14 +96,20 @@ class CurrentPlaylistFragment : BaseRadioListFragmentAbstract() {
             // <!-- 005 claude
 //            radioListAdapter = RadioListAdapter(radioStationPlaylist) { radioStationPresentationOnClick ->
 
-            val currentStationUuid = mainViewModel.curPlayingSongLiveData.value?.description?.mediaId
-            radioListAdapter = RadioListAdapter(radioStationPlaylist, currentStationUuid) { radioStationPresentationOnClick ->
-            // 005 claude -->
+            val currentStationUuid = mainViewModel.curPlayingSongLiveData.value?.mediaId
+            radioListAdapter = RadioListAdapter(
+                radioStationPlaylist,
+                currentStationUuid
+            ) { radioStationPresentationOnClick ->
+                // 005 claude -->
 
                 Log.d(TAG, "Выбранный элемент списка: $radioStationPresentationOnClick")
 
                 // Открываем по клику другой фрагмент, передаём туда нашу радиостанцию
-                val direction = CurrentPlaylistFragmentDirections.actionCurrentPlaylistFragmentToHomeRadioFragment(radioStationPresentationOnClick)
+                val direction =
+                    CurrentPlaylistFragmentDirections.actionCurrentPlaylistFragmentToHomeRadioFragment(
+                        radioStationPresentationOnClick
+                    )
                 if (this.findNavController().currentDestination?.id == R.id.currentPlaylistFragment) {
                     this.findNavController().navigate(direction)
                 }
@@ -118,7 +123,7 @@ class CurrentPlaylistFragment : BaseRadioListFragmentAbstract() {
 
             // Если станция переключилась, пока список открыт (например, кнопкой в уведомлении), переносим выделение
             mainViewModel.curPlayingSongLiveData.observe(viewLifecycleOwner) { metadata ->
-                radioListAdapter.setCurrentStation(metadata?.description?.mediaId)
+                radioListAdapter.setCurrentStation(metadata?.mediaId)
             }
             // 005 claude -->
 

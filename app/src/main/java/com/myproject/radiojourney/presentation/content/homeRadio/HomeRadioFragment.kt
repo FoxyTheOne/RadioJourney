@@ -242,7 +242,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 //                    } // 004 claude
 
                     val curCountryCode =
-                        mainViewModel.curPlayingSongLiveData.value?.description?.subtitle.toString()
+                        mainViewModel.curPlayingSongLiveData.value?.mediaMetadata?.subtitle.toString()
                     val argCountryCode = radioStation.countryCode
 
                     if (argCountryCode.endsWith("_FAV", true)) {
@@ -312,7 +312,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                     stationUuid = radioStationFavourite.stationuuid
 
                     val curCountryCode =
-                        mainViewModel.curPlayingSongLiveData.value?.description?.subtitle.toString()
+                        mainViewModel.curPlayingSongLiveData.value?.mediaMetadata?.subtitle.toString()
                     val argCountryCode = radioStationFavourite.countryCode
 
                     handleArgumentsFavoriteStation(

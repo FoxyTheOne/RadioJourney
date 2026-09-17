@@ -1,42 +1,46 @@
 package com.myproject.radiojourney.utils.exoplayer
 
+import android.content.Context
 import android.os.Bundle
 import android.os.SystemClock
-import android.support.v4.media.MediaBrowserCompat
-import android.support.v4.media.MediaBrowserCompat.MediaItem.FLAG_PLAYABLE
-import android.support.v4.media.MediaDescriptionCompat
-import android.support.v4.media.MediaMetadataCompat
-import android.support.v4.media.MediaMetadataCompat.*
 import android.util.Log
 import androidx.core.net.toUri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.source.ConcatenatingMediaSource
-import com.google.android.exoplayer2.source.ProgressiveMediaSource
-import com.google.android.exoplayer2.source.hls.HlsMediaSource
-import com.google.android.exoplayer2.source.ShuffleOrder
-import com.google.android.exoplayer2.upstream.DefaultDataSource
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
+import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
+import androidx.media3.common.MimeTypes
+import com.myproject.radiojourney.R
 import com.myproject.radiojourney.data.dataSource.network.INetworkRadioDataSource
 import com.myproject.radiojourney.data.localDatabaseRoom.IRadioStationDAO
 import com.myproject.radiojourney.other.Status
-import com.myproject.radiojourney.utils.exoplayer.State.*
+import com.myproject.radiojourney.utils.exoplayer.State.STATE_CREATED
+import com.myproject.radiojourney.utils.exoplayer.State.STATE_ERROR
+import com.myproject.radiojourney.utils.exoplayer.State.STATE_INITIALIZED
+import com.myproject.radiojourney.utils.exoplayer.State.STATE_INITIALIZING
 import com.myproject.radiojourney.utils.extension.call
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
+import java.util.Locale
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 
 // We need time to upload music from firebase or other data
 class FirebaseMusicSource @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val networkRadioDataSource: INetworkRadioDataSource,
     private val radioStationDAO: IRadioStationDAO
 ) {
     companion object {
         private const val TAG = "FirebaseMusicSource"
+
+        // Ключи extras станции (MediaMetadata.extras). Читаются в MainRadioUseCase
+        const val EXTRA_URL_RESOLVED = "UrlResolved"
+        const val EXTRA_CLICK_COUNT = "ClickCount"
+        const val EXTRA_COUNTRY = "Country"
     }
 
     private val _notifyChildrenChangedLiveData = MutableLiveData<Boolean>()
@@ -56,7 +60,12 @@ class FirebaseMusicSource @Inject constructor(
         _serverIsDownLiveData
 
     // Список, куда будут сохраняться метаданные по каждой радиостанции с помощью метода fetchMediaData()
-    var radioStations = emptyList<MediaMetadataCompat>() // meta info about radioStations
+    var radioStations =
+        emptyList<MediaItem>() // meta info about radioStations (media3 MediaItem: адрес потока + метаданные)
+
+    // Картинка для уведомления (раньше MusicNotificationManager.getCurrentLargeIcon)
+    private val artworkUri =
+        "android.resource://${context.packageName}/drawable/radio_heissenstein_pixabay".toUri()
 
     // 005 CLAUDE // Номер последней начатой загрузки: отменённая загрузка не должна менять state, если после неё уже началась следующая
     private val fetchGeneration = AtomicInteger(0)
@@ -124,7 +133,10 @@ class FirebaseMusicSource @Inject constructor(
         } catch (e: CancellationException) {
             // Загрузку отменили (выбран другой плейлист или полоса загрузки висела слишком долго). Текущий плейлист остаётся рабочим.
             // state возвращаем, только если после этой загрузки не началась новая - она сама выставит state, когда закончит
-            Log.d(TAG, "PLAYLIST_UPDATE: Загрузка плейлиста $countryCode отменена, текущий плейлист не меняем")
+            Log.d(
+                TAG,
+                "PLAYLIST_UPDATE: Загрузка плейлиста $countryCode отменена, текущий плейлист не меняем"
+            )
             if (generation == fetchGeneration.get()) state = STATE_INITIALIZED
             throw e
         }
@@ -184,32 +196,16 @@ class FirebaseMusicSource @Inject constructor(
                         // Попробую убрать такие станции с помощью .filter { !it.description.mediaId.isNullOrEmpty() }
                     }
 
-                    MediaMetadataCompat.Builder()
-                        .putString(
-                            METADATA_KEY_MEDIA_ID,
-                            radioStationRemote.stationuuid
-                        ) // media Id / stationuuid (Primary key) /
-                        .putString(
-                            METADATA_KEY_MEDIA_URI,
-                            radioStationRemote.url_resolved
-                        ) // url_resolved
-                        .putString(METADATA_KEY_TITLE, radioStationRemote.name) // station name
-                        .putString(
-                            METADATA_KEY_DISPLAY_TITLE,
-                            radioStationRemote.name
-                        ) // station name
-                        .putLong(
-                            METADATA_KEY_DOWNLOAD_STATUS,
-                            radioStationRemote.clickcount.toLong()
-                        ) // click count
-                        .putString(METADATA_KEY_ARTIST, radioStationRemote.country) // country
-                        .putString(
-                            METADATA_KEY_DISPLAY_SUBTITLE,
-                            radioStationRemote.countrycode
-                        ) // country code
-                        .build()
+                    toRadioStationMediaItem(
+                        stationUuid = radioStationRemote.stationuuid, // media Id / stationuuid (Primary key)
+                        urlResolved = radioStationRemote.url_resolved,
+                        stationName = radioStationRemote.name,
+                        clickCount = radioStationRemote.clickcount.toLong(),
+                        country = radioStationRemote.country,
+                        countryCode = radioStationRemote.countrycode
+                    )
                 }.filter {
-                    it.description.mediaUri.toString().isNotEmpty()
+                    it.localConfiguration?.uri.toString().isNotEmpty()
                 }
 
                 Log.d(TAG, "Получаем список размером ${radioStations.size}")
@@ -258,62 +254,22 @@ class FirebaseMusicSource @Inject constructor(
                     // Попробую убрать такие станции с помощью .filter { !it.description.mediaId.isNullOrEmpty() }
                 }
 
-                MediaMetadataCompat.Builder()
-                    .putString(
-                        METADATA_KEY_MEDIA_ID,
-                        radioStationLocal.stationuuid
-                    ) // media Id / stationuuid (Primary key)
-                    .putString(
-                        METADATA_KEY_MEDIA_URI,
-                        radioStationLocal.urlResolved
-                    ) // url_resolved
-                    .putString(METADATA_KEY_TITLE, radioStationLocal.stationName) // station name
-                    .putString(
-                        METADATA_KEY_DISPLAY_TITLE,
-                        radioStationLocal.stationName
-                    ) // station name
-                    .putLong(
-                        METADATA_KEY_DOWNLOAD_STATUS,
-                        radioStationLocal.clickCount.toLong()
-                    ) // click count
-                    .putString(METADATA_KEY_ARTIST, radioStationLocal.country) // country
-                    .putString(
-                        METADATA_KEY_DISPLAY_SUBTITLE,
-                        radioStationLocal.countryCode + "_FAV"
-                    ) // country code
-                    .build()
+                toRadioStationMediaItem(
+                    stationUuid = radioStationLocal.stationuuid, // media Id / stationuuid (Primary key)
+                    urlResolved = radioStationLocal.urlResolved,
+                    stationName = radioStationLocal.stationName,
+                    clickCount = radioStationLocal.clickCount.toLong(),
+                    country = radioStationLocal.country,
+                    countryCode = radioStationLocal.countryCode + "_FAV"
+                )
             }.filter {
-                it.description.mediaUri.toString().isNotEmpty()
+                it.localConfiguration?.uri.toString().isNotEmpty()
             }
 
 //            state = STATE_INITIALIZED
         } else {
             isFavoriteEmpty = true
         }
-
-//        radioStations = favouriteRadioStations.map { radioStationLocal ->
-//            MediaMetadataCompat.Builder()
-//                .putString(
-//                    METADATA_KEY_MEDIA_ID,
-//                    radioStationLocal.url
-//                ) // media Id / url (Primary key)
-//                .putString(METADATA_KEY_MEDIA_URI, radioStationLocal.urlResolved) // url_resolved
-//                .putString(METADATA_KEY_TITLE, radioStationLocal.stationName) // station name
-//                .putString(
-//                    METADATA_KEY_DISPLAY_TITLE,
-//                    radioStationLocal.stationName
-//                ) // station name
-//                .putLong(
-//                    METADATA_KEY_DOWNLOAD_STATUS,
-//                    radioStationLocal.clickCount.toLong()
-//                ) // click count
-//                .putString(METADATA_KEY_ARTIST, radioStationLocal.country) // country
-//                .putString(
-//                    METADATA_KEY_DISPLAY_SUBTITLE,
-//                    radioStationLocal.countryCode + "_FAV"
-//                ) // country code
-//                .build()
-//        }
 
         Log.d(TAG, "Получаем список размером ${radioStations.size}")
         _notifyChildrenChangedLiveData.call()
@@ -322,114 +278,54 @@ class FirebaseMusicSource @Inject constructor(
 
     // A list of media items. Список MediaMetadataCompat теперь преобразуем в список MediaBrowserCompat.MediaItem (для нашей MainViewModel). Сформированный список вернется как результат работы функции там, где её вызвали.
     // Метод необходимо вызывать после того, как список radioStations будет полностью сформирован!
-    fun asMediaItems() = radioStations.map { radioStation ->
-        val extrasRadioStationInfo = Bundle().apply {
-            putLong("ClickCount", radioStation.getLong(METADATA_KEY_DOWNLOAD_STATUS))
-            putString("Country", radioStation.getString(METADATA_KEY_ARTIST))
+    // Список станций для экрана (MainViewModel получает его через MediaBrowser.getChildren()).
+    // С media3 radioStations - уже готовые MediaItem, отдельно преобразовывать не нужно
+    fun asMediaItems(): List<MediaItem> = radioStations
+
+    // Станция в формате media3 - один объект и для плеера, и для уведомления, и для экрана.
+    // Раньше были MediaMetadataCompat (метаданные) + MediaBrowserCompat.MediaItem (экран) + ConcatenatingMediaSource (плеер)
+    private fun toRadioStationMediaItem(
+        stationUuid: String,
+        urlResolved: String,
+        stationName: String,
+        clickCount: Long,
+        country: String,
+        countryCode: String // для плейлиста избранного - с суффиксом "_FAV"
+    ): MediaItem {
+        // Адрес потока (localConfiguration) media3 не передаёт из сервиса на экран (MediaBrowser),
+        // поэтому для экрана дублируем его в extras. Там же - число прослушиваний и страна
+        val extras = Bundle().apply {
+            putString(EXTRA_URL_RESOLVED, urlResolved)
+            putLong(EXTRA_CLICK_COUNT, clickCount)
+            putString(EXTRA_COUNTRY, country)
         }
 
-        if (radioStation.description.mediaUri.toString().isEmpty()) {
-            Log.d(
-                TAG,
-                "name = ${radioStation.description.title}, url = ${radioStation.description.mediaUri}, mediaUri = ${radioStation.description.mediaUri}"
-            )
-        }
-
-        val desc = MediaDescriptionCompat.Builder()
-            .setMediaId(radioStation.description.mediaId) // media Id / stationuuid (Primary key)
-            .setMediaUri(
-                radioStation.getString(METADATA_KEY_MEDIA_URI).toUri()
-            ) // url_resolved
-            .setTitle(radioStation.description.title) // station name
-            .setSubtitle(radioStation.description.subtitle) // country code
-            .setExtras(extrasRadioStationInfo) // <- click count, country in extras
+        val metadata = MediaMetadata.Builder()
+            .setTitle(stationName) // station name
+            .setDisplayTitle(stationName)
+            .setArtist(notificationCountryText(countryCode)) // вторая строка уведомления: страна или "Избранное: страна"
+            .setSubtitle(countryCode) // country code ("PL" или "PL_FAV")
+            .setArtworkUri(artworkUri) // большая картинка в уведомлении
+            .setIsPlayable(true)
+            .setIsBrowsable(false)
+            .setMediaType(MediaMetadata.MEDIA_TYPE_RADIO_STATION)
+            .setExtras(extras)
             .build()
-        MediaBrowserCompat.MediaItem(desc, FLAG_PLAYABLE)
+
+        return MediaItem.Builder()
+            .setMediaId(stationUuid)
+            .setUri(urlResolved)
+            // HLS (.m3u8) воспроизводится другим источником - DefaultMediaSourceFactory выберет его по MIME-типу
+            .apply { if (urlResolved.endsWith(".m3u8")) setMimeType(MimeTypes.APPLICATION_M3U8) }
+            .setMediaMetadata(metadata)
+            .build()
     }
-        .toMutableList() // Flag FLAG_PLAYABLE indicates that the item is playable, not the item that has children of its own.
 
-    // DefaultDataSourceFactory is deprecated
-//    fun asMediaSource(dataSourceFactory: DefaultDataSourceFactory): ConcatenatingMediaSource {
-//        val concatenatingMediaSource = ConcatenatingMediaSource() // empty by default
-//        radioStations.forEach { radioStation ->
-//            val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
-//                .createMediaSource(radioStation.getString(METADATA_KEY_MEDIA_URI).toUri())
-//            concatenatingMediaSource.addMediaSource(mediaSource) // Add one by one to our concatenatingMediaSource
-//        }
-//        return concatenatingMediaSource
-//    }
-
-//    fun asMediaSource(dataSourceFactory: DefaultDataSource.Factory): ConcatenatingMediaSource {
-//        val concatenatingMediaSource = ConcatenatingMediaSource() // empty by default
-//        radioStations.forEach { radioStation ->
-//            val mediaItem =
-//                MediaItem.fromUri(radioStation.getString(METADATA_KEY_MEDIA_URI).toUri())
-//            val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
-//                .createMediaSource(mediaItem)
-//            concatenatingMediaSource.addMediaSource(mediaSource) // Add one by one to our concatenatingMediaSource
-//        }
-//        return concatenatingMediaSource
-//    }
-//
-//    fun asHlsMediaSource(httpDataSourceFactory: DefaultHttpDataSource.Factory): ConcatenatingMediaSource {
-//        val concatenatingMediaSource = ConcatenatingMediaSource() // empty by default
-//        radioStations.forEach { radioStation ->
-//            val mediaItem =
-//                MediaItem.fromUri(radioStation.getString(METADATA_KEY_MEDIA_URI).toUri())
-//            val mediaSource = HlsMediaSource.Factory(httpDataSourceFactory)
-//                .createMediaSource(mediaItem)
-//            concatenatingMediaSource.addMediaSource(mediaSource) // Add one by one to our concatenatingMediaSource
-//        }
-//        return concatenatingMediaSource
-//    }
-
-    // Для формирования плейлиста из нескольких песен/радиостанций. Info for exoplayer to stream songs
-    fun asMediaSourcePlaylist(
-        playlist: List<MediaMetadataCompat>, // 001 claude
-        httpDataSourceFactory: DefaultHttpDataSource.Factory,
-        dataSourceFactory: DefaultDataSource.Factory
-    ): ConcatenatingMediaSource {
-
-//        <!-- 001 claude
-//        val concatenatingMediaSource = ConcatenatingMediaSource() // empty by default
-//        radioStations.forEach { radioStation ->
-        // useLazyPreparation = true: источник станции готовится только когда до неё доходит очередь.
-        // По умолчанию (ConcatenatingMediaSource()) сразу готовятся ВСЕ станции плейлиста (до 500), и каждая HLS (.m3u8) станция
-        // постоянно перезагружает свой live-плейлист -> Timeline постоянно меняется -> MediaSessionConnector постоянно
-        // пересылает метаданные (onMetadataChanged) + лишний интернет-трафик
-        val concatenatingMediaSource = ConcatenatingMediaSource(
-            /* isAtomic = */ false,
-            /* useLazyPreparation = */ true,
-            ShuffleOrder.DefaultShuffleOrder(0)
-        ) // empty by default
-        playlist.forEach { radioStation ->
-//            001 claude 001 -->
-
-            val mediaUri = radioStation.description.mediaUri.toString()
-
-            Log.d(
-                TAG,
-                "PLAYLIST_UPDATE: 5.$TAG, asMediaSourceTest(). Проверяем, заканчивается ли ссылка на .m3u8. Формируем данные для плейлиста"
-            )
-            if (mediaUri.endsWith(".m3u8")
-            ) {
-                // .m3u8 -> .asHlsMediaSource(httpDataSourceFactory)
-                val mediaItem =
-                    MediaItem.fromUri(radioStation.getString(METADATA_KEY_MEDIA_URI).toUri())
-                val mediaSource = HlsMediaSource.Factory(httpDataSourceFactory)
-                    .createMediaSource(mediaItem)
-                concatenatingMediaSource.addMediaSource(mediaSource) // Add one by one to our concatenatingMediaSource
-            } else {
-                // else -> .asMediaSource(dataSourceFactory)
-                val mediaItem =
-                    MediaItem.fromUri(radioStation.getString(METADATA_KEY_MEDIA_URI).toUri())
-                val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
-                    .createMediaSource(mediaItem)
-                concatenatingMediaSource.addMediaSource(mediaSource) // Add one by one to our concatenatingMediaSource
-            }
-
-        }
-        return concatenatingMediaSource
+    // Раньше этот текст формировал MusicNotificationManager.getCurrentContentText()
+    private fun notificationCountryText(countryCode: String): String {
+        val isFavourite = countryCode.endsWith("_FAV")
+        val countryName = Locale("", countryCode.removeSuffix("_FAV")).displayName
+        return if (isFavourite) context.getString(R.string.homeRadio_goToFavourites) + ": " + countryName else countryName
     }
 }
 

@@ -113,20 +113,19 @@ dependencies {
     // Google maps
     implementation 'com.google.android.gms:play-services-maps:20.0.0'
 
-    // ExoPlayer
-    // com.google.android.exoplayer2 устарел (последняя версия 2.19.1). Переход на androidx.media3 - отдельная большая задача
-    implementation 'com.google.android.exoplayer:exoplayer-core:2.19.1'
-    implementation 'com.google.android.exoplayer:exoplayer-ui:2.19.1'
-    implementation 'com.google.android.exoplayer:extension-mediasession:2.19.1'
+    // Media3 (замена устаревшего com.google.android.exoplayer2):
+    // ExoPlayer - плеер, exoplayer-hls - потоки .m3u8,
+    // session - MediaLibraryService / MediaBrowser и уведомление плеера (вместо MediaSessionConnector и PlayerNotificationManager)
+    implementation "androidx.media3:media3-exoplayer:$media3_version"
+    implementation "androidx.media3:media3-exoplayer-hls:$media3_version"
+    implementation "androidx.media3:media3-session:$media3_version"
 
-    // HlsMediaSource for playing .m3u8
-    implementation 'com.google.android.exoplayer:exoplayer-hls:2.19.1'
+    // Только для старого, не используемого плеера utils/oldMusicPlayer (MediaSessionCompat). Новый плеер работает на media3.
+    // Если oldMusicPlayer удалить, эту зависимость тоже можно убрать
+    implementation 'androidx.media:media:1.8.0'
 
     // LocalBroadcastManager (раньше подключался неявно через устаревший lifecycle-extensions)
     implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
-
-    // Music Player on Notification
-    implementation 'androidx.media:media:1.8.0'
 
     // Interceptor
     implementation 'com.squareup.okhttp3:logging-interceptor:5.4.0'

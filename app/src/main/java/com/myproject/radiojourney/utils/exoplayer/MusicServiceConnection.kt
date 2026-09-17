@@ -5,23 +5,34 @@ import android.content.Context
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.os.ResultReceiver
-import android.support.v4.media.MediaBrowserCompat
-import android.support.v4.media.MediaMetadataCompat
-import android.support.v4.media.session.MediaControllerCompat
-import android.support.v4.media.session.PlaybackStateCompat
+import android.os.SystemClock
 import android.util.Log
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.myproject.radiojourney.other.Constants
+import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
+import androidx.media3.session.LibraryResult
+import androidx.media3.session.MediaBrowser
+import androidx.media3.session.MediaController
+import androidx.media3.session.SessionCommand
+import androidx.media3.session.SessionResult
+import androidx.media3.session.SessionToken
+import com.google.common.util.concurrent.Futures
+import com.google.common.util.concurrent.ListenableFuture
 import com.myproject.radiojourney.other.Constants.NETWORK_ERROR
 import com.myproject.radiojourney.other.Event
 import com.myproject.radiojourney.other.Resource
 
 /**
- * A class for connection between activity or fragment with MusicService
+ * A class for connection between activity or fragment with MusicService.
+ * С media3 подключение к сервису - через MediaBrowser (раньше MediaBrowserCompat + MediaControllerCompat).
+ * MediaBrowser - это одновременно и "пульт" плеера (play, pause, выбор станции), и доступ к списку станций.
+ *
+ * MediaBrowser работает только в главном потоке, поэтому все команды отправляются через mainHandler:
+ * их можно вызывать из любого потока (например, из viewModelScope.launch(Dispatchers.IO) в MainViewModel).
  */
-class MusicServiceConnection(context: Context) {
+class MusicServiceConnection(private val context: Context) {
     companion object {
         private const val TAG = "MusicServiceConnection"
     }
@@ -36,193 +47,199 @@ class MusicServiceConnection(context: Context) {
     val networkErrorLiveData: LiveData<Event<Resource<Boolean>>> =
         _networkErrorLiveData // And another LiveData, that equals to previous, so that classes can't change it
 
-    private val _playbackStateLiveData =
-        MutableLiveData<PlaybackStateCompat?>() // Is player playing or not
-    val playbackStateLiveData: LiveData<PlaybackStateCompat?> = _playbackStateLiveData
+    // Is player playing or not
+    private val _playbackStateLiveData = MutableLiveData<PlaybackStateInfo?>()
+    val playbackStateLiveData: LiveData<PlaybackStateInfo?> = _playbackStateLiveData
 
-    private val _curPlayingSongLiveData =
-        MutableLiveData<MediaMetadataCompat?>() // Contains meta information of the song that is currently playing
-    val curPlayingSongLiveData: LiveData<MediaMetadataCompat?> = _curPlayingSongLiveData
+    // Станция, которая сейчас в плеере: mediaId (stationuuid), mediaMetadata.title (название),
+    // mediaMetadata.subtitle (код страны, "PL" или "PL_FAV")
+    private val _curPlayingSongLiveData = MutableLiveData<MediaItem?>()
+    val curPlayingSongLiveData: LiveData<MediaItem?> = _curPlayingSongLiveData
 
-    lateinit var mediaController: MediaControllerCompat // 1. To use transport controls (pause, play the song, skip to the next) 2. For watching callbacks, that are useful for us here
+    private val mainHandler = Handler(Looper.getMainLooper())
 
-    // To have access to token we also must create a mediaBrowser instance and for that we need this MediaBrowserConnectionCallback()
-    // So, let's create an instance of mediaBrowserConnectionCallback()
-    private val mediaBrowserConnectionCallback = MediaBrowserConnectionCallback(context)
+    private var mediaBrowser: MediaBrowser? = null
+    private var isConnecting = false
 
-//    Based on the classes you mentioned, it seems like the responsibility of starting, stopping, and destroying the `MusicService` lies within the `MusicServiceConnection` class.
-//    To ensure that the `MusicService` is properly stopped and destroyed when the application is closed, you can do the following:
-//    1. In the `MusicServiceConnection`, override the `onServiceConnected()` method and start the `MusicService` from there. This ensures that the service is started when the connection is established.
-//    2. In the `MusicServiceConnection`, override the `onServiceDisconnected()` method and handle the disconnection by stopping and destroying the `MusicService`. You can call `stopService()` and `unbindService()` to stop and unbind the service, respectively.
-//    3. In the `MusicService`, override the `onDestroy()` method and call `stopForeground(true)` to remove the service from the foreground state and hide the notification.
-//    By implementing these steps, the `MusicService` should be properly started, stopped, and destroyed when the application is opened and closed, respectively.
-//    private val serviceConnection = object : ServiceConnection {
-//        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-////            context.startService(
-////                Intent(
-////                    context,
-////                    MusicService::class.java
-////                )
-////            )
-//        }
-//        override fun onServiceDisconnected(name: ComponentName?) {
-//            context.stopService(
-//                Intent(
-//                    context,
-//                    MusicService::class.java
-//                )
-//            )
-//            Log.d(TAG, "Вызван метод onServiceDisconnected() в классе MusicServiceConnection")
-//        }
-//    }
-//    No, this ^ won't work. We are stopping service in MusicPlayerNotificationListener
+    // Команды, отправленные до подключения к сервису - выполняются сразу после подключения
+    private val pendingActions = mutableListOf<(MediaBrowser) -> Unit>()
 
-    // And then, in the end - an instance of mediaBrowser
-    private val mediaBrowser = MediaBrowserCompat(
-        context,
-        ComponentName(
-            context,
-            MusicService::class.java
-        ),
-        mediaBrowserConnectionCallback,
-        null
-    ).apply { connect() } // ! Trigger a function to connect
-    // now we can return to the function onConnected() in the inner class MediaBrowserConnectionCallback()
+    // Подписчики на списки станций: parentId -> получатели списка
+    private val childrenSubscribers = mutableMapOf<String, MutableList<(List<MediaItem>) -> Unit>>()
 
-    // transportControls: pause, play the song, skip to the next etc.
-    val transportControls: MediaControllerCompat.TransportControls
-        get() = mediaController.transportControls // transportControls are not initialized yet (!lateinit! var mediaController) so we need to use "get". Otherwise there will be a crash. Now it will be initialized only when we'll try to get access to it
+    // Чтобы не отправлять на экран одну и ту же станцию повторно (при каждом обновлении Timeline):
+    // экран реагирует на смену станции (прячет полосу загрузки, обновляет звезду и т.п.)
+    private var lastPostedSongKey: String? = null
+
+    private val browserListener = object : MediaBrowser.Listener {
+        // Скачан новый плейлист (MusicService -> notifyChildrenChanged) - запрашиваем список станций заново
+        override fun onChildrenChanged(
+            browser: MediaBrowser,
+            parentId: String,
+            itemCount: Int,
+            params: androidx.media3.session.MediaLibraryService.LibraryParams?
+        ) {
+            loadChildren(browser, parentId)
+        }
+
+        // Send custom events from our service to this connection. We use it to notify when there is a network error
+        override fun onCustomCommand(
+            controller: MediaController,
+            command: SessionCommand,
+            args: Bundle
+        ): ListenableFuture<SessionResult> {
+            if (command.customAction == NETWORK_ERROR) postNetworkError()
+            return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+        }
+
+        // Invoked when the client is disconnected from the media session
+        // (например, сервис завершился). При следующей команде подключимся заново
+        override fun onDisconnected(controller: MediaController) {
+            mediaBrowser = null
+            _isConnectedLiveData.postValue(Event(Resource.error("The connection was suspended", false)))
+        }
+    }
+
+    private val playerListener = object : Player.Listener {
+        override fun onEvents(player: Player, events: Player.Events) {
+            postPlaybackState(player)
+            if (events.containsAny(
+                    Player.EVENT_MEDIA_ITEM_TRANSITION,
+                    Player.EVENT_TIMELINE_CHANGED,
+                    Player.EVENT_MEDIA_METADATA_CHANGED
+                )
+            ) {
+                postCurrentSong(player)
+            }
+        }
+    }
+
+    init {
+        mainHandler.post { connect() }
+    }
+
+    // Подключаемся к MusicService (в главном потоке)
+    private fun connect() {
+        if (isConnecting || mediaBrowser != null) return
+        isConnecting = true
+        val sessionToken = SessionToken(context, ComponentName(context, MusicService::class.java))
+        val browserFuture = MediaBrowser.Builder(context, sessionToken)
+            .setListener(browserListener)
+            .buildAsync()
+        browserFuture.addListener({
+            isConnecting = false
+            try {
+                val browser = browserFuture.get()
+                mediaBrowser = browser
+                browser.addListener(playerListener)
+                postPlaybackState(browser)
+                postCurrentSong(browser)
+                _isConnectedLiveData.postValue(Event(Resource.success(true))) // post connection data to LiveData
+
+                // После переподключения подписываемся на списки станций заново
+                childrenSubscribers.keys.forEach { browser.subscribe(it, null) }
+
+                val actions = pendingActions.toList()
+                pendingActions.clear()
+                actions.forEach { it(browser) }
+            } catch (e: Exception) {
+                Log.d(TAG, "Couldn't connect to MusicService: ${e.message}")
+                _isConnectedLiveData.postValue(Event(Resource.error("Couldn't connect to media browser", false)))
+            }
+        }, ContextCompat.getMainExecutor(context))
+    }
+
+    // Выполнить действие с MediaBrowser в главном потоке; если ещё не подключились - после подключения
+    private fun withBrowser(action: (MediaBrowser) -> Unit) {
+        mainHandler.post {
+            val browser = mediaBrowser
+            if (browser != null && browser.isConnected) {
+                action(browser)
+            } else {
+                pendingActions += action
+                connect()
+            }
+        }
+    }
 
     // Also let's create functions for subscribing and unsubscribing (for calling from view model):
-    fun subscribe(parentId: String, callback: MediaBrowserCompat.SubscriptionCallback) {
-        mediaBrowser.subscribe(parentId, callback)
-    }
-
-    fun unsubscribe(parentId: String, callback: MediaBrowserCompat.SubscriptionCallback) {
-        mediaBrowser.unsubscribe(parentId, callback)
-    }
-
-    // !!! Попробуем изменять плейлист
-    fun sendCommand(command: String, parameters: Bundle?) =
-        sendCommand(command, parameters) { _, _ -> }
-
-    // !!! Попробуем изменять плейлист
-    private fun sendCommand(
-        command: String,
-        parameters: Bundle?,
-        resultCallback: ((Int, Bundle?) -> Unit)
-    ) = if (mediaBrowser.isConnected) {
-        mediaController.sendCommand(
-            command,
-            parameters,
-            object : ResultReceiver(Handler(Looper.myLooper()!!)) {
-                override fun onReceiveResult(resultCode: Int, resultData: Bundle?) {
-                    resultCallback(resultCode, resultData)
-                }
-            })
-        true
-    } else {
-        false
-    }
-
-    private inner class MediaBrowserConnectionCallback(
-        private val context: Context
-    ) : MediaBrowserCompat.ConnectionCallback() {
-
-        // Once this musicService connection here is active, this function will be called
-        // Invoked after MediaBrowser#connect() when the request has successfully completed
-        override fun onConnected() {
-            // Once it is connected, we have access to our session token and we can now initialize mediaController
-            // But to have access to token we also must create a mediaBrowser instance and for that we need this MediaBrowserConnectionCallback(). So, return here later, when we will have that instance
-            // After we have mediaBrowser instance, we can return to this method
-            mediaController = MediaControllerCompat(context, mediaBrowser.sessionToken).apply {
-                registerCallback(MediaControllerCallback()) // <- our second inner class
-            }
-            _isConnectedLiveData.postValue(Event(Resource.success(true))) // post connection data to LiveData
+    fun subscribe(parentId: String, onChildrenLoaded: (List<MediaItem>) -> Unit) {
+        withBrowser { browser ->
+            childrenSubscribers.getOrPut(parentId) { mutableListOf() } += onChildrenLoaded
+            // После подписки сессия сама сообщит onChildrenChanged, и список будет загружен (loadChildren)
+            browser.subscribe(parentId, null)
         }
+    }
 
-        // Invoked when the client is disconnected from the media browser
-        override fun onConnectionSuspended() {
-            _isConnectedLiveData.postValue(
-                Event(
-                    Resource.error(
-                        "The connection was suspended", false
-                    )
-                )
+    fun unsubscribe(parentId: String, onChildrenLoaded: (List<MediaItem>) -> Unit) {
+        withBrowser { browser ->
+            val subscribers = childrenSubscribers[parentId] ?: return@withBrowser
+            subscribers.remove(onChildrenLoaded)
+            if (subscribers.isEmpty()) {
+                childrenSubscribers.remove(parentId)
+                browser.unsubscribe(parentId)
+            }
+        }
+    }
+
+    private fun loadChildren(browser: MediaBrowser, parentId: String) {
+        val childrenFuture = browser.getChildren(parentId, /* page= */ 0, /* pageSize= */ Int.MAX_VALUE, null)
+        childrenFuture.addListener({
+            val result = try {
+                childrenFuture.get()
+            } catch (e: Exception) {
+                Log.d(TAG, "getChildren($parentId) failed: ${e.message}")
+                null
+            }
+            val items = result?.value
+            if (result?.resultCode == LibraryResult.RESULT_SUCCESS && items != null) {
+                childrenSubscribers[parentId]?.toList()?.forEach { it(items) }
+            }
+        }, mainHandler::post)
+    }
+
+    // Controls (раньше transportControls)
+    fun play() = withBrowser { it.play() } // если плеер остановлен (STATE_IDLE), сессия сама подготовит его
+
+    fun pause() = withBrowser { it.pause() }
+
+    // Включить станцию по stationuuid (раньше transportControls.playFromMediaId). Сессия (MusicLibrarySessionCallback.onSetMediaItems)
+    // заменит этот MediaItem на весь плейлист и начнёт с нужной станции
+    fun playFromMediaId(mediaId: String) = withBrowser { browser ->
+        browser.setMediaItem(MediaItem.Builder().setMediaId(mediaId).build())
+        browser.prepare()
+        browser.play()
+    }
+
+    // Команды сервису: загрузить плейлист, отменить загрузку
+    fun sendCommand(command: String, parameters: Bundle?) = withBrowser { browser ->
+        browser.sendCustomCommand(SessionCommand(command, Bundle.EMPTY), parameters ?: Bundle.EMPTY)
+    }
+
+    private fun postPlaybackState(player: Player) {
+        _playbackStateLiveData.postValue(
+            PlaybackStateInfo(
+                playbackState = player.playbackState,
+                playWhenReady = player.playWhenReady,
+                isActuallyPlaying = player.isPlaying,
+                hasError = player.playerError != null,
+                updateTime = SystemClock.elapsedRealtime()
             )
-        }
-
-        // Invoked when the connection to the media browser failed
-        override fun onConnectionFailed() {
-            _isConnectedLiveData.postValue(
-                Event(
-                    Resource.error(
-                        "Couldn't connect to media browser", false
-                    )
-                )
-            )
-        }
+        )
     }
 
-    private inner class MediaControllerCallback : MediaControllerCompat.Callback() {
-        // When playback state changes this function will be called
-        override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
-            _playbackStateLiveData.postValue(state) // We are posting our state and now we have an access to it from our fragment
-        }
+    private fun postCurrentSong(player: Player) {
+        val currentItem = player.currentMediaItem
+        // Та же станция из другого плейлиста (например, из избранного: subtitle "PL_FAV") - это другая запись
+        val key = currentItem?.let { "${it.mediaId}|${it.mediaMetadata.subtitle}" }
+        if (key == lastPostedSongKey) return
+        lastPostedSongKey = key
+        _curPlayingSongLiveData.postValue(currentItem) // Getting new meta data (put it into LiveData)
+    }
 
-        override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
-
-//            <!-- 001 claude
-////            _curPlayingSongLiveData.postValue(metadata) // Getting new meta data (put it into LiveData)
-//            val oldMetadata = _curPlayingSongLiveData.value
-//            Log.d(
-//                TAG,
-//                "oldMetadata = ${oldMetadata?.description?.title}, ${oldMetadata?.description?.subtitle}, ${oldMetadata?.description?.mediaId} newMetadata = ${metadata?.description?.title},${metadata?.description?.subtitle}, ${metadata?.description?.mediaId}"
-//            )
-////            if (metadata != oldMetadata) {
-//            if (metadata?.description?.mediaUri != oldMetadata?.description?.mediaUri
-//                || metadata?.description?.title != oldMetadata?.description?.title
-//                || metadata?.description?.extras != oldMetadata?.description?.extras
-//            ) {
-//                Log.d(TAG, "metadata != oldMetadata")
-//                _curPlayingSongLiveData.postValue(metadata)
-//            }
-
-            // MediaMetadataCompat не переопределяет equals(), а каждый вызов приходит через Parcel (всегда новый объект),
-            // поэтому metadata != oldMetadata всегда true. Одинаковые метаданные теперь отсекает сам MediaSessionConnector
-            // (setMetadataDeduplicationEnabled(true) в MusicService), так что сюда приходят только реальные изменения
-
-            _curPlayingSongLiveData.postValue(metadata) // Getting new meta data (put it into LiveData)
-//            001 claude -->
-        }
-
-        // Send custom events from our service to this connection callback. We will use it to notify when there is a network error
-        override fun onSessionEvent(event: String?, extras: Bundle?) {
-            super.onSessionEvent(event, extras)
-            when (event) {
-                // Ловим исключение в случае проблемы с сервером
-                NETWORK_ERROR -> _networkErrorLiveData.postValue(
-                    Event(
-                        Resource.error(
-                            "Couldn't connect to the server. Please check your internet connection.",
-                            null
-                        )
-                    )
-                )
-                // Where we will set the NETWORK_ERROR, so that we can catch it here? We will do that in our MusicService
-            }
-        }
-
-        // If our session is destroyed, we can call a function from mediaBrowserConnectionCallback() - so we will post an error status to our LiveData
-        override fun onSessionDestroyed() {
-            mediaBrowserConnectionCallback.onConnectionSuspended()
-
-//            Disconnect when the media session is destroyed
-//            If the media session becomes invalid, the onSessionDestroyed() callback is issued. When that happens, the session cannot become functional again within the lifetime of the MediaBrowserService. Although functions related to MediaBrowser might continue to work, a user cannot view or control playback from a destroyed media session, which will likely diminish the value of your application.
-//            Therefore, when the session is destroyed, you must disconnect from the MediaBrowserService by calling disconnect(). This ensures that the browser service has no bound clients and can be destroyed by the OS. If you need to reconnect to the MediaBrowserService later (for example, if your application wants to maintain a persistent connection to the media app), create a new instance of MediaBrowser rather than reusing the old one.
-            if (mediaBrowser.isConnected) {
-                mediaBrowser.disconnect()
-            }
-        }
+    private fun postNetworkError() {
+        _networkErrorLiveData.postValue(
+            Event(Resource.error("Couldn't connect to the server. Please check your internet connection.", null))
+        )
     }
 }

@@ -7,13 +7,12 @@ import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
-import android.support.v4.media.MediaBrowserCompat
-import android.support.v4.media.MediaMetadataCompat.METADATA_KEY_MEDIA_ID
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.media3.common.MediaItem
 import com.google.android.gms.maps.model.CameraPosition
 import com.myproject.radiojourney.domain.homeRadioUseCase.IHomeRadioUseCase
 import com.myproject.radiojourney.domain.mainRadioUseCase.IMainRadioUseCase
@@ -30,9 +29,6 @@ import com.myproject.radiojourney.other.Resource
 import com.myproject.radiojourney.utils.exoplayer.MusicServiceConnection
 import com.myproject.radiojourney.utils.exoplayer.State
 import com.myproject.radiojourney.utils.extension.call
-import com.myproject.radiojourney.utils.extension.isPlayEnabled
-import com.myproject.radiojourney.utils.extension.isPlaying
-import com.myproject.radiojourney.utils.extension.isPrepared
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -214,6 +210,25 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    // Получатель списка станций от сервиса (MusicServiceConnection.subscribe). Отдельное поле - чтобы в onCleared()
+    // отписать именно его: MusicServiceConnection один на всё приложение, а MainViewModel создаётся заново вместе с MainActivity
+    private val onChildrenLoaded: (List<MediaItem>) -> Unit = { children ->
+        viewModelScope.launch(Dispatchers.IO) {
+
+            // And here we convert children: List<MediaItem> (media3) to our format of data
+            // Данные подтягиваются из MusicLibrarySessionCallback.onGetChildren() в MusicService
+            val radioStationPresentationList =
+                mainRadioInteractor.mediaItemChildrenToRadioStationPresentation(children)
+
+            _mediaItemsListLiveData.postValue(Resource.success(radioStationPresentationList))
+
+            Log.d(
+                TAG,
+                "PLAYLIST_UPDATE: 3.$TAG, onChildrenLoaded(). Данные загружены, кладём их в mediaItemsListLiveData"
+            )
+        }
+    }
+
     init {
         try {
             state = State.STATE_INITIALIZING
@@ -222,38 +237,7 @@ class MainViewModel @Inject constructor(
             _mediaItemsListLiveData.postValue(Resource.loading(null)) // Resource data loading status. Null as default - we don't have any data here yet. Т.е. мы кладём в _mediaItems LiveData значение - объект класса Resource с нужным нам флагом и данными
 
             // Назначение: Этот метод предоставляет список радиостанций после загрузки плейлиста. Он необходим для обновления UI (например, ViewPager).
-            musicServiceConnection.subscribe(
-                MEDIA_ROOT_ID,
-                object : MediaBrowserCompat.SubscriptionCallback() {
-                    override fun onChildrenLoaded(
-                        parentId: String,
-                        children: MutableList<MediaBrowserCompat.MediaItem>
-                    ) {
-                        super.onChildrenLoaded(parentId, children)
-
-                        viewModelScope.launch(Dispatchers.IO) {
-
-                            // And here we convert children: MutableList<MediaBrowserCompat.MediaItem> to our format of data
-                            // Данные подтягиваются из result.sendResult(firebaseMusicSource.asMediaItems()) в MusicService
-                            val radioStationPresentationList =
-                                mainRadioInteractor.mediaItemChildrenToRadioStationPresentation(
-                                    children
-                                )
-
-                            _mediaItemsListLiveData.postValue(
-                                Resource.success(
-                                    radioStationPresentationList
-                                )
-                            )
-
-//                            state = State.STATE_INITIALIZED
-                            Log.d(
-                                TAG,
-                                "PLAYLIST_UPDATE: 3.$TAG, onChildrenLoaded(). Данные загружены, кладём их в mediaItemsListLiveData"
-                            )
-                        }
-                    }
-                })
+            musicServiceConnection.subscribe(MEDIA_ROOT_ID, onChildrenLoaded)
         } catch (e2: IOException) {
             e2.printStackTrace()
             _errorMessageLiveData.postValue(
@@ -297,7 +281,7 @@ class MainViewModel @Inject constructor(
                     // curPlayingSong.value?.getString(METADATA_KEY_MEDIA_ID) <- it's how we get metadata of currently playing song
                     if (isPrepared &&
                         mediaItem.stationuuid ==
-                        curPlayingSongLiveData.value?.getString(METADATA_KEY_MEDIA_ID)
+                        curPlayingSongLiveData.value?.mediaId
                     ) {
                         Log.d(
                             TAG,
@@ -319,14 +303,14 @@ class MainViewModel @Inject constructor(
 //                                            mediaItem.stationuuid,
 //                                            null
 //                                        )
-//                                        if (toggle) musicServiceConnection.transportControls.pause()
+//                                        if (toggle) musicServiceConnection.pause()
 //                                        _switchViewPagerOnceAgainLiveData.postValue(mediaItem)
 //                                    }
                                     // ^ check, if it's needed after adding a download button
 
                                     // Проверила. Нужно, но попробую другое условие:
                                     val isCurCountryCodeFAV =
-                                        curPlayingSongLiveData.value?.description?.subtitle.toString()
+                                        curPlayingSongLiveData.value?.mediaMetadata?.subtitle.toString()
                                             .endsWith("_FAV", true)
                                     val isToggleCountryCodeFAV =
                                         mediaItem.countryCode.endsWith("_FAV", true)
@@ -336,22 +320,18 @@ class MainViewModel @Inject constructor(
                                             TAG,
                                             "Станция одна и та же, но одна из них не из избранного. Cтанция: ${mediaItem.stationName}, код страны: ${mediaItem.countryCode}"
                                         )
-                                        musicServiceConnection.transportControls.playFromMediaId(
-//                                        mediaItem.urlResolved,
-                                            mediaItem.stationuuid,
-                                            null
-                                        )
-                                        if (toggle) musicServiceConnection.transportControls.pause()
+                                        musicServiceConnection.playFromMediaId(mediaItem.stationuuid)
+                                        if (toggle) musicServiceConnection.pause()
                                         _switchViewPagerOnceAgainLiveData.postValue(mediaItem)
                                     }
 
-                                    if (toggle) musicServiceConnection.transportControls.pause()
+                                    if (toggle) musicServiceConnection.pause()
                                 }
 
                                 playbackState.isPlayEnabled -> {
                                     // Создадим уведомление (Snackbar.make)
 //                                    _messageLiveData.postValue(AUDIO_CONNECTING) -> вместо этого у нас полоса прогресса на экране
-                                    musicServiceConnection.transportControls.play()
+                                    musicServiceConnection.play()
                                 }
 
                                 else -> Unit
@@ -374,11 +354,7 @@ class MainViewModel @Inject constructor(
                             "Включаем другую песню ${mediaItem.stationName}, url = ${mediaItem.urlResolved}"
                         )
 
-                        musicServiceConnection.transportControls.playFromMediaId(
-                            mediaItem.stationuuid,
-//                        mediaItem.urlResolved,
-                            null
-                        )
+                        musicServiceConnection.playFromMediaId(mediaItem.stationuuid)
                         saveLastUsedRadioStationUrlAndCode(
                             mediaItem.urlResolved,
                             mediaItem.countryCode
@@ -834,9 +810,7 @@ class MainViewModel @Inject constructor(
 
     // when View model is destroyed - заканчиваем нашу связь с сервисом
     override fun onCleared() {
-        musicServiceConnection.unsubscribe(
-            MEDIA_ROOT_ID,
-            object : MediaBrowserCompat.SubscriptionCallback() {})
+        musicServiceConnection.unsubscribe(MEDIA_ROOT_ID, onChildrenLoaded)
 
         super.onCleared()
     }

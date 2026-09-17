@@ -16,6 +16,8 @@
     Разрешение для Foreground Service:
      -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- Media3 ExoPlayer: не даём Wi-Fi и процессору уснуть, пока играет радио (C.WAKE_MODE_NETWORK) -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission
         android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"
         android:minSdkVersion="34" />
@@ -46,6 +48,8 @@
             android:exported="false"
             android:foregroundServiceType="mediaPlayback">
             <intent-filter>
+                <!-- Media3: MediaLibraryService (MusicService) -->
+                <action android:name="androidx.media3.session.MediaLibraryService" />
                 <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>
         </service>
@@ -74,6 +78,7 @@
         <receiver
             android:name=".utils.oldMusicPlayer.NotificationActionBroadcast"
             android:exported="false" />
+
         <service
             android:name=".utils.oldMusicPlayer.MusicPlayerBoundService"
             android:exported="false" />

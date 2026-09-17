@@ -1,12 +1,13 @@
 package com.myproject.radiojourney.di
 
 import android.content.Context
-import com.google.android.exoplayer2.C
-import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.audio.AudioAttributes
-import com.google.android.exoplayer2.upstream.DefaultDataSource
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
-import com.google.android.exoplayer2.util.Util
+import androidx.media3.common.AudioAttributes
+import androidx.media3.common.C
+import androidx.media3.common.util.Util
+import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,11 +19,11 @@ import dagger.hilt.android.scopes.ServiceScoped
 @InstallIn(ServiceComponent::class)
 object ServiceModule {
 
-    // For our exoplayer (AudioAttributes from google, exoplayer2)
+    // For our exoplayer (AudioAttributes from androidx.media3)
     @ServiceScoped // !!! ServiceScoped - это как синглтон внутри сервиса (не всего приложения)
     @Provides
-    fun provideAudioAttributes() = AudioAttributes.Builder()
-        .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC) // CONTENT_TYPE_MUSIC is deprecated
+    fun provideAudioAttributes(): AudioAttributes = AudioAttributes.Builder()
+        .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
         .setUsage(C.USAGE_MEDIA)
         .build()
 
@@ -31,31 +32,20 @@ object ServiceModule {
     @Provides
     fun provideExoPlayer(
         @ApplicationContext context: Context,
-        audioAttributes: AudioAttributes // <- Инструкцию по созданию мы описали выше
-    ) = ExoPlayer.Builder(context).build().apply {
-        setAudioAttributes(audioAttributes, true)
-        setHandleAudioBecomingNoisy(true) // Stops music if user plugs in his headphones, for instance. It can be too noisy
-    }
+        audioAttributes: AudioAttributes, // <- Инструкцию по созданию мы описали выше
+        dataSourceFactory: DefaultDataSource.Factory
+    ): ExoPlayer = ExoPlayer.Builder(context)
+        // DefaultMediaSourceFactory сам выбирает источник: HLS для .m3u8 (MediaItem с MIME-типом APPLICATION_M3U8),
+        // обычный поток для остальных. Раньше это делал FirebaseMusicSource.asMediaSourcePlaylist() вручную
+        .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
+        .setAudioAttributes(audioAttributes, /* handleAudioFocus= */ true)
+        .setHandleAudioBecomingNoisy(true) // Stops music if user plugs out headphones, for instance. It can be too noisy
+        // Не даём телефону "уснуть" (Wi-Fi и процессор), пока играет интернет-радио с выключенным экраном
+        .setWakeMode(C.WAKE_MODE_NETWORK)
+        .build()
 
-    // Deprecated
-//    @ServiceScoped
-//    @Provides
-//    fun provideDataSourceFactory(
-//        @ApplicationContext context: Context
-//    ) = DefaultDataSourceFactory(context, Util.getUserAgent(context, "RadioJourney"))@ServiceScoped
 
-
-    // <!-- 004 claude
-//    @Provides
-//    fun provideDataSourceFactory(
-//        @ApplicationContext context: Context
-//    ) = DefaultDataSource.Factory(context)
-//
-//    @Provides
-//    fun provideHttpDataSource() = DefaultHttpDataSource.Factory()
-
-    // Для обычных (не HLS) потоков. Раньше DefaultDataSource.Factory(context) создавал внутри свой http-источник -
-    // без User-Agent и без редиректов между http и https (см. provideHttpDataSource)
+    // Для обычных (не HLS) потоков. Http-источник - с User-Agent и редиректами между http и https (см. provideHttpDataSource)
     @Provides
     fun provideDataSourceFactory(
         @ApplicationContext context: Context,
@@ -71,6 +61,4 @@ object ServiceModule {
     ): DefaultHttpDataSource.Factory = DefaultHttpDataSource.Factory()
         .setUserAgent(Util.getUserAgent(context, "RadioJourney"))
         .setAllowCrossProtocolRedirects(true)
-    // 004 claude -->
-
 }

@@ -14,7 +14,6 @@ import android.os.Bundle
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.LayerDrawable
 import android.view.Gravity
-import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import android.view.View
 import android.widget.Toast
@@ -49,8 +48,8 @@ import com.myproject.radiojourney.other.Status.LOADING
 import com.myproject.radiojourney.other.Status.SUCCESS
 import com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioFragmentDirections
 import com.myproject.radiojourney.presentation.content.radioStationList.adapter.SwipeRadioStationAdapter
-import com.myproject.radiojourney.utils.extension.isPlaying
 import com.myproject.radiojourney.utils.extension.startStationIndex
+import com.myproject.radiojourney.utils.exoplayer.PlaybackStateInfo
 import com.myproject.radiojourney.utils.service.ProgressForegroundService
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.IOException
@@ -113,7 +112,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
     // Variable for currently playing song
     private var curPlayingRadioStation: RadioStationPresentation? = null
-    private var playbackState: PlaybackStateCompat? = null
+    private var playbackState: PlaybackStateInfo? = null
 
     private var mOnPageChangeCallback: ViewPager2.OnPageChangeCallback? = null
     private val swipeRadioStationAdapter = SwipeRadioStationAdapter()
@@ -159,7 +158,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                 // Favorite star
                 if (swipeRadioStationAdapter.radioStationList.isNotEmpty()) {
                     checkFavoriteStarIfCountryCodeIsRight(
-                        mainViewModel.curPlayingSongLiveData.value?.description?.subtitle.toString(),
+                        mainViewModel.curPlayingSongLiveData.value?.mediaMetadata?.subtitle.toString(),
                         swipeRadioStationAdapter.radioStationList[0].countryCode
                     )
                 }
@@ -245,7 +244,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                 // Favorite star
                 if (swipeRadioStationAdapter.radioStationList.isNotEmpty()) {
                     checkFavoriteStarIfCountryCodeIsRight(
-                        mainViewModel.curPlayingSongLiveData.value?.description?.subtitle.toString(),
+                        mainViewModel.curPlayingSongLiveData.value?.mediaMetadata?.subtitle.toString(),
                         swipeRadioStationAdapter.radioStationList[0].countryCode
                     )
                 }
@@ -429,7 +428,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
     }
 
     private fun switchViewPagerToCurrentSong(mediaId: String, countryCode: String) {
-        val curPlayingMediaId = mainViewModel.curPlayingSongLiveData.value?.description?.mediaId
+        val curPlayingMediaId = mainViewModel.curPlayingSongLiveData.value?.mediaId
         if (mediaId != curPlayingMediaId) return
 
         Log.d(
@@ -565,9 +564,9 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                                     // (при запуске он приходит дважды) плейер внизу показывал первую станцию вместо той, что на паузе/играет
                                     val curPlayingSong = mainViewModel.curPlayingSongLiveData.value
                                     switchViewPagerToCurrentSong(
-                                        curPlayingSong?.description?.mediaId
+                                        curPlayingSong?.mediaId
                                             ?: return@submitRadioStationList,
-                                        curPlayingSong.description?.subtitle.toString()
+                                        curPlayingSong.mediaMetadata.subtitle.toString()
                                     )
                                 }
 //                                002 claude -->
@@ -631,8 +630,8 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                     // if we had an individual image
 //            glide.load(curPlayingSong?.imageUrl).into(ivCurSongImage)
 
-                    val mediaId = it.description.mediaId
-                    val countrycode = it.description.subtitle.toString()
+                    val mediaId = it.mediaId
+                    val countrycode = it.mediaMetadata.subtitle.toString()
 //                            switchViewPagerToCurrentSong(mediaId ?: return@observe, countrycode)
                     switchViewPagerToCurrentSong(mediaId ?: return@whenReady, countrycode)
 
@@ -681,16 +680,15 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             // (ошибка - это тот же момент, когда сервис показывает toast). Ждать смены метаданных нельзя:
             // при повторном выборе той же станции (например, после ошибки) метаданные не меняются, и полоса висела до таймаута
             val connectingShownAt = mainViewModel.connectingProgressShownAt
-            if (connectingShownAt != null && it != null && it.lastPositionUpdateTime >= connectingShownAt &&
-                (it.state == PlaybackStateCompat.STATE_PLAYING || it.state == PlaybackStateCompat.STATE_ERROR)
+            if (connectingShownAt != null && it != null && it.updateTime >= connectingShownAt &&
+                (it.isActuallyPlaying || it.hasError)
             ) {
                 Log.d(
                     TAG,
-                    "BROADCAST: Прячем Connecting to radio station, состояние плейера = ${it.state}"
+                    "BROADCAST: Прячем Connecting to radio station, состояние плейера = $it"
                 )
                 mainViewModel.hideProgressAndSetClickable()
             }
-
             // 004 claude -->
 
         }
