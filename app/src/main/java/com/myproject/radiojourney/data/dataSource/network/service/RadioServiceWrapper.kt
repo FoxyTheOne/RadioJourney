@@ -1,38 +1,33 @@
 package com.myproject.radiojourney.data.dataSource.network.service
 
-import com.myproject.radiojourney.other.Constants.NETWORK_CALL_TIMEOUT
-import com.myproject.radiojourney.other.Constants.NETWORK_CONNECT_TIMEOUT
-import com.myproject.radiojourney.other.Constants.NETWORK_READ_TIMEOUT
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
+import javax.inject.Singleton
 
+/**
+ * Retrofit-сервис для конкретного сервера radio-browser.
+ *
+ * Раньше при каждом запросе (и каждой попытке на другом сервере) создавались новые OkHttpClient и Retrofit.
+ * У каждого OkHttpClient свой пул соединений и потоки, поэтому документация OkHttp советует один клиент на всё приложение.
+ * Теперь клиент один (создаётся в SingletonModule), а Retrofit-сервис создаётся один раз на каждый адрес сервера
+ */
+@Singleton
 class RadioServiceWrapper @Inject constructor(
-    private val userAgentInterceptor: UserAgentInterceptor
+    private val okHttpClient: OkHttpClient
 ) : IRadioServiceWrapper {
 
-    override fun getRadioService(baseURL: String): IRadioService {
-        val client = OkHttpClient.Builder()
-            .addInterceptor(userAgentInterceptor)
+    private val radioServices = ConcurrentHashMap<String, IRadioService>()
 
-            // 006 claude:
-            // Без явных таймаутов попытка к недоступному серверу длилась ~20 с (по 10 с на IPv6 и IPv4 адрес),
-            // и за время полосы загрузки успевали пройти всего 2-3 попытки
-            .connectTimeout(NETWORK_CONNECT_TIMEOUT, TimeUnit.MILLISECONDS)
-            .readTimeout(NETWORK_READ_TIMEOUT, TimeUnit.MILLISECONDS)
-            .callTimeout(NETWORK_CALL_TIMEOUT, TimeUnit.MILLISECONDS) // весь запрос целиком, включая скачивание списка
-
-            .build()
-
-        val retrofit = Retrofit.Builder()
-            .baseUrl(baseURL)
-            .addConverterFactory(GsonConverterFactory.create())
-            .client(client)
-            .build()
-
-        return retrofit.create(IRadioService::class.java)
-    }
-
+    override fun getRadioService(baseURL: String): IRadioService =
+        radioServices.getOrPut(baseURL) {
+            Retrofit.Builder()
+                .baseUrl(baseURL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .client(okHttpClient)
+                .build()
+                .create(IRadioService::class.java)
+        }
 }

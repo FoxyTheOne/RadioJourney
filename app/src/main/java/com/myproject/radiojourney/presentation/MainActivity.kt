@@ -4,10 +4,8 @@ import android.Manifest
 import android.accounts.AccountsException
 import android.app.ActivityManager
 import android.app.Dialog
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -29,8 +27,8 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.doOnLayout
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import androidx.navigation.findNavController
+import androidx.navigation.NavController
+import androidx.navigation.fragment.NavHostFragment
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.IAppSettings
@@ -41,8 +39,6 @@ import com.myproject.radiojourney.other.Constants
 import com.myproject.radiojourney.other.Constants.AUDIO_CONNECTING
 import com.myproject.radiojourney.other.Constants.AUDIO_PLAYING
 import com.myproject.radiojourney.other.Constants.AUDIO_STOPPED
-import com.myproject.radiojourney.other.Constants.FILTER_FOR_BROADCAST_MA_SERVER
-import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_SERVER_IS_DOWN
 import com.myproject.radiojourney.other.Status.ERROR
 import com.myproject.radiojourney.other.Status.LOADING
 import com.myproject.radiojourney.other.Status.SUCCESS
@@ -50,7 +46,6 @@ import com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioFragme
 import com.myproject.radiojourney.presentation.content.radioStationList.adapter.SwipeRadioStationAdapter
 import com.myproject.radiojourney.utils.extension.startStationIndex
 import com.myproject.radiojourney.utils.exoplayer.PlaybackStateInfo
-import com.myproject.radiojourney.utils.service.ProgressForegroundService
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.IOException
 
@@ -74,7 +69,7 @@ import java.io.IOException
  * - Для хранения небольших пар ключ-значение (токен и тп.) я использую Shared preferences;
  * - Для сохранения локаций маркеров на карте, а также для хранения избранных радиостанций используется реляционная база данных Room.
  * При первом запуске нужно дождаться окончания кеширования, в дальнейшем данные берутся из подписки на локальную базу данных;
- * - Для отображения прогресса кеширования в уведомлении используется Foreground service;
+ * - Список стран для карты загружается в фоне с помощью WorkManager;
  * - Все запросы на сервер, либо в локальную БД из ViewModel я делаю через Coroutines;
  * - Для запроса на сервер используется Retrofit2.
  *
@@ -95,7 +90,7 @@ import java.io.IOException
  * - To store small key-value pairs (token for instance), I use Shared preferences;
  * - The Room database is used to store marker locations on the map, as well as to store favorite radio stations.
  * You need to wait until caching ends at the first start. Further the data is taken from the subscription to the local database;
- * - I use Foreground service to display caching progress in notification;
+ * - The country list for the map is loaded in the background with WorkManager;
  * - I make all requests to the server, or to the local database from the ViewModel, through Coroutines;
  * - For the request to the server, Retrofit2 is used.
  */
@@ -119,9 +114,24 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
     private lateinit var dialogPleaseWait: Dialog
     private var isInternetAvailable = false
+    private lateinit var navController: NavController
 
     // Действия, которые ждут, пока плейлист появится в ViewPager (см. whenPlaylistReady)
     private val pendingWhenPlaylistReady = mutableListOf<() -> Unit>()
+
+    // Запрос на разрешение notification. Регистрируется полем класса - до создания Activity, как требует Activity Result API
+    private val requestPermissionLauncherNotification =
+        registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted: Boolean ->
+            if (!isGranted) {
+                Toast.makeText(
+                    this,
+                    "We don't have permission to show notifications on your Android",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
 
 //    // 1. PROGRESS Текущий актуальный ID загрузки
 //    private var currentPlaylistId = -1
@@ -135,6 +145,18 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         val view: View = binding!!.root
         setContentView(view)
         applySystemBarInsets(view)
+
+        // Навигация. Условная навигация по рекомендации developer.android.com: стартовый экран выбирается до его создания.
+        // Раньше первый экран открывался всегда, а уже в его onCreate выполнялся переход на карту (BaseAuthFragmentAbstract)
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
+        navController = navHostFragment.navController
+        val navGraph = navController.navInflater.inflate(R.navigation.app_navigation).apply {
+            setStartDestination(
+                if (mainViewModel.isLoggedIn()) R.id.homeRadioFragment else R.id.firstScreenLoadingFragment
+            )
+        }
+        // При пересоздании Activity NavController сам восстановит открытые экраны поверх этого графа
+        navController.setGraph(navGraph, null)
 
         binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_border_24_orange)
 
@@ -260,44 +282,8 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         // Передайте ссылку на разметку
         dialogPleaseWait.setContentView(R.layout.layout_please_wait_dialog)
 
-        // Запрос на разрешение Foreground
-        val requestPermissionLauncherForeground =
-            registerForActivityResult(
-                ActivityResultContracts.RequestPermission()
-            ) { isGranted: Boolean ->
-                if (!isGranted) {
-                    Toast.makeText(
-                        this,
-                        "We don't have permission to start foreground service",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-            }
-
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.FOREGROUND_SERVICE
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // Если нет разрешения - вызываем requestPermissionLauncher
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                requestPermissionLauncherForeground.launch(Manifest.permission.FOREGROUND_SERVICE)
-            }
-        }
-
-        // Запрос на разрешение notification
-        val requestPermissionLauncherNotification =
-            registerForActivityResult(
-                ActivityResultContracts.RequestPermission()
-            ) { isGranted: Boolean ->
-                if (!isGranted) {
-                    Toast.makeText(
-                        this,
-                        "We don't have permission to show notifications on your Android",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-            }
+        // Запрос на разрешение notification (уведомление плеера).
+        // Разрешение FOREGROUND_SERVICE раньше тоже запрашивалось здесь, но оно выдаётся при установке и в запросе не нуждается
 
         if (ContextCompat.checkSelfPermission(
                 this,
@@ -310,65 +296,10 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             }
         }
 
-        // COUNTRY LIST MARKERS ON MAP -> 1. Получаем список кодов стран, преобразуем в локальные модели, сохраняем в Room.
-        // Делается 1 раз, при запуске приложения и по окончанию stopSelf()
-        this.startService(
-            Intent(
-                this,
-                ProgressForegroundService::class.java
-            )
-        )
+        // COUNTRY LIST MARKERS ON MAP -> 1. Список стран загружается в MainViewModel (WorkManager, CountryCacheWorker) - один раз за запуск приложения
 
         initListeners()
         subscribeToObservers()
-
-//        // 1.Broadcast для отображения уведомления (2,3 - в MusicService)
-//        val intentMS =
-//            Intent(FILTER_FOR_BROADCAST_MS) // FILTER is a string to identify this intent
-//        intentMS.apply {
-//            Log.d(TAG, "Отправляем ключ KEY_BROADCAST_ACTIVITY, для отображения уведомления")
-//            putExtra(KEY_BROADCAST_ACTIVITY, 50)
-//            sendBroadcast(this)
-//        }
-
-    }
-
-    override fun onStart() {
-        super.onStart()
-        LocalBroadcastManager.getInstance(this).registerReceiver(
-            receiverServerIsDown,
-            IntentFilter(FILTER_FOR_BROADCAST_MA_SERVER)
-        )
-        Log.d(
-            TAG,
-            "LocalBroadcastManager.BROADCAST: Регистрируемся в onStart() - когда получаем нулевой список, обычный бродкаст не работает (зависает полоса прогресса)"
-        )
-    }
-
-    // 3.Broadcast для горизонтальной полосы прогресса в activity (1 - в ???)
-    override fun onResume() {
-        super.onResume()
-        ContextCompat.registerReceiver(
-            this,
-            receiver,
-            IntentFilter(Constants.FILTER_FOR_BROADCAST_MA),
-            ContextCompat.RECEIVER_NOT_EXPORTED
-        )
-//        registerReceiver(receiver, IntentFilter(Constants.FILTER_FOR_BROADCAST_MA))
-        Log.d(TAG, "BROADCAST: Регистрируемся в onResume()")
-    }
-
-    // 3.Broadcast - регистрируем в onResume и отписываемся в onPause
-    override fun onPause() {
-        super.onPause()
-        unregisterReceiver(receiver)
-        Log.d(TAG, "BROADCAST: Отписываемся в onPause()")
-    }
-
-    override fun onStop() {
-        super.onStop()
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(receiverServerIsDown)
-        Log.d(TAG, "LocalBroadcastManager.BROADCAST: Отписываемся в onStop()")
     }
 
     private fun initListeners() {
@@ -400,13 +331,13 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         swipeRadioStationAdapter.setItemClickListener {
             val direction =
                 HomeRadioFragmentDirections.actionHomeRadioFragmentToCurrentPlaylistFragment()
-            if (this.findNavController(R.id.navHostFragment).currentDestination?.id == R.id.homeRadioFragment) {
-                this.findNavController(R.id.navHostFragment).navigate(direction)
+            if (navController.currentDestination?.id == R.id.homeRadioFragment) {
+                navController.navigate(direction)
             }
         }
 
         // Let's add a listener to our NavController to hide BottomBar when we are on the first page, where we are cashing
-        this.findNavController(R.id.navHostFragment)
+        navController
             .addOnDestinationChangedListener { _, destination, _ ->
                 when (destination.id) {
                     R.id.firstScreenLoadingFragment -> hideBottomBar()
@@ -475,6 +406,23 @@ class MainActivity : AppCompatActivity(), IAppSettings {
     }
 
     private fun subscribeToObservers() {
+        // Полоса загрузки плейлиста: 0..70% - обработка станций (дальше 85% и 95% ставятся ниже, когда список показан и станция выбрана).
+        // Раньше прогресс приходил бродкастом из MusicService
+        mainViewModel.playlistDownloadProgressLiveData.observe(this) { percent ->
+            binding?.progressBarHorizontalDp?.progress = 70 * percent / 100
+        }
+
+        // Не удалось скачать плейлист: сервер недоступен (раньше - LocalBroadcastManager из MusicService)
+        mainViewModel.serverIsDownLiveData.observe(this) { event ->
+            event.getContentIfNotHandled()?.let {
+                showCustomDialog(
+                    R.string.dialogInternetTrouble_title4,
+                    R.string.dialogInternetTrouble_text4
+                )
+                mainViewModel.hideProgressAndSetClickable(true)
+            }
+        }
+
         // LIVEDATA: to fill our widget.ViewPager2 with correct items, display right ones WHEN WE LAUNCH OUR APP
         mainViewModel.mediaItemsListLiveData.observe(this) {
             it?.let { result ->
@@ -1093,46 +1041,5 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 //        }
 
         super.onDestroy()
-    }
-
-    // 2.Broadcast для полосы прогресса MainActivity при загрузке плейлиста (1 - в ???)
-    // Создадим анонимный класс => не нужно регистрировать в манифесте
-    private var receiver: BroadcastReceiver? = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent) {
-
-            Log.d(TAG, "BROADCAST: Получаем данные в onReceive()")
-
-            // Общее количество станций
-            val listSize = intent.getIntExtra(Constants.KEY_BROADCAST_LIST_SIZE_MA, 1)
-            // Какая по счету обрабатывается сейчас в FirebaseMusicSource
-            val filesAmount = intent.getIntExtra(Constants.KEY_BROADCAST_COUNT_MA, 1)
-
-            if (listSize > 0 && filesAmount <= listSize) { // listSize = 0 - пустой плейлист, без проверки было бы деление на ноль
-                val progress = 70 * filesAmount / listSize
-                binding?.progressBarHorizontalDp?.progress = progress
-                Log.d(
-                    TAG,
-                    "BROADCAST: Получаем данные в onReceive(). progress = 70 * $filesAmount / $listSize = $progress%"
-                )
-            }
-
-        }
-    }
-
-    private val receiverServerIsDown: BroadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent) {
-            // Ваш код обработки сообщения
-            Log.d(TAG, "BROADCAST: Получаем данные в onReceive() receiverServerIsDown")
-
-            val isServerDown = intent.getBooleanExtra(KEY_BROADCAST_SERVER_IS_DOWN, false)
-
-            if (isServerDown) {
-                showCustomDialog(
-                    R.string.dialogInternetTrouble_title4,
-                    R.string.dialogInternetTrouble_text4
-                )
-                mainViewModel.hideProgressAndSetClickable(true)
-            }
-        }
     }
 }

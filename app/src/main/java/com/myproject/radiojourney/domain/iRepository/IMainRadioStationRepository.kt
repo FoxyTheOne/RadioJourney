@@ -18,6 +18,9 @@ interface IMainRadioStationRepository {
     // И сохранить радиостанцию в Room
     suspend fun saveRadioStationInRoom(radioStationLocal: RadioStationLocal)
 
+    // Добавить в избранное или убрать из него: меняется только флаг избранного
+    suspend fun setStationFavourite(radioStationLocal: RadioStationLocal, isFavourite: Boolean)
+
     //    suspend fun getRadioStationList(countryCode: String): List<RadioStationLocal>
     suspend fun getRadioStationList(countryCode: String): Resource<List<RadioStationLocal>>
 

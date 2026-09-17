@@ -13,21 +13,16 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <!-- 1.
-    Разрешение для Foreground Service:
+    Разрешение для Foreground Service (плеер MusicService). Выдаётся при установке, запрашивать у пользователя не нужно
      -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <!-- Media3 ExoPlayer: не даём Wi-Fi и процессору уснуть, пока играет радио (C.WAKE_MODE_NETWORK) -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission
-        android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"
-        android:minSdkVersion="34" />
-    <uses-permission
         android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
         android:minSdkVersion="34" />
-    <!--
-        Разрешение для Alert Window:
-    -->
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <!-- FOREGROUND_SERVICE_DATA_SYNC убрано вместе с ProgressForegroundService (список стран теперь загружает WorkManager).
+         SYSTEM_ALERT_WINDOW (окна поверх других приложений) убрано: нигде не использовалось -->
     <!--
         When targeting Android 13 or higher, posting a permission requires holding the `POST_NOTIFICATIONS` permission:
     -->
@@ -66,12 +61,19 @@
         </activity>
 
         <!--
-         2. Декларируем Foreground Service:
-          -->
-        <service
-            android:name=".utils.service.ProgressForegroundService"
+        WorkManager инициализируется в App (Configuration.Provider) с фабрикой Hilt для CountryCacheWorker,
+        поэтому автоматическую инициализацию отключаем
+         -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
             android:exported="false"
-            android:foregroundServiceType="dataSync" />
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
         <!--
         Google maps:
         Старые версии модуля карт в Google Play services используют Apache HTTP, которого нет в Android 9+ по умолчанию.

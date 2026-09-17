@@ -19,6 +19,8 @@ class LocalUserDataSource @Inject constructor(
 
     override suspend fun getToken() = preference.getToken()
 
+    override fun isLoggedIn(): Boolean = preference.getToken().isNotBlank() && !preference.isFirstStart()
+
     // Выход из аккаунта
     override fun logout() {
         preference.saveToken(null)

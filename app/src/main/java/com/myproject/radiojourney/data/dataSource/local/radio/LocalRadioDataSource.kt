@@ -36,6 +36,9 @@ class LocalRadioDataSource @Inject constructor(
         radioStationDAO.saveRadioStationList(radioStation)
     }
 
+    override suspend fun setStationFavourite(radioStation: RadioStationLocal, isFavourite: Boolean) =
+        radioStationDAO.setStationFavourite(radioStation, isFavourite)
+
     override suspend fun saveCountryList(countryLocalList: MutableList<CountryLocal>) {
         countryDAO.saveCountryList(*countryLocalList.toTypedArray())
         Log.d(TAG, "результат Метод для сохранения стран в Room завершён")

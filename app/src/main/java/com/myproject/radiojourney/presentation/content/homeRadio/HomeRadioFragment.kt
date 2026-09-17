@@ -31,8 +31,7 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.*
-import com.google.android.gms.tasks.CancellationToken
-import com.google.android.gms.tasks.OnTokenCanceledListener
+import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.IAppSettings
 import com.myproject.radiojourney.R
@@ -112,6 +111,40 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 
     private var isInternetAvailable = false
 
+    private var locationCancellationTokenSource: CancellationTokenSource? = null
+
+    // Запрос разрешения на местоположение. Регистрируется полем класса: Activity Result API требует регистрации
+    // до создания фрагмента. Раньше регистрация была в onViewCreated и повторялась при каждом возвращении на карту
+    private val requestPermissionLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { permissionsMap ->
+            if (permissionsMap[Manifest.permission.ACCESS_COARSE_LOCATION] != true
+                &&
+                permissionsMap[Manifest.permission.ACCESS_FINE_LOCATION] != true
+            ) {
+                Toast.makeText(
+                    requireContext(),
+                    "We can't show your location without an access to it",
+                    Toast.LENGTH_LONG
+                ).show()
+            } else {
+                getCurrentOrLastLocation(moveCamera = mainViewModel.mapCameraPosition == null)
+            }
+        }
+
+    private fun isLocationPermissionGranted(): Boolean =
+        ContextCompat.checkSelfPermission(
+            requireContext(),
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+                ||
+                ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -165,32 +198,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 
         // Если каким-то образом мы попали на этот фрагмент минуя первый, загрузочный фрагмент - стоит ещё раз проверить разрешения
         // Если разрешения нет - или запросить их, или перекинуть на загрузочный фрагмент и там запросить
-        val requestPermissionLauncher =
-            registerForActivityResult(
-                ActivityResultContracts.RequestMultiplePermissions()
-            ) { permissionsMap ->
-                if (permissionsMap[Manifest.permission.ACCESS_COARSE_LOCATION] != true
-                    &&
-                    permissionsMap[Manifest.permission.ACCESS_FINE_LOCATION] != true
-                ) {
-                    Toast.makeText(
-                        requireContext(),
-                        "We can't show your location without an access to it",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-            }
-
-        if (ContextCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-            &&
-            ContextCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
+        if (!isLocationPermissionGranted()) {
             requestPermissionLauncher.launch(
                 arrayOf(
                     Manifest.permission.ACCESS_COARSE_LOCATION,
@@ -479,16 +487,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         // LOCATION -> 1.5. Местоположение запрашивается в onMapReady (разово, при открытии фрагмента): маркер можно поставить только на готовую карту
 
         binding?.buttonYouAreHere?.setOnClickListener {
-            if (ContextCompat.checkSelfPermission(
-                    requireContext(),
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
-                ||
-                ContextCompat.checkSelfPermission(
-                    requireContext(),
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
+            if (isLocationPermissionGranted()) {
                 getCurrentOrLastLocation()
             } else {
                 // Если нет - вызываем requestPermissionLauncher
@@ -753,6 +752,8 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 
     private fun getCurrentOrLastLocation(moveCamera: Boolean = true) {
         // 004 claude -->
+        if (!isLocationPermissionGranted()) return // без разрешения запрос местоположения завершится ошибкой
+
         // Last location
         fusedLocationProviderClient.lastLocation.addOnSuccessListener { location: Location? ->
             location
@@ -771,26 +772,17 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         }
 
         // Current location
+        // PRIORITY_PASSIVE - незначительное влияние на энергопотребление + получение обновлений местоположений, когда они доступны.
+        // С этим параметром приложение не инициирует никаких обновлений местоположения, но получает местоположения, инициированные другими приложениями.
+        // Раньше: устаревший LocationRequest.PRIORITY_NO_POWER и свой CancellationToken, который не сообщал об отмене слушателям.
+        // CancellationTokenSource - стандартный способ отменить запрос (отменяем в onDestroyView, когда карты уже нет)
+        locationCancellationTokenSource?.cancel()
+        val cancellationTokenSource = CancellationTokenSource().also { locationCancellationTokenSource = it }
         fusedLocationProviderClient.getCurrentLocation(
-            // PRIORITY_NO_POWER - незначительное влияние на энергопотребление + получение обновлений местоположений, когда они доступны.
-            // С этим параметром приложение не инициирует никаких обновлений местоположения, но получает местоположения, инициированные другими приложениями.
-            LocationRequest.PRIORITY_NO_POWER,
-            object : CancellationToken() {
-                // Создадим переменную со значением по умолчанию
-                private var isCancellationRequested = false
-
-                // Если запрошено
-                override fun onCanceledRequested(p0: OnTokenCanceledListener): CancellationToken {
-                    isCancellationRequested = true
-                    return this
-                }
-
-                // Проверка статуса
-                override fun isCancellationRequested(): Boolean {
-                    return isCancellationRequested
-                }
-            }).addOnSuccessListener { location: Location? ->
-            // Т.к. location может прилететь null, пишем тернарный оператор. Если location = null, то просто выходим из метода addOnSuccessListener
+            Priority.PRIORITY_PASSIVE,
+            cancellationTokenSource.token
+        ).addOnSuccessListener { location: Location? ->
+        // Т.к. location может прилететь null, пишем тернарный оператор. Если location = null, то просто выходим из метода addOnSuccessListener
             location ?: return@addOnSuccessListener
             // Проверяем получение ширины и долготы в логе
             Log.d(
@@ -1117,6 +1109,8 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 
     // VIEW BINDING -> 3. onDestroyView()
     override fun onDestroyView() {
+        locationCancellationTokenSource?.cancel()
+        locationCancellationTokenSource = null
         // Карта уничтожается вместе с view: маркеры старой карты больше не нужны
         isMapReady = false
         countryMarkers.clear()

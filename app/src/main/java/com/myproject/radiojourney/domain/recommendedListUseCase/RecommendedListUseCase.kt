@@ -39,7 +39,7 @@ class RecommendedListUseCase @Inject constructor(
             currentRadioStation,
             isStationInFavourite = true
         )
-        mainRadioStationRepository.saveRadioStationInRoom(currentRadioStationLocal)
+        mainRadioStationRepository.setStationFavourite(currentRadioStationLocal, currentRadioStationLocal.isStationInFavourite)
     }
 
     override suspend fun deleteStationInRoomFromFavourite(currentRadioStation: RadioStationPresentation) {
@@ -47,7 +47,7 @@ class RecommendedListUseCase @Inject constructor(
             currentRadioStation,
             isStationInFavourite = false
         )
-        mainRadioStationRepository.saveRadioStationInRoom(currentRadioStationLocal)
+        mainRadioStationRepository.setStationFavourite(currentRadioStationLocal, currentRadioStationLocal.isStationInFavourite)
     }
 
 }

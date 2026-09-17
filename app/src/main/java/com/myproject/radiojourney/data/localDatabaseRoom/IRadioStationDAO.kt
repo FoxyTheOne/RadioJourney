@@ -4,24 +4,43 @@ import androidx.room.*
 import com.myproject.radiojourney.entities.local.RadioStationLocal
 import kotlinx.coroutines.flow.Flow
 
+// Сравнение через "=", а не LIKE: LIKE - поиск по шаблону (символы % и _ в значении работают как подстановка, регистр не учитывается),
+// а здесь нужно точное совпадение id или флага
 @Dao
 interface IRadioStationDAO {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveRadioStationList(vararg radioStationLocalList: RadioStationLocal)
 
-    @Query("SELECT * from RadioStationLocal WHERE stationuuid LIKE:stationUuid")
+    @Query("SELECT * from RadioStationLocal WHERE stationuuid = :stationUuid")
     suspend fun getRadioStationByUuid(stationUuid: String): RadioStationLocal?
 
-    @Query("SELECT * from RadioStationLocal WHERE url_resolved LIKE:urlResolved")
+    @Query("SELECT * from RadioStationLocal WHERE url_resolved = :urlResolved")
     suspend fun getRadioStationByUrl(urlResolved: String): RadioStationLocal?
     // ^ Могут быть сохранены в локальную базу несколько одинаковых станций с разным stationUuid. В таком случае могут возникнуть ошибки, в зависимости от того, какая станция прилетит по запросу
 
-    @Query("SELECT * from RadioStationLocal WHERE countrycode LIKE:countryCode")
+    @Query("SELECT * from RadioStationLocal WHERE countrycode = :countryCode")
     fun getRadioStationList(countryCode: String): Flow<List<RadioStationLocal>>
 
-    @Query("SELECT * from RadioStationLocal WHERE isStationInRecommended LIKE:isStationInRecommended")
-    fun getRecommendedRadioStationList(isStationInRecommended: Boolean): List<RadioStationLocal>
+    // suspend: Room сам выполняет запрос в фоновом потоке. Без suspend вызов из главного потока падает с исключением
+    @Query("SELECT * from RadioStationLocal WHERE isStationInRecommended = :isStationInRecommended")
+    suspend fun getRecommendedRadioStationList(isStationInRecommended: Boolean): List<RadioStationLocal>
 
-    @Query("SELECT * from RadioStationLocal WHERE isStationInFavourite LIKE:isStationInFavorite")
-    fun getFavoriteRadioStationList(isStationInFavorite: Boolean): List<RadioStationLocal>
+    @Query("SELECT * from RadioStationLocal WHERE isStationInFavourite = :isStationInFavorite")
+    suspend fun getFavoriteRadioStationList(isStationInFavorite: Boolean): List<RadioStationLocal>
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertRadioStationIfAbsent(radioStation: RadioStationLocal)
+
+    @Query("UPDATE RadioStationLocal SET isStationInFavourite = :isFavourite WHERE stationuuid = :stationUuid")
+    suspend fun updateIsStationInFavourite(stationUuid: String, isFavourite: Boolean)
+
+    // Добавить станцию в избранное или убрать из него.
+// Раньше станция целиком перезаписывалась (REPLACE) данными с экрана, и вместе со звездой затирались другие поля
+// (например, isStationInRecommended), если на экране был устаревший объект. Теперь меняется только флаг избранного;
+// станции, которой ещё нет в базе, сначала добавляется. @Transaction - обе операции выполняются вместе
+    @Transaction
+    suspend fun setStationFavourite(radioStation: RadioStationLocal, isFavourite: Boolean) {
+        insertRadioStationIfAbsent(radioStation.copy(isStationInFavourite = isFavourite))
+        updateIsStationInFavourite(radioStation.stationuuid, isFavourite)
+    }
 }

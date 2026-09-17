@@ -12,7 +12,7 @@ interface ICountryDAO {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveCountryList(vararg countryLocalList: CountryLocal)
 
-    @Query("SELECT * from CountryLocal WHERE countryCode LIKE:countryCode")
+    @Query("SELECT * from CountryLocal WHERE countryCode = :countryCode")
     suspend fun getCountry(countryCode: String): CountryLocal?
 
     @Query("SELECT * from CountryLocal")

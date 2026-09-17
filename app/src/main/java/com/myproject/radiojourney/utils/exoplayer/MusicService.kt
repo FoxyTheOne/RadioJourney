@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.util.Log
 import androidx.annotation.OptIn
 import androidx.lifecycle.Observer
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
@@ -16,11 +15,7 @@ import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.data.sharedPreference.IAppSharedPreference
-import com.myproject.radiojourney.other.Constants
 import com.myproject.radiojourney.other.Constants.DEFAULT_COUNTRY_CODE
-import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_COUNT_MA
-import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_LIST_SIZE_MA
-import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_SERVER_IS_DOWN
 import com.myproject.radiojourney.other.Constants.MEDIA_ROOT_ID
 import com.myproject.radiojourney.other.Constants.NOTIFICATION_CHANNEL_ID
 import com.myproject.radiojourney.other.Constants.NOTIFICATION_ID
@@ -77,17 +72,6 @@ class MusicService : MediaLibraryService() {
     private lateinit var musicPlayerEventListener: MusicPlayerEventListener
 
     private lateinit var notifyChildrenChangedLiveDataObserver: Observer<Boolean>
-
-    // setPackage: с Android 14 неявный интент (без пакета) не доходит до приёмника RECEIVER_NOT_EXPORTED в MainActivity.
-    // by lazy - packageName доступен только после создания сервиса, а не при создании полей класса
-    private val intent by lazy {
-        Intent(Constants.FILTER_FOR_BROADCAST_MA).setPackage(packageName) // FILTER is a string to identify this intent
-    }
-    private lateinit var listSizeLiveDataObserver: Observer<Int>
-    private lateinit var radioStationsCountLiveDataObserver: Observer<Int>
-    private val intentServerIsDown =
-        Intent(Constants.FILTER_FOR_BROADCAST_MA_SERVER) // FILTER is a string to identify this intent
-    private lateinit var serverIsDownLiveDataObserver: Observer<Boolean>
 
     // Уведомление на паузе. media3 показывает уведомление, пока плеер подготовлен (не STATE_IDLE), и после паузы держит
     // сервис в foreground не дольше 10 минут - потом уведомление остаётся уже без foreground-сервиса.
@@ -219,42 +203,7 @@ class MusicService : MediaLibraryService() {
             notifyChildrenChangedLiveDataObserver
         )
 
-        // List size for broadcast
-        listSizeLiveDataObserver = Observer {
-            //Live data value has changed
-            intent.putExtra(KEY_BROADCAST_LIST_SIZE_MA, it)
-            Log.d(
-                TAG,
-                "BROADCAST: Отправляем в MainActivity данные из listSizeLiveDataObserver. it = $it"
-            )
-            sendBroadcast(intent)
-        }
-        firebaseMusicSource.listSizeLiveData.observeForever(listSizeLiveDataObserver)
-
-        // Counting for broadcast
-        radioStationsCountLiveDataObserver = Observer {
-            intent.putExtra(KEY_BROADCAST_COUNT_MA, it)
-            Log.d(
-                TAG,
-                "BROADCAST: Отправляем в MainActivity данные из radioStationsCountLiveDataObserver"
-            )
-            sendBroadcast(intent)
-        }
-        firebaseMusicSource.radioStationsCountLiveData.observeForever(
-            radioStationsCountLiveDataObserver
-        )
-
-        // Вызывается в случае ошибки HttpException при обращении к серверу
-        serverIsDownLiveDataObserver = Observer {
-            intentServerIsDown.apply {
-                putExtra(KEY_BROADCAST_SERVER_IS_DOWN, it)
-            }
-            Log.d(TAG, "LocalBroadcastManager.BROADCAST: Отправляем в MainActivity данные из serverIsDownLiveDataObserver, it = $it")
-            LocalBroadcastManager.getInstance(this).sendBroadcast(intentServerIsDown)
-        }
-        firebaseMusicSource.serverIsDownLiveData.observeForever(
-            serverIsDownLiveDataObserver
-        )
+        // Прогресс загрузки плейлиста и ошибку сервера экран получает напрямую из PlaylistDownloadStatus (раньше сервис пересылал их бродкастами)
 
         musicPlayerEventListener = MusicPlayerEventListener(this)
         exoPlayer.addListener(musicPlayerEventListener)
@@ -311,9 +260,6 @@ class MusicService : MediaLibraryService() {
         exoPlayer.release()
 
         firebaseMusicSource.notifyChildrenChangedLiveData.removeObserver(notifyChildrenChangedLiveDataObserver)
-        firebaseMusicSource.listSizeLiveData.removeObserver(listSizeLiveDataObserver)
-        firebaseMusicSource.radioStationsCountLiveData.removeObserver(radioStationsCountLiveDataObserver)
-        firebaseMusicSource.serverIsDownLiveData.removeObserver(serverIsDownLiveDataObserver)
 
 //        // 3.Broadcast - регистрируем в onCreate и отписываемся в onDestroy
 //        unregisterReceiver(receiver)

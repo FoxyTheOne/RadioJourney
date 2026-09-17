@@ -31,5 +31,7 @@ class AuthRepository @Inject constructor(
         return userTokenInt
     }
 
+    override fun isLoggedIn(): Boolean = localUserDataSource.isLoggedIn()
+
     override fun logout() = localUserDataSource.logout()
 }

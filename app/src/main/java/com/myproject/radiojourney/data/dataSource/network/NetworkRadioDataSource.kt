@@ -11,7 +11,9 @@ import com.myproject.radiojourney.other.Constants.SERVER_SEARCH_TIME
 import com.myproject.radiojourney.other.Constants.SERVER_IS_DOWN
 import com.myproject.radiojourney.other.Resource
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import okhttp3.ResponseBody
 import retrofit2.HttpException
 import retrofit2.Response
@@ -413,8 +415,9 @@ class NetworkRadioDataSource @Inject constructor(
     // <!-- 003 claude
 //    private fun updateDNSList(): MutableList<String> {
 
-    private fun updateDNSList(attemptsLeft: Int = 3): MutableList<String> {
-        // 003 claude -->
+    // suspend + withContext(IO): поиск DNS блокирует поток, а пауза между попытками - delay (не занимает поток, как Thread.sleep)
+    private suspend fun updateDNSList(attemptsLeft: Int = 3): MutableList<String> = withContext(Dispatchers.IO) {
+    // 003 claude -->
 
         val listDNSResult = Vector<String>()
         try {
@@ -454,10 +457,10 @@ class NetworkRadioDataSource @Inject constructor(
         // Раньше здесь была бесконечная рекурсия: без интернета DNS не отвечает, updateDNSList() вызывал сам себя,
         // пока приложение не падало со StackOverflowError. Теперь несколько попыток, а потом пустой список -
         // вызывающий код переберёт 0 серверов и вернёт пустой результат (он обрабатывается как ошибка загрузки)
-        return if (listDNSResultArray.isNotEmpty()) {
+        if (listDNSResultArray.isNotEmpty()) {
             listDNSResultArray
         } else if (attemptsLeft > 1) {
-            Thread.sleep(DNS_RETRY_DELAY) // метод вызывается в Dispatchers.IO
+            delay(DNS_RETRY_DELAY)
             updateDNSList(attemptsLeft - 1)
         } else {
             // Имена серверов так и не получили - пробуем сервер, известный из документации radio-browser

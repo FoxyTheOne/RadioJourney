@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.myproject.radiojourney.data.worker.CountryCacheScheduler
 import com.myproject.radiojourney.domain.homeRadioUseCase.IHomeRadioUseCase
 import com.myproject.radiojourney.domain.firstScreenLoadingUseCase.ILoginScreenUseCase
 import com.myproject.radiojourney.other.Event
@@ -25,8 +26,12 @@ import javax.inject.Inject
 @HiltViewModel
 class FirstScreenLoadingViewModel @Inject constructor(
     private val loginScreenInteractor: ILoginScreenUseCase,
-    homeRadioInteractor: IHomeRadioUseCase
+    homeRadioInteractor: IHomeRadioUseCase,
+    countryCacheScheduler: CountryCacheScheduler
 ) : ViewModel() {
+    // Прогресс загрузки списка стран (WorkManager) для полосы на экране. Раньше - бродкаст из ProgressForegroundService
+    val countryCacheProgressLiveData: LiveData<Int> = countryCacheScheduler.progressLiveData
+
     // If smth went wrong
     private val _errorMessageLiveData =
         MutableLiveData<Event<Resource<Boolean>>>() // It must be private, so that other classes can't change it

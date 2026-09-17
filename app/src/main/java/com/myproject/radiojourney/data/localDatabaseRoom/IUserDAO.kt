@@ -8,7 +8,7 @@ interface IUserDAO {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveUser(user: UserEntity)
 
-    @Query("SELECT * from UserEntity WHERE email LIKE:email")
+    @Query("SELECT * from UserEntity WHERE email = :email")
     suspend fun getUser(email: String): UserEntity?
 
 //    // Finally, add a method to the DAO class that returns all instances of the data class that pairs the parent entity and the child entity.

@@ -41,6 +41,9 @@ import com.myproject.radiojourney.domain.radioListUseCase.RadioListUseCase
 import com.myproject.radiojourney.domain.recommendedListUseCase.IRecommendedListUseCase
 import com.myproject.radiojourney.domain.recommendedListUseCase.RecommendedListUseCase
 import com.myproject.radiojourney.utils.exoplayer.MusicServiceConnection
+import com.myproject.radiojourney.other.Constants.NETWORK_CALL_TIMEOUT
+import com.myproject.radiojourney.other.Constants.NETWORK_CONNECT_TIMEOUT
+import com.myproject.radiojourney.other.Constants.NETWORK_READ_TIMEOUT
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -48,6 +51,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ViewModelComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import okhttp3.OkHttpClient
+import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
@@ -90,6 +95,20 @@ abstract class SingletonModule {
             @ApplicationContext context: Context
         ) =
             UserAgentInterceptor(context) // Создаём экземпляр нашего класса UserAgentInterceptor, для создания которого нужен context
+
+        // Один OkHttpClient на всё приложение: у каждого клиента свой пул соединений и потоки (рекомендация OkHttp).
+        // Раньше клиент создавался в RadioServiceWrapper заново для каждого запроса
+        @Provides
+        @Singleton
+        fun providesOkHttpClient(userAgentInterceptor: UserAgentInterceptor): OkHttpClient =
+            OkHttpClient.Builder()
+                .addInterceptor(userAgentInterceptor)
+                // Без явных таймаутов попытка к недоступному серверу длилась ~20 с (по 10 с на IPv6 и IPv4 адрес),
+                // и за время полосы загрузки успевали пройти всего 2-3 попытки
+                .connectTimeout(NETWORK_CONNECT_TIMEOUT, TimeUnit.MILLISECONDS)
+                .readTimeout(NETWORK_READ_TIMEOUT, TimeUnit.MILLISECONDS)
+                .callTimeout(NETWORK_CALL_TIMEOUT, TimeUnit.MILLISECONDS) // весь запрос целиком, включая скачивание списка
+                .build()
     }
 
     @Binds

@@ -11,9 +11,12 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import com.google.android.gms.maps.model.CameraPosition
+import com.myproject.radiojourney.data.worker.CountryCacheScheduler
+import com.myproject.radiojourney.domain.firstScreenLoadingUseCase.ILoginScreenUseCase
 import com.myproject.radiojourney.domain.homeRadioUseCase.IHomeRadioUseCase
 import com.myproject.radiojourney.domain.mainRadioUseCase.IMainRadioUseCase
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
@@ -27,6 +30,7 @@ import com.myproject.radiojourney.other.Constants.CANCEL_PLAYLIST_DOWNLOAD
 import com.myproject.radiojourney.other.Event
 import com.myproject.radiojourney.other.Resource
 import com.myproject.radiojourney.utils.exoplayer.MusicServiceConnection
+import com.myproject.radiojourney.utils.exoplayer.PlaylistDownloadStatus
 import com.myproject.radiojourney.utils.extension.call
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -40,11 +44,30 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     private val musicServiceConnection: MusicServiceConnection,
     private val mainRadioInteractor: IMainRadioUseCase,
-    private val homeRadioInteractor: IHomeRadioUseCase
+    private val homeRadioInteractor: IHomeRadioUseCase,
+    private val loginScreenInteractor: ILoginScreenUseCase,
+    playlistDownloadStatus: PlaylistDownloadStatus,
+    countryCacheScheduler: CountryCacheScheduler
 ) : ViewModel() {
 
     companion object {
         private const val TAG = "MainViewModel"
+    }
+
+    // Прогресс загрузки плейлиста (0..100) и ошибка "сервер недоступен" - из сервиса плеера. Раньше приходили бродкастами в MainActivity
+    val playlistDownloadProgressLiveData: LiveData<Int> = playlistDownloadStatus.progressPercent.asLiveData()
+
+    private val _serverIsDownLiveData = MutableLiveData<Event<Boolean>>()
+    val serverIsDownLiveData: LiveData<Event<Boolean>> = _serverIsDownLiveData
+
+    init {
+        viewModelScope.launch {
+            playlistDownloadStatus.serverIsDown.collect { _serverIsDownLiveData.value = Event(true) }
+        }
+
+        // Загрузка списка стран для карты. MainViewModel создаётся один раз за запуск приложения (переживает пересоздание Activity),
+        // поэтому загрузка не повторяется при смене темы или языка, как было с запуском сервиса в MainActivity.onCreate
+        countryCacheScheduler.start()
     }
 
     private val _messageLiveData = MutableLiveData<String>()
@@ -237,6 +260,9 @@ class MainViewModel @Inject constructor(
 //    fun seekTo(pos: Long) {
 //        musicServiceConnection.transportControls.seekTo(pos)
 //    }
+
+    // Пользователь уже входил - первый экран (загрузка и вход) пропускаем
+    fun isLoggedIn(): Boolean = loginScreenInteractor.isLoggedIn()
 
     fun stateInitialized() {
         isPlaylistReady = true

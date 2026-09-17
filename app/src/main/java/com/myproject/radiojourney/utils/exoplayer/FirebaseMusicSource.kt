@@ -32,7 +32,9 @@ import javax.inject.Inject
 class FirebaseMusicSource @Inject constructor(
     @ApplicationContext private val context: Context,
     private val networkRadioDataSource: INetworkRadioDataSource,
-    private val radioStationDAO: IRadioStationDAO
+    private val radioStationDAO: IRadioStationDAO,
+    // Прогресс загрузки и "сервер недоступен" для экрана (раньше - LiveData, которые MusicService пересылал бродкастами)
+    private val playlistDownloadStatus: PlaylistDownloadStatus
 ) {
     companion object {
         private const val TAG = "FirebaseMusicSource"
@@ -46,18 +48,6 @@ class FirebaseMusicSource @Inject constructor(
     private val _notifyChildrenChangedLiveData = MutableLiveData<Boolean>()
     val notifyChildrenChangedLiveData: LiveData<Boolean> =
         _notifyChildrenChangedLiveData
-
-    private val _listSizeLiveData = MutableLiveData<Int>()
-    val listSizeLiveData: LiveData<Int> =
-        _listSizeLiveData
-
-    private val _radioStationsCountLiveData = MutableLiveData<Int>()
-    val radioStationsCountLiveData: LiveData<Int> =
-        _radioStationsCountLiveData
-
-    private val _serverIsDownLiveData = MutableLiveData<Boolean>()
-    val serverIsDownLiveData: LiveData<Boolean> =
-        _serverIsDownLiveData
 
     // Список, куда будут сохраняться метаданные по каждой радиостанции с помощью метода fetchMediaData()
     // @Volatile: список записывается в потоке IO, а читается в главном - без @Volatile главный поток может увидеть старое значение
@@ -169,7 +159,7 @@ class FirebaseMusicSource @Inject constructor(
             )
             // radioStations не трогаем: плейер продолжает играть текущий плейлист, список в плейере остаётся прежним.
             // MainActivity покажет диалог и уберёт полосу загрузки
-            _serverIsDownLiveData.call()
+            playlistDownloadStatus.notifyServerIsDown()
             // Раньше state оставался STATE_INITIALIZING навсегда, и лямбды whenReady() (в т.ч. из onLoadChildren) больше не вызывались
             state = STATE_INITIALIZED
             // 003 claude -->
@@ -178,24 +168,24 @@ class FirebaseMusicSource @Inject constructor(
             countryCodeRadioStationsResource.data?.let { radioStationRemoteList ->
                 // А затем уже, если такой ошибки не было, обрабатываем полученные данные
 
-                // Отправляем цифру в MusicService для Broadcast
+                // Прогресс загрузки для полосы в MainActivity
                 val listSize = radioStationRemoteList.size
-                _listSizeLiveData.postValue(listSize)
+                playlistDownloadStatus.resetProgress()
                 var radioStationsCount = 0
                 var percentCount = 10
 
                 Log.d(
                     TAG,
-                    "Загружаем метаданные fetchMediaData - $countryCode, listSize = $listSize. Отправляем BROADCAST"
+                    "Загружаем метаданные fetchMediaData - $countryCode, listSize = $listSize."
                 )
                 radioStations = radioStationRemoteList.map { radioStationRemote ->
 
-                    // Подсчёт для Broadcast
+                    // Подсчёт для прогресса (каждые 10%)
                     radioStationsCount += 1
-                    val countingForBroadcast = percentCount * listSize / 100
-                    if (radioStationsCount == countingForBroadcast) {
+                    val countingForProgress = percentCount * listSize / 100
+                    if (radioStationsCount == countingForProgress) {
                         percentCount += 10
-                        _radioStationsCountLiveData.postValue(radioStationsCount)
+                        playlistDownloadStatus.setProgress(radioStationsCount, listSize)
                     }
 
                     if (radioStationRemote.url_resolved.isEmpty()) {
@@ -233,27 +223,27 @@ class FirebaseMusicSource @Inject constructor(
         state = STATE_INITIALIZING
         val favouriteRadioStations = radioStationDAO.getFavoriteRadioStationList(true)
 
-        // Отправляем цифру в MusicService для Broadcast
+        // Прогресс загрузки для полосы в MainActivity
         val listSize = favouriteRadioStations.size
-        _listSizeLiveData.postValue(listSize)
+        playlistDownloadStatus.resetProgress()
         var radioStationsCount = 0
         var percentCount = 10
 
         Log.d(
             TAG,
-            "Загружаем метаданные fetchMediaData - FAV, listSize = $listSize. Отправляем BROADCAST"
+            "Загружаем метаданные fetchMediaData - FAV, listSize = $listSize."
         )
         if (favouriteRadioStations.isNotEmpty()) {
             isFavoriteEmpty = false
 
             radioStations = favouriteRadioStations.map { radioStationLocal ->
 
-                // Подсчёт для Broadcast
+                // Подсчёт для прогресса (каждые 10%)
                 radioStationsCount += 1
-                val countingForBroadcast = percentCount * listSize / 100
-                if (radioStationsCount == countingForBroadcast) {
+                val countingForProgress = percentCount * listSize / 100
+                if (radioStationsCount == countingForProgress) {
                     percentCount += 10
-                    _radioStationsCountLiveData.postValue(radioStationsCount)
+                    playlistDownloadStatus.setProgress(radioStationsCount, listSize)
                 }
 
                 if (radioStationLocal.urlResolved.isEmpty()) {

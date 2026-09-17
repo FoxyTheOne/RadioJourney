@@ -14,4 +14,5 @@ class LoginScreenUseCase @Inject constructor(
     private val authRepository: IAuthRepository
 ) : ILoginScreenUseCase {
     override suspend fun onLoginClicked() = authRepository.onLoginClicked()
+    override fun isLoggedIn(): Boolean = authRepository.isLoggedIn()
 }

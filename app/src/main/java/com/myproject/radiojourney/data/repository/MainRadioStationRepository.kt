@@ -51,6 +51,9 @@ class MainRadioStationRepository @Inject constructor(
         localRadioDataSource.saveRadioStationInRoom(radioStationLocal)
     }
 
+    override suspend fun setStationFavourite(radioStationLocal: RadioStationLocal, isFavourite: Boolean) =
+        localRadioDataSource.setStationFavourite(radioStationLocal, isFavourite)
+
     override suspend fun getRadioStationList(countryCode: String): Resource<List<RadioStationLocal>> {
         // Получаем список радиостанций из networkRadioDataSource в формате Resource чтобы знать ответ с сервера
         val radioStationRemoteListResource = networkRadioDataSource.getRadioStationList(countryCode)

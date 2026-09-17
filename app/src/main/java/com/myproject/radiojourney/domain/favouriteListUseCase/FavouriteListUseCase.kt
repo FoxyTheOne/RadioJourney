@@ -58,7 +58,7 @@ class FavouriteListUseCase @Inject constructor(
             currentRadioStation.copy(countryCode = currentRadioStation.countryCode.removeSuffix("_FAV")),
             isStationInFavourite = true
         )
-        mainRadioStationRepository.saveRadioStationInRoom(currentRadioStationLocal)
+        mainRadioStationRepository.setStationFavourite(currentRadioStationLocal, currentRadioStationLocal.isStationInFavourite)
     }
 
 //    override suspend fun deleteStationInRoomFromFavourite(currentRadioStation: RadioStationPresentation) {
@@ -85,7 +85,7 @@ class FavouriteListUseCase @Inject constructor(
             currentRadioStation.copy(countryCode = currentRadioStation.countryCode.removeSuffix("_FAV")),
             isStationInFavourite = false
         )
-        mainRadioStationRepository.saveRadioStationInRoom(currentRadioStationLocal)
+        mainRadioStationRepository.setStationFavourite(currentRadioStationLocal, currentRadioStationLocal.isStationInFavourite)
     }
     // 007 claude -->
 }

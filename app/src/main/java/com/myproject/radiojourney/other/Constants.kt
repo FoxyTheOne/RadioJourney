@@ -24,19 +24,6 @@ object Constants {
     const val AUDIO_PLAYING = "Audio started playing"
     const val AUDIO_STOPPED = "Audio stopped"
 
-    // Broadcast для полосы прогресса FirstScreenLoadingFragment - ProgressForegroundService
-    const val FILTER_FOR_BROADCAST = "FILTER_FOR_BROADCAST"
-    const val KEY_BROADCAST_LIST_SIZE = "KEY_BROADCAST_LIST_SIZE"
-    const val KEY_BROADCAST_COUNT = "KEY_BROADCAST_COUNT"
-    const val KEY_BROADCAST_END = "KEY_BROADCAST_END"
-
-    // Broadcast для полосы прогресса MainActivity при загрузке плейлиста
-    const val FILTER_FOR_BROADCAST_MA = "FILTER_FOR_BROADCAST_MA"
-    const val KEY_BROADCAST_LIST_SIZE_MA = "KEY_BROADCAST_LIST_SIZE_MA"
-    const val KEY_BROADCAST_COUNT_MA = "KEY_BROADCAST_COUNT_MA"
-    const val KEY_BROADCAST_END_MA = "KEY_BROADCAST_END_MA"
-    const val KEY_BROADCAST_IS_EMPTY_MA = "KEY_BROADCAST_IS_EMPTY_MA"
-
     const val SERVER_IS_DOWN = "SERVER_IS_DOWN"
 
     // Запросы к серверу radio-browser (RadioServiceWrapper, NetworkRadioDataSource)
@@ -51,8 +38,4 @@ object Constants {
 
     // Через сколько убрать уведомление, если радио стоит на паузе (или остановлено ошибкой)
     const val PAUSED_NOTIFICATION_TIMEOUT = 5 * 60_000L
-
-    // Broadcast для ошибки HttpException при обращении к серверу (FirebaseMusicSource to MainActivity)
-    const val FILTER_FOR_BROADCAST_MA_SERVER = "FILTER_FOR_BROADCAST_MA_SERVER"
-    const val KEY_BROADCAST_SERVER_IS_DOWN = "KEY_BROADCAST_SERVER_IS_DOWN"
 }
