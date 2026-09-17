@@ -1,6 +1,5 @@
 package com.myproject.radiojourney.utils.service
 
-import android.app.Dialog
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
@@ -35,7 +34,7 @@ import javax.inject.Inject
  * FOREGROUND_SERVICE -> 1. Для начала, декларируем Foreground Service в Manifest. А так же добавим туда разрешение для Foreground Service
  */
 @AndroidEntryPoint
-class ProgressForegroundService @Inject constructor() : Service() {
+class ProgressForegroundService : Service() {
     companion object {
         private const val TAG = "ProgressForeground"
         private const val CHANNEL_CASHING_ID = "CHANNEL_CASHING_ID" // 5
@@ -48,7 +47,6 @@ class ProgressForegroundService @Inject constructor() : Service() {
     lateinit var localRadioDataSource: ILocalRadioDataSource
 
     private var notificationBuilder: NotificationCompat.Builder? = null
-    private lateinit var dialogInternetTrouble: Dialog
     private val serviceJob = Job()
     private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
 
@@ -348,15 +346,11 @@ class ProgressForegroundService @Inject constructor() : Service() {
         // 4.3. И далее вызываем метод, который будет обновлять наш notification
         updateProgress(this)
 
-        // Настройки диалогового окна
-        dialogInternetTrouble = Dialog(this)
-        // Передайте ссылку на разметку
-        dialogInternetTrouble.setContentView(R.layout.layout_internet_trouble_dialog_cashing)
+        // Dialog здесь убран: у сервиса нет окна, показать диалог из сервиса нельзя (BadTokenException)
     }
 
-    override fun onBind(intent: Intent?): IBinder? {
-        TODO("Not yet implemented")
-    }
+    // Сервис только запускается (startService), к нему никто не привязывается. Раньше здесь был TODO(), который бросает исключение
+    override fun onBind(intent: Intent?): IBinder? = null
 
     // FOREGROUND_SERVICE -> 2. Создадим Channel CashingCountries
     @RequiresApi(Build.VERSION_CODES.O)
@@ -400,8 +394,10 @@ class ProgressForegroundService @Inject constructor() : Service() {
                 // Для отображения прогресса
                 val listSize = countryCodeRemoteList.size
 
+                // setPackage: с Android 14 неявный интент (без пакета) не доходит до приёмника RECEIVER_NOT_EXPORTED,
+                // и полоса прогресса на первом экране не двигалась. С пакетом бродкаст получит только наше приложение
                 val intent =
-                    Intent(FILTER_FOR_BROADCAST) // FILTER is a string to identify this intent
+                    Intent(FILTER_FOR_BROADCAST).setPackage(packageName) // FILTER is a string to identify this intent
                 intent.putExtra(KEY_BROADCAST_LIST_SIZE, listSize)
                 sendBroadcast(intent)
 
@@ -500,20 +496,21 @@ class ProgressForegroundService @Inject constructor() : Service() {
 
 //                        Log.d(TAG, "End of geocoding")
 
-                        // Если notificationBuilder != null
-                        notificationBuilder?.let { builder ->
-                            builder
-                                .setContentText("Progress: $countryCodeRemoteCount files")
-                                .setProgress(listSize, countryCodeRemoteCount, false)
-                                .setSound(null)
-                            // 5.3. Передаём notificationManager наш билдер notification
-                            notificationManager.notify(5, builder.build())
-                        }
-
                         // 1.Broadcast для горизонтальной полосы прогресса в фрагменте (2,3 - в фрагменте)
                         val countingForBroadcast = percentCount * listSize / 100
                         if (countryCodeRemoteCount == countingForBroadcast) {
                             percentCount += 10
+
+                            // Уведомление обновляем только каждые 10%: раньше notify() вызывался ~200 раз подряд,
+                            // а система пропускает обновления чаще нескольких в секунду
+                            notificationBuilder?.let { builder ->
+                                builder
+                                    .setContentText("Progress: $countryCodeRemoteCount files")
+                                    .setProgress(listSize, countryCodeRemoteCount, false)
+                                    .setSound(null)
+                                // 5.3. Передаём notificationManager наш билдер notification
+                                notificationManager.notify(5, builder.build())
+                            }
 
                             intent.putExtra(KEY_BROADCAST_COUNT, countryCodeRemoteCount)
                             sendBroadcast(intent)
@@ -559,19 +556,22 @@ class ProgressForegroundService @Inject constructor() : Service() {
                 notificationManager.cancel(5)
                 stopSelf()
 
-            } catch (e: IOException) {
+            } catch (e: CancellationException) {
+                throw e // сервис уничтожен - корутину отменили, это не ошибка
+            } catch (e: Exception) {
+                // Раньше ловили только IOException: любая другая ошибка (например, некорректный ответ сервера) роняла приложение,
+                // а уведомление "загрузка" оставалось висеть
                 Log.d(
                     TAG,
                     "Exception: ${e.message}. Please, try turn on and then turn off airplane mode (on the emulator). And then restart the program, if needed."
                 )
                 e.printStackTrace()
 
-                // TODO notification "Cashing failed"
-                Toast.makeText(context, "Cashing failed", Toast.LENGTH_LONG)
-                    .show()
-//                serviceScope.launch(Dispatchers.Main) {
-//                    dialogInternetTrouble.show()
-//                }
+                // Toast можно показать только из главного потока, а мы в Dispatchers.IO
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "Cashing failed", Toast.LENGTH_LONG)
+                        .show()
+                }
 
                 // stopForeground(true) - deprecated
                 // STOP_FOREGROUND_DETACH if set, the notification previously supplied to startForeground(int, Notification) will be detached from the service's lifecycle.

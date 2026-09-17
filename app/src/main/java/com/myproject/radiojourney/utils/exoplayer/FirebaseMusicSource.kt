@@ -60,6 +60,8 @@ class FirebaseMusicSource @Inject constructor(
         _serverIsDownLiveData
 
     // Список, куда будут сохраняться метаданные по каждой радиостанции с помощью метода fetchMediaData()
+    // @Volatile: список записывается в потоке IO, а читается в главном - без @Volatile главный поток может увидеть старое значение
+    @Volatile
     var radioStations =
         emptyList<MediaItem>() // meta info about radioStations (media3 MediaItem: адрес потока + метаданные)
 
@@ -73,10 +75,12 @@ class FirebaseMusicSource @Inject constructor(
     // Список лямбд action, которые будут передаваться в метод whenReady(), пока state == STATE_CREATED или state == STATE_INITIALIZING
     private val onReadyListeners = mutableListOf<(Boolean) -> Unit>()
 
+    @Volatile
     var isFavoriteEmpty = true // Initializer required, not a nullable type
         private set // the setter is private and has the default implementation
 
     // Параметр state с setter для того, чтобы можно было привязать к этому параметру определенную логику
+    @Volatile
     private var state: State = STATE_CREATED // State on default
         set(value) {
             if (value == STATE_INITIALIZED || value == STATE_ERROR) {
@@ -101,14 +105,21 @@ class FirebaseMusicSource @Inject constructor(
         }
 
     // A function which will add actions to our list of actions (returns boolean - if it is ready or not)
+    // Проверка state и добавление в список - под тем же synchronized, что и в setter state.
+    // Иначе возможна гонка: главный поток видит INITIALIZING, в этот момент поток IO ставит INITIALIZED и очищает список,
+    // и только потом лямбда добавляется - её уже никто не вызовет, а экран вечно ждёт плейлист
     fun whenReady(action: (Boolean) -> Unit): Boolean {
-        return if (state == STATE_CREATED || state == STATE_INITIALIZING) {
-            onReadyListeners += action // We are not ready, so just add action to list (we will do it later, when we will be ready)
-            false // not ready
-        } else {
-            action(state == STATE_INITIALIZED) // we are ready, so we can call action
-            true
+        val readyState = synchronized(onReadyListeners) {
+            if (state == STATE_CREATED || state == STATE_INITIALIZING) {
+                onReadyListeners += action // We are not ready, so just add action to list (we will do it later, when we will be ready)
+                null
+            } else {
+                state
+            }
         }
+        if (readyState == null) return false // not ready
+        action(readyState == STATE_INITIALIZED) // we are ready, so we can call action
+        return true
     }
 
     // Метод для СОХРАНЕНИЯ МЕТАДАННЫХ по каждой радиостанции. Создаём список MediaMetadataCompat

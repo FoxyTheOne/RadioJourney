@@ -242,6 +242,7 @@ class RecommendedListFragment : BaseContentFragmentAbstract() {
 
     // VIEW BINDING -> 3. onDestroyView()
     override fun onDestroyView() {
+        dialogInternetTrouble.dismiss() // Открытый диалог закрываем вместе с экраном, иначе WindowLeaked
         super.onDestroyView()
         binding = null
     }

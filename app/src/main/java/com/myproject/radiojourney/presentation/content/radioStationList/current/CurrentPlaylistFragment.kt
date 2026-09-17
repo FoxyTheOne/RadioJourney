@@ -170,4 +170,8 @@ class CurrentPlaylistFragment : BaseRadioListFragmentAbstract() {
             }
         }
     }
+    override fun onDestroyView() {
+        dialogInternetTrouble.dismiss() // Открытый диалог закрываем вместе с экраном, иначе WindowLeaked
+        super.onDestroyView()
+    }
 }

@@ -15,11 +15,9 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class LogOutDialogFragment : DialogFragment() {
 
-    // Переменная нашего интерфейса, чтобы вызвать его метод
-    private var listener: ILogOutListener? = null
-
-    fun setLogOutListener(listener: ILogOutListener) {
-        this.listener = listener
+    companion object {
+        // Ключ ответа "пользователь подтвердил выход" (см. BaseContentFragmentAbstract)
+        const val REQUEST_KEY = "LogOutDialogFragment.logOut"
     }
 
     override fun onCreateView(
@@ -40,9 +38,8 @@ class LogOutDialogFragment : DialogFragment() {
             dismiss()
         }
         buttonYes.setOnClickListener {
-            // По кнопке да вызываем наш метод из интерфейса. Описываем его в фрагменте, в котором расположен toolbar (content фрагмент).
-            // BaseContentFragmentAbstract должен наследоваться от этого интерфейса, чтобы в content фрагменте описать этот метод
-            listener?.onLogOut()
+            // По кнопке "Да" отправляем ответ фрагменту, который открыл диалог (onLogOut() описан в content фрагменте с toolbar)
+            parentFragmentManager.setFragmentResult(REQUEST_KEY, Bundle.EMPTY)
             dismiss()
         }
     }

@@ -330,4 +330,9 @@ class FavouriteListFragment : BaseRadioListFragmentAbstract() {
         frameLayout.isVisible = false
         progressCircular.isVisible = false
     }
+
+    override fun onDestroyView() {
+        dialogInternetTrouble.dismiss() // Открытый диалог закрываем вместе с экраном, иначе WindowLeaked
+        super.onDestroyView()
+    }
 }

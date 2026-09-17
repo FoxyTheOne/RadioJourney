@@ -34,6 +34,8 @@ import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_END
 import com.myproject.radiojourney.other.Constants.KEY_BROADCAST_LIST_SIZE
 import com.myproject.radiojourney.other.Status
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
@@ -44,10 +46,12 @@ import kotlinx.coroutines.launch
 class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
     companion object {
         private const val TAG = "FirstScreenLoading"
+        private const val EMPTY_LIST_DIALOG_DELAY = 7_000L
     }
 
     private var countryList = emptyList<CountryPresentation>()
     private var countryListIsNotEmpty = false
+    private var emptyListDialogJob: Job? = null
 
     // VIEW BINDING -> 1. Объявляем переменную. This property is only valid between onCreateView and onDestroyView
     private var binding: LayoutFirstScreenLoadingBinding? = null
@@ -341,13 +345,14 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
 //            }
 //        }
 
-        lifecycleScope.launch {
-            lifecycle.repeatOnLifecycle(Lifecycle.State.CREATED) {
+        // viewLifecycleOwner, а не сам фрагмент: подписка живёт, пока существует экран (view), и не копится при возврате на фрагмент.
+        // STARTED - когда экран не виден, данные не собираем (рекомендация developer.android.com для repeatOnLifecycle)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 
                 viewModel.countryListFlow.collect {
-//                    if (it != listOf<CountryPresentation>()) {
-//                    if (it != emptyList<CountryPresentation>()) {
                     if (it.isNotEmpty()) {
+                        emptyListDialogJob?.cancel()
                         dialogInternetTrouble.hide()
                         Log.d(
                             TAG,
@@ -360,7 +365,11 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
                         binding?.buttonLogIn?.isVisible = true
                         binding?.progressBarHorizontal?.isVisible = false
                     } else {
-                        android.os.Handler(Looper.getMainLooper()).postDelayed({
+                        // Раньше - Handler.postDelayed: он срабатывал и после закрытия экрана, и dialog.show() у закрытой Activity
+                        // ронял приложение (BadTokenException). Корутина viewLifecycleOwner отменяется вместе с экраном
+                        emptyListDialogJob?.cancel()
+                        emptyListDialogJob = viewLifecycleOwner.lifecycleScope.launch {
+                            delay(EMPTY_LIST_DIALOG_DELAY)
 
                             Log.d(
                                 TAG,
@@ -393,7 +402,7 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
                                 dialogInternetTrouble.show()
                             }
 
-                        }, 7000)
+                        }
                     }
 
                 }
@@ -415,6 +424,8 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
 
     // VIEW BINDING -> 3. onDestroyView()
     override fun onDestroyView() {
+        // Открытый диалог нужно закрыть вместе с экраном, иначе WindowLeaked
+        dialogInternetTrouble.dismiss()
         super.onDestroyView()
         binding = null
     }
@@ -431,8 +442,10 @@ class FirstScreenLoadingFragment : BaseAuthFragmentAbstract() {
 //            progress = progress?.plus(10)
 //            progress?.let { binding?.progressBarHorizontal?.setProgress(it) }
 
-            val progress = 100 * filesAmount / listSize
-            binding?.progressBarHorizontal?.progress = progress
+            // Если сервер недоступен, listSize = 0: без проверки было бы деление на ноль
+            if (listSize > 0) {
+                binding?.progressBarHorizontal?.progress = 100 * filesAmount / listSize
+            }
 
             if (endOfBroadcast == 100) {
                 binding?.progressBarHorizontal?.progress = 100

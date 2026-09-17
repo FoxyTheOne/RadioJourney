@@ -201,7 +201,9 @@ class MusicLibrarySessionCallback(
                     }
                 }
                 job.join()
-                if (!firebaseMusicSource.isFavoriteEmpty) state = STATE_INITIALIZED
+                // Раньше при пустом избранном state оставался STATE_INITIALIZING, и onSetMediaItems (выбор станции)
+                // ждал до следующей загрузки плейлиста. Теперь ожидающие сразу получают ответ: станции в плейлисте нет
+                state = STATE_INITIALIZED
 
             } else if (lastCountryCode != countryCode || lastCountryCode?.endsWith("_FAV", true) == true) {
                 Log.d(TAG, "PLAYLIST_UPDATE: 2.$TAG, addSongs(). Скачиваем плейлист, т.к. $lastCountryCode != $countryCode")

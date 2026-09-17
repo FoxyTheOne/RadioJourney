@@ -27,7 +27,6 @@ import com.myproject.radiojourney.other.Constants.CANCEL_PLAYLIST_DOWNLOAD
 import com.myproject.radiojourney.other.Event
 import com.myproject.radiojourney.other.Resource
 import com.myproject.radiojourney.utils.exoplayer.MusicServiceConnection
-import com.myproject.radiojourney.utils.exoplayer.State
 import com.myproject.radiojourney.utils.extension.call
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -181,34 +180,12 @@ class MainViewModel @Inject constructor(
     private val _setNonClickableCRStLiveData = MutableLiveData<Boolean>()
     val setNonClickableCRStLiveData: LiveData<Boolean> = _setNonClickableCRStLiveData
 
-    // Список лямбд action, которые будут передаваться в метод whenReady(), пока state == STATE_CREATED или state == STATE_INITIALIZING
-    private val onReadyListeners = mutableListOf<(Boolean) -> Unit>()
-
-    // Параметр state с setter для того, чтобы можно было привязать к этому параметру определенную логику
-    private var state: State = State.STATE_CREATED // State on default
-        set(value) {
-            if (value == State.STATE_INITIALIZED || value == State.STATE_ERROR) {
-                synchronized(onReadyListeners) { // synchronized for save change
-                    field = value // sign a new value to the field
-                    onReadyListeners.forEach { listener ->
-                        listener(state == State.STATE_INITIALIZED) // go through list and call needed lambda function. If there will be STATE_ERROR instead STATE_INITIALIZED, we will get "false". So we can check, if it was successful or not
-                    }
-                }
-            } else {
-                field = value // if it is STATE_CREATED or STATE_INITIALIZING
-            }
-        }
-
-    // A function which will add actions to our list of actions (returns boolean - if it is ready or not)
-    fun whenReady(action: (Boolean) -> Unit): Boolean {
-        return if (state == State.STATE_CREATED || state == State.STATE_INITIALIZING) {
-            onReadyListeners += action // We are not ready, so just add action to list (we will do it later, when we will be ready)
-            false // not ready
-        } else {
-            action(state == State.STATE_INITIALIZED) // we are ready, so we can call action
-            true
-        }
-    }
+    // Плейлист хотя бы раз показан на экране (в ViewPager).
+    // Раньше здесь был список лямбд whenReady: ViewModel хранила лямбды из MainActivity (а значит, и саму Activity) и не очищала список.
+    // ViewModel живёт дольше Activity (пересоздание при смене темы, языка), поэтому старая Activity оставалась в памяти,
+    // а лямбды вызывались повторно при каждом новом плейлисте. Теперь ViewModel хранит только флаг, а ожидающие действия - в MainActivity
+    var isPlaylistReady = false
+        private set
 
     // Получатель списка станций от сервиса (MusicServiceConnection.subscribe). Отдельное поле - чтобы в onCleared()
     // отписать именно его: MusicServiceConnection один на всё приложение, а MainViewModel создаётся заново вместе с MainActivity
@@ -231,8 +208,6 @@ class MainViewModel @Inject constructor(
 
     init {
         try {
-            state = State.STATE_INITIALIZING
-
             // Here we start query media items, so let's put it into LiveData:
             _mediaItemsListLiveData.postValue(Resource.loading(null)) // Resource data loading status. Null as default - we don't have any data here yet. Т.е. мы кладём в _mediaItems LiveData значение - объект класса Resource с нужным нам флагом и данными
 
@@ -264,7 +239,7 @@ class MainViewModel @Inject constructor(
 //    }
 
     fun stateInitialized() {
-        state = State.STATE_INITIALIZED
+        isPlaylistReady = true
     }
 
     // isPrepared, isPlaying, isPlayEnabled <- it's our extensions

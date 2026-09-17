@@ -10,6 +10,7 @@ import com.myproject.radiojourney.other.Constants.MAX_STATIONS_COUNT
 import com.myproject.radiojourney.other.Constants.SERVER_SEARCH_TIME
 import com.myproject.radiojourney.other.Constants.SERVER_IS_DOWN
 import com.myproject.radiojourney.other.Resource
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import okhttp3.ResponseBody
 import retrofit2.HttpException
@@ -87,6 +88,15 @@ class NetworkRadioDataSource @Inject constructor(
                     countryCodeRemoteList = radioService.getCountryCodeList()
 
                     if (countryCodeRemoteList != emptyList<String>()) break
+                } catch (e: CancellationException) {
+                    throw e // загрузку отменили - это не ошибка сервера, прекращаем перебор
+                } catch (e: HttpException) {
+                    // Сервер ответил ошибкой (например, 502) - пробуем следующий, а не прекращаем перебор
+                    Log.d(
+                        TAG,
+                        "HttpException: ${e.code()}. Continue searching baseURL in resultDNSIterator"
+                    )
+                    continue
                 } catch (e: SocketTimeoutException) {
                     Log.d(
                         TAG,
@@ -100,6 +110,13 @@ class NetworkRadioDataSource @Inject constructor(
                         "Exception: ${e.message}. Problem with the server. Continue searching baseURL in resultDNSIterator"
                     )
                     e.printStackTrace()
+                    continue
+                } catch (e: RuntimeException) {
+                    // Например, JsonSyntaxException - сервер прислал не тот ответ. Раньше такое исключение роняло приложение
+                    Log.d(
+                        TAG,
+                        "Unexpected server response: ${e.message}. Continue searching baseURL in resultDNSIterator"
+                    )
                     continue
                 }
             }
@@ -197,10 +214,15 @@ class NetworkRadioDataSource @Inject constructor(
                     // <!-- 005 claude
                     // Сервер ответил, но прислал пустой список. Раньше следующая попытка в этом случае шла сразу, без паузы,
                     // и все попытки заканчивались за доли секунды
-                    Log.d(TAG, "Попытка связаться с сервером: получен пустой список. Continue searching baseURL in resultDNSIterator")
+                    Log.d(
+                        TAG,
+                        "Попытка связаться с сервером: получен пустой список. Continue searching baseURL in resultDNSIterator"
+                    )
                     delay(1_000L) // небольшая пауза перед следующей попыткой
                     // 005 claude -->
 
+                } catch (e: CancellationException) {
+                    throw e // загрузку отменили (выбран другой плейлист) - прекращаем перебор
                 } catch (e: SocketTimeoutException) {
                     Log.d(
                         TAG,
@@ -230,6 +252,14 @@ class NetworkRadioDataSource @Inject constructor(
                     continue
                     // 004 claude -->
 
+                } catch (e: RuntimeException) {
+                    // Например, JsonSyntaxException - сервер прислал не тот ответ. Раньше такое исключение роняло приложение
+                    Log.d(
+                        TAG,
+                        "Unexpected server response: ${e.message}. Continue searching baseURL in resultDNSIterator"
+                    )
+                    delay(1_000L)
+                    continue
                 }
             }
 
@@ -296,10 +326,13 @@ class NetworkRadioDataSource @Inject constructor(
                 }
 
                 return Resource.success(resultStationsRemote)
-            } catch (e: Exception) {
-                Resource.error("Ошибка обработки списка станций", null)
-                return Resource.success(radioStationRemoteList.take(MAX_STATIONS_COUNT))
-            }
+
+        } catch (e: RuntimeException) {
+            // Например, у станции нет названия (null пришёл в не-null поле). Раньше здесь создавался Resource.error,
+            // который никуда не возвращался, и отдавался необработанный список. Теперь сообщаем об ошибке
+            Log.d(TAG, "Ошибка обработки списка станций: ${e.message}")
+            return Resource.error(SERVER_IS_DOWN, listOf())
+        }
 
         } catch (e: HttpException) {
             Log.d(TAG, "Попытка связаться с сервером. Exception: ${e.message}. The server is down")
@@ -344,6 +377,8 @@ class NetworkRadioDataSource @Inject constructor(
                         )
                         break
                     }
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: SocketTimeoutException) {
                     Log.d(
                         TAG,
@@ -357,6 +392,10 @@ class NetworkRadioDataSource @Inject constructor(
                         "Exception: ${e.message}. Problem with the server. Continue searching baseURL in resultDNSIterator"
                     )
                     e.printStackTrace()
+                    continue
+                } catch (e: RuntimeException) {
+                    // Например, JsonSyntaxException - сервер прислал не тот ответ. Раньше такое исключение роняло приложение
+                    Log.d(TAG, "Unexpected server response: ${e.message}. Continue searching baseURL in resultDNSIterator")
                     continue
                 }
             }

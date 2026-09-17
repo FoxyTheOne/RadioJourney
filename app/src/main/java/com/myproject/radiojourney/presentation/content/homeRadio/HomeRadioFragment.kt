@@ -86,10 +86,17 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
     // GOOGLE MAPS -> 2.1. Объявляем переменную, в соответствии с инструкцией от google
     private lateinit var mMap: GoogleMap
 
+    // Карта текущего экрана готова. Фрагмент в back stack переживает свою view: mMap остаётся от старой, уже уничтоженной карты,
+    // поэтому одной проверки ::mMap.isInitialized недостаточно
+    private var isMapReady = false
+
     // GOOGLE MAPS -> 2.6. Объявляем переменную для маркера
     private var marker: Marker? = null
     private var customMarkerYouAreHere: Bitmap? = null
     private var customMarkerRadio: Bitmap? = null
+
+    // Маркеры стран. Список хранится, чтобы при повторной выдаче списка из базы заменить маркеры, а не добавить копии поверх
+    private val countryMarkers = mutableListOf<Marker>()
 
     //    // ADD MARKERS TO MAP -> 1. Для примера, сейчас. Потом подгружать список по запросу
     //    private val places: List<Place> = listOf(
@@ -469,15 +476,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             )
         }
 
-        // LOCATION -> 1.5. Создадим метод для получения Current location либо Last location
-
-        // <!-- 004-6 claude
-//        getCurrentOrLastLocation()
-
-        // Если пользователь уже двигал карту (позиция сохранена), не уводим её к маркеру "вы здесь" - к нему можно вернуться кнопкой
-        getCurrentOrLastLocation(moveCamera = mainViewModel.mapCameraPosition == null)
-        // 004-6 claude -->
-        // Получить локацию нужно разово, при открытии фрагмента. Обновлять не нужно.
+        // LOCATION -> 1.5. Местоположение запрашивается в onMapReady (разово, при открытии фрагмента): маркер можно поставить только на готовую карту
 
         binding?.buttonYouAreHere?.setOnClickListener {
             if (ContextCompat.checkSelfPermission(
@@ -676,38 +675,33 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 //            }
 //        }
 
-        lifecycleScope.launch {
-            lifecycle.repeatOnLifecycle(Lifecycle.State.CREATED) {
+        // viewLifecycleOwner, а не сам фрагмент. Фрагмент остаётся в back stack, когда открыт другой экран, а view уничтожается.
+        // С lifecycleScope фрагмента подписка продолжала работать без экрана, а при каждом возвращении на карту добавлялась ещё одна
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 
                 viewModel.countryListFlow.collect { countryPresentationList ->
-                    try {
-                        binding?.textLoadingData?.isVisible = false
-                        countryList =
-                            countryPresentationList // Заполним массив для последующей обработки клика
+                    binding?.textLoadingData?.isVisible = false
+                    countryList =
+                        countryPresentationList // Заполним массив для последующей обработки клика
+
+                    // Раньше, если список приходил раньше карты, mMap ещё не был инициализирован: исключение молча ловилось,
+                    // и маркеры стран не появлялись. Теперь маркеры рисуются здесь, если карта готова, или в onMapReady
+                    showCountryMarkers()
+
+                    if (countryPresentationList == emptyList<CountryPresentation>()) { // Мы переходим на эту страницу только если БД не пуста. Если массив пустой - что-то пошло не так
                         showProgress()
-                        countryPresentationList.forEach { countryPresentation ->
-                            addMarkersOnMap(countryPresentation)
-                        }
-                        hideProgress()
-//                        showSelectedCountryOnMap() // 004 claude, 006 comment
+                        Toast.makeText(
+                            context,
+                            "Something went wrong. The server is down. Please, try again later",
+                            Toast.LENGTH_LONG
+                        ).show()
 
-                        if (countryPresentationList == emptyList<CountryPresentation>()) { // Мы переходим на эту страницу только если БД не пуста. Если массив пустой - что-то пошло не так
-                            showProgress()
-                            Toast.makeText(
-                                context,
-                                "Something went wrong. The server is down. Please, try again later",
-                                Toast.LENGTH_LONG
-                            ).show()
-
-                            // Меняем текст диалогового окна
-                            showCustomDialog(
-                                R.string.dialogPleaseWait_title2,
-                                R.string.dialogPleaseWait_text2
-                            )
-                        }
-                    } catch (e: UninitializedPropertyAccessException) {
-                        Log.d(TAG, "mMap is not ready yet")
-                        e.printStackTrace()
+                        // Меняем текст диалогового окна
+                        showCustomDialog(
+                            R.string.dialogPleaseWait_title2,
+                            R.string.dialogPleaseWait_text2
+                        )
                     }
                 }
 
@@ -825,7 +819,13 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             TAG,
             "Метод showMyLocation вызван: latitude = ${latLng.latitude}, longitude = ${latLng.longitude}"
         )
-        // Настраиваем маркер, если он не null
+
+        // Местоположение приходит асинхронно и может прийти, когда экрана уже нет
+        if (!isMapReady || view == null) return
+
+        // Настраиваем маркер, если он не null. Старый маркер убираем: lastLocation и getCurrentLocation приходят оба,
+        // и раньше на карте появлялись два маркера "вы здесь"
+        marker?.remove()
         customMarkerYouAreHere?.let { customBitmapMarker ->
             marker = mMap.addMarker(
                 MarkerOptions()
@@ -878,17 +878,32 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 //    }
 //    // 004 claude -->
 
+    private fun showCountryMarkers() {
+        if (!isMapReady) return // карта ещё не готова - маркеры нарисует onMapReady
+        showProgress()
+        countryMarkers.forEach { it.remove() }
+        countryMarkers.clear()
+        countryList.forEach { countryPresentation ->
+            addMarkersOnMap(countryPresentation)
+        }
+        Log.d(TAG, "На карте маркеров стран: ${countryMarkers.size}")
+        hideProgress()
+    }
+
     private fun addMarkersOnMap(countryPresentation: CountryPresentation) {
-//        Log.d(
-//            TAG,
-//            "Метод addMarkersOnMap вызван: страна = ${countryPresentation.countryName}"
-//        )
         customMarkerRadio?.let { customBitmapMarker ->
             val marker = mMap.addMarker(
                 MarkerOptions()
                     .title(countryPresentation.countryName)
 //                    .snippet("Список радиостанций (${countryPresentation.stationCount})")
-                    .snippet("Список радиостанций (${minOf(countryPresentation.stationCount, MAX_STATIONS_COUNT)})") // 004 claude // загружается не больше MAX_STATIONS_COUNT станций
+                    .snippet(
+                        "Список радиостанций (${
+                            minOf(
+                                countryPresentation.stationCount,
+                                MAX_STATIONS_COUNT
+                            )
+                        })"
+                    ) // 004 claude // загружается не больше MAX_STATIONS_COUNT станций
                     .position(countryPresentation.countryLocation)
                     .icon(BitmapDescriptorFactory.fromBitmap(customBitmapMarker))
             )
@@ -896,6 +911,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             // Set place as the tag on the marker object so it can be referenced within
             // MarkerInfoWindowAdapter
             marker?.tag = countryPresentation
+            marker?.let { countryMarkers += it }
         }
     }
 
@@ -904,6 +920,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
     // !!! This method passes a GoogleMap instance to you, which you can then use to perform various operations on the map.
     override fun onMapReady(map: GoogleMap) {
         this.mMap = map
+        isMapReady = true
 //        showSelectedCountryOnMap() // 004 claude // если список стран уже загружен раньше карты // comment 006
 
         // <!-- 006 claude
@@ -917,16 +934,23 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         }
         // 006 claude -->
 
+        // Маркеры стран и "вы здесь" - только когда карта готова. Раньше местоположение запрашивалось в onViewCreated,
+        // и если оно приходило раньше карты, mMap.addMarker ронял приложение (mMap ещё не инициализирован)
+        showCountryMarkers()
+        // Если пользователь уже двигал карту (позиция сохранена), не уводим её к маркеру "вы здесь" - к нему можно вернуться кнопкой
+        getCurrentOrLastLocation(moveCamera = mainViewModel.mapCameraPosition == null)
+
         // Далее по документации здесь делают некоторые действия, однако мы сделаем их в отдельном методе
 
         // Обработка клика по InfoWindow маркера
         mMap.setOnInfoWindowClickListener { marker ->
             val latLon = marker.position
 
-            // Cycle through countryList array
-            for (country in countryList) {
-                if (latLon == country.countryLocation) {
-                    //match found!  Do something....
+            // Страну берём из tag маркера. Раньше страна искалась по совпадению координат: у стран без координат (0, 0)
+            // они совпадают, и открывалась первая из них. У маркера "вы здесь" tag нет - по нему ничего не открываем
+            val country = marker.tag as? CountryPresentation
+            if (country != null) {
+                run {
 
 // Comparing image views:
 //                    val starId = activity?.findViewById(R.id.image_star) as ImageView
@@ -944,7 +968,10 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                     // <!-- 006 claude
                     // Когда вернёмся на главный экран (посмотрев список, загрузив плейлист или просто назад), карта будет на этой стране
                     mainViewModel.mapCameraPosition =
-                        CameraPosition.fromLatLngZoom(country.countryLocation, mMap.cameraPosition.zoom)
+                        CameraPosition.fromLatLngZoom(
+                            country.countryLocation,
+                            mMap.cameraPosition.zoom
+                        )
                     // 006 claude -->
 
                     // Перенесём countryCode на RadioListFragment для запроса списка станций
@@ -1090,6 +1117,11 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 
     // VIEW BINDING -> 3. onDestroyView()
     override fun onDestroyView() {
+        // Карта уничтожается вместе с view: маркеры старой карты больше не нужны
+        isMapReady = false
+        countryMarkers.clear()
+        marker = null
+        dialogInternetTrouble.dismiss() // Открытый диалог закрываем вместе с экраном, иначе WindowLeaked
         super.onDestroyView()
         binding = null
     }

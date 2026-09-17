@@ -120,6 +120,9 @@ class MainActivity : AppCompatActivity(), IAppSettings {
     private lateinit var dialogPleaseWait: Dialog
     private var isInternetAvailable = false
 
+    // Действия, которые ждут, пока плейлист появится в ViewPager (см. whenPlaylistReady)
+    private val pendingWhenPlaylistReady = mutableListOf<() -> Unit>()
+
 //    // 1. PROGRESS Текущий актуальный ID загрузки
 //    private var currentPlaylistId = -1
 
@@ -578,6 +581,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                         }
 
                         mainViewModel.stateInitialized()
+                        runPendingWhenPlaylistReady()
 
                     }
 
@@ -617,8 +621,8 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         mainViewModel.curPlayingSongLiveData.observe(this) {
             if (it == null) return@observe
 
-            mainViewModel.whenReady { isInitialized ->
-                if (isInitialized) {
+            whenPlaylistReady {
+                run {
 
                     // Полоса progressBar, которая заполняется с помощью Broadcast
                     binding?.progressBarHorizontalDp?.progress = 95
@@ -633,7 +637,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
                     val mediaId = it.mediaId
                     val countrycode = it.mediaMetadata.subtitle.toString()
 //                            switchViewPagerToCurrentSong(mediaId ?: return@observe, countrycode)
-                    switchViewPagerToCurrentSong(mediaId ?: return@whenReady, countrycode)
+                    switchViewPagerToCurrentSong(mediaId ?: return@run, countrycode)
 
                     Log.d(
                         TAG,
@@ -659,12 +663,8 @@ class MainActivity : AppCompatActivity(), IAppSettings {
 
         // Иногда сбивается и в уведомлении показывает правильную станцию, а в плейере - нет. Добавляю страховку
         mainViewModel.switchViewPagerOnceAgainLiveData.observe(this) {
-            mainViewModel.whenReady { isInitialized ->
-                if (isInitialized) {
-
-                    switchViewPagerToCurrentSong(it.stationuuid, it.countryCode)
-
-                }
+            whenPlaylistReady {
+                switchViewPagerToCurrentSong(it.stationuuid, it.countryCode)
             }
         }
 
@@ -1060,10 +1060,26 @@ class MainActivity : AppCompatActivity(), IAppSettings {
         setSupportActionBar(toolbar)
     }
 
+    // Выполнить действие, когда плейлист показан в ViewPager (сразу, если уже показан).
+    // Ожидающие действия хранятся в Activity, а не в MainViewModel: они ссылаются на Activity и должны исчезать вместе с ней
+    private fun whenPlaylistReady(action: () -> Unit) {
+        if (mainViewModel.isPlaylistReady) action() else pendingWhenPlaylistReady += action
+    }
+
+    private fun runPendingWhenPlaylistReady() {
+        val actions = pendingWhenPlaylistReady.toList()
+        pendingWhenPlaylistReady.clear()
+        actions.forEach { it() }
+    }
+
+
     override fun onDestroy() {
         mOnPageChangeCallback?.let {
             binding?.vpSong?.unregisterOnPageChangeCallback(it)
         }
+
+        pendingWhenPlaylistReady.clear()
+        dialogPleaseWait.dismiss() // Открытый диалог закрываем вместе с Activity, иначе WindowLeaked
 
         binding = null // VIEW BINDING -> 3. onDestroyView()
 
@@ -1091,7 +1107,7 @@ class MainActivity : AppCompatActivity(), IAppSettings {
             // Какая по счету обрабатывается сейчас в FirebaseMusicSource
             val filesAmount = intent.getIntExtra(Constants.KEY_BROADCAST_COUNT_MA, 1)
 
-            if (filesAmount <= listSize) {
+            if (listSize > 0 && filesAmount <= listSize) { // listSize = 0 - пустой плейлист, без проверки было бы деление на ноль
                 val progress = 70 * filesAmount / listSize
                 binding?.progressBarHorizontalDp?.progress = progress
                 Log.d(

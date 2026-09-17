@@ -28,6 +28,7 @@ import com.myproject.radiojourney.other.Constants.PAUSED_NOTIFICATION_TIMEOUT
 import com.myproject.radiojourney.utils.exoplayer.callback.MusicLibrarySessionCallback
 import com.myproject.radiojourney.utils.exoplayer.callback.MusicPlayerEventListener
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -63,7 +64,13 @@ class MusicService : MediaLibraryService() {
 
     // Create a coroutine scope to avoid using main thread for our tasks
     private val serviceJob = Job()
-    private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
+
+    // Непойманное исключение в корутине сервиса (например, некорректный ответ сервера при загрузке плейлиста)
+    // раньше роняло всё приложение. Теперь записываем его в лог, а плеер продолжает работать с текущим плейлистом
+    private val serviceExceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        Log.e(TAG, "Uncaught exception in MusicService coroutine", throwable)
+    }
+    private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob + serviceExceptionHandler)
 
     private lateinit var mediaLibrarySession: MediaLibrarySession
 
@@ -71,8 +78,11 @@ class MusicService : MediaLibraryService() {
 
     private lateinit var notifyChildrenChangedLiveDataObserver: Observer<Boolean>
 
-    private val intent =
-        Intent(Constants.FILTER_FOR_BROADCAST_MA) // FILTER is a string to identify this intent
+    // setPackage: с Android 14 неявный интент (без пакета) не доходит до приёмника RECEIVER_NOT_EXPORTED в MainActivity.
+    // by lazy - packageName доступен только после создания сервиса, а не при создании полей класса
+    private val intent by lazy {
+        Intent(Constants.FILTER_FOR_BROADCAST_MA).setPackage(packageName) // FILTER is a string to identify this intent
+    }
     private lateinit var listSizeLiveDataObserver: Observer<Int>
     private lateinit var radioStationsCountLiveDataObserver: Observer<Int>
     private val intentServerIsDown =
