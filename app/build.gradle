@@ -120,10 +120,6 @@ dependencies {
     implementation "androidx.media3:media3-exoplayer-hls:$media3_version"
     implementation "androidx.media3:media3-session:$media3_version"
 
-    // Только для старого, не используемого плеера utils/oldMusicPlayer (MediaSessionCompat). Новый плеер работает на media3.
-    // Если oldMusicPlayer удалить, эту зависимость тоже можно убрать
-    implementation 'androidx.media:media:1.8.0'
-
     // LocalBroadcastManager (раньше подключался неявно через устаревший lifecycle-extensions)
     implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
 

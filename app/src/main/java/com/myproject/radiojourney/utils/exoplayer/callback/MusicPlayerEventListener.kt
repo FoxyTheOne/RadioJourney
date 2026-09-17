@@ -2,8 +2,10 @@ package com.myproject.radiojourney.utils.exoplayer.callback
 
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.OptIn
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.source.UnrecognizedInputFormatException
 import androidx.media3.datasource.HttpDataSource.HttpDataSourceException
 import com.myproject.radiojourney.utils.exoplayer.MusicService
@@ -21,6 +23,7 @@ class MusicPlayerEventListener(
     // Теперь на паузе сервис остаётся foreground, а уведомление убирается само через PAUSED_NOTIFICATION_TIMEOUT (MusicService)
 
     // TODO onPlayerError - обработать /  Обрабатывала в другом месте - проверить, нужно ли
+    @OptIn(UnstableApi::class) // UnrecognizedInputFormatException
     override fun onPlayerError(error: PlaybackException) {
         when (error.cause) {
             is UnrecognizedInputFormatException -> {

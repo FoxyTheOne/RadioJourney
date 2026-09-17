@@ -73,19 +73,6 @@
             android:exported="false"
             android:foregroundServiceType="dataSync" />
         <!--
-         И другие компоненты
-          -->
-        <receiver
-            android:name=".utils.oldMusicPlayer.NotificationActionBroadcast"
-            android:exported="false" />
-
-        <service
-            android:name=".utils.oldMusicPlayer.MusicPlayerBoundService"
-            android:exported="false" />
-        <service
-            android:name=".utils.oldMusicPlayer.ForegroundNotificationService"
-            android:exported="false" />
-        <!--
         Google maps:
          -->
         <meta-data

@@ -4,6 +4,7 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import androidx.annotation.OptIn
 import androidx.lifecycle.Observer
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.media3.common.Player
@@ -46,7 +47,8 @@ import javax.inject.Inject
  * Создаём CoroutineScope для задач, решаемых в сервисе, чтобы не перегружать наш main thread (don't forget serviceScope.cancel() in onDestroy!)
  * Fetching our metadata from our class, created earlier (firebaseMusicSource)
  */
-@UnstableApi // setForegroundServiceTimeoutMs, setShowNotificationForIdlePlayer, DefaultMediaNotificationProvider.setSmallIcon
+// @OptIn, а не @UnstableApi: @UnstableApi на классе требовал бы такой же пометки везде, где упоминается MusicService
+@OptIn(UnstableApi::class) // setForegroundServiceTimeoutMs, setShowNotificationForIdlePlayer, isPlaybackOngoing, DefaultMediaNotificationProvider.setSmallIcon
 @AndroidEntryPoint
 class MusicService : MediaLibraryService() {
 

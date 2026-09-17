@@ -44,7 +44,6 @@ import com.myproject.radiojourney.other.Status
 import com.myproject.radiojourney.presentation.MainViewModel
 import com.myproject.radiojourney.presentation.content.base.BaseContentFragmentAbstract
 import com.myproject.radiojourney.utils.extension.call
-import com.myproject.radiojourney.utils.oldMusicPlayer.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import javax.inject.Inject

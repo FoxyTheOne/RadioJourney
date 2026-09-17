@@ -1,8 +1,10 @@
 package com.myproject.radiojourney.di
 
 import android.content.Context
+import androidx.annotation.OptIn
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.DefaultHttpDataSource
@@ -15,6 +17,9 @@ import dagger.hilt.android.components.ServiceComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.scopes.ServiceScoped
 
+// Часть API media3 помечена @UnstableApi: его могут изменить или удалить в новой версии media3 без предварительного deprecated.
+// @OptIn - "знаем об этом, используем осознанно". На работу приложения аннотация не влияет, это только проверка Android Lint
+@OptIn(UnstableApi::class) // DefaultMediaSourceFactory, setAllowCrossProtocolRedirects
 @Module
 @InstallIn(ServiceComponent::class)
 object ServiceModule {

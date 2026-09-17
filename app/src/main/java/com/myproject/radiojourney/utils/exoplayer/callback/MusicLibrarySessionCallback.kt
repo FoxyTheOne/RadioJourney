@@ -2,10 +2,12 @@ package com.myproject.radiojourney.utils.exoplayer.callback
 
 import android.os.Bundle
 import android.util.Log
+import androidx.annotation.OptIn
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.LibraryResult
 import androidx.media3.session.MediaLibraryService.LibraryParams
 import androidx.media3.session.MediaLibraryService.MediaLibrarySession
@@ -44,6 +46,7 @@ import java.io.IOException
  *
  * Все методы вызываются в главном потоке.
  */
+@OptIn(UnstableApi::class) // AcceptedResultBuilder, DEFAULT_SESSION_AND_LIBRARY_COMMANDS, onSetMediaItems, MediaItemsWithStartPosition (см. ServiceModule)
 class MusicLibrarySessionCallback(
     private val firebaseMusicSource: FirebaseMusicSource,
     private val serviceScope: CoroutineScope,
