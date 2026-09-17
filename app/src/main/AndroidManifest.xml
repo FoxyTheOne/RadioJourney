@@ -74,7 +74,12 @@
             android:foregroundServiceType="dataSync" />
         <!--
         Google maps:
+        Старые версии модуля карт в Google Play services используют Apache HTTP, которого нет в Android 9+ по умолчанию.
+        Без этой строки на таких устройствах приложение падает с NoClassDefFoundError: org/apache/http/ProtocolVersion
          -->
+        <uses-library
+            android:name="org.apache.http.legacy"
+            android:required="false" />
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="${MAPS_API_KEY}" />

@@ -5,7 +5,7 @@
     <string name="first_screen_text1">If it is the first start - please wait until cashing ends.</string>
     <string name="first_screen_text2">If cashing failed on the first start, check your internet connection, and then restart the program.</string>
     <string name="first_screen_text1_2">If it is the first start - please wait until cashing ends. If it failed, check your internet connection and then restart the program.</string>
-    <string name="first_screen_text3">The functionality of the program depends on the availability of the server from which information about radio stations is obtained.</string>
+    <string name="first_screen_text3">The functionality of the program depends on the availability of the server from which information about the radio stations is obtained.</string>
     <string name="first_screen_button">Start journey</string>
 
     <string name="content_description_email">Email</string>
