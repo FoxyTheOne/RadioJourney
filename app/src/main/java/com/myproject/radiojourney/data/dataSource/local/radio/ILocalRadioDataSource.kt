@@ -7,15 +7,11 @@ import kotlinx.coroutines.flow.Flow
 interface ILocalRadioDataSource {
     fun subscribeOnCountryList(): Flow<List<CountryLocal>>
 
-    suspend fun isRadioStationStored(): Boolean
-    suspend fun getRadioStationUrl(): String?
-    suspend fun getRadioStationSaved(radioStationUrl: String): RadioStationLocal?
+    suspend fun getRadioStationSaved(radioStationUuid: String): RadioStationLocal?
 
-    // Сохранить радиостанцию в Room
-    suspend fun saveRadioStationInRoom(radioStation: RadioStationLocal)
     suspend fun setStationFavourite(radioStation: RadioStationLocal, isFavourite: Boolean)
 
-    suspend fun saveCountryList(countryLocalList: MutableList<CountryLocal>)
+    suspend fun saveCountryList(countryLocalList: List<CountryLocal>)
 
     suspend fun saveLastUsedRadioStationUrlAndCode(urlResolved: String, countryCode: String)
 

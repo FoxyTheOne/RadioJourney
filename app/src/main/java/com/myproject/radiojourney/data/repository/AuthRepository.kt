@@ -1,6 +1,5 @@
 package com.myproject.radiojourney.data.repository
 
-import android.util.Log
 import com.myproject.radiojourney.data.dataSource.local.auth.ILocalUserDataSource
 import com.myproject.radiojourney.domain.iRepository.IAuthRepository
 import javax.inject.Inject
@@ -15,21 +14,7 @@ import javax.inject.Inject
 class AuthRepository @Inject constructor(
     private val localUserDataSource: ILocalUserDataSource
 ) : IAuthRepository {
-    companion object {
-        private const val TAG = "AuthRepository"
-    }
-
     override suspend fun onLoginClicked() = localUserDataSource.onLoginClicked()
-
-    override suspend fun getToken(): Int? {
-        // Узнаём userCreatorId
-        // В нашем случае userCreatorId = token
-        val userToken = localUserDataSource.getToken()
-        val userTokenInt = userToken.toIntOrNull()
-        Log.d(TAG, "Результат преобразования $userToken String в Int = $userTokenInt")
-
-        return userTokenInt
-    }
 
     override fun isLoggedIn(): Boolean = localUserDataSource.isLoggedIn()
 

@@ -13,5 +13,5 @@ import javax.inject.Inject
 class LogOutUseCase @Inject constructor(
     private val authRepository: IAuthRepository
 ) : ILogOutUseCase {
-    override suspend fun onLogout() = authRepository.logout()
+    override fun onLogout() = authRepository.logout()
 }

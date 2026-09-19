@@ -8,8 +8,6 @@ import com.myproject.radiojourney.data.dataSource.local.favorite.ILocalFavoriteD
 import com.myproject.radiojourney.data.dataSource.local.favorite.LocalFavoriteDataSource
 import com.myproject.radiojourney.data.dataSource.local.radio.ILocalRadioDataSource
 import com.myproject.radiojourney.data.dataSource.local.radio.LocalRadioDataSource
-import com.myproject.radiojourney.data.dataSource.local.recommended.ILocalRecommendedDataSource
-import com.myproject.radiojourney.data.dataSource.local.recommended.LocalRecommendedDataSource
 import com.myproject.radiojourney.data.dataSource.network.INetworkRadioDataSource
 import com.myproject.radiojourney.data.dataSource.network.NetworkRadioDataSource
 import com.myproject.radiojourney.data.dataSource.network.service.IRadioServiceWrapper
@@ -19,7 +17,6 @@ import com.myproject.radiojourney.data.localDatabaseRoom.*
 import com.myproject.radiojourney.data.repository.AuthRepository
 import com.myproject.radiojourney.data.repository.FavoriteStationRepository
 import com.myproject.radiojourney.data.repository.MainRadioStationRepository
-import com.myproject.radiojourney.data.repository.RecommendedStationRepository
 import com.myproject.radiojourney.data.sharedPreference.AppSharedPreference
 import com.myproject.radiojourney.data.sharedPreference.IAppSharedPreference
 import com.myproject.radiojourney.domain.favouriteListUseCase.FavouriteListUseCase
@@ -31,15 +28,12 @@ import com.myproject.radiojourney.domain.homeRadioUseCase.IHomeRadioUseCase
 import com.myproject.radiojourney.domain.iRepository.IAuthRepository
 import com.myproject.radiojourney.domain.iRepository.IFavoriteStationRepository
 import com.myproject.radiojourney.domain.iRepository.IMainRadioStationRepository
-import com.myproject.radiojourney.domain.iRepository.IRecommendedStationRepository
 import com.myproject.radiojourney.domain.logOutUseCase.ILogOutUseCase
 import com.myproject.radiojourney.domain.logOutUseCase.LogOutUseCase
 import com.myproject.radiojourney.domain.mainRadioUseCase.IMainRadioUseCase
 import com.myproject.radiojourney.domain.mainRadioUseCase.MainRadioUseCase
 import com.myproject.radiojourney.domain.radioListUseCase.IRadioListUseCase
 import com.myproject.radiojourney.domain.radioListUseCase.RadioListUseCase
-import com.myproject.radiojourney.domain.recommendedListUseCase.IRecommendedListUseCase
-import com.myproject.radiojourney.domain.recommendedListUseCase.RecommendedListUseCase
 import com.myproject.radiojourney.utils.exoplayer.MusicServiceConnection
 import com.myproject.radiojourney.other.Constants.NETWORK_CALL_TIMEOUT
 import com.myproject.radiojourney.other.Constants.NETWORK_CONNECT_TIMEOUT
@@ -54,11 +48,12 @@ import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
+import com.myproject.radiojourney.domain.changeFavouriteUseCase.ChangeFavouriteUseCase
+import com.myproject.radiojourney.domain.changeFavouriteUseCase.IChangeFavouriteUseCase
 
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class SingletonModule {
-
     companion object {
         // ROOM -> 1. База данных Room
         @Provides
@@ -107,7 +102,10 @@ abstract class SingletonModule {
                 // и за время полосы загрузки успевали пройти всего 2-3 попытки
                 .connectTimeout(NETWORK_CONNECT_TIMEOUT, TimeUnit.MILLISECONDS)
                 .readTimeout(NETWORK_READ_TIMEOUT, TimeUnit.MILLISECONDS)
-                .callTimeout(NETWORK_CALL_TIMEOUT, TimeUnit.MILLISECONDS) // весь запрос целиком, включая скачивание списка
+                .callTimeout(
+                    NETWORK_CALL_TIMEOUT,
+                    TimeUnit.MILLISECONDS
+                ) // весь запрос целиком, включая скачивание списка
                 .build()
     }
 
@@ -137,30 +135,15 @@ abstract class SingletonModule {
 @Module
 @InstallIn(ViewModelComponent::class)
 abstract class ViewModelModule {
-
-    companion object {
-        // ROOM -> 2. Объекты для обращения к Dao
-        @Provides
-        fun providesUserDAO(appDatabase: AppRoomDBAbstract): IUserDAO {
-            return appDatabase.getUserDAO()
-        }
-
-        // Переношу следующие конструкторы в SingletonModule, т.к. их будет использовать LocalRadioDataSource, который использует Foreground service
-//        @Provides
-//        fun providesCountryDAO(appDatabase: AppRoomDBAbstract): ICountryDAO {
-//            return appDatabase.getCountryDAO()
-//        }
-
-//        @Provides
-//        fun providesRadioStationDAO(appDatabase: AppRoomDBAbstract): IRadioStationDAO {
-//            return appDatabase.getRadioStationDAO()
-//        }
-    }
-
     @Binds
     abstract fun bindsFavouriteListInteractor(
         favouriteListInteractor: FavouriteListUseCase
     ): IFavouriteListUseCase
+
+    @Binds
+    abstract fun bindsChangeFavouriteUseCase(
+        changeFavouriteUseCase: ChangeFavouriteUseCase
+    ): IChangeFavouriteUseCase
 
     @Binds
     abstract fun bindsLoginScreenInteractor(
@@ -183,11 +166,6 @@ abstract class ViewModelModule {
     ): IRadioListUseCase
 
     @Binds
-    abstract fun bindsRecommendedListInteractor(
-        recommendedListInteractor: RecommendedListUseCase
-    ): IRecommendedListUseCase
-
-    @Binds
     abstract fun bindsMainRadioUseCase(
         mainRadioInteractor: MainRadioUseCase
     ): IMainRadioUseCase
@@ -208,11 +186,6 @@ abstract class ViewModelModule {
     ): IMainRadioStationRepository
 
     @Binds
-    abstract fun bindsRecommendedStationRepository(
-        recommendedStationRepository: RecommendedStationRepository
-    ): IRecommendedStationRepository
-
-    @Binds
     abstract fun bindsLocalUserDataSource(
         localUserDataSource: LocalUserDataSource
     ): ILocalUserDataSource
@@ -221,26 +194,4 @@ abstract class ViewModelModule {
     abstract fun bindsLocalFavoriteDataSource(
         localFavoriteDataSource: LocalFavoriteDataSource
     ): ILocalFavoriteDataSource
-
-    @Binds
-    abstract fun bindsLocalRecommendedDataSource(
-        localRecommendedDataSource: LocalRecommendedDataSource
-    ): ILocalRecommendedDataSource
-
-    // Переношу следующие конструкторы в SingletonModule, т.к. их будет использовать LocalRadioDataSource, который использует Foreground service
-//    @Binds
-//    abstract fun bindsLocalRadioDataSource(
-//        localRadioDataSource: LocalRadioDataSource
-//    ) : ILocalRadioDataSource
-//
-//    @Binds
-//    abstract fun bindsNetworkRadioDataSource(
-//        networkRadioDataSource: NetworkRadioDataSource
-//    ) : INetworkRadioDataSource
-
-//    @Binds
-//    abstract fun bindRadioServiceWrapper(
-//        radioServiceWrapper: RadioServiceWrapper
-//    ): IRadioServiceWrapper
-
 }

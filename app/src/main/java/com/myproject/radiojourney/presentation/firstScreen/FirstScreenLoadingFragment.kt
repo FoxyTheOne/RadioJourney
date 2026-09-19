@@ -1,7 +1,6 @@
 package com.myproject.radiojourney.presentation.firstScreen
 
 import android.Manifest
-import android.app.Dialog
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
@@ -10,7 +9,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -19,11 +17,10 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.LayoutFirstScreenLoadingBinding
 import com.myproject.radiojourney.entities.presentation.CountryPresentation
-import com.myproject.radiojourney.other.Status
+import com.myproject.radiojourney.presentation.common.InfoDialog
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -50,7 +47,7 @@ class FirstScreenLoadingFragment : Fragment() {
     // VIEW BINDING -> 1. Объявляем переменную. This property is only valid between onCreateView and onDestroyView
     private var binding: LayoutFirstScreenLoadingBinding? = null
     private val viewModel by viewModels<FirstScreenLoadingViewModel>()
-    private lateinit var dialogInternetTrouble: Dialog
+    private lateinit var infoDialog: InfoDialog
 
     // Оформим запрос на PERMISSION, если он не был дан в предыдущий раз
     // !!! Т.к. запросов много, а не один, мы пишем .RequestMultiplePermissions() вместо .RequestPermission()
@@ -107,16 +104,14 @@ class FirstScreenLoadingFragment : Fragment() {
         }
 
         // Настройки диалогового окна
-        dialogInternetTrouble = Dialog(requireContext())
-        // Передайте ссылку на разметку
-        dialogInternetTrouble.setContentView(R.layout.layout_internet_trouble_dialog)
+        infoDialog = InfoDialog(requireContext())
 
         binding?.buttonLogIn?.setOnClickListener {
 
             if (countryList.isEmpty()) {
                 Log.d(TAG, "При нажатии на кнопку обнаружилось, что список кодов стран пустой")
                 // Показываем диалоговое окно о проблеме с сервером
-                showDialog(R.string.dialogPleaseWait_title2, R.string.dialogPleaseWait_text2)
+                infoDialog.show(R.string.dialogPleaseWait_title2, R.string.dialogPleaseWait_text2)
             } else {
                 viewModel.onLoginClicked()
             }
@@ -148,47 +143,10 @@ class FirstScreenLoadingFragment : Fragment() {
         }
     }
 
-    private fun showDialog(titleId: Int, textId: Int) {
-        dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.title_internetTrouble).text =
-            getString(titleId)
-        dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.text_internetTrouble).text =
-            getString(textId)
-        dialogInternetTrouble.show()
-    }
-
     private fun subscribeOnLiveData() {
         // Горизонтальная полоса прогресса загрузки списка стран (раньше - бродкаст из ProgressForegroundService)
         viewModel.countryCacheProgressLiveData.observe(viewLifecycleOwner) { progress ->
             binding?.progressBarHorizontal?.progress = progress
-        }
-
-        // Показываем или прячем Progress
-        viewModel.showProgressLiveData.observe(viewLifecycleOwner) {
-            showProgress()
-        }
-        viewModel.hideProgressLiveData.observe(viewLifecycleOwner) {
-            hideProgress()
-        }
-        viewModel.dialogInternetTroubleLiveData.observe(viewLifecycleOwner) {
-            // Уточняем текст диалогового окна (который по умолчанию)
-            showDialog(R.string.dialogInternetTrouble_title, R.string.dialogInternetTrouble_text)
-        }
-        viewModel.errorMessageLiveData.observe(viewLifecycleOwner) {
-            it?.getContentIfNotHandled()?.let { result ->
-                when (result.status) {
-                    // If everything is ok, we don't want to show anything. Only if smth went wrong
-                    Status.ERROR ->
-                        binding?.let { nonNullBinding ->
-                            Snackbar.make(
-                                nonNullBinding.frameLayout.rootView,
-                                result.message ?: "An unknown error occurred",
-                                Snackbar.LENGTH_LONG
-                            ).show()
-                        }
-
-                    else -> Unit
-                }
-            }
         }
     }
 
@@ -201,7 +159,7 @@ class FirstScreenLoadingFragment : Fragment() {
                 viewModel.countryListFlow.collect {
                     if (it.isNotEmpty()) {
                         emptyListDialogJob?.cancel()
-                        dialogInternetTrouble.hide()
+                        infoDialog.hide()
                         Log.d(
                             TAG,
                             "При сборе данных в viewModel.countryListFlow.collect список кодов стран НЕ пустой"
@@ -226,7 +184,7 @@ class FirstScreenLoadingFragment : Fragment() {
                                     "При сборе данных в viewModel.countryListFlow.collect список кодов стран всё ещё пустой, вызываем диалоговое окно"
                                 )
                                 // Показываем диалоговое окно о проблеме с сервером
-                                showDialog(
+                                infoDialog.show(
                                     R.string.dialogPleaseWait_title2,
                                     R.string.dialogPleaseWait_text2
                                 )
@@ -242,20 +200,10 @@ class FirstScreenLoadingFragment : Fragment() {
 
     }
 
-    private fun showProgress() {
-        binding?.frameLayout?.isVisible = true
-        binding?.progressCircular?.isVisible = true
-    }
-
-    private fun hideProgress() {
-        binding?.frameLayout?.isVisible = false
-        binding?.progressCircular?.isVisible = false
-    }
-
     // VIEW BINDING -> 3. onDestroyView()
     override fun onDestroyView() {
         // Открытый диалог нужно закрыть вместе с экраном, иначе WindowLeaked
-        dialogInternetTrouble.dismiss()
+        infoDialog.dismiss()
         super.onDestroyView()
         binding = null
     }

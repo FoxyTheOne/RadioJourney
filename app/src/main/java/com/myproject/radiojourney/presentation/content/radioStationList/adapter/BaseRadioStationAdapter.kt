@@ -30,7 +30,8 @@ abstract class BaseRadioStationAdapter(
             oldItem: RadioStationPresentation,
             newItem: RadioStationPresentation
         ): Boolean {
-            return oldItem.hashCode() == newItem.hashCode()
+            // Сравниваем сами данные (data class ==). Раньше сравнивался hashCode: у разных данных он может совпасть
+            return oldItem == newItem
         }
     }
 
@@ -44,13 +45,11 @@ abstract class BaseRadioStationAdapter(
         get() = differ.currentList
         set(value) = differ.submitList(value)
 
-//    <!-- 002 claude
     // submitList() асинхронный: пока DiffUtil сравнивает старый и новый список в фоновом потоке,
     // radioStationList (differ.currentList) продолжает возвращать СТАРЫЙ список.
     // Код, которому нужен уже новый список, нужно выполнять в onCommitted
     fun submitRadioStationList(list: List<RadioStationPresentation>, onCommitted: () -> Unit) =
         differ.submitList(list, onCommitted)
-// 002 claude -->
 
     // 3. lambda for clicking on our list elements
     protected var onItemClickListener: ((RadioStationPresentation) -> Unit)? = null

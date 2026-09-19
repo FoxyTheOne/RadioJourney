@@ -1,5 +1,6 @@
 package com.myproject.radiojourney.presentation.content.radioStationList.favourite
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,18 +10,21 @@ import androidx.appcompat.widget.AppCompatTextView
 import androidx.recyclerview.widget.RecyclerView
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
-import java.util.*
+import java.util.Locale
 
 // 1.1. ОБРАБОТКА КЛИКА -> передадим в конструктор анонимную функцию (как класса Adapter, так и вложенного класса). Затем отдаём эту лямбду каждому ViewHolder
 class FavoriteListAdapter(
-    private val favouriteStationList: List<RadioStationPresentation>,
     private val onItemClicked: (RadioStationPresentation) -> Unit,
     private val onStarClicked: (RadioStationPresentation) -> Unit
 ) :
     RecyclerView.Adapter<FavoriteListAdapter.FavoriteListViewHolder>() {
-//    companion object {
-//        private const val TAG = "FavoriteListAdapter"
-//    }
+    // Список станций. Адаптер создаётся один раз, а список обновляется: раньше при каждом изменении списка создавался новый адаптер
+    var favouriteStationList: List<RadioStationPresentation> = emptyList()
+        @SuppressLint("NotifyDataSetChanged") // список небольшой, а звезда меняется у элемента на месте
+        set(value) {
+            field = value
+            notifyDataSetChanged()
+        }
 
     var isClickableRecyclerView = false
 

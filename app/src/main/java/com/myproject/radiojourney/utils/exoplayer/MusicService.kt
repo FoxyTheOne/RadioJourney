@@ -65,7 +65,8 @@ class MusicService : MediaLibraryService() {
     private val serviceExceptionHandler = CoroutineExceptionHandler { _, throwable ->
         Log.e(TAG, "Uncaught exception in MusicService coroutine", throwable)
     }
-    private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob + serviceExceptionHandler)
+    private val serviceScope =
+        CoroutineScope(Dispatchers.Main + serviceJob + serviceExceptionHandler)
 
     private lateinit var mediaLibrarySession: MediaLibrarySession
 
@@ -208,37 +209,19 @@ class MusicService : MediaLibraryService() {
         musicPlayerEventListener = MusicPlayerEventListener(this)
         exoPlayer.addListener(musicPlayerEventListener)
         exoPlayer.addListener(pauseTimeoutListener)
-
-//        // 3.Broadcast для завершения сервиса (1 - в MainActivity)
-//        registerReceiver(receiver, IntentFilter(FILTER_FOR_BROADCAST_MS))
     }
 
     // Запущенный сервис будет работать пока у него не вызван stopSelf().
     // Передавать данные в сервис можно так же с помощью startService(intent),
     // новый сервис запускаться при этом не будет, а у запущенного сервиса будет вызван onStartCommand.
 
-    fun testMethodForError(errorCause: String) {
-        when (errorCause) {
-            "UnrecognizedInputFormatException" -> {
-                Log.d(TAG, "")
-            }
-
-            "HttpDataSourceException" -> {
-                Log.d(TAG, "")
-            }
-
-            else -> {
-                Log.d(TAG, "")
-            }
-        }
-    }
-
     private fun isPlayingOrStarting(): Boolean =
         exoPlayer.playWhenReady &&
                 (exoPlayer.playbackState == Player.STATE_BUFFERING || exoPlayer.playbackState == Player.STATE_READY)
 
     // Сессия для подключающихся контроллеров (экран приложения, уведомление, наушники)
-    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession = mediaLibrarySession
+    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession =
+        mediaLibrarySession
 
     // Приложение закрыли (смахнули из недавних).
     // Радио играет - продолжаем играть, уведомление остаётся (на паузе оно уберётся само через PAUSED_NOTIFICATION_TIMEOUT).
@@ -259,36 +242,10 @@ class MusicService : MediaLibraryService() {
         mediaLibrarySession.release()
         exoPlayer.release()
 
-        firebaseMusicSource.notifyChildrenChangedLiveData.removeObserver(notifyChildrenChangedLiveDataObserver)
-
-//        // 3.Broadcast - регистрируем в onCreate и отписываемся в onDestroy
-//        unregisterReceiver(receiver)
+        firebaseMusicSource.notifyChildrenChangedLiveData.removeObserver(
+            notifyChildrenChangedLiveDataObserver
+        )
 
         super.onDestroy()
     }
-
-//    // 2.Broadcast для управления уведомлением из Activity (1 - в MainActivity)
-//    // Создадим анонимный класс => не нужно регистрировать в манифесте
-//    private var receiver: BroadcastReceiver? = object : BroadcastReceiver() {
-//        override fun onReceive(context: Context?, intent: Intent) {
-//            Log.d(TAG, "Получен ключ из Activity в BroadcastReceiver")
-//
-////            if (numberFromActivity == 100) {
-////                Log.d(TAG, "Получен ключ KEY_BROADCAST_ACTIVITY_DESTROYED, число 100 - убираем уведомление")
-//////                onDestroy()
-////                cancelNotifications()
-////            }
-//
-//            when (intent.getIntExtra(Constants.KEY_BROADCAST_ACTIVITY, 1)) {
-//                50 -> {
-//                    Log.d(TAG, "Получен ключ KEY_BROADCAST_ACTIVITY, число 50 - показываем уведомление")
-//                    musicNotificationManager.showNotification(exoPlayer)
-//                }
-//                100 -> {
-//                    Log.d(TAG, "Получен ключ KEY_BROADCAST_ACTIVITY, число 100 - убираем уведомление")
-//                    musicNotificationManager.cancelNotifications()
-//                }
-//            }
-//        }
-//    }
 }

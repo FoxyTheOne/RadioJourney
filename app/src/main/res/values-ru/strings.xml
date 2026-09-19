@@ -2,32 +2,21 @@
     <string name="app_name">RadioJourney</string>
 
     <string name="first_screen_tittle">Приветствуем в RadioJourney!</string>
-    <string name="first_screen_text1">Если это первый запуск - пожалуйста, дождитесь окончания кеширования.</string>
-    <string name="first_screen_text2">Если кеширование при первом запуске не удалось, проверье ваше интернет соединение, после чего перезапустите программу.</string>
     <string name="first_screen_text1_2">Если это первый запуск - пожалуйста, дождитесь окончания кеширования. В случае ошибки проверье ваше интернет соединение, после чего перезапустите программу.</string>
     <string name="first_screen_text3">Работоспособность программы зависит от доступности сервера, откуда берется информация о радиостанциях.</string>
     <string name="first_screen_button">Начать путешествие</string>
 
-    <string name="content_description_email">Email</string>
-    <string name="content_description_password">Пароль</string>
-    <string name="content_description_confirm_password">Подтверждение пароля</string>
-    <string name="content_description_userName">Имя пользователя</string>
 
     <string name="logout_intention_question">Хотите выйти?</string>
 
     <string name="homeRadio_zoomPlus">+</string>
     <string name="homeRadio_zoomMinus">-</string>
-    <string name="homeRadio_goToRecommended">Рекомендуемое</string>
     <string name="homeRadio_goToFavourites">Избранное</string>
-    <string name="homeRadio_selectRadioStation">Выберите радиостанцию</string>
-    <string name="homeRadio_canTakeTime">Соединение может занять некоторое время.</string>
     <string name="homeRadio_mayNotWork">Также выбранная радиостанция может не работать в данный момент.</string>
     <string name="homeRadio_youAreHere">Вы здесь</string>
 
     <string name="dialogInternetTrouble_title">Проблема с соединением!</string>
     <string name="dialogInternetTrouble_title4">В ответ на запрос получен пустой список</string>
-    <string name="dialogInternetTrouble_text_cashing">Если это первый запуск и кеширование не закончилось - пожалуйста, проверье ваше интернет соединение, после чего перезапустите программу.</string>
-    <string name="dialogInternetTrouble_text2_cashing">Если же нет, не обращайте внимание на ошибку. Если нужно, повторите последнее действие</string>
     <string name="dialogInternetTrouble_text">Возникла проблема при запросе на сервер. Попробуйте повторить последнее действие или проверье ваше интернет соединение.</string>
     <string name="dialogInternetTrouble_text3">Пожалуйста, проверье ваше интернет соединение.</string>
     <string name="dialogInternetTrouble_text4">Похоже, что сервер с информацией о радиостанциях временно не работает. Пожалуйста, попробуйте ещё раз позже или проверье ваше интернет соединение.</string>
@@ -37,8 +26,6 @@
     <string name="dialogPleaseWait_title2">Что-то пошло не так</string>
     <string name="dialogPleaseWait_text2">Похоже, что сервер с информацией о радиостанциях временно не работает. Пожалуйста, попробуйте ещё раз позже</string>
     <string name="dialogPleaseWait_text5">Во время последнего запроса сервер с информацией о радиостанциях был недоступен. Вы можете попробовать повторить запрос или зайти в программу позже</string>
-    <string name="dialogInternetTrouble_title2">Повторная попытка кэширования</string>
-    <string name="dialogInternetTrouble_text2">Что-то пошло не так. Пытаюсь подключиться к серверу с информацией о радиостанциях ещё раз.</string>
 
     <string name="radioStationList_title_loading">Обращение к серверу для получения списка названий радиостанций…</string>
     <string name="radioStationList_title_select">Список радиостанций. Выберите:</string>
@@ -48,22 +35,15 @@
 
     <string name="downloading_playlist">Загрузка плейлиста</string>
     <string name="downloading_radio_station">Подключение к радиостанции</string>
-    <string name="connecting">Обращение к серверу…</string>
 
-    <string name="foregroundNotification_name">Кеширование локаций</string>
-    <string name="foregroundNotification_description">Кеширование… </string>
-    <string name="foregroundNotification_failedName">Кеширование не удалось.</string>
-    <string name="foregroundNotification_failedDescription">Пожалуйста, включите и выключите авиарежим, после чего перезапустите программу.</string>
 
     <string name="favouriteRadioStationList_title">Избранное:</string>
     <string name="favouriteRadioStationList_empty">Здесь пусто. Попробуйте добавлять звезды понравившимся радиостанциям.</string>
 
-    <string name="recommendedRadioStationList_title">Рекомендуемые радиостанции:</string>
 
     <string name="currentPlaylist_title">Текущий плейлист</string>
     <string name="currentPlaylist_empty">Здесь пусто</string>
 
-    <string name="settings_tittle">Настройки</string>
     <string name="settings_tittle2">О программе</string>
     <string name="settings_text1">Данное приложение создано для прослушивания интернет радиостанций.</string>
     <string name="settings_text2">Для этого используется база данных https://www.radio-browser.info/, содержащая информацию об интернет-радиостанциях со всего мира.</string>
@@ -75,13 +55,10 @@
     <string name="settings_saveToLocalStorage">Сохранить в локальное хранилище</string>
     <string name="settings_restoreLocalStorage">Восстановить из локального хранилища</string>
     <string name="settings_textMail">Почта для обратной связи</string>
-    <string name="settings_textMail2">Это моё первое приложение. Не стесняйтесь писать ваши советы"</string>
     <string name="settings_mail">gartel.av@gmail.com</string>
-    <string name="settings_textAndMail">Почта для обратной связи: gartel.av@gmail.com</string>
     <string name="settings_coffee">Поддержать проект (Boosty)</string>
     <string name="settings_pixabay">В приложении использовались изображения с сайта pixabay.com</string>
 
     <!-- exoplayer -->
     <string name="notification_channel_name">Поток радиостанции</string>
-    <string name="notification_channel_description">Показывает выбранную радиостанцию</string>
 </resources>

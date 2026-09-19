@@ -1,20 +1,15 @@
 package com.myproject.radiojourney.presentation.firstScreen
 
-import android.accounts.AccountsException
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myproject.radiojourney.data.worker.CountryCacheScheduler
-import com.myproject.radiojourney.domain.homeRadioUseCase.IHomeRadioUseCase
 import com.myproject.radiojourney.domain.firstScreenLoadingUseCase.ILoginScreenUseCase
-import com.myproject.radiojourney.other.Event
-import com.myproject.radiojourney.other.Resource
+import com.myproject.radiojourney.domain.homeRadioUseCase.IHomeRadioUseCase
 import com.myproject.radiojourney.utils.extension.call
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.io.IOException
 import javax.inject.Inject
 
 /**
@@ -32,50 +27,19 @@ class FirstScreenLoadingViewModel @Inject constructor(
     // Прогресс загрузки списка стран (WorkManager) для полосы на экране. Раньше - бродкаст из ProgressForegroundService
     val countryCacheProgressLiveData: LiveData<Int> = countryCacheScheduler.progressLiveData
 
-    // If smth went wrong
-    private val _errorMessageLiveData =
-        MutableLiveData<Event<Resource<Boolean>>>() // It must be private, so that other classes can't change it
-    val errorMessageLiveData: LiveData<Event<Resource<Boolean>>> =
-        _errorMessageLiveData // And another LiveData, that equals to previous, so that classes can't change it
-
-    // LiveData для открытия диалогового окна
-    private val _dialogInternetTroubleLiveData = MutableLiveData<Boolean>()
-    val dialogInternetTroubleLiveData: MutableLiveData<Boolean> = _dialogInternetTroubleLiveData
-
     // Флаг для проверки на permissions при переходе на следующий fragment
     private val _signInLiveData = MutableLiveData<Boolean>()
-    val signInLiveData: MutableLiveData<Boolean> = _signInLiveData
+    val signInLiveData: LiveData<Boolean> = _signInLiveData
 
     // Подписка на локальную БД, для проверки (Если БД пуста, нужно ждать окончания кеширования)
     val countryListFlow = homeRadioInteractor.subscribeOnCountryList()
 
-    // LiveData, которые будут отвечать за отображение прогресса (кружок)
-    private val _showProgressLiveData = MutableLiveData<Boolean>()
-    val showProgressLiveData: MutableLiveData<Boolean> = _showProgressLiveData
-    private val _hideProgressLiveData = MutableLiveData<Boolean>()
-    val hideProgressLiveData: MutableLiveData<Boolean> = _hideProgressLiveData
-
+    // Раньше здесь были LiveData ошибки и диалога "нет интернета" в catch (AccountsException / IOException),
+    // но сохранение токена такие исключения не бросает - эти ветки не могли сработать
     fun onLoginClicked() {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                _showProgressLiveData.call()
-                loginScreenInteractor.onLoginClicked() // Сохраняем токен, чтобы в следующий раз пропустить этот фрагмент
-                _signInLiveData.call()
-                _hideProgressLiveData.call()
-            } catch (e1: AccountsException) {
-                e1.printStackTrace()
-                _dialogInternetTroubleLiveData.call()
-            } catch (e: IOException) {
-                e.printStackTrace()
-                _errorMessageLiveData.postValue(
-                    Event(
-                        Resource.error(
-                            "Failure. Something went wrong",
-                            null
-                        )
-                    )
-                )
-            }
+        viewModelScope.launch {
+            loginScreenInteractor.onLoginClicked() // Сохраняем токен, чтобы в следующий раз пропустить этот фрагмент
+            _signInLiveData.call()
         }
     }
 }

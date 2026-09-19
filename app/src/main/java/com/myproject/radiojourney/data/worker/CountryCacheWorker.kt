@@ -81,7 +81,7 @@ class CountryCacheWorker @AssistedInject constructor(
         }
 
         // Теперь сохраним наши страны в Room
-        localRadioDataSource.saveCountryList(countryLocalList.toMutableList())
+        localRadioDataSource.saveCountryList(countryLocalList)
         Log.d(TAG, "Список стран сохранён в локальную базу данных: size = ${countryLocalList.size}")
         return Result.success()
     }

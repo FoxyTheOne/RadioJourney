@@ -1,12 +1,12 @@
 package com.myproject.radiojourney.presentation.content.radioStationList.adapter
 
-import androidx.appcompat.widget.AppCompatTextView
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.DynamicDrawableSpan
 import android.text.style.ImageSpan
-import androidx.recyclerview.widget.AsyncListDiffer
+import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.AsyncListDiffer
 import com.myproject.radiojourney.R
 
 class SwipeRadioStationAdapter :
@@ -21,28 +21,27 @@ class SwipeRadioStationAdapter :
     override fun onBindViewHolder(holder: RadioStationViewHolder, position: Int) {
         val radioStation = radioStationList[position]
         holder.itemView.apply {
-//            val text = "${radioStation.stationName} - ${radioStation.countryCode}"
-
             val title: AppCompatTextView = this.findViewById(R.id.tvPrimary)
-//            title.text = text
 
             // У станций из плейлиста избранного код страны с суффиксом "_FAV" (например "PL_FAV").
             // Показываем вместо суффикса сердечко перед названием: "♥ RMF FM - PL"
             val isFavouritePlaylist = radioStation.countryCode.endsWith("_FAV")
-            val text = "${radioStation.stationName} - ${radioStation.countryCode.removeSuffix("_FAV")}"
+            val text =
+                "${radioStation.stationName} - ${radioStation.countryCode.removeSuffix("_FAV")}"
 
             if (isFavouritePlaylist) {
                 // Сердечко - векторная картинка, а не символ "♥": символ в разных шрифтах и на разных телефонах
                 // может выглядеть по-разному (или стать цветным эмодзи), а картинка отображается везде одинаково
                 val spannableText = SpannableString("  $text") // первый пробел заменяется картинкой
-                ContextCompat.getDrawable(context, R.drawable.ic_baseline_favorite_24_orange)?.let { heart ->
-                    val size = (title.textSize * 0.9f).toInt()
-                    heart.setBounds(0, 0, size, size)
-                    spannableText.setSpan(
-                        ImageSpan(heart, DynamicDrawableSpan.ALIGN_BASELINE),
-                        0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                    )
-                }
+                ContextCompat.getDrawable(context, R.drawable.ic_baseline_favorite_24_orange)
+                    ?.let { heart ->
+                        val size = (title.textSize * 0.9f).toInt()
+                        heart.setBounds(0, 0, size, size)
+                        spannableText.setSpan(
+                            ImageSpan(heart, DynamicDrawableSpan.ALIGN_BASELINE),
+                            0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                        )
+                    }
                 title.text = spannableText
             } else {
                 title.text = text

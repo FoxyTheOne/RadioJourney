@@ -1,272 +1,95 @@
 package com.myproject.radiojourney.presentation.content.radioStationList.favourite
 
-import android.app.Dialog
 import android.os.Bundle
-import android.util.Log
-import android.view.*
-import android.widget.FrameLayout
-import android.widget.ProgressBar
+import android.view.View
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.view.isVisible
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.myproject.radiojourney.R
-import dagger.hilt.android.AndroidEntryPoint
-import androidx.recyclerview.widget.DefaultItemAnimator
-import com.google.android.material.snackbar.Snackbar
-import com.myproject.radiojourney.other.Status
+import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
 import com.myproject.radiojourney.presentation.MainViewModel
+import com.myproject.radiojourney.presentation.common.InfoDialog
 import com.myproject.radiojourney.presentation.content.radioStationList.base.BaseRadioListFragmentAbstract
-import java.io.IOException
+import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * Страница с избранным
  */
 @AndroidEntryPoint
 class FavouriteListFragment : BaseRadioListFragmentAbstract() {
-    companion object {
-        private const val TAG = "FavouriteListFragment"
-    }
 
     private val viewModel by viewModels<FavouriteListViewModel>()
 
-    // 1.1. ViewModel. We bind our viewModel to the cycle of our activity, not fragment. So, we need to do this way:
-    private lateinit var mainViewModel: MainViewModel
+    // ViewModel плейера привязана к Activity, а не к фрагменту
+    private val mainViewModel by activityViewModels<MainViewModel>()
 
-    private lateinit var dialogInternetTrouble: Dialog
-    private lateinit var favouriteListAdapter: FavoriteListAdapter
-    private lateinit var textRadioListTitle: AppCompatTextView
-    private lateinit var textRadioListSecondTitleSelect: AppCompatTextView
+    private lateinit var infoDialog: InfoDialog
     private lateinit var textRadioListSecondTitleDownload: AppCompatTextView
-    private lateinit var imageArrowBack: AppCompatImageView
     private lateinit var textFavouritesEmpty: TextView
-    private lateinit var recyclerViewRadioStationList: RecyclerView
-    private lateinit var frameLayout: FrameLayout
-    private lateinit var progressCircular: ProgressBar
-    private lateinit var radioCountryCodeFromActivity: String
-    private var isInternetAvailable = false
+
+    // Адаптер создаётся вместе с фрагментом (а не в наблюдателе списка). Раньше он был lateinit и создавался только
+    // после загрузки списка, а changeTextDownloadOrNothing() обращался к нему раньше - например, после пересоздания экрана
+    private val favouriteListAdapter = FavoriteListAdapter(
+        onItemClicked = { radioStation -> openHomeRadio(radioStation) },
+        // По клику нужно добавить либо удалить из избранного
+        onStarClicked = { radioStation -> viewModel.checkIsStationInFavouritesAndChangeTheStar(radioStation) }
+    )
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1.2. ViewModel. We bind our viewModel to the lifecycle of our activity, not fragment. We pass our activity as an owner of the lifecycle.
-        // So, we need to do this way:
-        mainViewModel = ViewModelProvider(requireActivity())[MainViewModel::class.java]
-
-        textRadioListTitle = view.findViewById(R.id.text_myFavorites_title)
-        textRadioListTitle.text = resources.getText(R.string.favouriteRadioStationList_title)
-
-        textRadioListSecondTitleSelect = view.findViewById(R.id.text_radioStationDialogTitleSelect)
-        textRadioListSecondTitleDownload =
-            view.findViewById(R.id.text_radioStationDialogTitleDownload)
-        textRadioListSecondTitleSelect.isVisible = false
-
-        imageArrowBack = view.findViewById(R.id.image_arrowBack)
+        view.findViewById<AppCompatTextView>(R.id.text_myFavorites_title).text = getString(R.string.favouriteRadioStationList_title)
+        view.findViewById<AppCompatTextView>(R.id.text_radioStationDialogTitleSelect).isVisible = false
+        textRadioListSecondTitleDownload = view.findViewById(R.id.text_radioStationDialogTitleDownload)
         textFavouritesEmpty = view.findViewById(R.id.text_favouritesEmpty)
-        recyclerViewRadioStationList = view.findViewById(R.id.recyclerView_radioStationList)
-        frameLayout = view.findViewById(R.id.frameLayout)
-        progressCircular = view.findViewById(R.id.progressCircular)
 
-        // Получаем список избранного для отображения
-        viewModel.getRadioStationFavouriteListAndShow()
-
-        // Настройки диалогового окна
-        dialogInternetTrouble = Dialog(requireContext())
-        // Передайте ссылку на разметку
-        dialogInternetTrouble.setContentView(R.layout.layout_internet_trouble_dialog)
-
-        activity?.let{
-            isInternetAvailable = mainViewModel.isInternetAvailable(it)
-            if (!isInternetAvailable) {
-                // Диалоговое окно при отсутствии интернета
-                val textInternetTrouble = getString(R.string.dialogInternetTrouble_text3)
-                val textViewInternetTrouble =
-                    dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.text_internetTrouble)
-                textViewInternetTrouble.text = textInternetTrouble
-
-                dialogInternetTrouble.show()
-            }
+        val recyclerViewRadioStationList = view.findViewById<RecyclerView>(R.id.recyclerView_radioStationList)
+        recyclerViewRadioStationList.adapter = favouriteListAdapter
+        // Без мигания элемента при смене звезды
+        recyclerViewRadioStationList.itemAnimator = object : DefaultItemAnimator() {
+            override fun canReuseUpdatedViewHolder(viewHolder: RecyclerView.ViewHolder): Boolean = true
         }
 
-        initListeners()
+        infoDialog = InfoDialog(requireContext())
+        infoDialog.showIfNoInternet()
+
+        val goToHomeRadio = View.OnClickListener {
+            if (findNavController().currentDestination?.id == R.id.favouriteListFragment) {
+                findNavController().navigate(R.id.action_favouriteListFragment_to_homeRadioFragment)
+            }
+        }
+        view.findViewById<AppCompatImageView>(R.id.image_arrowBack).setOnClickListener(goToHomeRadio)
+        textFavouritesEmpty.setOnClickListener(goToHomeRadio)
+
         subscribeOnLiveData()
-
-        // Если у нас играет другой плейлист, нужно показать надпись "скачать". Если же этот плейлист уже скачан - "выберите радиостанцию"
-        radioCountryCodeFromActivity =
-            if ((mainViewModel.mediaItemsListLiveData.value?.data?.size ?: 0) >= 1) {
-                mainViewModel.mediaItemsListLiveData.value?.data?.get(0)?.countryCode
-                    ?: ""
-            } else {
-                ""
-            }
-        changeTextDownloadOrNothing()
-    }
-
-    private fun initListeners() {
-        imageArrowBack.setOnClickListener {
-            if (this.findNavController().currentDestination?.id == R.id.favouriteListFragment) {
-                this.findNavController()
-                    .navigate(R.id.action_favouriteListFragment_to_homeRadioFragment)
-            }
-        }
-        textFavouritesEmpty.setOnClickListener {
-            if (this.findNavController().currentDestination?.id == R.id.favouriteListFragment) {
-                this.findNavController()
-                    .navigate(R.id.action_favouriteListFragment_to_homeRadioFragment)
-            }
-        }
     }
 
     private fun subscribeOnLiveData() {
-        // Показываем или прячем Progress
-        viewModel.showProgressLiveData.observe(viewLifecycleOwner) {
-            showProgress()
-        }
-        viewModel.hideProgressLiveData.observe(viewLifecycleOwner) {
-            hideProgress()
-        }
-        viewModel.dialogInternetTroubleLiveData.observe(viewLifecycleOwner) {
-            // Возвращаем текст диалогового окна (на случай, если мы делали какие-то изменения во время пользования этим фрагментом)
-            val titleInternetTrouble = getString(R.string.dialogInternetTrouble_title)
-            val textInternetTrouble = getString(R.string.dialogInternetTrouble_text)
-            val titleViewInternetTrouble =
-                dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.title_internetTrouble)
-            val textViewInternetTrouble =
-                dialogInternetTrouble.findViewById<AppCompatTextView>(R.id.text_internetTrouble)
-            titleViewInternetTrouble.text = titleInternetTrouble
-            textViewInternetTrouble.text = textInternetTrouble
+        viewModel.radioStationFavouriteListLiveData.observe(viewLifecycleOwner) { favouriteStationList ->
+            favouriteListAdapter.favouriteStationList = favouriteStationList
+            textFavouritesEmpty.isVisible = favouriteStationList.isEmpty()
+            changeTextDownloadOrNothing(favouriteStationList)
 
-            dialogInternetTrouble.show()
-        }
-        viewModel.errorMessageLiveData.observe(viewLifecycleOwner) {
-            it?.getContentIfNotHandled()?.let { result ->
-                when (result.status) {
-                    // If everything is ok, we don't want to show anything. Only if smth went wrong
-                    Status.ERROR ->
-                        view?.let { nonNullBinding ->
-                            Snackbar.make(
-                                nonNullBinding.rootView,
-                                result.message ?: "An unknown error occurred",
-                                Snackbar.LENGTH_LONG
-                            ).show()
-                        }
-
-                    else -> Unit
-                }
+            textRadioListSecondTitleDownload.setOnClickListener {
+                // Иногда после скачивания нового плейлиста экзоплейер не обновляется. Поэтому перед тем, как включить первую станцию нового плейлиста, укажем явно, что его нужно скачать
+                mainViewModel.fetchSongs("FAV")
+                // Открываем по клику другой фрагмент, передаём туда первую станцию
+                openHomeRadio(favouriteStationList[0])
             }
         }
-        viewModel.radioStationFavouriteListLiveData.observe(viewLifecycleOwner) { radioStationFavouritePresentationList ->
-            showProgress()
 
-            // 1.5. ОБРАБОТКА КЛИКА -> Получаем результат клика во фрагменте (описываем нашу анонимную функцию из RecyclerView)
-            // Инициализация адаптера
-            val favouriteStationList = viewModel.radioStationFavouriteListLiveData.value
-
-            if (!favouriteStationList.isNullOrEmpty()) {
-
-                favouriteListAdapter = FavoriteListAdapter(
-                    favouriteStationList,
-                    { radioStationFavouriteOnClick ->
-                        Log.d(TAG, "Выбранный элемент списка: $radioStationFavouriteOnClick")
-                        // Открываем по клику другой фрагмент, передаём туда нашу радиостанцию
-                        val direction =
-                            FavouriteListFragmentDirections.actionFavouriteListFragmentToHomeRadioFragment(
-                                radioStationFavouriteOnClick
-                            )
-                        if (this.findNavController().currentDestination?.id == R.id.favouriteListFragment) {
-                            this.findNavController().navigate(direction)
-                        }
-                    },
-                    { radioStationFavouriteOnStarClick ->
-                        Log.d(
-                            TAG,
-                            "Выбранный элемент списка: $radioStationFavouriteOnStarClick"
-                        )
-                        // По клику нужно добавить либо удалить из избранного, предварительно проверив наличие радиостанции в базе
-                        viewModel.checkIsStationInFavouritesAndChangeTheStar(
-                            radioStationFavouriteOnStarClick
-                        )
-                    })
-
-                recyclerViewRadioStationList.adapter = favouriteListAdapter
-
-                val animator: DefaultItemAnimator = object : DefaultItemAnimator() {
-                    override fun canReuseUpdatedViewHolder(viewHolder: RecyclerView.ViewHolder): Boolean {
-                        return true
-                    }
-                }
-                recyclerViewRadioStationList.itemAnimator = animator
-
-                changeTextDownloadOrNothing()
-
-                textRadioListSecondTitleDownload.setOnClickListener {
-                    Log.d(TAG, "Загружаем плейлист")
-
-                    // Иногда после скачивания нового плейлиста экзоплейер не обновляется. Поэтому перед тем, как включить первую станцию нового плейлиста, укажем явно, что его нужно скачать
-                    mainViewModel.fetchSongs("FAV")
-
-                    // Открываем по клику другой фрагмент, передаём туда нашу радиостанцию
-                    val direction =
-                        FavouriteListFragmentDirections.actionFavouriteListFragmentToHomeRadioFragment(
-                            radioStationFavouritePresentationList[0]
-                        )
-                    if (this.findNavController().currentDestination?.id == R.id.favouriteListFragment) {
-                        this.findNavController().navigate(direction)
-                    }
-                }
-
-            } else {
-                textFavouritesEmpty.isVisible = true
-                hideProgress()
-                return@observe
-            }
-
-            Log.d(
-                TAG,
-                "Успешный запрос в локальную БД (радиостанции). Получен результат: массив size = ${radioStationFavouritePresentationList.size}, элемент[0] = ${radioStationFavouritePresentationList[0].countryCode}, ${radioStationFavouritePresentationList[0].urlResolved}"
-            )
-
-            hideProgress()
-        }
-
-        // <!-- 007 claude
-//        viewModel.stationSavedInFavouritesLiveData.observe(viewLifecycleOwner) {
-//            recyclerViewRadioStationList.adapter?.notifyDataSetChanged()
-//            // Нужно так же сообщить это плейеру в activity
-//            mainViewModel.changeTheStar(true)
-//        }
-//        viewModel.stationDeletedFromFavouritesLiveData.observe(viewLifecycleOwner) {
-//            recyclerViewRadioStationList.adapter?.notifyDataSetChanged()
-//            // Нужно так же сообщить это плейеру в activity
-//            mainViewModel.changeTheStar(false)
-//        }
-
-        viewModel.listRedrawLiveData.observe(viewLifecycleOwner) {
-            recyclerViewRadioStationList.adapter?.notifyDataSetChanged()
-        }
         // Звезду нажали в этом списке - сообщаем плейеру (и остальным экранам), какая именно станция изменилась
         viewModel.stationFavouriteChangedLiveData.observe(viewLifecycleOwner) { event ->
             event.getContentIfNotHandled()?.let { station ->
                 mainViewModel.notifyFavouriteChanged(station, station.isStationInFavourite)
             }
         }
-
-//        // Если изменение было в activity, и открыт этот фрагмент, здесь тоже нужно это отобразить:
-//        mainViewModel.stationSavedInFavouritesLiveData.observe(viewLifecycleOwner) {
-//            recyclerViewRadioStationList.adapter?.notifyDataSetChanged()
-//            viewModel.changeTheStar(
-//                mainViewModel.curPlayingSongLiveData.value?.description?.mediaId,
-//                true
-//            )
-//        }
-//        // Если мы добавили звезду в плейере, то в список в FavouriteListFragment нужно добавить не просто звезду, а всю позицию - на случай, если её там не было
-//        mainViewModel.addAStationToFavouriteListIfItIsNotThereLiveData.observe(viewLifecycleOwner) {
-//            viewModel.addAStationToFavouriteListIfItIsNotThere(it)
-//        }
 
         // Звезду нажали в плейере, пока открыт этот список: меняем звезду у той же станции или добавляем станцию в список.
         // Изменения, случившиеся до открытия списка, пропускаем - список и так загружается из базы уже с ними
@@ -275,64 +98,28 @@ class FavouriteListFragment : BaseRadioListFragmentAbstract() {
             if (change.id <= skipFavouriteChangesUpToId) return@observe
             viewModel.applyFavouriteChangeFromOutside(change.station, change.isFavourite)
         }
+    }
 
-        // Если добавляем первую станцию в пустой список, нужно убрать надпись
-        viewModel.addingAStationToAnEmptyListLiveData.observe(viewLifecycleOwner) {
-            textFavouritesEmpty.isVisible = false
+    // Если в плейере не плейлист избранного, показываем надпись "скачать" и не даём выбрать станцию.
+    // В этом фрагменте могут быть только избранные радиостанции, поэтому проверять можно только список в плейере
+    private fun changeTextDownloadOrNothing(favouriteStationList: List<RadioStationPresentation>) {
+        val countryCodeInPlayer = mainViewModel.mediaItemsListLiveData.value?.data?.firstOrNull()?.countryCode.orEmpty()
+        val isFavouritesInPlayer = countryCodeInPlayer.endsWith("_FAV", ignoreCase = true)
+
+        textRadioListSecondTitleDownload.isVisible = favouriteStationList.isNotEmpty() && !isFavouritesInPlayer
+        favouriteListAdapter.isClickableRecyclerView = isFavouritesInPlayer
+    }
+
+    private fun openHomeRadio(radioStation: RadioStationPresentation) {
+        if (findNavController().currentDestination?.id == R.id.favouriteListFragment) {
+            findNavController().navigate(
+                FavouriteListFragmentDirections.actionFavouriteListFragmentToHomeRadioFragment(radioStation)
+            )
         }
-//        mainViewModel.stationDeletedFromFavouritesLiveData.observe(viewLifecycleOwner) {
-//            recyclerViewRadioStationList.adapter?.notifyDataSetChanged()
-//            viewModel.changeTheStar(
-//                mainViewModel.curPlayingSongLiveData.value?.description?.mediaId,
-//                false
-//            )
-//        }
-        // 007 claude -->
-
-    }
-
-    private fun changeTextDownloadOrNothing() {
-        val favouriteStationList = viewModel.radioStationFavouriteListLiveData.value
-
-        // Список избранного может быть пустым. Проверяем
-        if (!favouriteStationList.isNullOrEmpty()) {
-
-            // Если он не пуст, всё хорошо. В этом фрагменте могут быть только избранные радиостанции, поэтому проверять можно только список в плейере
-//            val radioCountryCodeFromFragment = favouriteStationList[0].countryCode
-
-            // textRadioListSecondTitleDownload виден только если у нас список избранного и на экране, и в плейере:
-//            textRadioListSecondTitleDownload.isVisible =
-//                !radioCountryCodeFromActivity.endsWith("_FAV", ignoreCase = true)
-            try {
-                if (radioCountryCodeFromActivity.endsWith("_FAV", ignoreCase = true)) {
-                    textRadioListSecondTitleDownload.isVisible = false
-                    favouriteListAdapter.isClickableRecyclerView = true
-                } else {
-                    textRadioListSecondTitleDownload.isVisible = true
-                    favouriteListAdapter.isClickableRecyclerView = false
-                }
-            } catch (e: IOException) {
-                e.printStackTrace()
-            }
-
-        } else {
-            // Favourites list is empty
-            textRadioListSecondTitleDownload.isVisible = false
-        }
-    }
-
-    private fun showProgress() {
-        frameLayout.isVisible = true
-        progressCircular.isVisible = true
-    }
-
-    private fun hideProgress() {
-        frameLayout.isVisible = false
-        progressCircular.isVisible = false
     }
 
     override fun onDestroyView() {
-        dialogInternetTrouble.dismiss() // Открытый диалог закрываем вместе с экраном, иначе WindowLeaked
+        infoDialog.dismiss() // Открытый диалог закрываем вместе с экраном, иначе WindowLeaked
         super.onDestroyView()
     }
 }

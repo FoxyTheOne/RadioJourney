@@ -21,35 +21,14 @@ import javax.inject.Inject
  * При работе с model, здесь происходит запрос в remote, преобразование remote -> local, сохранение результата в базу данных.
  */
 class MainRadioStationRepository @Inject constructor(
-//    @ApplicationContext private val context: Context,
     private val networkRadioDataSource: INetworkRadioDataSource,
-    private val localRadioDataSource: ILocalRadioDataSource,
-    private val localFavoriteDataSource: ILocalFavoriteDataSource,
-//    private val firebaseMusicSource: FirebaseMusicSource
+    private val localRadioDataSource: ILocalRadioDataSource
 ) : IMainRadioStationRepository {
-    companion object {
-        private const val TAG = "ContentRepository"
-    }
-
     override fun subscribeOnCountryList(): Flow<List<CountryLocal>> =
         localRadioDataSource.subscribeOnCountryList()
 
-    override suspend fun isRadioStationStored(): Boolean =
-        localRadioDataSource.isRadioStationStored()
-
-    override suspend fun getRadioStationUrl(): String? = localRadioDataSource.getRadioStationUrl()
-
-    override suspend fun getRadioStationSaved(radioStationUuidResolved: String): RadioStationLocal? =
-        localRadioDataSource.getRadioStationSaved(radioStationUuidResolved)
-
-    // Поменять в Shared Preference setIsRadioStationStored на true. Сохранить в Shared Preference (url)
-    override suspend fun saveRadioStationUrl(isStored: Boolean, urlResolved: String) =
-        localFavoriteDataSource.saveFavouriteRadioStationUrl(isStored, urlResolved)
-
-    // И сохранить радиостанцию в Room
-    override suspend fun saveRadioStationInRoom(radioStationLocal: RadioStationLocal) {
-        localRadioDataSource.saveRadioStationInRoom(radioStationLocal)
-    }
+    override suspend fun getRadioStationSaved(radioStationUuid: String): RadioStationLocal? =
+        localRadioDataSource.getRadioStationSaved(radioStationUuid)
 
     override suspend fun setStationFavourite(radioStationLocal: RadioStationLocal, isFavourite: Boolean) =
         localRadioDataSource.setStationFavourite(radioStationLocal, isFavourite)
@@ -57,74 +36,22 @@ class MainRadioStationRepository @Inject constructor(
     override suspend fun getRadioStationList(countryCode: String): Resource<List<RadioStationLocal>> {
         // Получаем список радиостанций из networkRadioDataSource в формате Resource чтобы знать ответ с сервера
         val radioStationRemoteListResource = networkRadioDataSource.getRadioStationList(countryCode)
+        val radioStationRemoteList = radioStationRemoteListResource.data
 
-        // Если была ошибка HttpException, обозначаем по умолчанию
-        var radioStationLocalListResource: Resource<List<RadioStationLocal>> =
+        // Преобразуем модельки remote -> local
+        return if (radioStationRemoteListResource.status == Status.SUCCESS && radioStationRemoteList != null) {
+            Resource.success(radioStationRemoteList.map { RadioStationLocal.fromRemoteToLocal(it) })
+        } else {
             Resource.error(Constants.SERVER_IS_DOWN, listOf())
-
-        // Далее проверяем и если ошибки HttpException не было - меняем значение
-        radioStationRemoteListResource.let { result ->
-            when (result.status) {
-                Status.SUCCESS -> {
-                    result.data?.let { radioStationRemoteList ->
-
-                        // Преобразуем модельки remote -> local
-                        val radioStationLocalList = mutableListOf<RadioStationLocal>()
-
-                        radioStationRemoteList.forEach { radioStationRemote ->
-                            val radioStationLocal =
-                                RadioStationLocal.fromRemoteToLocal(radioStationRemote)
-                            radioStationLocalList.add(radioStationLocal)
-                        }
-
-                        Log.d(
-                            TAG,
-                            "Успешный запрос; результат запроса радиостанций $radioStationRemoteList"
-                        )
-
-                        radioStationLocalListResource =
-                            Resource.success(radioStationLocalList.toList())
-                    }
-                }
-
-                Status.ERROR -> Unit // we don't need this
-                Status.LOADING -> Unit // we don't need this
-            }
         }
-
-//        val radioStationRemoteList = networkRadioDataSource.getRadioStationList(countryCode)
-//
-//        // Преобразуем модельки remote -> local
-//        val radioStationLocalList = mutableListOf<RadioStationLocal>()
-//
-//        radioStationRemoteList.forEach { radioStationRemote ->
-//            val radioStationLocal = RadioStationLocal.fromRemoteToLocal(radioStationRemote)
-//            radioStationLocalList.add(radioStationLocal)
-//        }
-//
-//        Log.d(
-//            TAG,
-//            "Успешный запрос; результат запроса радиостанций $radioStationRemoteList"
-//        )
-
-        return radioStationLocalListResource
     }
 
-    override suspend fun saveLastUsedRadioStationUrlAndCode(
-        urlResolved: String,
-        countryCode: String
-    ) {
+    override suspend fun saveLastUsedRadioStationUrlAndCode(urlResolved: String, countryCode: String) =
         localRadioDataSource.saveLastUsedRadioStationUrlAndCode(urlResolved, countryCode)
-    }
 
-    override suspend fun markRadioStationAsPopularSendGetRequest(stationUuid: String): Boolean {
-        Log.d(
-            TAG,
-            "Делаем запрос, как указано автором API (Send /json/url requests for every click the user makes, this helps to mark stations as popular and makes the database more usefull to other people)"
-        )
-        return networkRadioDataSource.sendGetRequestToMarkRadioStationAsPopular(stationUuid)
-    }
-
+    // Как указано автором API: send /json/url requests for every click the user makes, this helps to mark stations as popular
+    override suspend fun markRadioStationAsPopularSendGetRequest(stationUuid: String): Boolean =
+        networkRadioDataSource.sendGetRequestToMarkRadioStationAsPopular(stationUuid)
 
     override suspend fun setIsHideInfoClicked(isHideInfoClicked: Boolean) =
         localRadioDataSource.setIsHideInfoClicked(isHideInfoClicked)

@@ -27,15 +27,13 @@ import com.myproject.radiojourney.other.Constants.DEFAULT_COUNTRY_CODE
 import com.myproject.radiojourney.other.Constants.MEDIA_ROOT_ID
 import com.myproject.radiojourney.other.Constants.NETWORK_ERROR
 import com.myproject.radiojourney.utils.exoplayer.FirebaseMusicSource
-import com.myproject.radiojourney.utils.exoplayer.callback.State.STATE_CREATED
-import com.myproject.radiojourney.utils.exoplayer.callback.State.STATE_ERROR
-import com.myproject.radiojourney.utils.exoplayer.callback.State.STATE_INITIALIZED
-import com.myproject.radiojourney.utils.exoplayer.callback.State.STATE_INITIALIZING
+import com.myproject.radiojourney.utils.exoplayer.ReadinessState
+import com.myproject.radiojourney.utils.exoplayer.State.STATE_INITIALIZED
+import com.myproject.radiojourney.utils.exoplayer.State.STATE_INITIALIZING
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import java.io.IOException
 
 /**
  * Колбэк медиасессии media3 (MediaLibrarySession). Заменяет MusicPlaybackPreparer (MediaSessionConnector.PlaybackPreparer)
@@ -59,7 +57,8 @@ class MusicLibrarySessionCallback(
         private const val TAG = "MusicSessionCallback"
 
         val ADD_SONGS_COMMAND = SessionCommand(ADD_SONGS, Bundle.EMPTY)
-        val CANCEL_PLAYLIST_DOWNLOAD_COMMAND = SessionCommand(CANCEL_PLAYLIST_DOWNLOAD, Bundle.EMPTY)
+        val CANCEL_PLAYLIST_DOWNLOAD_COMMAND =
+            SessionCommand(CANCEL_PLAYLIST_DOWNLOAD, Bundle.EMPTY)
         val NETWORK_ERROR_COMMAND = SessionCommand(NETWORK_ERROR, Bundle.EMPTY)
     }
 
@@ -89,52 +88,24 @@ class MusicLibrarySessionCallback(
             downloadJob?.cancel() // вложенные загрузки (launch внутри) отменятся вместе с ней
             downloadingCountryCode = null
             // Текущий плейлист остаётся рабочим - разблокируем лямбды whenReady()
-            state = STATE_INITIALIZED
+            readiness.state = STATE_INITIALIZED
         }
         downloadJob = null
     }
 
-    // Список лямбд action, которые будут передаваться в метод whenReady(), пока state == STATE_CREATED или state == STATE_INITIALIZING
-    private val onReadyListeners = mutableListOf<(Boolean) -> Unit>()
-
-    // Параметр state с setter для того, чтобы можно было привязать к этому параметру определенную логику
-    private var state: State = STATE_CREATED // State on default
-        set(value) {
-            if (value == STATE_INITIALIZED || value == STATE_ERROR) {
-                synchronized(onReadyListeners) { // synchronized for save change
-                    field = value // sign a new value to the field
-                    // Каждая лямбда должна сработать один раз, иначе при следующей загрузке плейлиста снова сработает старая
-                    val listeners = onReadyListeners.toList()
-                    onReadyListeners.clear()
-                    listeners.forEach { listener ->
-                        listener(state == STATE_INITIALIZED) // If there will be STATE_ERROR instead STATE_INITIALIZED, we will get "false"
-                    }
-                }
-            } else {
-                field = value // if it is STATE_CREATED or STATE_INITIALIZING
-            }
-        }
-
-    // A function which will add actions to our list of actions (returns boolean - if it is ready or not)
-    private fun whenReady(action: (Boolean) -> Unit): Boolean {
-        return if (state == STATE_CREATED || state == STATE_INITIALIZING) {
-            onReadyListeners += action // We are not ready, so just add action to list (we will do it later, when we will be ready)
-            false // not ready
-        } else {
-            action(state == STATE_INITIALIZED) // we are ready, so we can call action
-            true
-        }
-    }
+    // Состояние загрузки плейлиста по команде ADD_SONGS и ожидающие её действия (общий класс, см. ReadinessState)
+    private val readiness = ReadinessState()
 
     // Разрешаем подключившимся (экрану приложения, уведомлению) наши команды
     override fun onConnect(
         session: MediaSession,
         controller: MediaSession.ControllerInfo
     ): MediaSession.ConnectionResult {
-        val sessionCommands = MediaSession.ConnectionResult.DEFAULT_SESSION_AND_LIBRARY_COMMANDS.buildUpon()
-            .add(ADD_SONGS_COMMAND)
-            .add(CANCEL_PLAYLIST_DOWNLOAD_COMMAND)
-            .build()
+        val sessionCommands =
+            MediaSession.ConnectionResult.DEFAULT_SESSION_AND_LIBRARY_COMMANDS.buildUpon()
+                .add(ADD_SONGS_COMMAND)
+                .add(CANCEL_PLAYLIST_DOWNLOAD_COMMAND)
+                .build()
         return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
             .setAvailableSessionCommands(sessionCommands)
             .build()
@@ -154,7 +125,10 @@ class MusicLibrarySessionCallback(
             // Полоса загрузки висела слишком долго (MainViewModel, PROGRESS_TIMEOUT): отменяем загрузку,
             // чтобы её результат (например, ошибка) не появился позже, когда пользователь уже делает что-то другое
             CANCEL_PLAYLIST_DOWNLOAD -> {
-                Log.d(TAG, "PLAYLIST_UPDATE: Загрузка плейлиста $downloadingCountryCode отменена по таймауту")
+                Log.d(
+                    TAG,
+                    "PLAYLIST_UPDATE: Загрузка плейлиста $downloadingCountryCode отменена по таймауту"
+                )
                 cancelPlaylistDownload()
             }
 
@@ -167,7 +141,10 @@ class MusicLibrarySessionCallback(
         // fetchSongs() вызывается два раза подряд (RadioListFragment и HomeRadioFragment). Если этот плейлист уже скачивается,
         // вторую загрузку не запускаем, иначе две параллельные загрузки дважды перезаписывают плейлист
         if (countryCode != null && countryCode == downloadingCountryCode) {
-            Log.d(TAG, "PLAYLIST_UPDATE: Плейлист countryCode = $countryCode уже скачивается, повторную загрузку не запускаем")
+            Log.d(
+                TAG,
+                "PLAYLIST_UPDATE: Плейлист countryCode = $countryCode уже скачивается, повторную загрузку не запускаем"
+            )
             return
         }
 
@@ -176,60 +153,53 @@ class MusicLibrarySessionCallback(
         cancelPlaylistDownload()
         downloadingCountryCode = countryCode
 
+        // Загрузка выполняется прямо в downloadJob: при отмене downloadJob отменяется и она.
+        // Раньше здесь были вложенные launch + join и catch (IOException), который не мог сработать: загрузка не бросает IOException
         downloadJob = serviceScope.launch {
-            state = STATE_INITIALIZING
+            readiness.state = STATE_INITIALIZING
 
             // Чтобы проверить, может быть такой плейлист уже скачан и сейчас используется, обновим переменную
-            if (firebaseMusicSource.radioStations.isNotEmpty()) {
-                lastCountryCode = firebaseMusicSource.radioStations[0].mediaMetadata.subtitle.toString()
+            firebaseMusicSource.radioStations.firstOrNull()?.let {
+                lastCountryCode = it.mediaMetadata.subtitle.toString()
             }
 
-            if (countryCode == "FAV") {
-                val job = launch { // дочерняя корутина downloadJob - отменяется вместе с ней
-                    try {
-                        Log.d(TAG, "PLAYLIST_UPDATE: Проверяем список в exoplayer, lastCountryCode = $lastCountryCode")
-                        if (!lastCountryCode.toString().endsWith("_FAV")) {
-                            // Скачиваем список избранного
-                            firebaseMusicSource.fetchFavouriteMediaData()
-                            Log.d(TAG, "PLAYLIST_UPDATE: 5. FAV_STAR: Запускаем метод для скачивания списка избранного в exoplayer")
-                        } else {
-                            Log.d(TAG, "!! PLAYLIST_UPDATE: 5. FAV_STAR: Список избранного уже скачан в exoplayer")
-                        }
-                    } catch (e: IOException) {
-                        e.printStackTrace()
-                        Log.d(TAG, "!! PLAYLIST_UPDATE: IOException !!")
-                    }
-                }
-                job.join()
-                // Раньше при пустом избранном state оставался STATE_INITIALIZING, и onSetMediaItems (выбор станции)
-                // ждал до следующей загрузки плейлиста. Теперь ожидающие сразу получают ответ: станции в плейлисте нет
-                state = STATE_INITIALIZED
+            when {
+                countryCode == "FAV" && lastCountryCode.orEmpty().endsWith("_FAV") ->
+                    Log.d(
+                        TAG,
+                        "!! PLAYLIST_UPDATE: 5. FAV_STAR: Список избранного уже скачан в exoplayer"
+                    )
 
-            } else if (lastCountryCode != countryCode || lastCountryCode?.endsWith("_FAV", true) == true) {
-                Log.d(TAG, "PLAYLIST_UPDATE: 2.$TAG, addSongs(). Скачиваем плейлист, т.к. $lastCountryCode != $countryCode")
-                val job = launch { // дочерняя корутина downloadJob - отменяется вместе с ней
-                    try {
-                        firebaseMusicSource.fetchMediaData(
-                            if (countryCode.toString() != "null" && countryCode.toString().isNotBlank()) countryCode.toString()
-                            else DEFAULT_COUNTRY_CODE
-                        )
-                    } catch (e: IOException) {
-                        // Когда сохранён не верный CountryCode, по запросу такого не найдёт и выдаст ошибку retrofit2.HttpException: HTTP 404
-                        Log.d(TAG, "PLAYLIST_UPDATE: 2.$TAG, addSongs(). Не получилось скачать плейлист. Exception: ${e.message}")
-                        e.printStackTrace()
-                        firebaseMusicSource.fetchMediaData(DEFAULT_COUNTRY_CODE)
-                    }
+                countryCode == "FAV" -> {
+                    Log.d(
+                        TAG,
+                        "PLAYLIST_UPDATE: 5. FAV_STAR: Скачиваем список избранного в exoplayer"
+                    )
+                    firebaseMusicSource.fetchFavouriteMediaData()
                 }
-                job.join()
-                Log.d(TAG, "PLAYLIST_UPDATE: 2.$TAG, addSongs(). Дождались окончания загрузки нового плейлиста")
-                state = STATE_INITIALIZED
 
-            } else {
-                Log.d(TAG, "PLAYLIST_UPDATE: Список countryCode = $countryCode уже скачан в exoplayer")
-                // Плейлист уже скачан - значит всё готово. Иначе state навсегда остаётся STATE_INITIALIZING
-                state = STATE_INITIALIZED
+                lastCountryCode != countryCode || lastCountryCode?.endsWith(
+                    "_FAV",
+                    true
+                ) == true -> {
+                    Log.d(
+                        TAG,
+                        "PLAYLIST_UPDATE: 2.$TAG, addSongs(). Скачиваем плейлист, т.к. $lastCountryCode != $countryCode"
+                    )
+                    firebaseMusicSource.fetchMediaData(
+                        if (!countryCode.isNullOrBlank() && countryCode != "null") countryCode else DEFAULT_COUNTRY_CODE
+                    )
+                }
+
+                else -> Log.d(
+                    TAG,
+                    "PLAYLIST_UPDATE: Список countryCode = $countryCode уже скачан в exoplayer"
+                )
             }
 
+            // Плейлист готов (или загрузка не удалась, а текущий плейлист остался рабочим): ожидающие получают ответ.
+            // При пустом избранном ожидающий выбор станции получит "станции нет в плейлисте" и не будет ждать бесконечно
+            readiness.state = STATE_INITIALIZED
             downloadingCountryCode = null
         }
     }
@@ -247,7 +217,13 @@ class MusicLibrarySessionCallback(
         val requestedItem = mediaItems.singleOrNull()
         if (requestedItem == null || requestedItem.localConfiguration != null) {
             // Пришли готовые станции с адресами - ставим как есть
-            return Futures.immediateFuture(MediaItemsWithStartPosition(mediaItems, startIndex, startPositionMs))
+            return Futures.immediateFuture(
+                MediaItemsWithStartPosition(
+                    mediaItems,
+                    startIndex,
+                    startPositionMs
+                )
+            )
         }
 
         val mediaId = requestedItem.mediaId
@@ -258,8 +234,12 @@ class MusicLibrarySessionCallback(
             val radioStations = firebaseMusicSource.radioStations
             val index = radioStations.indexOfFirst { it.mediaId == mediaId }
             if (index == -1) return false
-            lastCountryCode = radioStations[index].mediaMetadata.subtitle.toString() // Обновляем переменную класса после поиска
-            Log.d(TAG, "PLAYLIST_UPDATE: 2.$TAG, onSetMediaItems(). Включаем станцию ${radioStations[index].mediaMetadata.title}")
+            lastCountryCode =
+                radioStations[index].mediaMetadata.subtitle.toString() // Обновляем переменную класса после поиска
+            Log.d(
+                TAG,
+                "PLAYLIST_UPDATE: 2.$TAG, onSetMediaItems(). Включаем станцию ${radioStations[index].mediaMetadata.title}"
+            )
             result.set(MediaItemsWithStartPosition(radioStations, index, C.TIME_UNSET))
             return true
         }
@@ -268,10 +248,13 @@ class MusicLibrarySessionCallback(
             serviceScope.launch(Dispatchers.Main) {
                 if (completeIfFound()) return@launch
                 // Станции нет в плейлисте: возможно, как раз скачивается новый плейлист - ждём его
-                whenReady {
+                readiness.whenReady {
                     serviceScope.launch(Dispatchers.Main) {
                         if (!completeIfFound()) {
-                            Log.d(TAG, "PLAYLIST_UPDATE: 2.$TAG, onSetMediaItems(). Станция $mediaId не найдена в плейлисте")
+                            Log.d(
+                                TAG,
+                                "PLAYLIST_UPDATE: 2.$TAG, onSetMediaItems(). Станция $mediaId не найдена в плейлисте"
+                            )
                             result.setException(IllegalStateException("Radio station $mediaId is not in the playlist"))
                         }
                     }
@@ -285,7 +268,8 @@ class MusicLibrarySessionCallback(
         session: MediaLibrarySession,
         browser: MediaSession.ControllerInfo,
         params: LibraryParams?
-    ): ListenableFuture<LibraryResult<MediaItem>> = Futures.immediateFuture(LibraryResult.ofItem(rootItem, params))
+    ): ListenableFuture<LibraryResult<MediaItem>> =
+        Futures.immediateFuture(LibraryResult.ofItem(rootItem, params))
 
     // Нужен для подписки на список станций (MediaBrowser.subscribe): по умолчанию сессия проверяет, что корень - папка
     override fun onGetItem(
@@ -293,10 +277,17 @@ class MusicLibrarySessionCallback(
         browser: MediaSession.ControllerInfo,
         mediaId: String
     ): ListenableFuture<LibraryResult<MediaItem>> {
-        if (mediaId == MEDIA_ROOT_ID) return Futures.immediateFuture(LibraryResult.ofItem(rootItem, null))
+        if (mediaId == MEDIA_ROOT_ID) return Futures.immediateFuture(
+            LibraryResult.ofItem(
+                rootItem,
+                null
+            )
+        )
         val item = firebaseMusicSource.radioStations.find { it.mediaId == mediaId }
         return Futures.immediateFuture(
-            if (item != null) LibraryResult.ofItem(item, null) else LibraryResult.ofError(SessionError.ERROR_BAD_VALUE)
+            if (item != null) LibraryResult.ofItem(item, null) else LibraryResult.ofError(
+                SessionError.ERROR_BAD_VALUE
+            )
         )
     }
 
@@ -317,7 +308,7 @@ class MusicLibrarySessionCallback(
         firebaseMusicSource.whenReady { isInitialized ->
             serviceScope.launch(Dispatchers.Main) {
                 if (isInitialized) {
-                    val radioStations = firebaseMusicSource.asMediaItems()
+                    val radioStations = firebaseMusicSource.radioStations
                     setInitialPlaylistIfEmpty(radioStations)
                     result.set(LibraryResult.ofItemList(radioStations, params))
                 } else {
@@ -336,15 +327,12 @@ class MusicLibrarySessionCallback(
     private fun setInitialPlaylistIfEmpty(radioStations: List<MediaItem>) {
         if (player.mediaItemCount > 0 || radioStations.isEmpty()) return
         val lastUsedRadioStationUrl = getLastUsedRadioStationUrl()
-        val lastIndex = radioStations.indexOfFirst { it.localConfiguration?.uri.toString() == lastUsedRadioStationUrl }
+        val lastIndex =
+            radioStations.indexOfFirst { it.localConfiguration?.uri.toString() == lastUsedRadioStationUrl }
         player.setMediaItems(radioStations, lastIndex.coerceAtLeast(0), C.TIME_UNSET)
-        Log.d(TAG, "PLAYLIST_UPDATE: 5.$TAG, плейлист положен в плейер, станция ${lastIndex.coerceAtLeast(0)}")
+        Log.d(
+            TAG,
+            "PLAYLIST_UPDATE: 5.$TAG, плейлист положен в плейер, станция ${lastIndex.coerceAtLeast(0)}"
+        )
     }
-}
-
-enum class State {
-    STATE_CREATED,
-    STATE_INITIALIZING,
-    STATE_INITIALIZED,
-    STATE_ERROR
 }

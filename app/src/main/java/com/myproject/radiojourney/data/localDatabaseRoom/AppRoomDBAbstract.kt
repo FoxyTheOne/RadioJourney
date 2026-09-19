@@ -16,8 +16,8 @@ import com.myproject.radiojourney.entities.local.UserEntity
 //    ]
 )
 @TypeConverters(LatLngConverter::class)
+// UserEntity (таблица от удалённых экранов входа) оставлена в @Database: удаление таблицы меняет схему базы и требует миграции
 abstract class AppRoomDBAbstract : RoomDatabase() {
-    abstract fun getUserDAO(): IUserDAO
     abstract fun getCountryDAO(): ICountryDAO
     abstract fun getRadioStationDAO(): IRadioStationDAO
 

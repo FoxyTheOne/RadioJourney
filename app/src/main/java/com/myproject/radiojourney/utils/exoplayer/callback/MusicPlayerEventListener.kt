@@ -6,8 +6,8 @@ import androidx.annotation.OptIn
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.source.UnrecognizedInputFormatException
 import androidx.media3.datasource.HttpDataSource.HttpDataSourceException
+import androidx.media3.exoplayer.source.UnrecognizedInputFormatException
 import com.myproject.radiojourney.utils.exoplayer.MusicService
 
 class MusicPlayerEventListener(
@@ -33,7 +33,6 @@ class MusicPlayerEventListener(
                 )
                 Toast.makeText(musicService, "Exoplayer can't read the stream", Toast.LENGTH_LONG)
                     .show()
-                musicService.testMethodForError("UnrecognizedInputFormatException") // Пустой, написать, если нужно
             }
 
             is HttpDataSourceException -> {
@@ -43,7 +42,6 @@ class MusicPlayerEventListener(
                 )
                 Toast.makeText(musicService, "Exoplayer can't read this url", Toast.LENGTH_LONG)
                     .show()
-                musicService.testMethodForError("HttpDataSourceException") // Пустой, написать, если нужно
             }
 
             else -> {

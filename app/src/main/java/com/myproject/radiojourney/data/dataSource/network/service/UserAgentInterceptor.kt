@@ -8,8 +8,7 @@ import okhttp3.Interceptor
 import okhttp3.Response
 import java.io.IOException
 
-
-class UserAgentInterceptor (context: Context) : Interceptor {
+class UserAgentInterceptor(context: Context) : Interceptor {
 
     companion object {
         private const val USER_AGENT = "User-Agent"
@@ -20,7 +19,6 @@ class UserAgentInterceptor (context: Context) : Interceptor {
             "(${context.packageName}; " +
             "build:${BuildConfig.VERSION_CODE} " +
             "Android SDK ${Build.VERSION.SDK_INT}) " +
-//            "${Version.userAgent()} " +
             getDeviceName()
 
     private fun getApplicationName(context: Context): String? {

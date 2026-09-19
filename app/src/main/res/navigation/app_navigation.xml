@@ -11,18 +11,19 @@
         <action
             android:id="@+id/action_homeRadioFragment_to_radioListFragment"
             app:destination="@id/radioListFragment">
-            <!-- Передаём countryCode на следующий фрагмент для запроса списка станций -->
+            <!-- Передаём код и название страны на следующий фрагмент для запроса списка станций.
+                 Раньше это была одна строка "код||название", которую фрагмент разбирал сам -->
             <argument
                 android:name="country_code"
+                app:argType="string" />
+            <argument
+                android:name="country_name"
                 app:argType="string" />
 
         </action>
         <action
             android:id="@+id/action_homeRadioFragment_to_favouriteListFragment"
             app:destination="@id/favouriteListFragment" />
-        <action
-            android:id="@+id/action_homeRadioFragment_to_recommendedListFragment"
-            app:destination="@id/recommendedListFragment" />
         <action
             android:id="@+id/action_homeRadioFragment_to_currentPlaylistFragment"
             app:destination="@id/currentPlaylistFragment" />
@@ -60,20 +61,6 @@
     </fragment>
 
     <fragment
-        android:id="@+id/recommendedListFragment"
-        android:name="com.myproject.radiojourney.presentation.content.recommendedList.RecommendedListFragment"
-        android:label="RecommendedListFragment">
-        <action
-            android:id="@+id/action_recommendedListFragment_to_homeRadioFragment"
-            app:destination="@id/homeRadioFragment">
-
-            <argument
-                android:name="radio_station"
-                app:argType="com.myproject.radiojourney.entities.presentation.RadioStationPresentation" />
-        </action>
-    </fragment>
-
-    <fragment
         android:id="@+id/firstScreenLoadingFragment"
         android:name="com.myproject.radiojourney.presentation.firstScreen.FirstScreenLoadingFragment"
         android:label="FirstScreenLoadingFragment">
@@ -91,7 +78,7 @@
     <fragment
         android:id="@+id/currentPlaylistFragment"
         android:name="com.myproject.radiojourney.presentation.content.radioStationList.current.CurrentPlaylistFragment"
-        android:label="CurrentPlaylistFragment" >
+        android:label="CurrentPlaylistFragment">
         <action
             android:id="@+id/action_currentPlaylistFragment_to_homeRadioFragment"
             app:destination="@id/homeRadioFragment">
@@ -104,7 +91,7 @@
     <fragment
         android:id="@+id/settingsFragment"
         android:name="com.myproject.radiojourney.presentation.content.settingsFragment.SettingsFragment"
-        android:label="SettingsFragment" >
+        android:label="SettingsFragment">
         <action
             android:id="@+id/action_settingsFragment_to_homeRadioFragment"
             app:destination="@id/homeRadioFragment" />

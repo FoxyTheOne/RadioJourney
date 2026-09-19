@@ -8,23 +8,10 @@ import kotlinx.coroutines.flow.Flow
 // а здесь нужно точное совпадение id или флага
 @Dao
 interface IRadioStationDAO {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun saveRadioStationList(vararg radioStationLocalList: RadioStationLocal)
-
     @Query("SELECT * from RadioStationLocal WHERE stationuuid = :stationUuid")
     suspend fun getRadioStationByUuid(stationUuid: String): RadioStationLocal?
 
-    @Query("SELECT * from RadioStationLocal WHERE url_resolved = :urlResolved")
-    suspend fun getRadioStationByUrl(urlResolved: String): RadioStationLocal?
-    // ^ Могут быть сохранены в локальную базу несколько одинаковых станций с разным stationUuid. В таком случае могут возникнуть ошибки, в зависимости от того, какая станция прилетит по запросу
-
-    @Query("SELECT * from RadioStationLocal WHERE countrycode = :countryCode")
-    fun getRadioStationList(countryCode: String): Flow<List<RadioStationLocal>>
-
     // suspend: Room сам выполняет запрос в фоновом потоке. Без suspend вызов из главного потока падает с исключением
-    @Query("SELECT * from RadioStationLocal WHERE isStationInRecommended = :isStationInRecommended")
-    suspend fun getRecommendedRadioStationList(isStationInRecommended: Boolean): List<RadioStationLocal>
-
     @Query("SELECT * from RadioStationLocal WHERE isStationInFavourite = :isStationInFavorite")
     suspend fun getFavoriteRadioStationList(isStationInFavorite: Boolean): List<RadioStationLocal>
 
@@ -35,9 +22,9 @@ interface IRadioStationDAO {
     suspend fun updateIsStationInFavourite(stationUuid: String, isFavourite: Boolean)
 
     // Добавить станцию в избранное или убрать из него.
-// Раньше станция целиком перезаписывалась (REPLACE) данными с экрана, и вместе со звездой затирались другие поля
-// (например, isStationInRecommended), если на экране был устаревший объект. Теперь меняется только флаг избранного;
-// станции, которой ещё нет в базе, сначала добавляется. @Transaction - обе операции выполняются вместе
+    // Раньше станция целиком перезаписывалась (REPLACE) данными с экрана, и вместе со звездой затирались другие поля
+    // (например, isStationInRecommended), если на экране был устаревший объект. Теперь меняется только флаг избранного;
+    // станции, которой ещё нет в базе, сначала добавляется. @Transaction - обе операции выполняются вместе
     @Transaction
     suspend fun setStationFavourite(radioStation: RadioStationLocal, isFavourite: Boolean) {
         insertRadioStationIfAbsent(radioStation.copy(isStationInFavourite = isFavourite))

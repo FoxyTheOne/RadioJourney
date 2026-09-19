@@ -30,12 +30,8 @@ interface IRadioService {
     @GET("$BASE_PATH/{countrycodes}")
     suspend fun getCountryCodeList(
         @Path("countrycodes") countryCodes: String = COUNTRY_CODE_PATH,
-
-        // <!-- 004 claude
         // Считать только работающие станции (как и в списке станций ниже)
         @Query("hidebroken") hideBroken: Boolean = true
-        // 004 claude -->
-
     ): List<CountryCodeRemote>
 
     // Пример - http://de1.api.radio-browser.info/{format}/stations/bycountrycodeexact/{searchterm}
@@ -45,8 +41,6 @@ interface IRadioService {
         @Path("stations") stations: String = STATIONS_PATH,
         @Path("bycountrycodeexact") byCountryCodeExact: String = BY_COUNTRY_CODE_EXACT_PATH,
         @Path("searchterm") searchTerm: String,
-
-        // <!-- 004 claude
         // Не присылать станции, которые не прошли последнюю проверку сервера radio-browser (lastcheckok = 0)
         @Query("hidebroken") hideBroken: Boolean = true,
         // Сортировка и лимит - на сервере. Без них сервер отдаёт максимум 1000 станций в произвольном порядке
@@ -54,15 +48,12 @@ interface IRadioService {
         @Query("order") order: String = "clickcount",
         @Query("reverse") reverse: Boolean = true,
         @Query("limit") limit: Int = MAX_STATIONS_COUNT
-        // 004 claude -->
-
     ): List<RadioStationRemote>
 
     //    Station click counter
 //
 //    Increase the click count of a station by one. This should be called everytime when a user starts playing a stream to mark the stream more popular than others. Every call to this endpoint from the same IP address and for the same station only gets counted once per day. The call will return detailed information about the stream, supported output formats: JSON, XML ,PLS ,M3U
 //    Syntax:
-//
 //    http://de1.api.radio-browser.info/xml/url/stationuuid
 //    http://de1.api.radio-browser.info/json/url/stationuuid
 //    http://de1.api.radio-browser.info/pls/url/stationuuid

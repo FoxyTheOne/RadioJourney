@@ -1,20 +1,17 @@
 package com.myproject.radiojourney.presentation.content.radioStationList.radioList
 
-import android.accounts.AccountsException
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myproject.radiojourney.domain.radioListUseCase.IRadioListUseCase
-import com.myproject.radiojourney.utils.extension.call
 import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
-import com.myproject.radiojourney.other.Event
-import com.myproject.radiojourney.other.Resource
 import com.myproject.radiojourney.other.Status
+import com.myproject.radiojourney.utils.extension.call
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.io.IOException
 import javax.inject.Inject
 
 /**
@@ -25,69 +22,38 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class RadioListViewModel @Inject constructor(
-    private val radioListInteractor: IRadioListUseCase
+    private val radioListInteractor: IRadioListUseCase,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-//    companion object {
-//        private const val TAG = "RadioListViewModel"
-//    }
+    // Аргументы навигации (код и название страны) ViewModel получает сама через SavedStateHandle
+    val countryCode: String = savedStateHandle["country_code"] ?: ""
+    val countryName: String = savedStateHandle["country_name"] ?: ""
 
-    // Получение списка радиостанций
     private val _radioStationListLiveData = MutableLiveData<List<RadioStationPresentation>>()
-    val radioStationListLiveData: MutableLiveData<List<RadioStationPresentation>> =
+    val radioStationListLiveData: LiveData<List<RadioStationPresentation>> =
         _radioStationListLiveData
 
-    // LiveData, которые будут отвечать за отображение прогресса (кружок)
-    private val _showProgressLiveData = MutableLiveData<Boolean>()
-    val showProgressLiveData: MutableLiveData<Boolean> = _showProgressLiveData
-    private val _hideProgressLiveData = MutableLiveData<Boolean>()
-    val hideProgressLiveData: MutableLiveData<Boolean> = _hideProgressLiveData
-
-    // If smth went wrong
-    private val _errorMessageLiveData =
-        MutableLiveData<Event<Resource<Boolean>>>() // It must be private, so that other classes can't change it
-    val errorMessageLiveData: LiveData<Event<Resource<Boolean>>> =
-        _errorMessageLiveData // And another LiveData, that equals to previous, so that classes can't change it
-
-    // LiveData для открытия диалогового окна
-    private val _dialogInternetTroubleLiveData = MutableLiveData<Boolean>()
-    val dialogInternetTroubleLiveData: MutableLiveData<Boolean> = _dialogInternetTroubleLiveData
     private val _serverIsDownLiveData = MutableLiveData<Boolean>()
-    val serverIsDownLiveData: MutableLiveData<Boolean> = _serverIsDownLiveData
+    val serverIsDownLiveData: LiveData<Boolean> = _serverIsDownLiveData
 
-    fun getRadioStationList(countryCode: String) {
+    init {
+        // Список загружается один раз при создании ViewModel. Раньше загрузка запускалась из onViewCreated,
+        // и при каждом возвращении на этот экран (кнопкой "назад") список заново скачивался с сервера
+        loadRadioStationList()
+    }
+
+    // Получаем список радиостанций, преобразуем. Сохранять в Room не будем. Радиостанций очень много, будет занимать много места на телефоне.
+    // Кроме того, списки на сервере постоянно обновляются. Возможно какой-то радиостанции в списке уже не будет, а в локальной БД она ещё осталась.
+    private fun loadRadioStationList() {
         viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val radioStationPresentationRecourse =
-                    radioListInteractor.getRadioStationList(countryCode)
-
-                if (radioStationPresentationRecourse.status == Status.ERROR) {
-                    _serverIsDownLiveData.call()
-                } else {
-                    radioStationPresentationRecourse.data?.let {
-                        val radioStationPresentation: List<RadioStationPresentation> = it
-                        _radioStationListLiveData.postValue(radioStationPresentation)
-                    }
-                }
-            } catch (e1: AccountsException) {
-                // AccountsException -> Known direct subclasses: AuthenticatorException, NetworkErrorException, OperationCanceledException
-                e1.printStackTrace()
-                _dialogInternetTroubleLiveData.call()
-                _hideProgressLiveData.call()
-            } catch (e: IOException) {
-                e.printStackTrace()
-                _dialogInternetTroubleLiveData.call()
-                _errorMessageLiveData.postValue(
-                    Event(
-                        Resource.error(
-                            "Failed connecting to the local database",
-                            null
-                        )
-                    )
-                )
-                _hideProgressLiveData.call()
+            val radioStationPresentationResource =
+                radioListInteractor.getRadioStationList(countryCode)
+            if (radioStationPresentationResource.status == Status.ERROR) {
+                _serverIsDownLiveData.call()
+            } else {
+                _radioStationListLiveData.postValue(radioStationPresentationResource.data.orEmpty())
             }
         }
     }
-
 }

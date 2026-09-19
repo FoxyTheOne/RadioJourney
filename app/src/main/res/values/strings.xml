@@ -2,32 +2,21 @@
     <string name="app_name">RadioJourney</string>
 
     <string name="first_screen_tittle">Welcome to RadioJourney!</string>
-    <string name="first_screen_text1">If it is the first start - please wait until cashing ends.</string>
-    <string name="first_screen_text2">If cashing failed on the first start, check your internet connection, and then restart the program.</string>
     <string name="first_screen_text1_2">If it is the first start - please wait until cashing ends. If it failed, check your internet connection and then restart the program.</string>
-    <string name="first_screen_text3">The functionality of the program depends on the availability of the server from which information about the radio stations is obtained.</string>
+    <string name="first_screen_text3">The functionality of the program depends on the availability of the server from which information about radio stations is obtained.</string>
     <string name="first_screen_button">Start journey</string>
 
-    <string name="content_description_email">Email</string>
-    <string name="content_description_password">Password</string>
-    <string name="content_description_confirm_password">Confirm password</string>
-    <string name="content_description_userName">User Name</string>
 
     <string name="logout_intention_question">Do you want to exit?</string>
 
     <string name="homeRadio_zoomPlus">+</string>
     <string name="homeRadio_zoomMinus">-</string>
-    <string name="homeRadio_goToRecommended">Recommended</string>
     <string name="homeRadio_goToFavourites">Favorites</string>
-    <string name="homeRadio_selectRadioStation">Select radio station</string>
-    <string name="homeRadio_canTakeTime">It may take time to connect.</string>
     <string name="homeRadio_mayNotWork">Also selected radio station may not work right now.</string>
     <string name="homeRadio_youAreHere">You are here</string>
 
     <string name="dialogInternetTrouble_title">Some internet trouble!</string>
     <string name="dialogInternetTrouble_title4">Obtained list is empty</string>
-    <string name="dialogInternetTrouble_text_cashing">If it is the first start and cashing didn\'t end - please, check your internet connection, and then restart the program.</string>
-    <string name="dialogInternetTrouble_text2_cashing">Otherwise, just ignore this message. Repeat your last action if needed.</string>
     <string name="dialogInternetTrouble_text">Some internet or account trouble occurred. Try to repeat last action or check your internet connection.</string>
     <string name="dialogInternetTrouble_text3">Please check your internet connection.</string>
     <string name="dialogInternetTrouble_text4"> It looks like the radio station information server is down. Please try again later or check your internet connection.</string>
@@ -37,8 +26,6 @@
     <string name="dialogPleaseWait_title2">Something went wrong</string>
     <string name="dialogPleaseWait_text2">It looks like the radio station information server is down. Please try again later</string>
     <string name="dialogPleaseWait_text5">The radio station information server was unavailable during the last request. You can try to repeat your request or restart the program later</string>
-    <string name="dialogInternetTrouble_title2">Caching retry</string>
-    <string name="dialogInternetTrouble_text2">Something went wrong. Trying to reconnect to the radio station information server.</string>
 
     <string name="radioStationList_title_loading">Asking server for a list of radio station names…</string>
     <string name="radioStationList_title_select">Radio station list. Select one:</string>
@@ -48,22 +35,15 @@
 
     <string name="downloading_playlist">Downloading playlist</string>
     <string name="downloading_radio_station">Connecting to the radio station</string>
-    <string name="connecting">Connecting to the server…</string>
 
-    <string name="foregroundNotification_name">Cashing. Please, wait. </string>
-    <string name="foregroundNotification_description">Cashing… </string>
-    <string name="foregroundNotification_failedName">Cashing failed.</string>
-    <string name="foregroundNotification_failedDescription">Please, try turn on and then turn off airplane mode. And then restart the program, if needed.</string>
 
     <string name="favouriteRadioStationList_title">My favourites:</string>
     <string name="favouriteRadioStationList_empty">It\'s empty here. Try adding stars to your favourite stations.</string>
 
-    <string name="recommendedRadioStationList_title">Recommended radio stations:</string>
 
     <string name="currentPlaylist_title">Current playlist</string>
     <string name="currentPlaylist_empty">Playlist is empty</string>
 
-    <string name="settings_tittle">Settings</string>
     <string name="settings_tittle2">About</string>
     <string name="settings_text1">This application is created for listening to Internet radio stations.</string>
     <string name="settings_text2">Therefor we use database https://www.radio-browser.info/ that contains information about Internet radio stations all over the world.</string>
@@ -75,14 +55,11 @@
     <string name="settings_saveToLocalStorage">Save to local storage</string>
     <string name="settings_restoreLocalStorage">Restore from local storage</string>
     <string name="settings_textMail">Mail for your feedbacks</string>
-    <string name="settings_textMail2">It is my first app. Feel free to email your advices</string>
     <string name="settings_mail">gartel.av@gmail.com</string>
-    <string name="settings_textAndMail">Mail for your feedbacks: gartel.av@gmail.com</string>
     <string name="settings_coffee">Support the project (Boosty)</string>
     <string name="settings_pixabay">The app uses images from pixabay.com</string>
 
     <!-- exoplayer -->
     <string name="notification_channel_name">Radio station channel</string>
-    <string name="notification_channel_description">Shows the currently playing radio station</string>
 
 </resources>

@@ -39,12 +39,6 @@
         <item name="cornerSize">24dp</item>
     </style>
 
-    <style name="MyInputLayoutStyle" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
-        <item name="boxStrokeWidth">2dp</item>
-        <item name="boxStrokeWidthFocused">2dp</item>
-        <item name="boxBackgroundColor">@color/black_transparent_50</item>
-    </style>
-
     <style name="title_default" parent="@style/TextAppearance.AppCompat">
         <item name="android:textColor">@color/white_transparent_60</item>
         <item name="fontFamily">@font/comfortaa_variable_font_wght</item>

@@ -6,23 +6,15 @@ object Constants {
     const val MEDIA_ROOT_ID = "root_id"
     const val NETWORK_ERROR = "NETWORK_ERROR"
 
-    // For ResultReceiver in onCommand()
+    // Команды сервису плеера (MusicLibrarySessionCallback.onCustomCommand)
     const val ADD_SONGS = "Add Songs"
-    const val CANCEL_PLAYLIST_DOWNLOAD = "Cancel playlist download" // отменить загрузку плейлиста (по таймауту полосы загрузки)
-    const val PLAYLIST_ID = "Add Songs"
+    const val CANCEL_PLAYLIST_DOWNLOAD =
+        "Cancel playlist download" // отменить загрузку плейлиста (по таймауту полосы загрузки)
     const val COUNTRY_CODE_ID = "Country code"
-    const val COMMAND_SUCCESS = 1
-    const val COMMAND_ERROR = 0
 
     // Notification from exoplayer
     const val NOTIFICATION_CHANNEL_ID = "music"
     const val NOTIFICATION_ID = 1
-    const val UPDATE_PLAYER_POSITION_INTERVAL =
-        100L // we will update our seek bar 10 times a second
-
-    const val AUDIO_CONNECTING = "Connecting to radio station..."
-    const val AUDIO_PLAYING = "Audio started playing"
-    const val AUDIO_STOPPED = "Audio stopped"
 
     const val SERVER_IS_DOWN = "SERVER_IS_DOWN"
 
