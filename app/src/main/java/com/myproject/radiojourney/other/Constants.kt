@@ -1,5 +1,12 @@
 package com.myproject.radiojourney.other
 
+/**
+ * Константы приложения: коды, имена команд сервису плеера и тайминги сетевых запросов.
+ *
+ * Тайминги собраны в одном месте не для красоты: PROGRESS_TIMEOUT (сколько висит полоса загрузки)
+ * должен быть больше, чем максимальное время перебора серверов, иначе полоса пропадёт раньше, чем придёт ответ.
+ * Когда такие значения разбросаны по классам, это соотношение легко сломать
+ */
 object Constants {
     const val MAX_STATIONS_COUNT = 300
     const val DEFAULT_COUNTRY_CODE = "AQ"
@@ -8,8 +15,7 @@ object Constants {
 
     // Команды сервису плеера (MusicLibrarySessionCallback.onCustomCommand)
     const val ADD_SONGS = "Add Songs"
-    const val CANCEL_PLAYLIST_DOWNLOAD =
-        "Cancel playlist download" // отменить загрузку плейлиста (по таймауту полосы загрузки)
+    const val CANCEL_PLAYLIST_DOWNLOAD = "Cancel playlist download" // отменить загрузку плейлиста (по таймауту полосы загрузки)
     const val COUNTRY_CODE_ID = "Country code"
 
     // Notification from exoplayer
@@ -18,15 +24,24 @@ object Constants {
 
     const val SERVER_IS_DOWN = "SERVER_IS_DOWN"
 
-    // Запросы к серверу radio-browser (RadioServiceWrapper, NetworkRadioDataSource)
+    // Запросы к серверу radio-browser (RadioServiceWrapper, NetworkRadioDataSource).
+    // Все константы, которые влияют друг на друга по времени, собраны здесь, чтобы их можно было сравнить глазами
     const val NETWORK_CONNECT_TIMEOUT = 5_000L // подключение к одному адресу сервера
     const val NETWORK_READ_TIMEOUT = 15_000L // пауза в получении данных
     const val NETWORK_CALL_TIMEOUT = 30_000L // один запрос целиком
     const val SERVER_SEARCH_TIME = 40_000L // сколько времени перебираем серверы, прежде чем сдаться
+    const val SERVER_RETRY_DELAY = 1_000L // пауза перед попыткой на следующем сервере
+    const val DNS_RETRY_DELAY = 1_000L // пауза перед повторным DNS-запросом списка серверов
+    const val DNS_ATTEMPTS = 3 // сколько раз спрашиваем у DNS список серверов, прежде чем взять запасной
+    const val DNS_SERVER_LIST_NAME = "all.api.radio-browser.info" // имя, по которому DNS отдаёт все серверы radio-browser
+    const val FALLBACK_SERVER = "de1.api.radio-browser.info" // сервер из документации API - на случай, если DNS не ответил
 
     // Сколько максимум может висеть полоса загрузки плейлиста/станции. Потом прячем её и показываем ошибку.
-    // Должно быть больше, чем может занять перебор серверов: SERVER_SEARCH_TIME + последний запрос (NETWORK_CALL_TIMEOUT) + запас
-    const val PROGRESS_TIMEOUT = SERVER_SEARCH_TIME + NETWORK_CALL_TIMEOUT + 20_000L
+    // Должно быть больше, чем может занять перебор серверов, иначе полоса пропадёт раньше, чем придёт плейлист:
+    // DNS (DNS_ATTEMPTS попыток с паузой DNS_RETRY_DELAY) + перебор серверов (SERVER_SEARCH_TIME)
+    // + последний начатый запрос, который успел стартовать до конца перебора (NETWORK_CALL_TIMEOUT) + запас
+    const val PROGRESS_TIMEOUT =
+        DNS_ATTEMPTS * DNS_RETRY_DELAY + SERVER_SEARCH_TIME + NETWORK_CALL_TIMEOUT + 20_000L
 
     // Через сколько убрать уведомление, если радио стоит на паузе (или остановлено ошибкой)
     const val PAUSED_NOTIFICATION_TIMEOUT = 5 * 60_000L

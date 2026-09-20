@@ -6,17 +6,19 @@ import com.myproject.radiojourney.data.dataSource.network.service.IRadioService
 import com.myproject.radiojourney.data.dataSource.network.service.IRadioServiceWrapper
 import com.myproject.radiojourney.data.dataSource.network.entity.CountryCodeRemote
 import com.myproject.radiojourney.data.dataSource.network.entity.RadioStationRemote
+import com.myproject.radiojourney.other.Constants.DNS_ATTEMPTS
+import com.myproject.radiojourney.other.Constants.DNS_RETRY_DELAY
+import com.myproject.radiojourney.other.Constants.DNS_SERVER_LIST_NAME
+import com.myproject.radiojourney.other.Constants.FALLBACK_SERVER
 import com.myproject.radiojourney.other.Constants.MAX_STATIONS_COUNT
 import com.myproject.radiojourney.other.Constants.SERVER_IS_DOWN
+import com.myproject.radiojourney.other.Constants.SERVER_RETRY_DELAY
 import com.myproject.radiojourney.other.Constants.SERVER_SEARCH_TIME
 import com.myproject.radiojourney.other.Resource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import okhttp3.ResponseBody
-import retrofit2.HttpException
-import retrofit2.Response
 import java.net.InetAddress
 import java.net.UnknownHostException
 import javax.inject.Inject
@@ -51,16 +53,10 @@ class NetworkRadioDataSource @Inject constructor(
 ) : INetworkRadioDataSource {
     companion object {
         private const val TAG = "NetworkRadioDataSource"
-        private const val DNS_RETRY_DELAY = 1_000L
-        private const val FALLBACK_SERVER = "de1.api.radio-browser.info"
-
-        // Небольшая пауза перед попыткой на следующем сервере
-        private const val SERVER_RETRY_DELAY = 1_000L
     }
 
     override suspend fun getCountryCodeList(): List<CountryCodeRemote> =
-        requestFromAnyServer(isValidResult = { it.isNotEmpty() }) { getCountryCodeList() }
-            ?: listOf()
+        requestFromAnyServer(isValidResult = { it.isNotEmpty() }) { getCountryCodeList() } ?: listOf()
 
     // Список станций страны. Серверы перебираются по кругу, пока не пройдёт SERVER_SEARCH_TIME
     // (полоса загрузки PROGRESS_TIMEOUT рассчитана так, чтобы не пропасть раньше, чем закончится перебор)
@@ -106,100 +102,109 @@ class NetworkRadioDataSource @Inject constructor(
         } == null
 
     /**
-     * Выполнить запрос на одном из серверов radio-browser.
-     * Раньше этот перебор серверов был написан трижды (для стран, станций и отметки популярности), с разной обработкой ошибок.
+     * Выполнить запрос на одном из серверов radio-browser и вернуть первый подходящий ответ.
      *
-     * - Список серверов перемешивается (п. 2 документации API), каждый сервер пробуется хотя бы раз;
-     * - если задан searchTimeMs, серверы перебираются по кругу, пока не пройдёт это время;
-     * - ошибка одного сервера (нет соединения, ошибка HTTP, некорректный ответ) - переходим к следующему;
-     * - отмена корутины (выбран другой плейлист) прекращает перебор.
+     * Раньше этот перебор серверов был написан трижды (для стран, для станций и для отметки популярности),
+     * каждый раз чуть по-своему и с разной обработкой ошибок. Отличались же эти три места только двумя вещами:
+     * каким методом API дёргать сервер и какой ответ считать удачным. Именно их метод и принимает параметрами.
      *
-     * @return результат первого сервера, для которого isValidResult == true, или null
+     * Как читать сигнатуру:
+     * - `<T>` - тип ответа. Метод не знает, что именно он получает: список стран, список станций или ответ "ok".
+     *   Тип подставит компилятор по лямбде [request] (для стран T = List<CountryCodeRemote> и т.д.);
+     * - [request] - `suspend IRadioService.() -> T` - это "лямбда с приёмником": внутри неё `this` - это готовый
+     *   IRadioService нужного сервера, поэтому в вызове пишется просто `{ getCountryCodeList() }`, без имени переменной.
+     *   `suspend` - потому что внутри вызывается suspend-метод Retrofit;
+     * - [isValidResult] - что считать удачей. Сервер может ответить 200 OK и прислать пустой список, а нам нужен
+     *   следующий сервер. Для стран и станций это `{ it.isNotEmpty() }`, для отметки популярности - `{ it.ok != null }`;
+     * - [searchTimeMs] - сколько времени перебирать серверы по кругу. 0 - обойти каждый сервер ровно один раз.
+     *   Долго перебираем только плейлист станций (SERVER_SEARCH_TIME): без него пользователь увидит ошибку
+     *   из-за одного неудачного сервера, а список стран и отметка популярности могут подождать до следующего запуска.
+     *
+     * @return ответ первого сервера, для которого [isValidResult] вернул true, или null, если не ответил никто
      */
     private suspend fun <T> requestFromAnyServer(
         searchTimeMs: Long = 0L,
         isValidResult: (T) -> Boolean,
         request: suspend IRadioService.() -> T
     ): T? {
-        // 1. Get a list of available servers. Distinct - DNS возвращает одно и то же имя сервера для каждого его IP-адреса.
-        // 2. Randomize the list and choose the first entry of the now random list. If a request fails just retry the request with the next entry in the list.
+        // Шаг 1 документации API: получить список доступных серверов через DNS.
+        // distinct() - у одного сервера несколько IP-адресов (IPv4 и IPv6), и DNS возвращает его имя столько раз,
+        // сколько у него адресов. Без distinct() мы бы ходили на один и тот же сервер по два раза подряд.
+        // Шаг 2 документации: перемешать список, чтобы все пользователи приложения не нагружали один и тот же сервер
         val servers = updateDNSList().distinct().shuffled()
+
+        // elapsedRealtime() - время с момента загрузки телефона. В отличие от System.currentTimeMillis() оно не прыгнет,
+        // если пользователь (или сеть) переведёт часы, поэтому для измерения длительности берут именно его
         val searchStartTime = SystemClock.elapsedRealtime()
         var attempt = 0
 
+        // Условие цикла читается так: пока есть куда ходить И (мы ещё не обошли каждый сервер по одному разу
+        // ИЛИ нам разрешено ходить по кругу и время перебора ещё не вышло)
         while (servers.isNotEmpty() &&
             (attempt < servers.size || SystemClock.elapsedRealtime() - searchStartTime < searchTimeMs)
         ) {
+            // Остаток от деления - это и есть "по кругу": когда attempt дойдёт до конца списка, снова начнём с нулевого сервера
             val baseURL = "https://${servers[attempt % servers.size]}"
             attempt++
             Log.d(TAG, "Запрос к серверу $baseURL, попытка $attempt")
 
             try {
+                // Вот здесь вызывается лямбда: getRadioService(baseURL) даёт IRadioService этого сервера,
+                // а .request() выполняет на нём тот метод API, который передали в параметре
                 val result = radioServiceWrapper.getRadioService(baseURL).request()
+                // Ответ получен. Если он нас устраивает - выходим из цикла и из метода, остальные серверы не трогаем
                 if (isValidResult(result)) return result
                 Log.d(TAG, "Сервер $baseURL прислал пустой ответ")
             } catch (e: CancellationException) {
+                // Корутину отменили (например, пользователь выбрал другой плейлист, и старая загрузка больше не нужна).
+                // Отмену нельзя "проглатывать" вместе с остальными ошибками: если её поймать и продолжить цикл,
+                // мы будем ходить по серверам ради результата, который уже никому не нужен. Поэтому пробрасываем дальше
                 throw e
             } catch (e: Exception) {
-                // IOException (нет соединения, таймаут), HttpException (например, 502/503), JsonSyntaxException (не тот ответ)
+                // Любая ошибка этого сервера - не повод сдаваться, просто пробуем следующий:
+                // IOException (нет сети, таймаут), HttpException (например, 502 или 503),
+                // JsonSyntaxException (сервер жив, но ответил не тем, что мы ждём)
                 Log.d(TAG, "Сервер $baseURL: ${e.javaClass.simpleName}: ${e.message}")
             }
 
-            // Пауза перед следующей попыткой, если будет следующая
+            // Пауза перед следующей попыткой - чтобы не завалить серверы запросами, если они отвечают ошибкой мгновенно.
+            // Условие то же, что у цикла: паузу делаем, только если следующая попытка вообще будет.
+            // delay() не занимает поток (в отличие от Thread.sleep) и умеет отменяться вместе с корутиной
             if (attempt < servers.size || searchTimeMs > 0) delay(SERVER_RETRY_DELAY)
         }
+
+        // Никто не ответил. Что это значит для пользователя, решает вызывающий код:
+        // для станций - Resource.error и диалог "сервер недоступен", для стран - пустой список
         return null
     }
 
     // do the DNS request
     // suspend + withContext(IO): поиск DNS блокирует поток, а пауза между попытками - delay (не занимает поток, как Thread.sleep)
-    private suspend fun updateDNSList(attemptsLeft: Int = 3): List<String> =
-        withContext(Dispatchers.IO) {
-            val listDNSResult = mutableListOf<String>()
-            try {
-                // add all round robin servers one by one to select them separately
-                val list = InetAddress.getAllByName("all.api.radio-browser.info")
-                for (item in list) {
-                    // canonicalHostName делает обратный DNS-запрос. Если он не удался, вместо имени сервера возвращается IP-адрес,
-                    // а https-запрос по IP не пройдёт (сертификат выдан на имя) - такие результаты пропускаем
-                    val hostName = item.canonicalHostName
-                    if (hostName != item.hostAddress) listDNSResult.add(hostName)
-                }
-            } catch (e: UnknownHostException) {
-                Log.d(TAG, "DNS: ${e.message}")
+    private suspend fun updateDNSList(attemptsLeft: Int = DNS_ATTEMPTS): List<String> = withContext(Dispatchers.IO) {
+        val listDNSResult = mutableListOf<String>()
+        try {
+            // add all round robin servers one by one to select them separately
+            val list = InetAddress.getAllByName(DNS_SERVER_LIST_NAME)
+            for (item in list) {
+                // canonicalHostName делает обратный DNS-запрос. Если он не удался, вместо имени сервера возвращается IP-адрес,
+                // а https-запрос по IP не пройдёт (сертификат выдан на имя) - такие результаты пропускаем
+                val hostName = item.canonicalHostName
+                if (hostName != item.hostAddress) listDNSResult.add(hostName)
             }
-            Log.d(TAG, "Серверы из DNS: $listDNSResult")
-
-            // Без интернета DNS не отвечает: несколько попыток, а потом сервер, известный из документации radio-browser
-            if (listDNSResult.isNotEmpty()) {
-                listDNSResult
-            } else if (attemptsLeft > 1) {
-                delay(DNS_RETRY_DELAY)
-                updateDNSList(attemptsLeft - 1)
-            } else {
-                Log.d(TAG, "Список серверов не получен, используем $FALLBACK_SERVER")
-                listOf(FALLBACK_SERVER)
-            }
+        } catch (e: UnknownHostException) {
+            Log.d(TAG, "DNS: ${e.message}")
         }
+        Log.d(TAG, "Серверы из DNS: $listDNSResult")
 
-    private fun throwHttpException() {
-        Log.d(TAG, "Попытка вызвать ошибку The server is down")
-        // Создаем объект HttpException с указанием кода ошибки HTTP
-//            Код ошибки HTTP, который вы должны указать в statusCode, зависит от конкретной ошибки, которую вы хотите имитировать.
-//
-//            Некоторые наиболее распространенные коды ошибок HTTP:
-//
-//            - 400 Bad Request: ошибка запроса клиента (неверный синтаксис, неправильные параметры и т. д.)
-//            - 401 Unauthorized: требуется аутентификация пользователя для доступа к ресурсу
-//            - 403 Forbidden: доступ к ресурсу запрещен, у клиента нет прав доступа
-//            - 404 Not Found: ресурс не найден
-//            - 500 Internal Server Error: ошибка сервера, общая внутренняя ошибка
-//            - Если вам нужно имитировать случай, когда сервер недоступен, вы можете использовать код ошибки HTTP 503 Service Unavailable. Этот код ошибки указывает, что сервер не может обработать запрос в данный момент из-за временной недоступности.
-        val statusCode = 503
-
-        val response = Response.error<Any>(statusCode, ResponseBody.create(null, "error message"))
-        val httpException = HttpException(response)
-
-        throw httpException
+        // Без интернета DNS не отвечает: несколько попыток, а потом сервер, известный из документации radio-browser
+        if (listDNSResult.isNotEmpty()) {
+            listDNSResult
+        } else if (attemptsLeft > 1) {
+            delay(DNS_RETRY_DELAY)
+            updateDNSList(attemptsLeft - 1)
+        } else {
+            Log.d(TAG, "Список серверов не получен, используем $FALLBACK_SERVER")
+            listOf(FALLBACK_SERVER)
+        }
     }
 }
