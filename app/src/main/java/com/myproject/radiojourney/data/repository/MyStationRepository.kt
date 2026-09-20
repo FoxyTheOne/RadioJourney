@@ -23,11 +23,14 @@ class MyStationRepository @Inject constructor(
     override suspend fun getMyStationListOnce(): List<RadioStation> =
         localMyStationDataSource.getMyStationListOnce().map { it.toDomain() }
 
-    override suspend fun hasStationWithUrl(urlResolved: String): Boolean =
-        localMyStationDataSource.hasStationWithUrl(urlResolved)
+    override suspend fun findStationUuidByUrl(urlResolved: String): String? =
+        localMyStationDataSource.findStationUuidByUrl(urlResolved)
 
     override suspend fun saveMyStation(station: RadioStation) =
         localMyStationDataSource.saveMyStation(station.toMyStationLocal())
+
+    override suspend fun updateMyStation(stationUuid: String, name: String, urlResolved: String) =
+        localMyStationDataSource.updateMyStation(stationUuid, name, urlResolved)
 
     override suspend fun deleteMyStation(stationUuid: String) =
         localMyStationDataSource.deleteMyStation(stationUuid)

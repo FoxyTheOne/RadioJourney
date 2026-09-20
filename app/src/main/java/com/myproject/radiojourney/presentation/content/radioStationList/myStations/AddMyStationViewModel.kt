@@ -32,4 +32,10 @@ class AddMyStationViewModel @Inject constructor(
             _addResults.send(myStationsInteractor.addMyStation(name, url))
         }
     }
+
+    fun editMyStation(stationUuid: String, name: String, url: String) {
+        viewModelScope.launch {
+            _addResults.send(myStationsInteractor.editMyStation(stationUuid, name, url))
+        }
+    }
 }

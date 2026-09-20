@@ -14,11 +14,22 @@ class LocalMyStationDataSource @Inject constructor(
 
     override fun getMyStationList(): Flow<List<MyStationLocal>> = myStationDAO.getMyStationList()
 
-    override suspend fun getMyStationListOnce(): List<MyStationLocal> = myStationDAO.getMyStationListOnce()
+    override suspend fun getMyStationListOnce(): List<MyStationLocal> =
+        myStationDAO.getMyStationListOnce()
 
-    override suspend fun hasStationWithUrl(urlResolved: String): Boolean = myStationDAO.hasStationWithUrl(urlResolved)
+    override suspend fun findStationUuidByUrl(urlResolved: String): String? =
+        myStationDAO.findStationUuidByUrl(urlResolved)
 
-    override suspend fun saveMyStation(myStation: MyStationLocal) = myStationDAO.saveMyStation(myStation)
+    override suspend fun saveMyStation(myStation: MyStationLocal) =
+        myStationDAO.saveMyStation(myStation)
 
-    override suspend fun deleteMyStation(stationUuid: String) = myStationDAO.deleteMyStation(stationUuid)
+    override suspend fun updateMyStation(
+        stationUuid: String,
+        stationName: String,
+        urlResolved: String
+    ) =
+        myStationDAO.updateMyStation(stationUuid, stationName, urlResolved)
+
+    override suspend fun deleteMyStation(stationUuid: String) =
+        myStationDAO.deleteMyStation(stationUuid)
 }

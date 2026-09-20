@@ -22,7 +22,52 @@ class MyStationsUseCase @Inject constructor(
      * а не надеемся на плеер: неверную ссылку он покажет только ошибкой воспроизведения, и будет непонятно,
      * станция не работает или адрес набран с опечаткой
      */
-    override suspend fun addMyStation(name: String, url: String): IMyStationsUseCase.AddResult {
+    override suspend fun addMyStation(name: String, url: String): IMyStationsUseCase.AddResult =
+        checkAndRun(name, url, editedStationUuid = null) { stationName, stationUrl ->
+            myStationRepository.saveMyStation(
+                RadioStation(
+                    // Свою станцию в каталоге radio-browser никто не знает, поэтому uuid выдаём сами.
+                    // Он нужен плееру (mediaId) и для удаления станции из списка
+                    stationUuid = UUID.randomUUID().toString(),
+                    name = stationName,
+                    urlResolved = stationUrl,
+                    clickCount = 0,
+                    country = "",
+                    countryCode = MY_STATIONS_COUNTRY_CODE,
+                    isFavourite = false
+                )
+            )
+        }
+
+    /**
+     * Изменить название или ссылку уже добавленной станции. Проверки те же, что и при добавлении,
+     * но станция не считается дублем самой себя, если ссылку не меняли
+     */
+    override suspend fun editMyStation(
+        stationUuid: String,
+        name: String,
+        url: String
+    ): IMyStationsUseCase.AddResult =
+        checkAndRun(name, url, editedStationUuid = stationUuid) { stationName, stationUrl ->
+            myStationRepository.updateMyStation(stationUuid, stationName, stationUrl)
+        }
+
+    override suspend fun deleteMyStation(stationUuid: String) =
+        myStationRepository.deleteMyStation(stationUuid)
+
+    /**
+     * Общие проверки для добавления и для правки: пустое название, ссылка не похожа на адрес потока,
+     * такая ссылка уже есть у другой станции. Если всё хорошо - выполняем [save].
+     *
+     * [editedStationUuid] - станция, которую редактируем (null, когда добавляем новую):
+     * её собственная ссылка дублем не считается
+     */
+    private suspend fun checkAndRun(
+        name: String,
+        url: String,
+        editedStationUuid: String?,
+        save: suspend (name: String, url: String) -> Unit
+    ): IMyStationsUseCase.AddResult {
         val stationName = name.trim()
         // Пробелы по краям часто попадают при вставке ссылки из браузера или мессенджера
         val stationUrl = url.trim()
@@ -30,28 +75,25 @@ class MyStationsUseCase @Inject constructor(
         return when {
             stationName.isEmpty() -> IMyStationsUseCase.AddResult.EMPTY_NAME
             !isStreamUrlValid(stationUrl) -> IMyStationsUseCase.AddResult.INVALID_URL
-            myStationRepository.hasStationWithUrl(stationUrl) -> IMyStationsUseCase.AddResult.DUPLICATE_URL
+            isUrlTakenByAnotherStation(
+                stationUrl,
+                editedStationUuid
+            ) -> IMyStationsUseCase.AddResult.DUPLICATE_URL
+
             else -> {
-                myStationRepository.saveMyStation(
-                    RadioStation(
-                        // Свою станцию в каталоге radio-browser никто не знает, поэтому uuid выдаём сами.
-                        // Он нужен плееру (mediaId) и для удаления станции из списка
-                        stationUuid = UUID.randomUUID().toString(),
-                        name = stationName,
-                        urlResolved = stationUrl,
-                        clickCount = 0,
-                        country = "",
-                        countryCode = MY_STATIONS_COUNTRY_CODE,
-                        isFavourite = false
-                    )
-                )
+                save(stationName, stationUrl)
                 IMyStationsUseCase.AddResult.ADDED
             }
         }
     }
 
-    override suspend fun deleteMyStation(stationUuid: String) =
-        myStationRepository.deleteMyStation(stationUuid)
+    private suspend fun isUrlTakenByAnotherStation(
+        url: String,
+        editedStationUuid: String?
+    ): Boolean {
+        val ownerUuid = myStationRepository.findStationUuidByUrl(url)
+        return ownerUuid != null && ownerUuid != editedStationUuid
+    }
 
     // Минимальная проверка: это http(s)-адрес с именем сервера. Строже проверять смысла нет - работает ссылка или нет,
     // выяснится только при попытке включить станцию

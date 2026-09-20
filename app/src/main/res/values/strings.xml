@@ -66,12 +66,15 @@
     <string name="myStations_empty">The list is empty. Tap + to add a station by its stream link.</string>
     <string name="myStations_addButton">Add a station</string>
     <string name="myStations_added">Station added</string>
+    <string name="myStations_saved">Changes saved</string>
+    <string name="myStations_editButton">Edit the station</string>
     <string name="myStations_deleted">Station deleted</string>
     <string name="myStations_delete_title">Delete the station?</string>
     <string name="myStations_delete_text">%1$s will be removed from your list. The station itself stays available - you can add it again by the same link.</string>
     <string name="myStations_delete_confirm">Delete</string>
     <string name="myStations_delete_cancel">Cancel</string>
     <string name="addMyStation_title">New station</string>
+    <string name="addMyStation_titleEdit">Edit the station</string>
     <string name="addMyStation_name">Station name</string>
     <string name="addMyStation_url">Link to the stream</string>
     <string name="addMyStation_urlHelp">The link usually ends with .mp3, .aac or .m3u8 and can be found on the station\'s website</string>

@@ -7,12 +7,15 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.view.isVisible
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.LayoutMyStationsBinding
+import com.myproject.radiojourney.other.Constants.MY_STATIONS_COUNTRY_CODE
+import com.myproject.radiojourney.presentation.MainViewModel
 import com.myproject.radiojourney.presentation.common.collectWhenStarted
 import com.myproject.radiojourney.presentation.content.base.BaseContentFragmentAbstract
 import com.myproject.radiojourney.presentation.model.RadioStationPresentation
@@ -34,8 +37,16 @@ class MyStationsFragment : BaseContentFragmentAbstract() {
     // VIEW BINDING -> 1. Объявляем переменную. This property is only valid between onCreateView and onDestroyView
     private var binding: LayoutMyStationsBinding? = null
 
+    // ViewModel плеера привязана к Activity: после правки или удаления станции плейлист в плеере нужно перечитать
+    private val mainViewModel by activityViewModels<MainViewModel>()
+
     private val myStationAdapter = MyStationAdapter(
         onStationClicked = { station -> openHomeRadioAndPlay(station) },
+        onEditClicked = { station ->
+            AddMyStationDialogFragment
+                .newInstanceForEdit(station.stationuuid, station.stationName, station.urlResolved)
+                .show(parentFragmentManager, null)
+        },
         onDeleteClicked = { station -> confirmDelete(station) }
     )
 
@@ -61,16 +72,18 @@ class MyStationsFragment : BaseContentFragmentAbstract() {
             .setOnClickListener { goToHomeRadio() }
 
         view.findViewById<FloatingActionButton>(R.id.fab_addMyStation).setOnClickListener {
-            AddMyStationDialogFragment().show(parentFragmentManager, null)
+            AddMyStationDialogFragment.newInstance().show(parentFragmentManager, null)
         }
 
-        // Станция добавлена в окне "Новая станция" - подтверждаем это пользователю.
+        // Станция сохранена в окне "Новая станция" / "Изменить станцию" - подтверждаем это пользователю.
         // Сам список обновится сам: он подписан на базу данных
         parentFragmentManager.setFragmentResultListener(
             AddMyStationDialogFragment.REQUEST_KEY,
             viewLifecycleOwner
-        ) { _, _ ->
-            showMessage(R.string.myStations_added)
+        ) { _, result ->
+            val isEdit = result.getBoolean(AddMyStationDialogFragment.RESULT_IS_EDIT)
+            showMessage(if (isEdit) R.string.myStations_saved else R.string.myStations_added)
+            reloadPlayerPlaylistIfMyStations()
         }
 
         subscribeOnFlow()
@@ -94,6 +107,7 @@ class MyStationsFragment : BaseContentFragmentAbstract() {
             .setPositiveButton(R.string.myStations_delete_confirm) { _, _ ->
                 viewModel.deleteMyStation(station.stationuuid)
                 showMessage(R.string.myStations_deleted)
+                reloadPlayerPlaylistIfMyStations()
             }
             .setNegativeButton(R.string.myStations_delete_cancel, null)
             .show()
@@ -113,6 +127,14 @@ class MyStationsFragment : BaseContentFragmentAbstract() {
         if (findNavController().currentDestination?.id == R.id.myStationsFragment) {
             findNavController().navigate(R.id.action_myStationsFragment_to_homeRadioFragment)
         }
+    }
+
+    // Если в плеере сейчас плейлист своих станций, он держит их старые названия и ссылки - просим перечитать список.
+    // Для других плейлистов делать нечего: свои станции в них не попадают
+    private fun reloadPlayerPlaylistIfMyStations() {
+        val isMyStationsInPlayer =
+            mainViewModel.currentPlaylistStations.firstOrNull()?.countryCode == MY_STATIONS_COUNTRY_CODE
+        if (isMyStationsInPlayer) mainViewModel.fetchSongs(MY_STATIONS_COUNTRY_CODE)
     }
 
     private fun showMessage(messageId: Int) {

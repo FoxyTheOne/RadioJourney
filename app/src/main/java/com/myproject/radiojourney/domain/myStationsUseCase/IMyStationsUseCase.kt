@@ -23,5 +23,8 @@ interface IMyStationsUseCase {
 
     suspend fun addMyStation(name: String, url: String): AddResult
 
+    // Изменить название или ссылку уже добавленной станции
+    suspend fun editMyStation(stationUuid: String, name: String, url: String): AddResult
+
     suspend fun deleteMyStation(stationUuid: String)
 }

@@ -16,10 +16,13 @@ interface IMyStationRepository {
     // Список разово - для плеера
     suspend fun getMyStationListOnce(): List<RadioStation>
 
-    // Станция с таким адресом потока уже добавлена
-    suspend fun hasStationWithUrl(urlResolved: String): Boolean
+    // uuid станции с таким адресом потока, если она уже добавлена
+    suspend fun findStationUuidByUrl(urlResolved: String): String?
 
     suspend fun saveMyStation(station: RadioStation)
+
+    // Изменить название и ссылку у уже добавленной станции
+    suspend fun updateMyStation(stationUuid: String, name: String, urlResolved: String)
 
     suspend fun deleteMyStation(stationUuid: String)
 }

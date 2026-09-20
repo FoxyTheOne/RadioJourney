@@ -11,9 +11,11 @@ interface ILocalMyStationDataSource {
 
     suspend fun getMyStationListOnce(): List<MyStationLocal>
 
-    suspend fun hasStationWithUrl(urlResolved: String): Boolean
+    suspend fun findStationUuidByUrl(urlResolved: String): String?
 
     suspend fun saveMyStation(myStation: MyStationLocal)
+
+    suspend fun updateMyStation(stationUuid: String, stationName: String, urlResolved: String)
 
     suspend fun deleteMyStation(stationUuid: String)
 }

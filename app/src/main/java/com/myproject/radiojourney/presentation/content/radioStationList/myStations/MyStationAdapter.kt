@@ -19,16 +19,23 @@ import com.myproject.radiojourney.presentation.model.RadioStationPresentation
  */
 class MyStationAdapter(
     private val onStationClicked: (RadioStationPresentation) -> Unit,
+    private val onEditClicked: (RadioStationPresentation) -> Unit,
     private val onDeleteClicked: (RadioStationPresentation) -> Unit
 ) : RecyclerView.Adapter<MyStationAdapter.MyStationViewHolder>() {
 
     private val diffCallback = object : DiffUtil.ItemCallback<RadioStationPresentation>() {
         // Та же самая станция (по идентификатору)
-        override fun areItemsTheSame(oldItem: RadioStationPresentation, newItem: RadioStationPresentation): Boolean =
+        override fun areItemsTheSame(
+            oldItem: RadioStationPresentation,
+            newItem: RadioStationPresentation
+        ): Boolean =
             oldItem.stationuuid == newItem.stationuuid
 
         // Содержимое не изменилось - строку можно не перерисовывать (data class сравнивается по всем полям)
-        override fun areContentsTheSame(oldItem: RadioStationPresentation, newItem: RadioStationPresentation): Boolean =
+        override fun areContentsTheSame(
+            oldItem: RadioStationPresentation,
+            newItem: RadioStationPresentation
+        ): Boolean =
             oldItem == newItem
     }
 
@@ -39,7 +46,8 @@ class MyStationAdapter(
         set(value) = differ.submitList(value)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyStationViewHolder {
-        val itemView = LayoutInflater.from(parent.context).inflate(R.layout.layout_my_station_item, parent, false)
+        val itemView = LayoutInflater.from(parent.context)
+            .inflate(R.layout.layout_my_station_item, parent, false)
         return MyStationViewHolder(itemView)
     }
 
@@ -53,16 +61,20 @@ class MyStationAdapter(
 
         private val textName: AppCompatTextView = itemView.findViewById(R.id.text_myStationName)
         private val textUrl: AppCompatTextView = itemView.findViewById(R.id.text_myStationUrl)
-        private val imageDelete: AppCompatImageView = itemView.findViewById(R.id.image_deleteMyStation)
-        private val linearDescription: View = itemView.findViewById(R.id.linear_myStationDescription)
+        private val imageEdit: AppCompatImageView = itemView.findViewById(R.id.image_editMyStation)
+        private val imageDelete: AppCompatImageView =
+            itemView.findViewById(R.id.image_deleteMyStation)
+        private val linearDescription: View =
+            itemView.findViewById(R.id.linear_myStationDescription)
 
         fun bind(station: RadioStationPresentation) {
             textName.text = station.stationName
             textUrl.text = station.urlResolved
 
-            // Клик по названию - включить станцию, клик по корзине - удалить.
+            // Клик по названию - включить станцию, по карандашу - изменить, по корзине - удалить.
             // Слушатели ставятся здесь, а не в init: ViewHolder переиспользуется для разных станций
             linearDescription.setOnClickListener { onStationClicked(station) }
+            imageEdit.setOnClickListener { onEditClicked(station) }
             imageDelete.setOnClickListener { onDeleteClicked(station) }
         }
     }

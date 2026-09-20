@@ -167,10 +167,8 @@ class MusicLibrarySessionCallback(
             }
 
             when {
-                // Свои станции: список из Room, сети не требует
-                countryCode == MY_STATIONS_COUNTRY_CODE && lastCountryCode == MY_STATIONS_COUNTRY_CODE ->
-                    Log.d(TAG, "PLAYLIST_UPDATE: 5. Список своих станций уже скачан в exoplayer")
-
+                // Свои станции: список из Room, сети не требует. В отличие от плейлистов страны, перечитываем его всегда -
+                // пользователь мог добавить, изменить или удалить станцию, и плеер должен это увидеть
                 countryCode == MY_STATIONS_COUNTRY_CODE -> {
                     Log.d(TAG, "PLAYLIST_UPDATE: 5. Загружаем список своих станций в exoplayer")
                     radioPlaylistSource.fetchMyStationsMediaData()
