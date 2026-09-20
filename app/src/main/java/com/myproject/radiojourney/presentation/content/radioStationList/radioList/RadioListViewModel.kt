@@ -34,6 +34,12 @@ class RadioListViewModel @Inject constructor(
     // Аргументы навигации (код и название страны) ViewModel получает сама через SavedStateHandle
     val countryCode: String = savedStateHandle["country_code"] ?: ""
     val countryName: String = savedStateHandle["country_name"] ?: ""
+//    Это «сумка» с данными, которую Hilt отдаёт ViewModel при создании. В неё автоматически складываются аргументы навигации (те, что описаны в app_navigation.xml для этого экрана).
+//    Поэтому RadioListViewModel берёт код и название страны сам:
+//    val countryCode: String = savedStateHandle["country_code"] ?: ""
+//    Зачем так, а не передавать из фрагмента: во-первых, ViewModel может начать загрузку сразу при создании, не дожидаясь, пока фрагмент передаст ей аргументы;
+//    во-вторых, содержимое SavedStateHandle переживает не только поворот экрана, но и «смерть процесса» — когда система выгружает приложение из памяти, а пользователь потом возвращается в него из списка недавних.
+//    Обычные поля ViewModel в этом случае теряются, а туда можно и свои значения класть (savedStateHandle["key"] = value).
 
     // Раньше - две LiveData (список и "сервер недоступен"). Одно состояние не даёт экрану показать оба сразу
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
