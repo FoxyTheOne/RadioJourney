@@ -1,8 +1,7 @@
 package com.myproject.radiojourney.domain.changeFavouriteUseCase
 
 import com.myproject.radiojourney.domain.iRepository.IMainRadioStationRepository
-import com.myproject.radiojourney.entities.local.RadioStationLocal
-import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
+import com.myproject.radiojourney.domain.model.RadioStation
 import javax.inject.Inject
 
 /**
@@ -13,16 +12,15 @@ import javax.inject.Inject
 class ChangeFavouriteUseCase @Inject constructor(
     private val mainRadioStationRepository: IMainRadioStationRepository
 ) : IChangeFavouriteUseCase {
-    override suspend fun setFavourite(
-        radioStation: RadioStationPresentation,
-        isFavourite: Boolean
-    ) {
-        // В базу сохраняем код страны без "_FAV" (станция из плейлиста избранного). Делаем копию, а не меняем countryCode
-        // у самого объекта станции: иначе станция в плейлисте избранного переставала считаться станцией из избранного
-        val radioStationLocal = RadioStationLocal.fromPresentationToLocal(
-            radioStation.copy(countryCode = radioStation.countryCode.removeSuffix("_FAV")),
-            isStationInFavourite = isFavourite
+
+    override suspend fun setFavourite(radioStation: RadioStation, isFavourite: Boolean) {
+        // В базу сохраняем код страны без "_FAV" (станция из плейлиста избранного)
+        mainRadioStationRepository.setStationFavourite(
+            radioStation.copy(
+                countryCode = radioStation.countryCode.removeSuffix("_FAV"),
+                isFavourite = isFavourite
+            ),
+            isFavourite
         )
-        mainRadioStationRepository.setStationFavourite(radioStationLocal, isFavourite)
     }
 }

@@ -26,7 +26,7 @@ import com.myproject.radiojourney.other.Constants.COUNTRY_CODE_ID
 import com.myproject.radiojourney.other.Constants.DEFAULT_COUNTRY_CODE
 import com.myproject.radiojourney.other.Constants.MEDIA_ROOT_ID
 import com.myproject.radiojourney.other.Constants.NETWORK_ERROR
-import com.myproject.radiojourney.utils.exoplayer.FirebaseMusicSource
+import com.myproject.radiojourney.utils.exoplayer.RadioPlaylistSource
 import com.myproject.radiojourney.utils.exoplayer.ReadinessState
 import com.myproject.radiojourney.utils.exoplayer.State.STATE_INITIALIZED
 import com.myproject.radiojourney.utils.exoplayer.State.STATE_INITIALIZING
@@ -46,7 +46,7 @@ import kotlinx.coroutines.launch
  */
 @OptIn(UnstableApi::class) // AcceptedResultBuilder, DEFAULT_SESSION_AND_LIBRARY_COMMANDS, onSetMediaItems, MediaItemsWithStartPosition (см. ServiceModule)
 class MusicLibrarySessionCallback(
-    private val firebaseMusicSource: FirebaseMusicSource,
+    private val radioPlaylistSource: RadioPlaylistSource,
     private val serviceScope: CoroutineScope,
     private val player: Player,
     private val getLastUsedRadioStationUrl: () -> String,
@@ -159,7 +159,7 @@ class MusicLibrarySessionCallback(
             readiness.state = STATE_INITIALIZING
 
             // Чтобы проверить, может быть такой плейлист уже скачан и сейчас используется, обновим переменную
-            firebaseMusicSource.radioStations.firstOrNull()?.let {
+            radioPlaylistSource.radioStations.firstOrNull()?.let {
                 lastCountryCode = it.mediaMetadata.subtitle.toString()
             }
 
@@ -175,7 +175,7 @@ class MusicLibrarySessionCallback(
                         TAG,
                         "PLAYLIST_UPDATE: 5. FAV_STAR: Скачиваем список избранного в exoplayer"
                     )
-                    firebaseMusicSource.fetchFavouriteMediaData()
+                    radioPlaylistSource.fetchFavouriteMediaData()
                 }
 
                 lastCountryCode != countryCode || lastCountryCode?.endsWith(
@@ -186,7 +186,7 @@ class MusicLibrarySessionCallback(
                         TAG,
                         "PLAYLIST_UPDATE: 2.$TAG, addSongs(). Скачиваем плейлист, т.к. $lastCountryCode != $countryCode"
                     )
-                    firebaseMusicSource.fetchMediaData(
+                    radioPlaylistSource.fetchMediaData(
                         if (!countryCode.isNullOrBlank() && countryCode != "null") countryCode else DEFAULT_COUNTRY_CODE
                     )
                 }
@@ -231,7 +231,7 @@ class MusicLibrarySessionCallback(
 
         // true - станция найдена в текущем плейлисте, результат отправлен
         fun completeIfFound(): Boolean {
-            val radioStations = firebaseMusicSource.radioStations
+            val radioStations = radioPlaylistSource.radioStations
             val index = radioStations.indexOfFirst { it.mediaId == mediaId }
             if (index == -1) return false
             lastCountryCode =
@@ -244,7 +244,7 @@ class MusicLibrarySessionCallback(
             return true
         }
 
-        firebaseMusicSource.whenReady {
+        radioPlaylistSource.whenReady {
             serviceScope.launch(Dispatchers.Main) {
                 if (completeIfFound()) return@launch
                 // Станции нет в плейлисте: возможно, как раз скачивается новый плейлист - ждём его
@@ -283,7 +283,7 @@ class MusicLibrarySessionCallback(
                 null
             )
         )
-        val item = firebaseMusicSource.radioStations.find { it.mediaId == mediaId }
+        val item = radioPlaylistSource.radioStations.find { it.mediaId == mediaId }
         return Futures.immediateFuture(
             if (item != null) LibraryResult.ofItem(item, null) else LibraryResult.ofError(
                 SessionError.ERROR_BAD_VALUE
@@ -305,14 +305,14 @@ class MusicLibrarySessionCallback(
         }
 
         val result = SettableFuture.create<LibraryResult<ImmutableList<MediaItem>>>()
-        firebaseMusicSource.whenReady { isInitialized ->
+        radioPlaylistSource.whenReady { isInitialized ->
             serviceScope.launch(Dispatchers.Main) {
                 if (isInitialized) {
-                    val radioStations = firebaseMusicSource.radioStations
+                    val radioStations = radioPlaylistSource.radioStations
                     setInitialPlaylistIfEmpty(radioStations)
                     result.set(LibraryResult.ofItemList(radioStations, params))
                 } else {
-                    // Сеть недоступна - сообщаем экрану (MusicServiceConnection -> networkErrorLiveData)
+                    // Сеть недоступна - сообщаем экрану (MusicServiceConnection.errorMessages)
                     onNetworkError()
                     result.set(LibraryResult.ofError(SessionError.ERROR_IO))
                 }

@@ -8,8 +8,6 @@ import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.session.LibraryResult
@@ -21,8 +19,12 @@ import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.myproject.radiojourney.other.Constants.NETWORK_ERROR
-import com.myproject.radiojourney.other.Event
-import com.myproject.radiojourney.other.Resource
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 
 /**
  * A class for connection between activity or fragment with MusicService.
@@ -37,24 +39,19 @@ class MusicServiceConnection(private val context: Context) {
         private const val TAG = "MusicServiceConnection"
     }
 
-    // LiveData for our Service, where we will keep data (data for our fragments to update if server changes)
-    private val _isConnectedLiveData =
-        MutableLiveData<Event<Resource<Boolean>>>() // For current state. Event and Resource - are our classes
-    val isConnectedLiveData: LiveData<Event<Resource<Boolean>>> = _isConnectedLiveData
+    // Ошибки подключения к сервису и сети - сообщение для экрана. Channel: каждое сообщение получит один подписчик (MainActivity),
+    // и оно не потеряется, если экран в этот момент не виден. Раньше - две LiveData<Event<Resource<Boolean>>>
+    private val _errorMessages = Channel<String>(Channel.BUFFERED)
+    val errorMessages: Flow<String> = _errorMessages.receiveAsFlow()
 
-    private val _networkErrorLiveData =
-        MutableLiveData<Event<Resource<Boolean>>>() // It must be private, so that other classes can't change it
-    val networkErrorLiveData: LiveData<Event<Resource<Boolean>>> =
-        _networkErrorLiveData // And another LiveData, that equals to previous, so that classes can't change it
-
-    // Is player playing or not
-    private val _playbackStateLiveData = MutableLiveData<PlaybackStateInfo?>()
-    val playbackStateLiveData: LiveData<PlaybackStateInfo?> = _playbackStateLiveData
+    // Is player playing or not. StateFlow вместо LiveData: новый подписчик сразу получает текущее состояние
+    private val _playbackState = MutableStateFlow<PlaybackStateInfo?>(null)
+    val playbackState: StateFlow<PlaybackStateInfo?> = _playbackState.asStateFlow()
 
     // Станция, которая сейчас в плеере: mediaId (stationuuid), mediaMetadata.title (название),
     // mediaMetadata.subtitle (код страны, "PL" или "PL_FAV")
-    private val _curPlayingSongLiveData = MutableLiveData<MediaItem?>()
-    val curPlayingSongLiveData: LiveData<MediaItem?> = _curPlayingSongLiveData
+    private val _curPlayingSong = MutableStateFlow<MediaItem?>(null)
+    val curPlayingSong: StateFlow<MediaItem?> = _curPlayingSong.asStateFlow()
 
     private val mainHandler = Handler(Looper.getMainLooper())
 
@@ -96,7 +93,7 @@ class MusicServiceConnection(private val context: Context) {
         // (например, сервис завершился). При следующей команде подключимся заново
         override fun onDisconnected(controller: MediaController) {
             mediaBrowser = null
-            _isConnectedLiveData.postValue(Event(Resource.error("The connection was suspended", false)))
+            _errorMessages.trySend("The connection was suspended")
         }
     }
 
@@ -134,7 +131,6 @@ class MusicServiceConnection(private val context: Context) {
                 browser.addListener(playerListener)
                 postPlaybackState(browser)
                 postCurrentSong(browser)
-                _isConnectedLiveData.postValue(Event(Resource.success(true))) // post connection data to LiveData
 
                 // После переподключения подписываемся на списки станций заново
                 childrenSubscribers.keys.forEach { browser.subscribe(it, null) }
@@ -144,7 +140,7 @@ class MusicServiceConnection(private val context: Context) {
                 actions.forEach { it(browser) }
             } catch (e: Exception) {
                 Log.d(TAG, "Couldn't connect to MusicService: ${e.message}")
-                _isConnectedLiveData.postValue(Event(Resource.error("Couldn't connect to media browser", false)))
+                _errorMessages.trySend("Couldn't connect to media browser")
             }
         }, ContextCompat.getMainExecutor(context))
     }
@@ -183,7 +179,8 @@ class MusicServiceConnection(private val context: Context) {
     }
 
     private fun loadChildren(browser: MediaBrowser, parentId: String) {
-        val childrenFuture = browser.getChildren(parentId, /* page= */ 0, /* pageSize= */ Int.MAX_VALUE, null)
+        val childrenFuture =
+            browser.getChildren(parentId, /* page= */ 0, /* pageSize= */ Int.MAX_VALUE, null)
         childrenFuture.addListener({
             val result = try {
                 childrenFuture.get()
@@ -199,7 +196,8 @@ class MusicServiceConnection(private val context: Context) {
     }
 
     // Controls (раньше transportControls)
-    fun play() = withBrowser { it.play() } // если плеер остановлен (STATE_IDLE), сессия сама подготовит его
+    fun play() =
+        withBrowser { it.play() } // если плеер остановлен (STATE_IDLE), сессия сама подготовит его
 
     fun pause() = withBrowser { it.pause() }
 
@@ -217,7 +215,7 @@ class MusicServiceConnection(private val context: Context) {
     }
 
     private fun postPlaybackState(player: Player) {
-        _playbackStateLiveData.postValue(
+        _playbackState.value =
             PlaybackStateInfo(
                 playbackState = player.playbackState,
                 playWhenReady = player.playWhenReady,
@@ -225,7 +223,6 @@ class MusicServiceConnection(private val context: Context) {
                 hasError = player.playerError != null,
                 updateTime = SystemClock.elapsedRealtime()
             )
-        )
     }
 
     private fun postCurrentSong(player: Player) {
@@ -234,12 +231,10 @@ class MusicServiceConnection(private val context: Context) {
         val key = currentItem?.let { "${it.mediaId}|${it.mediaMetadata.subtitle}" }
         if (key == lastPostedSongKey) return
         lastPostedSongKey = key
-        _curPlayingSongLiveData.postValue(currentItem) // Getting new meta data (put it into LiveData)
+        _curPlayingSong.value = currentItem
     }
 
     private fun postNetworkError() {
-        _networkErrorLiveData.postValue(
-            Event(Resource.error("Couldn't connect to the server. Please check your internet connection.", null))
-        )
+        _errorMessages.trySend("Couldn't connect to the server. Please check your internet connection.")
     }
 }

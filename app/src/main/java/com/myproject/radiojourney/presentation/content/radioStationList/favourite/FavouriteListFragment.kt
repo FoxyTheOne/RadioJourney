@@ -12,9 +12,10 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.myproject.radiojourney.R
-import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
+import com.myproject.radiojourney.presentation.model.RadioStationPresentation
 import com.myproject.radiojourney.presentation.MainViewModel
 import com.myproject.radiojourney.presentation.common.InfoDialog
+import com.myproject.radiojourney.presentation.common.collectWhenStarted
 import com.myproject.radiojourney.presentation.content.radioStationList.base.BaseRadioListFragmentAbstract
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -67,11 +68,12 @@ class FavouriteListFragment : BaseRadioListFragmentAbstract() {
         view.findViewById<AppCompatImageView>(R.id.image_arrowBack).setOnClickListener(goToHomeRadio)
         textFavouritesEmpty.setOnClickListener(goToHomeRadio)
 
-        subscribeOnLiveData()
+        subscribeOnFlow()
     }
 
-    private fun subscribeOnLiveData() {
-        viewModel.radioStationFavouriteListLiveData.observe(viewLifecycleOwner) { favouriteStationList ->
+    private fun subscribeOnFlow() {
+        viewLifecycleOwner.collectWhenStarted(viewModel.radioStationFavouriteList) { favouriteStationList ->
+            if (favouriteStationList == null) return@collectWhenStarted // ещё загружается
             favouriteListAdapter.favouriteStationList = favouriteStationList
             textFavouritesEmpty.isVisible = favouriteStationList.isEmpty()
             changeTextDownloadOrNothing(favouriteStationList)
@@ -85,17 +87,13 @@ class FavouriteListFragment : BaseRadioListFragmentAbstract() {
         }
 
         // Звезду нажали в этом списке - сообщаем плейеру (и остальным экранам), какая именно станция изменилась
-        viewModel.stationFavouriteChangedLiveData.observe(viewLifecycleOwner) { event ->
-            event.getContentIfNotHandled()?.let { station ->
-                mainViewModel.notifyFavouriteChanged(station, station.isStationInFavourite)
-            }
+        viewLifecycleOwner.collectWhenStarted(viewModel.stationFavouriteChanged) { station ->
+            mainViewModel.notifyFavouriteChanged(station, station.isStationInFavourite)
         }
 
         // Звезду нажали в плейере, пока открыт этот список: меняем звезду у той же станции или добавляем станцию в список.
-        // Изменения, случившиеся до открытия списка, пропускаем - список и так загружается из базы уже с ними
-        val skipFavouriteChangesUpToId = mainViewModel.lastFavouriteChangeIdForNewObserver
-        mainViewModel.favouriteChangeLiveData.observe(viewLifecycleOwner) { change ->
-            if (change.id <= skipFavouriteChangesUpToId) return@observe
+        // SharedFlow без повтора: изменения, случившиеся до открытия списка, не приходят - список и так загружается из базы уже с ними
+        viewLifecycleOwner.collectWhenStarted(mainViewModel.favouriteChanges) { change ->
             viewModel.applyFavouriteChangeFromOutside(change.station, change.isFavourite)
         }
     }
@@ -103,7 +101,7 @@ class FavouriteListFragment : BaseRadioListFragmentAbstract() {
     // Если в плейере не плейлист избранного, показываем надпись "скачать" и не даём выбрать станцию.
     // В этом фрагменте могут быть только избранные радиостанции, поэтому проверять можно только список в плейере
     private fun changeTextDownloadOrNothing(favouriteStationList: List<RadioStationPresentation>) {
-        val countryCodeInPlayer = mainViewModel.mediaItemsListLiveData.value?.data?.firstOrNull()?.countryCode.orEmpty()
+        val countryCodeInPlayer = mainViewModel.currentPlaylistStations.firstOrNull()?.countryCode.orEmpty()
         val isFavouritesInPlayer = countryCodeInPlayer.endsWith("_FAV", ignoreCase = true)
 
         textRadioListSecondTitleDownload.isVisible = favouriteStationList.isNotEmpty() && !isFavouritesInPlayer

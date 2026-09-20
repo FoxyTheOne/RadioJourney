@@ -1,4 +1,4 @@
-package com.myproject.radiojourney.entities.local
+package com.myproject.radiojourney.data.localDatabaseRoom.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity

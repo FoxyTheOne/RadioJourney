@@ -3,7 +3,7 @@ package com.myproject.radiojourney.utils.exoplayer
 import androidx.media3.common.Player
 
 /**
- * Состояние плеера для экрана (MusicServiceConnection.playbackStateLiveData).
+ * Состояние плеера для экрана (MusicServiceConnection.playbackState).
  * Раньше экран получал PlaybackStateCompat, и для него были расширения isPrepared / isPlaying / isPlayEnabled
  * (PlaybackStateCompatExtension.kt). С media3 состояние берётся из MediaBrowser (Player) и складывается сюда,
  * свойства с теми же названиями и тем же смыслом.

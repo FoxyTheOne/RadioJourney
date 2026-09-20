@@ -11,9 +11,10 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import com.myproject.radiojourney.R
-import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
+import com.myproject.radiojourney.presentation.model.RadioStationPresentation
 import com.myproject.radiojourney.presentation.MainViewModel
 import com.myproject.radiojourney.presentation.common.InfoDialog
+import com.myproject.radiojourney.presentation.common.collectWhenStarted
 import com.myproject.radiojourney.presentation.content.radioStationList.adapter.ListRadioStationAdapter
 import com.myproject.radiojourney.presentation.content.radioStationList.base.BaseRadioListFragmentAbstract
 import com.myproject.radiojourney.utils.extension.startStationIndex
@@ -40,15 +41,13 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        view.findViewById<AppCompatTextView>(R.id.text_myFavorites_title).text =
-            viewModel.countryName
+        view.findViewById<AppCompatTextView>(R.id.text_myFavorites_title).text = viewModel.countryName
 
         textRadioListSecondTitleSelect = view.findViewById(R.id.text_radioStationDialogTitleSelect)
         textRadioListSecondTitleSelect.isVisible = true
         textRadioListSecondTitleSelect.text = getString(R.string.radioStationList_title_loading)
 
-        textRadioListSecondTitleDownload =
-            view.findViewById(R.id.text_radioStationDialogTitleDownload)
+        textRadioListSecondTitleDownload = view.findViewById(R.id.text_radioStationDialogTitleDownload)
         textRadioStationsEmpty = view.findViewById(R.id.text_radioStationsEmpty)
         recyclerViewRadioStationList = view.findViewById(R.id.recyclerView_radioStationList)
 
@@ -67,24 +66,26 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
             }
         }
 
-        subscribeOnLiveData()
+        subscribeOnFlow()
     }
 
-    private fun subscribeOnLiveData() {
-        viewModel.serverIsDownLiveData.observe(viewLifecycleOwner) {
-            // Диалоговое окно при ошибке сервера
-            infoDialog.show(
-                R.string.dialogInternetTrouble_title4,
-                R.string.dialogInternetTrouble_text4
-            )
-        }
+    private fun subscribeOnFlow() {
+        viewLifecycleOwner.collectWhenStarted(viewModel.uiState) { uiState ->
+            val radioStationList = when (uiState) {
+                RadioListViewModel.UiState.Loading -> return@collectWhenStarted
+                RadioListViewModel.UiState.ServerIsDown -> {
+                    // Диалоговое окно при ошибке сервера
+                    infoDialog.show(R.string.dialogInternetTrouble_title4, R.string.dialogInternetTrouble_text4)
+                    return@collectWhenStarted
+                }
+                is RadioListViewModel.UiState.Loaded -> uiState.radioStations
+            }
 
-        viewModel.radioStationListLiveData.observe(viewLifecycleOwner) { radioStationList ->
             if (radioStationList.isEmpty()) {
                 textRadioStationsEmpty.isVisible = true
                 textRadioListSecondTitleSelect.isVisible = false
                 textRadioListSecondTitleDownload.isVisible = false
-                return@observe
+                return@collectWhenStarted
             }
 
             textRadioStationsEmpty.isVisible = false
@@ -103,8 +104,7 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
 
     // Если у нас играет другой плейлист, нужно показать надпись "скачать". Если же этот плейлист уже скачан - "выберите радиостанцию"
     private fun changeTextSelectOrDownload(radioStationList: List<RadioStationPresentation>) {
-        val countryCodeInPlayer =
-            mainViewModel.mediaItemsListLiveData.value?.data?.firstOrNull()?.countryCode
+        val countryCodeInPlayer = mainViewModel.currentPlaylistStations.firstOrNull()?.countryCode
         val isPlaylistInPlayer = radioStationList[0].countryCode == countryCodeInPlayer
 
         textRadioListSecondTitleSelect.isVisible = isPlaylistInPlayer

@@ -1,4 +1,4 @@
-package com.myproject.radiojourney.entities.remote
+package com.myproject.radiojourney.data.dataSource.network.entity
 
 import com.google.gson.annotations.SerializedName
 

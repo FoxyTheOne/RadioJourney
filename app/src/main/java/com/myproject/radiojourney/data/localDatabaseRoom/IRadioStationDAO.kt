@@ -1,8 +1,7 @@
 package com.myproject.radiojourney.data.localDatabaseRoom
 
 import androidx.room.*
-import com.myproject.radiojourney.entities.local.RadioStationLocal
-import kotlinx.coroutines.flow.Flow
+import com.myproject.radiojourney.data.localDatabaseRoom.entity.RadioStationLocal
 
 // Сравнение через "=", а не LIKE: LIKE - поиск по шаблону (символы % и _ в значении работают как подстановка, регистр не учитывается),
 // а здесь нужно точное совпадение id или флага

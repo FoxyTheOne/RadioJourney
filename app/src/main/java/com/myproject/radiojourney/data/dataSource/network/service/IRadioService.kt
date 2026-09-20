@@ -1,8 +1,8 @@
 package com.myproject.radiojourney.data.dataSource.network.service
 
-import com.myproject.radiojourney.entities.remote.CountryCodeRemote
-import com.myproject.radiojourney.entities.remote.RadioStationRemote
-import com.myproject.radiojourney.entities.remote.StreamInfoResult
+import com.myproject.radiojourney.data.dataSource.network.entity.CountryCodeRemote
+import com.myproject.radiojourney.data.dataSource.network.entity.RadioStationRemote
+import com.myproject.radiojourney.data.dataSource.network.entity.StreamInfoResult
 import com.myproject.radiojourney.other.Constants.MAX_STATIONS_COUNT
 import retrofit2.http.GET
 import retrofit2.http.Path

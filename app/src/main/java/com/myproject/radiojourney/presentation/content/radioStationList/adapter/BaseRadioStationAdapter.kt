@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
+import com.myproject.radiojourney.presentation.model.RadioStationPresentation
 
 /**
  * Общий класс для списков радиостанций (вертикальных, горизонтальных и проч.)

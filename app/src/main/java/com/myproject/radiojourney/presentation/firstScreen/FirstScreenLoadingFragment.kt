@@ -19,8 +19,8 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.LayoutFirstScreenLoadingBinding
-import com.myproject.radiojourney.entities.presentation.CountryPresentation
 import com.myproject.radiojourney.presentation.common.InfoDialog
+import com.myproject.radiojourney.presentation.common.collectWhenStarted
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -40,7 +40,6 @@ class FirstScreenLoadingFragment : Fragment() {
         private const val EMPTY_LIST_DIALOG_DELAY = 7_000L
     }
 
-    private var countryList = emptyList<CountryPresentation>()
     private var countryListIsNotEmpty = false
     private var emptyListDialogJob: Job? = null
 
@@ -88,7 +87,7 @@ class FirstScreenLoadingFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // Переход на контент в случае успешной аутентификации
-        viewModel.signInLiveData.observe(viewLifecycleOwner) {
+        viewLifecycleOwner.collectWhenStarted(viewModel.signedIn) {
             // Если одно из разрешений уже есть, открываем HomeRadioFragment
             if (isLocationPermissionGranted()) {
                 openHomeRadio()
@@ -103,12 +102,10 @@ class FirstScreenLoadingFragment : Fragment() {
             }
         }
 
-        // Настройки диалогового окна
         infoDialog = InfoDialog(requireContext())
 
         binding?.buttonLogIn?.setOnClickListener {
-
-            if (countryList.isEmpty()) {
+            if (!countryListIsNotEmpty) {
                 Log.d(TAG, "При нажатии на кнопку обнаружилось, что список кодов стран пустой")
                 // Показываем диалоговое окно о проблеме с сервером
                 infoDialog.show(R.string.dialogPleaseWait_title2, R.string.dialogPleaseWait_text2)
@@ -116,9 +113,6 @@ class FirstScreenLoadingFragment : Fragment() {
                 viewModel.onLoginClicked()
             }
         }
-
-//        initListeners()
-        subscribeOnLiveData()
 
         // Подписываемся на локальную БД с помощью CountryListFlow (либо CountryListLiveData), аналогично подписке в HomeRadioFragment
         // Для того, чтобы знать, пустая ли база данных. По окончанию первого кеширования или же при последующих запусках покажем кнопку для входа, чтобы не ждать
@@ -143,29 +137,25 @@ class FirstScreenLoadingFragment : Fragment() {
         }
     }
 
-    private fun subscribeOnLiveData() {
+    private fun subscribeOnFlow() {
         // Горизонтальная полоса прогресса загрузки списка стран (раньше - бродкаст из ProgressForegroundService)
-        viewModel.countryCacheProgressLiveData.observe(viewLifecycleOwner) { progress ->
+        viewLifecycleOwner.collectWhenStarted(viewModel.countryCacheProgress) { progress ->
             binding?.progressBarHorizontal?.progress = progress
         }
-    }
 
-    private fun subscribeOnFlow() {
         // viewLifecycleOwner, а не сам фрагмент: подписка живёт, пока существует экран (view), и не копится при возврате на фрагмент.
         // STARTED - когда экран не виден, данные не собираем (рекомендация developer.android.com для repeatOnLifecycle)
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 
-                viewModel.countryListFlow.collect {
-                    if (it.isNotEmpty()) {
+                viewModel.hasCountries.collect { hasCountries ->
+                    if (hasCountries) {
                         emptyListDialogJob?.cancel()
                         infoDialog.hide()
                         Log.d(
                             TAG,
-                            "При сборе данных в viewModel.countryListFlow.collect список кодов стран НЕ пустой"
+                            "При сборе данных в viewModel.hasCountries.collect список кодов стран НЕ пустой"
                         )
-
-                        countryList = it
                         countryListIsNotEmpty = true
 
                         binding?.buttonLogIn?.isVisible = true
@@ -181,23 +171,16 @@ class FirstScreenLoadingFragment : Fragment() {
                             if (!countryListIsNotEmpty) {
                                 Log.d(
                                     TAG,
-                                    "При сборе данных в viewModel.countryListFlow.collect список кодов стран всё ещё пустой, вызываем диалоговое окно"
+                                    "При сборе данных в viewModel.hasCountries.collect список кодов стран всё ещё пустой, вызываем диалоговое окно"
                                 )
                                 // Показываем диалоговое окно о проблеме с сервером
-                                infoDialog.show(
-                                    R.string.dialogPleaseWait_title2,
-                                    R.string.dialogPleaseWait_text2
-                                )
+                                infoDialog.show(R.string.dialogPleaseWait_title2, R.string.dialogPleaseWait_text2)
                             }
-
                         }
                     }
-
                 }
-
             }
         }
-
     }
 
     // VIEW BINDING -> 3. onDestroyView()

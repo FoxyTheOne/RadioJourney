@@ -13,12 +13,16 @@ import com.myproject.radiojourney.data.dataSource.network.NetworkRadioDataSource
 import com.myproject.radiojourney.data.dataSource.network.service.IRadioServiceWrapper
 import com.myproject.radiojourney.data.dataSource.network.service.RadioServiceWrapper
 import com.myproject.radiojourney.data.dataSource.network.service.UserAgentInterceptor
-import com.myproject.radiojourney.data.localDatabaseRoom.*
+import com.myproject.radiojourney.data.localDatabaseRoom.AppRoomDBAbstract
+import com.myproject.radiojourney.data.localDatabaseRoom.ICountryDAO
+import com.myproject.radiojourney.data.localDatabaseRoom.IRadioStationDAO
 import com.myproject.radiojourney.data.repository.AuthRepository
 import com.myproject.radiojourney.data.repository.FavoriteStationRepository
 import com.myproject.radiojourney.data.repository.MainRadioStationRepository
 import com.myproject.radiojourney.data.sharedPreference.AppSharedPreference
 import com.myproject.radiojourney.data.sharedPreference.IAppSharedPreference
+import com.myproject.radiojourney.domain.changeFavouriteUseCase.ChangeFavouriteUseCase
+import com.myproject.radiojourney.domain.changeFavouriteUseCase.IChangeFavouriteUseCase
 import com.myproject.radiojourney.domain.favouriteListUseCase.FavouriteListUseCase
 import com.myproject.radiojourney.domain.favouriteListUseCase.IFavouriteListUseCase
 import com.myproject.radiojourney.domain.firstScreenLoadingUseCase.ILoginScreenUseCase
@@ -34,10 +38,10 @@ import com.myproject.radiojourney.domain.mainRadioUseCase.IMainRadioUseCase
 import com.myproject.radiojourney.domain.mainRadioUseCase.MainRadioUseCase
 import com.myproject.radiojourney.domain.radioListUseCase.IRadioListUseCase
 import com.myproject.radiojourney.domain.radioListUseCase.RadioListUseCase
-import com.myproject.radiojourney.utils.exoplayer.MusicServiceConnection
 import com.myproject.radiojourney.other.Constants.NETWORK_CALL_TIMEOUT
 import com.myproject.radiojourney.other.Constants.NETWORK_CONNECT_TIMEOUT
 import com.myproject.radiojourney.other.Constants.NETWORK_READ_TIMEOUT
+import com.myproject.radiojourney.utils.exoplayer.MusicServiceConnection
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -48,48 +52,40 @@ import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
-import com.myproject.radiojourney.domain.changeFavouriteUseCase.ChangeFavouriteUseCase
-import com.myproject.radiojourney.domain.changeFavouriteUseCase.IChangeFavouriteUseCase
 
+/**
+ * Data layer: база данных, сеть, источники данных и репозитории.
+ * В SingletonComponent: ими пользуются не только ViewModel, но и сервис плеера (RadioPlaylistSource) и WorkManager.
+ * Раньше репозитории были в ViewModelComponent, и сервис обращался к DAO и NetworkRadioDataSource напрямую, в обход репозиториев
+ */
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class SingletonModule {
+abstract class DataModule {
+
     companion object {
         // ROOM -> 1. База данных Room
         @Provides
         @Singleton
-        fun providesAppDatabase(@ApplicationContext appContext: Context): AppRoomDBAbstract {
-            val roomDatabase = Room.databaseBuilder(
-                appContext,
-                AppRoomDBAbstract::class.java,
-                "AppRoomDatabase"
-            ).build()
-
-            return roomDatabase
-        }
+        fun providesAppDatabase(@ApplicationContext appContext: Context): AppRoomDBAbstract =
+            Room.databaseBuilder(appContext, AppRoomDBAbstract::class.java, "AppRoomDatabase")
+                .build()
 
         @Provides
-        fun providesCountryDAO(appDatabase: AppRoomDBAbstract): ICountryDAO {
-            return appDatabase.getCountryDAO()
-        }
+        fun providesCountryDAO(appDatabase: AppRoomDBAbstract): ICountryDAO =
+            appDatabase.getCountryDAO()
 
         @Provides
-        fun providesRadioStationDAO(appDatabase: AppRoomDBAbstract): IRadioStationDAO {
-            return appDatabase.getRadioStationDAO()
-        }
+        fun providesRadioStationDAO(appDatabase: AppRoomDBAbstract): IRadioStationDAO =
+            appDatabase.getRadioStationDAO()
 
         @Provides
         @Singleton
-        fun providesMusicServiceConnection(
-            @ApplicationContext context: Context
-        ) =
-            MusicServiceConnection(context) // Создаём экземпляр нашего класса MusicServiceConnection, для создания которого нужен context
+        fun providesMusicServiceConnection(@ApplicationContext context: Context) =
+            MusicServiceConnection(context)
 
         @Provides
-        fun providesUserAgentInterceptor(
-            @ApplicationContext context: Context
-        ) =
-            UserAgentInterceptor(context) // Создаём экземпляр нашего класса UserAgentInterceptor, для создания которого нужен context
+        fun providesUserAgentInterceptor(@ApplicationContext context: Context) =
+            UserAgentInterceptor(context)
 
         // Один OkHttpClient на всё приложение: у каждого клиента свой пул соединений и потоки (рекомендация OkHttp).
         // Раньше клиент создавался в RadioServiceWrapper заново для каждого запроса
@@ -111,87 +107,58 @@ abstract class SingletonModule {
 
     @Binds
     @Singleton
-    abstract fun bindsSharedPreference(
-        appSharedPreference: AppSharedPreference
-    ): IAppSharedPreference
+    abstract fun bindsSharedPreference(appSharedPreference: AppSharedPreference): IAppSharedPreference
 
     @Binds
-    abstract fun bindsLocalRadioDataSource(
-        localRadioDataSource: LocalRadioDataSource
-    ): ILocalRadioDataSource
+    abstract fun bindRadioServiceWrapper(radioServiceWrapper: RadioServiceWrapper): IRadioServiceWrapper
 
     @Binds
-    abstract fun bindsNetworkRadioDataSource(
-        networkRadioDataSource: NetworkRadioDataSource
-    ): INetworkRadioDataSource
+    abstract fun bindsNetworkRadioDataSource(networkRadioDataSource: NetworkRadioDataSource): INetworkRadioDataSource
 
     @Binds
-    abstract fun bindRadioServiceWrapper(
-        radioServiceWrapper: RadioServiceWrapper
-    ): IRadioServiceWrapper
+    abstract fun bindsLocalRadioDataSource(localRadioDataSource: LocalRadioDataSource): ILocalRadioDataSource
 
+    @Binds
+    abstract fun bindsLocalFavoriteDataSource(localFavoriteDataSource: LocalFavoriteDataSource): ILocalFavoriteDataSource
+
+    @Binds
+    abstract fun bindsLocalUserDataSource(localUserDataSource: LocalUserDataSource): ILocalUserDataSource
+
+    @Binds
+    abstract fun bindsMainRadioStationRepository(mainRadioStationRepository: MainRadioStationRepository): IMainRadioStationRepository
+
+    @Binds
+    abstract fun bindsFavoriteStationRepository(favoriteStationRepository: FavoriteStationRepository): IFavoriteStationRepository
+
+    @Binds
+    abstract fun bindsAuthRepository(authRepository: AuthRepository): IAuthRepository
 }
 
+/**
+ * Domain layer: use cases. Нужны только ViewModel
+ */
 @Module
 @InstallIn(ViewModelComponent::class)
-abstract class ViewModelModule {
-    @Binds
-    abstract fun bindsFavouriteListInteractor(
-        favouriteListInteractor: FavouriteListUseCase
-    ): IFavouriteListUseCase
+abstract class DomainModule {
 
     @Binds
-    abstract fun bindsChangeFavouriteUseCase(
-        changeFavouriteUseCase: ChangeFavouriteUseCase
-    ): IChangeFavouriteUseCase
+    abstract fun bindsChangeFavouriteUseCase(changeFavouriteUseCase: ChangeFavouriteUseCase): IChangeFavouriteUseCase
 
     @Binds
-    abstract fun bindsLoginScreenInteractor(
-        loginScreenInteractor: LoginScreenUseCase
-    ): ILoginScreenUseCase
+    abstract fun bindsFavouriteListInteractor(favouriteListInteractor: FavouriteListUseCase): IFavouriteListUseCase
 
     @Binds
-    abstract fun bindsHomeRadioInteractor(
-        homeRadioInteractor: HomeRadioUseCase
-    ): IHomeRadioUseCase
+    abstract fun bindsLoginScreenInteractor(loginScreenInteractor: LoginScreenUseCase): ILoginScreenUseCase
 
     @Binds
-    abstract fun bindsLogOutInteractor(
-        logOutInteractor: LogOutUseCase
-    ): ILogOutUseCase
+    abstract fun bindsHomeRadioInteractor(homeRadioInteractor: HomeRadioUseCase): IHomeRadioUseCase
 
     @Binds
-    abstract fun bindsRadioListInteractor(
-        radioListInteractor: RadioListUseCase
-    ): IRadioListUseCase
+    abstract fun bindsLogOutInteractor(logOutInteractor: LogOutUseCase): ILogOutUseCase
 
     @Binds
-    abstract fun bindsMainRadioUseCase(
-        mainRadioInteractor: MainRadioUseCase
-    ): IMainRadioUseCase
+    abstract fun bindsRadioListInteractor(radioListInteractor: RadioListUseCase): IRadioListUseCase
 
     @Binds
-    abstract fun bindsAuthRepository(
-        authRepository: AuthRepository
-    ): IAuthRepository
-
-    @Binds
-    abstract fun bindsFavoriteStationRepository(
-        favoriteStationRepository: FavoriteStationRepository
-    ): IFavoriteStationRepository
-
-    @Binds
-    abstract fun bindsMainRadioStationRepository(
-        mainRadioStationRepository: MainRadioStationRepository
-    ): IMainRadioStationRepository
-
-    @Binds
-    abstract fun bindsLocalUserDataSource(
-        localUserDataSource: LocalUserDataSource
-    ): ILocalUserDataSource
-
-    @Binds
-    abstract fun bindsLocalFavoriteDataSource(
-        localFavoriteDataSource: LocalFavoriteDataSource
-    ): ILocalFavoriteDataSource
+    abstract fun bindsMainRadioUseCase(mainRadioInteractor: MainRadioUseCase): IMainRadioUseCase
 }

@@ -1,14 +1,15 @@
 package com.myproject.radiojourney.presentation.firstScreen
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myproject.radiojourney.data.worker.CountryCacheScheduler
 import com.myproject.radiojourney.domain.firstScreenLoadingUseCase.ILoginScreenUseCase
 import com.myproject.radiojourney.domain.homeRadioUseCase.IHomeRadioUseCase
-import com.myproject.radiojourney.utils.extension.call
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -25,21 +26,23 @@ class FirstScreenLoadingViewModel @Inject constructor(
     countryCacheScheduler: CountryCacheScheduler
 ) : ViewModel() {
     // Прогресс загрузки списка стран (WorkManager) для полосы на экране. Раньше - бродкаст из ProgressForegroundService
-    val countryCacheProgressLiveData: LiveData<Int> = countryCacheScheduler.progressLiveData
+    val countryCacheProgress: Flow<Int> = countryCacheScheduler.progress
 
-    // Флаг для проверки на permissions при переходе на следующий fragment
-    private val _signInLiveData = MutableLiveData<Boolean>()
-    val signInLiveData: LiveData<Boolean> = _signInLiveData
+    // Вход выполнен - экран проверит разрешения и перейдёт на карту. Channel: событие получит экран, даже если оно случилось,
+    // пока экран не был виден, и получит один раз (раньше - LiveData<Boolean>, в которую "стреляли" значением true)
+    private val _signedIn = Channel<Unit>(Channel.CONFLATED)
+    val signedIn: Flow<Unit> = _signedIn.receiveAsFlow()
 
-    // Подписка на локальную БД, для проверки (Если БД пуста, нужно ждать окончания кеширования)
-    val countryListFlow = homeRadioInteractor.subscribeOnCountryList()
+    // Подписка на локальную БД, для проверки (если БД пуста, нужно ждать окончания кеширования). Самих стран этому экрану не нужно
+    val hasCountries: Flow<Boolean> =
+        homeRadioInteractor.subscribeOnCountryList().map { it.isNotEmpty() }
 
     // Раньше здесь были LiveData ошибки и диалога "нет интернета" в catch (AccountsException / IOException),
     // но сохранение токена такие исключения не бросает - эти ветки не могли сработать
     fun onLoginClicked() {
         viewModelScope.launch {
             loginScreenInteractor.onLoginClicked() // Сохраняем токен, чтобы в следующий раз пропустить этот фрагмент
-            _signInLiveData.call()
+            _signedIn.send(Unit)
         }
     }
 }

@@ -42,7 +42,7 @@
 
             <argument
                 android:name="radio_station"
-                app:argType="com.myproject.radiojourney.entities.presentation.RadioStationPresentation" />
+                app:argType="com.myproject.radiojourney.presentation.model.RadioStationPresentation" />
         </action>
     </fragment>
 
@@ -56,7 +56,7 @@
 
             <argument
                 android:name="favourite_station"
-                app:argType="com.myproject.radiojourney.entities.presentation.RadioStationPresentation" />
+                app:argType="com.myproject.radiojourney.presentation.model.RadioStationPresentation" />
         </action>
     </fragment>
 
@@ -85,7 +85,7 @@
 
             <argument
                 android:name="radio_station"
-                app:argType="com.myproject.radiojourney.entities.presentation.RadioStationPresentation" />
+                app:argType="com.myproject.radiojourney.presentation.model.RadioStationPresentation" />
         </action>
     </fragment>
     <fragment

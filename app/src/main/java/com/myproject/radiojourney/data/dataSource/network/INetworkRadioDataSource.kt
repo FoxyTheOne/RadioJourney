@@ -1,7 +1,7 @@
 package com.myproject.radiojourney.data.dataSource.network
 
-import com.myproject.radiojourney.entities.remote.CountryCodeRemote
-import com.myproject.radiojourney.entities.remote.RadioStationRemote
+import com.myproject.radiojourney.data.dataSource.network.entity.CountryCodeRemote
+import com.myproject.radiojourney.data.dataSource.network.entity.RadioStationRemote
 import com.myproject.radiojourney.other.Resource
 
 interface INetworkRadioDataSource {

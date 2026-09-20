@@ -1,8 +1,6 @@
 package com.myproject.radiojourney.data.worker
 
 import android.content.Context
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.map
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
@@ -10,6 +8,8 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -32,14 +32,16 @@ class CountryCacheScheduler @Inject constructor(
     fun start() {
         val request = OneTimeWorkRequestBuilder<CountryCacheWorker>()
             // Без интернета WorkManager подождёт сеть, а не завершится ошибкой
-            .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+            .setConstraints(
+                Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
+            )
             .build()
         workManager.enqueueUniqueWork(UNIQUE_WORK_NAME, ExistingWorkPolicy.KEEP, request)
     }
 
     // Прогресс загрузки 0..100 (100 - загрузка завершена)
-    val progressLiveData: LiveData<Int> =
-        workManager.getWorkInfosForUniqueWorkLiveData(UNIQUE_WORK_NAME).map { workInfos ->
+    val progress: Flow<Int> =
+        workManager.getWorkInfosForUniqueWorkFlow(UNIQUE_WORK_NAME).map { workInfos ->
             val workInfo = workInfos.lastOrNull() ?: return@map 0
             when (workInfo.state) {
                 WorkInfo.State.SUCCEEDED -> 100

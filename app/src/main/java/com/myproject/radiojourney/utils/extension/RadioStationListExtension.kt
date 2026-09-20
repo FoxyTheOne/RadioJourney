@@ -1,6 +1,6 @@
 package com.myproject.radiojourney.utils.extension
 
-import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
+import com.myproject.radiojourney.presentation.model.RadioStationPresentation
 
 // С какой станции начинать новый плейлист. Список отсортирован по названию, и первые станции во многих странах одинаковые
 // (".Quran", "# TOP 100 ..." и т.п.), поэтому начинаем с самой популярной (больше всего прослушиваний).

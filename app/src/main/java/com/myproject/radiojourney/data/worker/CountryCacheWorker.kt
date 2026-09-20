@@ -6,12 +6,11 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
-import com.google.android.gms.maps.model.LatLng
-import com.myproject.radiojourney.data.dataSource.local.country.CountryCoordinates
+import com.myproject.radiojourney.data.dataSource.local.country.CountryCoordinatesDataSource
 import com.myproject.radiojourney.data.dataSource.local.radio.ILocalRadioDataSource
 import com.myproject.radiojourney.data.dataSource.network.INetworkRadioDataSource
-import com.myproject.radiojourney.entities.local.CountryLocal
-import com.myproject.radiojourney.entities.remote.CountryCodeRemote
+import com.myproject.radiojourney.data.mapper.toLocal
+import com.myproject.radiojourney.domain.model.Country
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import java.util.Locale
@@ -28,7 +27,8 @@ class CountryCacheWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
     private val networkRadioDataSource: INetworkRadioDataSource,
-    private val localRadioDataSource: ILocalRadioDataSource
+    private val localRadioDataSource: ILocalRadioDataSource,
+    private val countryCoordinatesDataSource: CountryCoordinatesDataSource
 ) : CoroutineWorker(context, params) {
 
     companion object {
@@ -48,41 +48,43 @@ class CountryCacheWorker @AssistedInject constructor(
         }
 
         // Коды стран могут прийти маленькими буквами: переводим в большие и суммируем количество станций по коду страны
-        val mergedCountryCodeRemoteList = countryCodeRemoteList
+        val stationCountByCountryCode = countryCodeRemoteList
             .groupBy({ it.name.uppercase() }, { it.stationcount })
-            .map { (countryCode, stationCounts) -> CountryCodeRemote(countryCode, stationCounts.sum()) }
+            .mapValues { (_, stationCounts) -> stationCounts.sum() }
 
-        val listSize = mergedCountryCodeRemoteList.size
+        val listSize = stationCountByCountryCode.size
         var percentCount = 10
+        var countryCount = 0
+        val countryList = mutableListOf<Country>()
 
-        val countryLocalList = mergedCountryCodeRemoteList.mapIndexed { index, countryCodeRemote ->
+        for ((countryCode, stationCount) in stationCountByCountryCode) {
             // Узнаем название страны
-            val countryName = Locale("", countryCodeRemote.name).displayName
+            val countryName = Locale("", countryCode).displayName
 
-            // Ищем локацию в нашей коллекции
-            val countryLocation = CountryCoordinates.byCountryCode[countryCodeRemote.name] ?: LatLng(0.0, 0.0)
-            if (countryLocation.latitude == 0.0) {
-                Log.d(TAG, "!! Адрес не найден, countryCode: ${countryCodeRemote.name}, countryName: $countryName")
+            // Координаты - из файла assets/country_coordinates.csv, для новых стран - через Geocoder.
+            // Страна без координат на карту не попадает (раньше её маркер ставился в точку 0, 0)
+            val coordinates = countryCoordinatesDataSource.getCoordinates(countryCode, countryName)
+            if (coordinates != null) {
+                countryList += Country(
+                    countryCode = countryCode,
+                    stationCount = stationCount,
+                    countryName = countryName,
+                    latitude = coordinates.first,
+                    longitude = coordinates.second
+                )
             }
 
             // Прогресс для полосы на первом экране - каждые 10%
-            val countryCount = index + 1
+            countryCount++
             if (countryCount == percentCount * listSize / 100) {
                 percentCount += 10
                 setProgress(workDataOf(KEY_PROGRESS to 100 * countryCount / listSize))
             }
-
-            // remote -> local
-            CountryLocal.fromRemoteToLocal(
-                countryCodeRemote,
-                countryName = countryName,
-                countryLocation = countryLocation
-            )
         }
 
-        // Теперь сохраним наши страны в Room
-        localRadioDataSource.saveCountryList(countryLocalList)
-        Log.d(TAG, "Список стран сохранён в локальную базу данных: size = ${countryLocalList.size}")
+        // Теперь сохраним наши страны в Room (список целиком заменяет старый)
+        localRadioDataSource.replaceCountryList(countryList.map { it.toLocal() })
+        Log.d(TAG, "Список стран сохранён в локальную базу данных: size = ${countryList.size} из $listSize")
         return Result.success()
     }
 }

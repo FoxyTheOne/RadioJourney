@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.presentation.MainViewModel
 import com.myproject.radiojourney.presentation.common.InfoDialog
+import com.myproject.radiojourney.presentation.common.collectWhenStarted
 import com.myproject.radiojourney.presentation.content.radioStationList.adapter.ListRadioStationAdapter
 import com.myproject.radiojourney.presentation.content.radioStationList.base.BaseRadioListFragmentAbstract
 import dagger.hilt.android.AndroidEntryPoint
@@ -34,28 +35,23 @@ class CurrentPlaylistFragment : BaseRadioListFragmentAbstract() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        view.findViewById<AppCompatTextView>(R.id.text_myFavorites_title).text =
-            getString(R.string.currentPlaylist_title)
-        view.findViewById<AppCompatTextView>(R.id.text_radioStationDialogTitleSelect).isVisible =
-            false
-        view.findViewById<AppCompatTextView>(R.id.text_radioStationDialogTitleDownload).isVisible =
-            false
+        view.findViewById<AppCompatTextView>(R.id.text_myFavorites_title).text = getString(R.string.currentPlaylist_title)
+        view.findViewById<AppCompatTextView>(R.id.text_radioStationDialogTitleSelect).isVisible = false
+        view.findViewById<AppCompatTextView>(R.id.text_radioStationDialogTitleDownload).isVisible = false
         recyclerViewRadioStationList = view.findViewById(R.id.recyclerView_radioStationList)
 
         infoDialog = InfoDialog(requireContext())
         infoDialog.showIfNoInternet()
 
         // Список станций текущего плейлиста - тот же, что в плейере
-        val radioStationPlaylist = mainViewModel.mediaItemsListLiveData.value?.data.orEmpty()
+        val radioStationPlaylist = mainViewModel.currentPlaylistStations
         if (radioStationPlaylist.isNotEmpty()) {
-            val currentStationUuid = mainViewModel.curPlayingSongLiveData.value?.mediaId
+            val currentStationUuid = mainViewModel.curPlayingSong.value?.mediaId
             radioListAdapter.setItemClickListener { radioStation ->
                 // Открываем по клику другой фрагмент, передаём туда нашу радиостанцию
                 if (findNavController().currentDestination?.id == R.id.currentPlaylistFragment) {
                     findNavController().navigate(
-                        CurrentPlaylistFragmentDirections.actionCurrentPlaylistFragmentToHomeRadioFragment(
-                            radioStation
-                        )
+                        CurrentPlaylistFragmentDirections.actionCurrentPlaylistFragmentToHomeRadioFragment(radioStation)
                     )
                 }
             }
@@ -67,7 +63,7 @@ class CurrentPlaylistFragment : BaseRadioListFragmentAbstract() {
             }
 
             // Станция переключилась, пока открыт список - переносим подсветку
-            mainViewModel.curPlayingSongLiveData.observe(viewLifecycleOwner) { mediaItem ->
+            viewLifecycleOwner.collectWhenStarted(mainViewModel.curPlayingSong) { mediaItem ->
                 radioListAdapter.setCurrentStation(mediaItem?.mediaId)
             }
         } else {

@@ -1,10 +1,10 @@
 package com.myproject.radiojourney.domain.mainRadioUseCase
 
-import androidx.media3.common.MediaItem
-import com.myproject.radiojourney.entities.presentation.RadioStationPresentation
+import com.myproject.radiojourney.domain.model.RadioStation
 
 interface IMainRadioUseCase {
-    suspend fun mediaItemChildrenToRadioStationPresentation(children: List<MediaItem>): List<RadioStationPresentation>
+    // Станции плейлиста с признаком избранного из Room
+    suspend fun withFavouriteFlags(radioStations: List<RadioStation>): List<RadioStation>
     suspend fun saveLastUsedRadioStationUrlAndCode(urlResolved: String, countryCode: String)
     suspend fun markRadioStationAsPopularSendGetRequest(stationUuid: String): Boolean
 }

@@ -1,7 +1,7 @@
 package com.myproject.radiojourney.domain.iRepository
 
-import com.myproject.radiojourney.entities.local.RadioStationLocal
+import com.myproject.radiojourney.domain.model.RadioStation
 
 interface IFavoriteStationRepository {
-    suspend fun getFavoriteRadioStationList(isStationInFavorite: Boolean): List<RadioStationLocal>
+    suspend fun getFavoriteRadioStationList(): List<RadioStation>
 }

@@ -4,8 +4,8 @@ import android.os.SystemClock
 import android.util.Log
 import com.myproject.radiojourney.data.dataSource.network.service.IRadioService
 import com.myproject.radiojourney.data.dataSource.network.service.IRadioServiceWrapper
-import com.myproject.radiojourney.entities.remote.CountryCodeRemote
-import com.myproject.radiojourney.entities.remote.RadioStationRemote
+import com.myproject.radiojourney.data.dataSource.network.entity.CountryCodeRemote
+import com.myproject.radiojourney.data.dataSource.network.entity.RadioStationRemote
 import com.myproject.radiojourney.other.Constants.MAX_STATIONS_COUNT
 import com.myproject.radiojourney.other.Constants.SERVER_IS_DOWN
 import com.myproject.radiojourney.other.Constants.SERVER_SEARCH_TIME
