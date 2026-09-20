@@ -5,7 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
 import androidx.annotation.StringRes
-import androidx.appcompat.app.AlertDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.myproject.radiojourney.R
 
 /**
@@ -24,7 +24,9 @@ fun Context.showPermissionRationale(
     @StringRes textId: Int,
     onContinue: () -> Unit
 ) {
-    AlertDialog.Builder(this)
+    // MaterialAlertDialogBuilder, а не AlertDialog.Builder: он берёт оформление окна из темы приложения
+    // (materialAlertDialogTheme), поэтому окно выглядит так же, как остальные окна приложения
+    MaterialAlertDialogBuilder(this)
         .setTitle(titleId)
         .setMessage(textId)
         .setPositiveButton(R.string.permission_button_continue) { _, _ -> onContinue() }
@@ -43,7 +45,7 @@ fun Context.showPermissionDeniedDialog(
     isPermanentlyDenied: Boolean,
     onDismiss: () -> Unit = {}
 ) {
-    val builder = AlertDialog.Builder(this)
+    val builder = MaterialAlertDialogBuilder(this)
         .setTitle(titleId)
         .setMessage(textId)
         .setPositiveButton(R.string.permission_button_ok, null)
@@ -52,7 +54,10 @@ fun Context.showPermissionDeniedDialog(
     if (isPermanentlyDenied) {
         builder.setNeutralButton(R.string.permission_button_settings) { _, _ ->
             startActivity(
-                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", packageName, null))
+                Intent(
+                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                    Uri.fromParts("package", packageName, null)
+                )
             )
         }
     }

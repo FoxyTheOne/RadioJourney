@@ -20,7 +20,10 @@ class InfoDialog(
     @IdRes private val titleViewId: Int = R.id.title_internetTrouble,
     @IdRes private val textViewId: Int = R.id.text_internetTrouble
 ) {
-    private val dialog = Dialog(context).apply { setContentView(layoutId) }
+    // Тема окна - общая для всех диалогов приложения (см. themes.xml): фон, скругление и цвета текста
+    private val dialog = Dialog(context, R.style.ThemeOverlay_RadioJourney_CustomDialog).apply {
+        setContentView(layoutId)
+    }
 
     fun show(@StringRes titleId: Int, @StringRes textId: Int) {
         dialog.findViewById<AppCompatTextView>(titleViewId).text = context.getString(titleId)

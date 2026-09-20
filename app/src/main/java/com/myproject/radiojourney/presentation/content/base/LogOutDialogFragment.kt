@@ -20,6 +20,12 @@ class LogOutDialogFragment : DialogFragment() {
         const val REQUEST_KEY = "LogOutDialogFragment.logOut"
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        // Единое оформление всех окон приложения (см. themes.xml)
+        setStyle(STYLE_NORMAL, R.style.ThemeOverlay_RadioJourney_CustomDialog)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,

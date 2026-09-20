@@ -62,6 +62,13 @@ class AddMyStationDialogFragment : DialogFragment() {
     // null - добавляем новую станцию, иначе редактируем эту
     private val editedStationUuid: String? get() = arguments?.getString(ARG_STATION_UUID)
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        // Оформление окна (фон со скруглением, цвета текста и полей) берётся из темы приложения,
+        // а не из разметки - тогда оно не зависит от того, светлая или тёмная тема стоит на телефоне
+        setStyle(STYLE_NORMAL, R.style.ThemeOverlay_RadioJourney_CustomDialog)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,

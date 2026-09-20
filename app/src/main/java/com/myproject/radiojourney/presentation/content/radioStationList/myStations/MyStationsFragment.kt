@@ -4,12 +4,12 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.R
@@ -101,7 +101,7 @@ class MyStationsFragment : BaseContentFragmentAbstract() {
     // Удаление - действие необратимое, поэтому переспрашиваем. В тексте показываем название станции,
     // чтобы было видно, какую именно удаляем (кнопок удаления в списке много)
     private fun confirmDelete(station: RadioStationPresentation) {
-        AlertDialog.Builder(requireContext())
+        MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.myStations_delete_title)
             .setMessage(getString(R.string.myStations_delete_text, station.stationName))
             .setPositiveButton(R.string.myStations_delete_confirm) { _, _ ->

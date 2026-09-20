@@ -1,11 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Окно добавления своей станции: название и ссылка на поток.
+<?xml version="1.0" encoding="utf-8"?><!-- Окно добавления своей станции: название и ссылка на поток.
      TextInputLayout из Material - он умеет показывать подсказку и текст ошибки прямо под полем -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/background"
     android:orientation="vertical"
     android:padding="@dimen/space_beforeOrAfterElement">
 
@@ -33,8 +31,7 @@
             android:layout_height="wrap_content"
             android:imeOptions="actionNext"
             android:inputType="textCapSentences"
-            android:maxLines="1"
-            android:textColor="@color/white" />
+            android:maxLines="1" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
@@ -55,8 +52,7 @@
             android:layout_height="wrap_content"
             android:imeOptions="actionDone"
             android:inputType="textUri"
-            android:maxLines="1"
-            android:textColor="@color/white" />
+            android:maxLines="1" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <LinearLayout

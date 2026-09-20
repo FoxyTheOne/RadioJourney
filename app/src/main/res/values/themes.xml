@@ -1,6 +1,11 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Theme.RadioJourney" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+    <!-- Base application theme.
+         Тема тёмная всегда, а не DayNight: все экраны приложения нарисованы тёмными (оранжевый на тёмно-синем),
+         светлого оформления у них нет. С DayNight при светлой теме телефона экраны оставались тёмными,
+         а системные окна (диалоги, меню) становились светлыми - получалась чёрная надпись на тёмном фоне.
+         Если когда-нибудь появится светлое оформление, сюда вернётся DayNight, а цвета переедут
+         в values/colors.xml и values-night/colors.xml -->
+    <style name="Theme.RadioJourney" parent="Theme.MaterialComponents.NoActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/bright_orange</item>
         <item name="colorPrimaryVariant">@color/orange</item>
@@ -22,6 +27,69 @@
         <!-- Для того, чтобы установить свой тулбар: -->
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+        <!-- Оформление всех диалоговых окон приложения (см. ниже). Указано в теме, поэтому окно,
+             созданное где угодно, выглядит одинаково - цвета не нужно передавать при каждом вызове -->
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.RadioJourney.AlertDialog</item>
+    </style>
+
+    <!-- ДИАЛОГИ.
+         Material рекомендует брать цвета окна из темы (colorSurface - фон, colorOnSurface - текст на нём),
+         а не прописывать их в разметке. Тогда все окна одинаковые, и оформление меняется в одном месте -->
+
+    <!-- Окна с заголовком, текстом и кнопками: "Удалить станцию?", объяснения к разрешениям.
+         Создаются через MaterialAlertDialogBuilder -->
+    <style name="ThemeOverlay.RadioJourney.AlertDialog" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <item name="colorSurface">@color/background</item>
+        <!-- В тёмной теме Material осветляет поверхность тем сильнее, чем выше элемент "приподнят" над экраном.
+             Из-за этого фон такого окна получался светлее, чем у окон со своей разметкой - отключаем -->
+        <item name="elevationOverlayEnabled">false</item>
+        <item name="colorOnSurface">@color/white</item>
+        <item name="colorPrimary">@color/bright_orange</item>
+        <item name="android:textColorPrimary">@color/white</item>
+        <item name="android:textColorSecondary">@color/white_transparent_80</item>
+        <item name="fontFamily">@font/comfortaa_variable_font_wght</item>
+        <item name="materialAlertDialogTitleTextStyle">
+            @style/TextAppearance.RadioJourney.DialogTitle
+        </item>
+        <item name="materialAlertDialogBodyTextStyle">
+            @style/TextAppearance.RadioJourney.DialogBody
+        </item>
+        <item name="buttonBarPositiveButtonStyle">@style/Widget.RadioJourney.DialogButton</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Widget.RadioJourney.DialogButton</item>
+        <item name="buttonBarNeutralButtonStyle">@style/Widget.RadioJourney.DialogButton</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.MyApp.MediumComponent
+        </item>
+    </style>
+
+    <!-- Окна со своей разметкой: "Новая станция", "Выход", информационные окна.
+         windowBackground - тот самый фон со скруглением, который раньше задавала каждая разметка сама -->
+    <style name="ThemeOverlay.RadioJourney.CustomDialog" parent="ThemeOverlay.MaterialComponents.Dialog">
+        <item name="colorSurface">@color/background</item>
+        <item name="elevationOverlayEnabled">false</item>
+        <item name="colorOnSurface">@color/white</item>
+        <item name="colorPrimary">@color/bright_orange</item>
+        <item name="android:textColorPrimary">@color/white</item>
+        <item name="android:textColorSecondary">@color/white_transparent_80</item>
+        <item name="android:textColorHint">@color/white_transparent_60</item>
+        <item name="android:windowBackground">@drawable/dialog_background</item>
+        <item name="fontFamily">@font/comfortaa_variable_font_wght</item>
+    </style>
+
+    <style name="TextAppearance.RadioJourney.DialogTitle" parent="MaterialAlertDialog.MaterialComponents.Title.Text">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">20sp</item>
+        <item name="fontFamily">@font/comfortaa_variable_font_wght</item>
+    </style>
+
+    <style name="TextAppearance.RadioJourney.DialogBody" parent="MaterialAlertDialog.MaterialComponents.Body.Text">
+        <item name="android:textColor">@color/white_transparent_80</item>
+        <item name="android:textSize">16sp</item>
+        <item name="fontFamily">@font/comfortaa_variable_font_wght</item>
+    </style>
+
+    <style name="Widget.RadioJourney.DialogButton" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/bright_orange</item>
+        <item name="fontFamily">@font/comfortaa_variable_font_wght</item>
     </style>
 
     <style name="ShapeAppearance.MyApp.SmallComponent" parent="ShapeAppearance.MaterialComponents.SmallComponent">
