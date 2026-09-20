@@ -1,29 +1,29 @@
 package com.myproject.radiojourney.data.dataSource.local.auth
 
-import com.myproject.radiojourney.data.sharedPreference.IAppSharedPreference
+import com.myproject.radiojourney.data.preference.IAppPreferenceStorage
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 /**
- * LocalAuthDataSource Будет доставать данные, либо сохранять их в локальную базу данных (SharedPreference, Room)
+ * Local data source входа в приложение: достаёт данные из локального хранилища (DataStore) и сохраняет их туда
  */
 class LocalUserDataSource @Inject constructor(
-    private val preference: IAppSharedPreference
+    private val preferenceStorage: IAppPreferenceStorage
 ) : ILocalUserDataSource {
     // Сохраняем токен, чтобы пользователь мог миновать первый экран, если уже выполнил все его условия
     override suspend fun onLoginClicked() {
         val token = Math.random() * 1000
-        preference.saveToken(token.toInt())
+        preferenceStorage.saveToken(token.toInt())
 
-        preference.setIsFirstStart(isFirstStart = false)
+        preferenceStorage.setIsFirstStart(isFirstStart = false)
     }
 
-    override fun isLoggedIn(): Boolean =
-        preference.getToken().isNotBlank() && !preference.isFirstStart()
+    override fun isLoggedIn(): Flow<Boolean> = preferenceStorage.isLoggedIn
 
     // Выход из аккаунта
-    override fun logout() {
-        preference.saveToken(null)
+    override suspend fun logout() {
+        preferenceStorage.saveToken(null)
 
-        preference.setIsFirstStart(isFirstStart = true)
+        preferenceStorage.setIsFirstStart(isFirstStart = true)
     }
 }

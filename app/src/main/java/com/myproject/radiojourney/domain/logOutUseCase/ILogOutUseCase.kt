@@ -1,7 +1,9 @@
 package com.myproject.radiojourney.domain.logOutUseCase
 
+/**
+ * UseCase выхода из аккаунта
+ */
 interface ILogOutUseCase {
-    // Не suspend: выход вызывается прямо перед закрытием Activity. В корутине viewModelScope он мог отмениться
-    // вместе с ViewModel раньше, чем сохранится (Activity закрывается сразу после вызова)
+    // Не suspend: экран вызывает выход и сразу закрывается. Сама запись идёт в scope приложения (см. LogOutUseCase)
     fun onLogout()
 }

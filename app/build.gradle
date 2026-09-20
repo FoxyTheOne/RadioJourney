@@ -124,6 +124,9 @@ dependencies {
     implementation 'androidx.hilt:hilt-work:1.4.0'
     ksp 'androidx.hilt:hilt-compiler:1.4.0'
 
+    // DataStore - хранилище пар ключ-значение вместо SharedPreferences (см. AppPreferenceStorage)
+    implementation 'androidx.datastore:datastore-preferences:1.1.7'
+
     // Interceptor
     implementation 'com.squareup.okhttp3:logging-interceptor:5.4.0'
 }

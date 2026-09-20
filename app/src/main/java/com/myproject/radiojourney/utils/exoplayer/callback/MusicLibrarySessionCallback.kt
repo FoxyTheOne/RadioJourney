@@ -49,7 +49,7 @@ class MusicLibrarySessionCallback(
     private val radioPlaylistSource: RadioPlaylistSource,
     private val serviceScope: CoroutineScope,
     private val player: Player,
-    private val getLastUsedRadioStationUrl: () -> String,
+    private val getLastUsedRadioStationUrl: suspend () -> String,
     private val onNetworkError: () -> Unit
 ) : MediaLibrarySession.Callback {
 
@@ -324,7 +324,7 @@ class MusicLibrarySessionCallback(
     // При первом запуске кладём плейлист в плейер (без prepare()), чтобы в плеере на экране сразу была станция,
     // которую слушали в прошлый раз. prepare() не вызываем: иначе плеер сразу начнёт загружать поток
     // и media3 покажет уведомление, хотя радио не включали
-    private fun setInitialPlaylistIfEmpty(radioStations: List<MediaItem>) {
+    private suspend fun setInitialPlaylistIfEmpty(radioStations: List<MediaItem>) {
         if (player.mediaItemCount > 0 || radioStations.isEmpty()) return
         val lastUsedRadioStationUrl = getLastUsedRadioStationUrl()
         val lastIndex =

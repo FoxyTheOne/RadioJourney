@@ -27,7 +27,8 @@ class MainRadioStationRepository @Inject constructor(
 ) : IMainRadioStationRepository {
 
     override fun subscribeOnCountryList(): Flow<List<Country>> =
-        localRadioDataSource.subscribeOnCountryList().map { countries -> countries.map { it.toDomain() } }
+        localRadioDataSource.subscribeOnCountryList()
+            .map { countries -> countries.map { it.toDomain() } }
 
     override suspend fun getSavedRadioStation(stationUuid: String): RadioStation? =
         localRadioDataSource.getRadioStationSaved(stationUuid)?.toDomain()
@@ -48,12 +49,17 @@ class MainRadioStationRepository @Inject constructor(
         }
     }
 
-    override suspend fun saveLastUsedRadioStationUrlAndCode(urlResolved: String, countryCode: String) =
+    override suspend fun saveLastUsedRadioStationUrlAndCode(
+        urlResolved: String,
+        countryCode: String
+    ) =
         localRadioDataSource.saveLastUsedRadioStationUrlAndCode(urlResolved, countryCode)
 
-    override fun getLastUsedRadioStationUrl(): String = localRadioDataSource.getLastUsedRadioStationUrl()
+    override suspend fun getLastUsedRadioStationUrl(): String =
+        localRadioDataSource.getLastUsedRadioStationUrl()
 
-    override fun getLastUsedRadioStationCountryCode(): String = localRadioDataSource.getLastUsedRadioStationCountryCode()
+    override suspend fun getLastUsedRadioStationCountryCode(): String =
+        localRadioDataSource.getLastUsedRadioStationCountryCode()
 
     // Как указано автором API: send /json/url requests for every click the user makes, this helps to mark stations as popular
     override suspend fun markRadioStationAsPopularSendGetRequest(stationUuid: String): Boolean =
@@ -62,5 +68,5 @@ class MainRadioStationRepository @Inject constructor(
     override suspend fun setIsHideInfoClicked(isHideInfoClicked: Boolean) =
         localRadioDataSource.setIsHideInfoClicked(isHideInfoClicked)
 
-    override suspend fun isHideInfoClicked(): Boolean = localRadioDataSource.isHideInfoClicked()
+    override fun isHideInfoClicked(): Flow<Boolean> = localRadioDataSource.isHideInfoClicked()
 }

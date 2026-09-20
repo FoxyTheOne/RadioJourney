@@ -19,8 +19,8 @@ import com.myproject.radiojourney.data.localDatabaseRoom.IRadioStationDAO
 import com.myproject.radiojourney.data.repository.AuthRepository
 import com.myproject.radiojourney.data.repository.FavoriteStationRepository
 import com.myproject.radiojourney.data.repository.MainRadioStationRepository
-import com.myproject.radiojourney.data.sharedPreference.AppSharedPreference
-import com.myproject.radiojourney.data.sharedPreference.IAppSharedPreference
+import com.myproject.radiojourney.data.preference.AppPreferenceStorage
+import com.myproject.radiojourney.data.preference.IAppPreferenceStorage
 import com.myproject.radiojourney.domain.changeFavouriteUseCase.ChangeFavouriteUseCase
 import com.myproject.radiojourney.domain.changeFavouriteUseCase.IChangeFavouriteUseCase
 import com.myproject.radiojourney.domain.favouriteListUseCase.FavouriteListUseCase
@@ -49,6 +49,9 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ViewModelComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
@@ -67,25 +70,26 @@ abstract class DataModule {
         @Provides
         @Singleton
         fun providesAppDatabase(@ApplicationContext appContext: Context): AppRoomDBAbstract =
-            Room.databaseBuilder(appContext, AppRoomDBAbstract::class.java, "AppRoomDatabase")
-                .build()
+            Room.databaseBuilder(appContext, AppRoomDBAbstract::class.java, "AppRoomDatabase").build()
 
         @Provides
-        fun providesCountryDAO(appDatabase: AppRoomDBAbstract): ICountryDAO =
-            appDatabase.getCountryDAO()
+        fun providesCountryDAO(appDatabase: AppRoomDBAbstract): ICountryDAO = appDatabase.getCountryDAO()
 
         @Provides
-        fun providesRadioStationDAO(appDatabase: AppRoomDBAbstract): IRadioStationDAO =
-            appDatabase.getRadioStationDAO()
+        fun providesRadioStationDAO(appDatabase: AppRoomDBAbstract): IRadioStationDAO = appDatabase.getRadioStationDAO()
+
+        // Scope приложения для работы, которая не должна отменяться вместе с экраном (см. ApplicationScope)
+        @Provides
+        @Singleton
+        @ApplicationScope
+        fun providesApplicationScope(): CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
         @Provides
         @Singleton
-        fun providesMusicServiceConnection(@ApplicationContext context: Context) =
-            MusicServiceConnection(context)
+        fun providesMusicServiceConnection(@ApplicationContext context: Context) = MusicServiceConnection(context)
 
         @Provides
-        fun providesUserAgentInterceptor(@ApplicationContext context: Context) =
-            UserAgentInterceptor(context)
+        fun providesUserAgentInterceptor(@ApplicationContext context: Context) = UserAgentInterceptor(context)
 
         // Один OkHttpClient на всё приложение: у каждого клиента свой пул соединений и потоки (рекомендация OkHttp).
         // Раньше клиент создавался в RadioServiceWrapper заново для каждого запроса
@@ -98,16 +102,13 @@ abstract class DataModule {
                 // и за время полосы загрузки успевали пройти всего 2-3 попытки
                 .connectTimeout(NETWORK_CONNECT_TIMEOUT, TimeUnit.MILLISECONDS)
                 .readTimeout(NETWORK_READ_TIMEOUT, TimeUnit.MILLISECONDS)
-                .callTimeout(
-                    NETWORK_CALL_TIMEOUT,
-                    TimeUnit.MILLISECONDS
-                ) // весь запрос целиком, включая скачивание списка
+                .callTimeout(NETWORK_CALL_TIMEOUT, TimeUnit.MILLISECONDS) // весь запрос целиком, включая скачивание списка
                 .build()
     }
 
     @Binds
     @Singleton
-    abstract fun bindsSharedPreference(appSharedPreference: AppSharedPreference): IAppSharedPreference
+    abstract fun bindsPreferenceStorage(appPreferenceStorage: AppPreferenceStorage): IAppPreferenceStorage
 
     @Binds
     abstract fun bindRadioServiceWrapper(radioServiceWrapper: RadioServiceWrapper): IRadioServiceWrapper

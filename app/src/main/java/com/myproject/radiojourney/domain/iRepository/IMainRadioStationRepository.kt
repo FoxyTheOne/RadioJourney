@@ -5,7 +5,12 @@ import com.myproject.radiojourney.domain.model.RadioStation
 import com.myproject.radiojourney.other.Resource
 import kotlinx.coroutines.flow.Flow
 
-// Интерфейс в domain, реализация - в data (MainRadioStationRepository). Все методы работают с моделями domain
+/**
+ * Главный репозиторий радио: страны для карты, станции страны с сервера, избранное и последняя станция.
+ *
+ * Интерфейс объявлен в domain, реализация - в data (MainRadioStationRepository). Все методы работают
+ * с моделями domain: ни экран, ни бизнес-логика не знают, пришли данные из сети, из Room или из настроек
+ */
 interface IMainRadioStationRepository {
     fun subscribeOnCountryList(): Flow<List<Country>>
 
@@ -19,11 +24,13 @@ interface IMainRadioStationRepository {
     suspend fun getRadioStationList(countryCode: String): Resource<List<RadioStation>>
 
     suspend fun saveLastUsedRadioStationUrlAndCode(urlResolved: String, countryCode: String)
-    fun getLastUsedRadioStationUrl(): String
-    fun getLastUsedRadioStationCountryCode(): String
+    suspend fun getLastUsedRadioStationUrl(): String
+    suspend fun getLastUsedRadioStationCountryCode(): String
 
     suspend fun markRadioStationAsPopularSendGetRequest(stationUuid: String): Boolean
 
     suspend fun setIsHideInfoClicked(isHideInfoClicked: Boolean)
-    suspend fun isHideInfoClicked(): Boolean
+
+    // Скрыт ли информационный блок на главном экране (значение меняется - Flow пришлёт новое)
+    fun isHideInfoClicked(): Flow<Boolean>
 }

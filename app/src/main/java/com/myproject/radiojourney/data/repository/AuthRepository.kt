@@ -2,6 +2,7 @@ package com.myproject.radiojourney.data.repository
 
 import com.myproject.radiojourney.data.dataSource.local.auth.ILocalUserDataSource
 import com.myproject.radiojourney.domain.iRepository.IAuthRepository
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 /**
@@ -16,7 +17,7 @@ class AuthRepository @Inject constructor(
 ) : IAuthRepository {
     override suspend fun onLoginClicked() = localUserDataSource.onLoginClicked()
 
-    override fun isLoggedIn(): Boolean = localUserDataSource.isLoggedIn()
+    override fun isLoggedIn(): Flow<Boolean> = localUserDataSource.isLoggedIn()
 
-    override fun logout() = localUserDataSource.logout()
+    override suspend fun logout() = localUserDataSource.logout()
 }

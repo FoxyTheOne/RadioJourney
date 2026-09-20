@@ -1,21 +1,18 @@
 package com.myproject.radiojourney.presentation
 
 import android.Manifest
-import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
-import android.os.Bundle
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.LayerDrawable
-import android.view.Gravity
+import android.os.Build
+import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
@@ -29,15 +26,14 @@ import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.ActivityMainBinding
-import com.myproject.radiojourney.presentation.model.RadioStationPresentation
-import com.myproject.radiojourney.other.Constants
 import com.myproject.radiojourney.presentation.common.InfoDialog
 import com.myproject.radiojourney.presentation.common.collectWhenStarted
 import com.myproject.radiojourney.presentation.common.isInternetAvailable
 import com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioFragmentDirections
 import com.myproject.radiojourney.presentation.content.radioStationList.adapter.SwipeRadioStationAdapter
-import com.myproject.radiojourney.utils.extension.startStationIndex
+import com.myproject.radiojourney.presentation.model.RadioStationPresentation
 import com.myproject.radiojourney.utils.exoplayer.PlaybackStateInfo
+import com.myproject.radiojourney.utils.extension.startStationIndex
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
@@ -109,6 +105,9 @@ class MainActivity : AppCompatActivity() {
     // Действия, которые ждут, пока плейлист появится в ViewPager (см. whenPlaylistReady)
     private val pendingWhenPlaylistReady = mutableListOf<() -> Unit>()
 
+    // Граф навигации уже задан (см. onCreate)
+    private var isNavGraphSet = false
+
     // Версия плейлиста, которая уже показана в ViewPager (см. onPlaylistChanged)
     private var shownPlaylistVersion = 0
 
@@ -120,7 +119,7 @@ class MainActivity : AppCompatActivity() {
             if (!isGranted) {
                 Toast.makeText(
                     this,
-                    "We don't have permission to show notifications on your Android",
+                    "We don t have permission to show notifications on your Android",
                     Toast.LENGTH_LONG
                 ).show()
             }
@@ -137,15 +136,22 @@ class MainActivity : AppCompatActivity() {
 
         // Навигация. Условная навигация по рекомендации developer.android.com: стартовый экран выбирается до его создания.
         // Раньше первый экран открывался всегда, а уже в его onCreate выполнялся переход на карту (BaseAuthFragmentAbstract)
-        val navHostFragment = supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
         navController = navHostFragment.navController
-        val navGraph = navController.navInflater.inflate(R.navigation.app_navigation).apply {
-            setStartDestination(
-                if (mainViewModel.isLoggedIn()) R.id.homeRadioFragment else R.id.firstScreenLoadingFragment
-            )
+        // Стартовый экран зависит от того, входил ли пользователь раньше. Значение хранится в DataStore и читается
+        // с диска в фоновом потоке, поэтому граф навигации задаётся, как только придёт ответ (обычно в тот же кадр).
+        // Раньше это значение читалось из SharedPreferences прямо здесь и блокировало главный поток
+        collectWhenStarted(mainViewModel.startDestinationId) { startDestinationId ->
+            // null - значение ещё не прочитано. Граф задаём один раз: второй setGraph сбросил бы открытые экраны
+            if (startDestinationId == null || isNavGraphSet) return@collectWhenStarted
+            isNavGraphSet = true
+
+            val navGraph = navController.navInflater.inflate(R.navigation.app_navigation)
+                .apply { setStartDestination(startDestinationId) }
+            // При пересоздании Activity NavController сам восстановит открытые экраны поверх этого графа
+            navController.setGraph(navGraph, null)
         }
-        // При пересоздании Activity NavController сам восстановит открытые экраны поверх этого графа
-        navController.setGraph(navGraph, null)
 
         binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_border_24_orange)
 
@@ -237,7 +243,12 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        infoDialog = InfoDialog(this, R.layout.layout_please_wait_dialog, R.id.title_pleaseWait, R.id.text_pleaseWait)
+        infoDialog = InfoDialog(
+            this,
+            R.layout.layout_please_wait_dialog,
+            R.id.title_pleaseWait,
+            R.id.text_pleaseWait
+        )
 
         // Запрос на разрешение notification (уведомление плеера).
         // Разрешение FOREGROUND_SERVICE раньше тоже запрашивалось здесь, но оно выдаётся при установке и в запросе не нуждается
@@ -366,7 +377,10 @@ class MainActivity : AppCompatActivity() {
 
         // Не удалось скачать плейлист: сервер недоступен (раньше - LocalBroadcastManager из MusicService)
         collectWhenStarted(mainViewModel.serverIsDown) {
-            infoDialog.show(R.string.dialogInternetTrouble_title4, R.string.dialogInternetTrouble_text4)
+            infoDialog.show(
+                R.string.dialogInternetTrouble_title4,
+                R.string.dialogInternetTrouble_text4
+            )
             mainViewModel.hideProgressAndSetClickable(true)
         }
 
@@ -388,7 +402,10 @@ class MainActivity : AppCompatActivity() {
 
                 // Favorite star. Если список радиостанций не пуст и код страны одинаковый в vpSong и плейере, скроется прогресс
                 if (swipeRadioStationAdapter.radioStationList.isNotEmpty()) {
-                    checkFavoriteStarIfCountryCodeIsRight(countryCode, swipeRadioStationAdapter.radioStationList[0].countryCode)
+                    checkFavoriteStarIfCountryCodeIsRight(
+                        countryCode,
+                        swipeRadioStationAdapter.radioStationList[0].countryCode
+                    )
                 }
             }
         }
@@ -423,7 +440,8 @@ class MainActivity : AppCompatActivity() {
         collectWhenStarted(mainViewModel.errorMessages) { message ->
             Log.d(TAG, "Error: $message")
             binding?.let { nonNullBinding ->
-                Snackbar.make(nonNullBinding.rootLayout.rootView, message, Snackbar.LENGTH_LONG).show()
+                Snackbar.make(nonNullBinding.rootLayout.rootView, message, Snackbar.LENGTH_LONG)
+                    .show()
             }
             mainViewModel.hideProgressAndSetClickable()
         }
@@ -431,7 +449,9 @@ class MainActivity : AppCompatActivity() {
         // Favourites: звезда нажата где угодно (в плейере, списке избранного).
         // Звезду в плейере меняем, только если показана именно эта станция. Признак в плейлисте обновляет MainViewModel
         collectWhenStarted(mainViewModel.favouriteChanges) { change ->
-            val shownStation = swipeRadioStationAdapter.radioStationList.getOrNull(binding?.vpSong?.currentItem ?: -1)
+            val shownStation = swipeRadioStationAdapter.radioStationList.getOrNull(
+                binding?.vpSong?.currentItem ?: -1
+            )
             if (shownStation?.stationuuid == change.station.stationuuid) {
                 binding?.imageStar?.setImageResource(
                     if (change.isFavourite) R.drawable.ic_baseline_star_24_orange else R.drawable.ic_baseline_star_border_24_orange
@@ -447,8 +467,12 @@ class MainActivity : AppCompatActivity() {
             binding?.text1Dp?.isVisible = isLoading
             binding?.progressBarHorizontalDp?.isVisible = isLoading
             when (loadingState) {
-                MainViewModel.LoadingState.DOWNLOADING_PLAYLIST -> binding?.text1Dp?.text = getString(R.string.downloading_playlist)
-                MainViewModel.LoadingState.CONNECTING_STATION -> binding?.text1Dp?.text = getString(R.string.downloading_radio_station)
+                MainViewModel.LoadingState.DOWNLOADING_PLAYLIST -> binding?.text1Dp?.text =
+                    getString(R.string.downloading_playlist)
+
+                MainViewModel.LoadingState.CONNECTING_STATION -> binding?.text1Dp?.text =
+                    getString(R.string.downloading_radio_station)
+
                 MainViewModel.LoadingState.NONE -> Unit
             }
         }
@@ -483,10 +507,14 @@ class MainActivity : AppCompatActivity() {
                     it.stationuuid == curPlayingSong?.mediaId &&
                             it.countryCode == curPlayingSong.mediaMetadata.subtitle.toString()
                 }
-                val startPosition = if (curPlayingIndex != -1) curPlayingIndex else radioStations.startStationIndex()
+                val startPosition =
+                    if (curPlayingIndex != -1) curPlayingIndex else radioStations.startStationIndex()
                 val vpSong = binding?.vpSong
                 if (vpSong != null && vpSong.currentItem != startPosition) {
-                    vpSong.setCurrentItem(startPosition, false) // ViewPager сам вызовет onPageSelected(startPosition)
+                    vpSong.setCurrentItem(
+                        startPosition,
+                        false
+                    ) // ViewPager сам вызовет onPageSelected(startPosition)
                 } else {
                     // Почему-то этот метод изредка не вызывается, хотя должен. На всякий случай дублирую вызов здесь
                     mOnPageChangeCallback?.onPageSelected(startPosition)
@@ -502,7 +530,10 @@ class MainActivity : AppCompatActivity() {
                 // Возвращаем ViewPager на станцию, которая сейчас в плейере. Берём её из метаданных, а не из curPlayingRadioStation:
                 // onPageSelected выше уже записал туда станцию списка
                 if (curPlayingSong != null) {
-                    switchViewPagerToCurrentSong(curPlayingSong.mediaId, curPlayingSong.mediaMetadata.subtitle.toString())
+                    switchViewPagerToCurrentSong(
+                        curPlayingSong.mediaId,
+                        curPlayingSong.mediaMetadata.subtitle.toString()
+                    )
                 }
             }
         }
@@ -523,10 +554,20 @@ class MainActivity : AppCompatActivity() {
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
             )
-            v.updatePadding(left = bars.left, top = bars.top, right = bars.right, bottom = bars.bottom)
+            v.updatePadding(
+                left = bars.left,
+                top = bars.top,
+                right = bars.right,
+                bottom = bars.bottom
+            )
 
             // Фон: сверху полоса цвета строки состояния, остальное - тёмный фон приложения
-            v.background = LayerDrawable(arrayOf(ColorDrawable(backgroundColor), ColorDrawable(statusBarColor))).apply {
+            v.background = LayerDrawable(
+                arrayOf(
+                    ColorDrawable(backgroundColor),
+                    ColorDrawable(statusBarColor)
+                )
+            ).apply {
                 setLayerGravity(1, Gravity.TOP or Gravity.FILL_HORIZONTAL)
                 setLayerHeight(1, bars.top)
             }

@@ -19,6 +19,5 @@ class HomeRadioUseCase @Inject constructor(
     override suspend fun setIsHideInfoClicked(isHideInfoClicked: Boolean) =
         mainRadioStationRepository.setIsHideInfoClicked(isHideInfoClicked)
 
-    override suspend fun isHideInfoClicked(): Boolean =
-        mainRadioStationRepository.isHideInfoClicked()
+    override fun isHideInfoClicked(): Flow<Boolean> = mainRadioStationRepository.isHideInfoClicked()
 }

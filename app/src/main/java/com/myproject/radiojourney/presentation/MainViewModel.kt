@@ -11,6 +11,7 @@ import com.myproject.radiojourney.data.worker.CountryCacheScheduler
 import com.myproject.radiojourney.domain.changeFavouriteUseCase.IChangeFavouriteUseCase
 import com.myproject.radiojourney.domain.firstScreenLoadingUseCase.ILoginScreenUseCase
 import com.myproject.radiojourney.domain.mainRadioUseCase.IMainRadioUseCase
+import com.myproject.radiojourney.R
 import com.myproject.radiojourney.other.Constants.ADD_SONGS
 import com.myproject.radiojourney.other.Constants.CANCEL_PLAYLIST_DOWNLOAD
 import com.myproject.radiojourney.other.Constants.COUNTRY_CODE_ID
@@ -34,7 +35,10 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -145,8 +149,11 @@ class MainViewModel @Inject constructor(
         musicServiceConnection.subscribe(MEDIA_ROOT_ID, onChildrenLoaded)
     }
 
-    // Пользователь уже входил - первый экран (загрузка и вход) пропускаем
-    fun isLoggedIn(): Boolean = loginScreenInteractor.isLoggedIn()
+    // Стартовый экран: пользователь уже входил - открываем карту, нет - экран загрузки и входа.
+    // null, пока значение не прочитано из хранилища (DataStore читает файл в фоновом потоке)
+    val startDestinationId: StateFlow<Int?> = loginScreenInteractor.isLoggedIn()
+        .map { isLoggedIn -> if (isLoggedIn) R.id.homeRadioFragment else R.id.firstScreenLoadingFragment }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     fun stateInitialized() {
         isPlaylistReady = true
