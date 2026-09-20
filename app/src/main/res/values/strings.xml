@@ -62,4 +62,15 @@
     <!-- exoplayer -->
     <string name="notification_channel_name">Radio station channel</string>
 
+    !-- permissions: why the app asks for them (shown before the system dialog) -->
+    <string name="permission_button_continue">Continue</string>
+    <string name="permission_button_notNow">Not now</string>
+    <string name="permission_button_ok">OK</string>
+    <string name="permission_button_settings">Settings</string>
+    <string name="permission_location_title">Why we need your location</string>
+    <string name="permission_location_text">The map opens on the country you are in, so you can find nearby radio stations right away. The location is used on your phone only: it is not saved and not sent anywhere. You can use the app without it - just move the map by hand.</string>
+    <string name="permission_location_denied_text">The map will open on the world view instead of your country. Everything else works as usual.</string>
+    <string name="permission_notification_title">Why we need notifications</string>
+    <string name="permission_notification_text">The notification shows the station you are listening to and the play and pause buttons, so you can control the radio without opening the app. Nothing else is sent to you.</string>
+    <string name="permission_notification_denied_text">The radio will play, but there will be no notification with the play and pause buttons.</string>
 </resources>

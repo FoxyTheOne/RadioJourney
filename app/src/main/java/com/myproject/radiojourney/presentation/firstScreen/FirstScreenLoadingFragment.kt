@@ -7,7 +7,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
@@ -21,6 +20,8 @@ import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.LayoutFirstScreenLoadingBinding
 import com.myproject.radiojourney.presentation.common.InfoDialog
 import com.myproject.radiojourney.presentation.common.collectWhenStarted
+import com.myproject.radiojourney.presentation.common.showPermissionDeniedDialog
+import com.myproject.radiojourney.presentation.common.showPermissionRationale
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -65,11 +66,15 @@ class FirstScreenLoadingFragment : Fragment() {
                 // Если дано одно из разрешений, открываем следующий фрагмент
                 openHomeRadio()
             } else {
-                Toast.makeText(
-                    requireContext(),
-                    "We can't show your location without an access to it",
-                    Toast.LENGTH_LONG
-                ).show()
+                // Объясняем, что изменится без разрешения (раньше был Toast с текстом прямо в коде, без перевода),
+                // и всё равно пускаем пользователя дальше: карта и радио работают и без местоположения.
+                // Раньше отказ оставлял его на первом экране, и войти в приложение было нельзя
+                requireContext().showPermissionDeniedDialog(
+                    R.string.permission_location_title,
+                    R.string.permission_location_denied_text,
+                    isPermanentlyDenied = !shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION),
+                    onDismiss = { openHomeRadio() }
+                )
             }
         }
 
@@ -92,13 +97,18 @@ class FirstScreenLoadingFragment : Fragment() {
             if (isLocationPermissionGranted()) {
                 openHomeRadio()
             } else {
-                // Если нет - вызываем requestPermissionLauncher
-                requestLocationPermissionLauncher.launch(
-                    arrayOf(
-                        Manifest.permission.ACCESS_COARSE_LOCATION,
-                        Manifest.permission.ACCESS_FINE_LOCATION
+                // Сначала объясняем, зачем приложению местоположение, и только потом показываем системное окно
+                requireContext().showPermissionRationale(
+                    R.string.permission_location_title,
+                    R.string.permission_location_text
+                ) {
+                    requestLocationPermissionLauncher.launch(
+                        arrayOf(
+                            Manifest.permission.ACCESS_COARSE_LOCATION,
+                            Manifest.permission.ACCESS_FINE_LOCATION
+                        )
                     )
-                )
+                }
             }
         }
 
@@ -174,7 +184,10 @@ class FirstScreenLoadingFragment : Fragment() {
                                     "При сборе данных в viewModel.hasCountries.collect список кодов стран всё ещё пустой, вызываем диалоговое окно"
                                 )
                                 // Показываем диалоговое окно о проблеме с сервером
-                                infoDialog.show(R.string.dialogPleaseWait_title2, R.string.dialogPleaseWait_text2)
+                                infoDialog.show(
+                                    R.string.dialogPleaseWait_title2,
+                                    R.string.dialogPleaseWait_text2
+                                )
                             }
                         }
                     }

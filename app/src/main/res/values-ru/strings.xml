@@ -61,4 +61,16 @@
 
     <!-- exoplayer -->
     <string name="notification_channel_name">Поток радиостанции</string>
+
+    <!-- разрешения: зачем они приложению (показывается до системного окна) -->
+    <string name="permission_button_continue">Продолжить</string>
+    <string name="permission_button_notNow">Не сейчас</string>
+    <string name="permission_button_ok">Понятно</string>
+    <string name="permission_button_settings">Настройки</string>
+    <string name="permission_location_title">Зачем нужно местоположение</string>
+    <string name="permission_location_text">Карта откроется на той стране, где вы находитесь, и радиостанции рядом с вами будут видны сразу. Местоположение используется только на телефоне: оно никуда не отправляется и не сохраняется. Без разрешения приложение тоже работает - карту можно двигать вручную.</string>
+    <string name="permission_location_denied_text">Карта откроется на общем виде мира, а не на вашей стране. Всё остальное работает как обычно.</string>
+    <string name="permission_notification_title">Зачем нужны уведомления</string>
+    <string name="permission_notification_text">В уведомлении видно, какая станция играет, и есть кнопки паузы и включения - радио можно переключать, не открывая приложение. Ничего другого мы вам не присылаем.</string>
+    <string name="permission_notification_denied_text">Радио будет играть, но уведомления с кнопками паузы и включения не будет.</string>
 </resources>

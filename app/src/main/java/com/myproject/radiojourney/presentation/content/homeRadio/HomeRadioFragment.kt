@@ -2,13 +2,10 @@ package com.myproject.radiojourney.presentation.content.homeRadio
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Dialog
 import android.content.*
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
 import android.location.Location
-import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import android.os.Parcelable
@@ -18,7 +15,6 @@ import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.view.isVisible
@@ -32,19 +28,19 @@ import com.google.android.gms.location.*
 import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.*
 import com.google.android.gms.tasks.CancellationTokenSource
-import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.R
-import com.myproject.radiojourney.other.Constants.MAX_STATIONS_COUNT
 import com.myproject.radiojourney.databinding.LayoutHomeRadioBinding
-import com.myproject.radiojourney.presentation.model.CountryPresentation
-import com.myproject.radiojourney.presentation.model.RadioStationPresentation
+import com.myproject.radiojourney.other.Constants.MAX_STATIONS_COUNT
 import com.myproject.radiojourney.presentation.MainViewModel
 import com.myproject.radiojourney.presentation.common.InfoDialog
 import com.myproject.radiojourney.presentation.common.collectWhenStarted
+import com.myproject.radiojourney.presentation.common.showPermissionDeniedDialog
+import com.myproject.radiojourney.presentation.common.showPermissionRationale
 import com.myproject.radiojourney.presentation.content.base.BaseContentFragmentAbstract
+import com.myproject.radiojourney.presentation.model.CountryPresentation
+import com.myproject.radiojourney.presentation.model.RadioStationPresentation
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
-import javax.inject.Inject
 
 /**
  * Главная страница.
@@ -99,19 +95,34 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
         ) { permissionsMap ->
-            if (permissionsMap[Manifest.permission.ACCESS_COARSE_LOCATION] != true
-                &&
+            if (permissionsMap[Manifest.permission.ACCESS_COARSE_LOCATION] != true &&
                 permissionsMap[Manifest.permission.ACCESS_FINE_LOCATION] != true
             ) {
-                Toast.makeText(
-                    requireContext(),
-                    "We can't show your location without an access to it",
-                    Toast.LENGTH_LONG
-                ).show()
+                // Объясняем, что изменится без разрешения (раньше был Toast с текстом прямо в коде, без перевода)
+                requireContext().showPermissionDeniedDialog(
+                    R.string.permission_location_title,
+                    R.string.permission_location_denied_text,
+                    isPermanentlyDenied = !shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION)
+                )
             } else {
                 getCurrentOrLastLocation(moveCamera = mainViewModel.mapCameraPosition == null)
             }
         }
+
+    // Объясняем, зачем приложению местоположение, и только потом показываем системное окно запроса
+    private fun requestLocationPermissionWithRationale() {
+        requireContext().showPermissionRationale(
+            R.string.permission_location_title,
+            R.string.permission_location_text
+        ) {
+            requestPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                )
+            )
+        }
+    }
 
     private fun isLocationPermissionGranted(): Boolean =
         ContextCompat.checkSelfPermission(
@@ -145,12 +156,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
         // Если каким-то образом мы попали на этот фрагмент минуя первый, загрузочный фрагмент - стоит ещё раз проверить разрешения
         // Если разрешения нет - или запросить их, или перекинуть на загрузочный фрагмент и там запросить
         if (!isLocationPermissionGranted()) {
-            requestPermissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                )
-            )
+            requestLocationPermissionWithRationale()
         }
 
         // 1.2. ViewModel. We bind our viewModel to the lifecycle of our activity, not fragment. We pass our activity as an owner of the lifecycle.
@@ -312,13 +318,8 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             if (isLocationPermissionGranted()) {
                 getCurrentOrLastLocation()
             } else {
-                // Если нет - вызываем requestPermissionLauncher
-                requestPermissionLauncher.launch(
-                    arrayOf(
-                        Manifest.permission.ACCESS_COARSE_LOCATION,
-                        Manifest.permission.ACCESS_FINE_LOCATION
-                    )
-                )
+                // Если нет - объясняем, зачем нужно местоположение, и запрашиваем его
+                requestLocationPermissionWithRationale()
             }
         }
 
