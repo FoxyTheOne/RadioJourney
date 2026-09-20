@@ -9,15 +9,22 @@ import androidx.appcompat.widget.AppCompatImageView
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.recyclerview.widget.RecyclerView
 import com.myproject.radiojourney.R
-import java.util.Locale
 import com.myproject.radiojourney.presentation.model.RadioStationPresentation
+import java.util.Locale
 
 // 1.1. ОБРАБОТКА КЛИКА -> передадим в конструктор анонимную функцию (как класса Adapter, так и вложенного класса). Затем отдаём эту лямбду каждому ViewHolder
+/**
+ * Адаптер списка избранного: станция, страна, количество прослушиваний и звезда.
+ *
+ * Два обработчика клика (по элементу и по звезде) передаются в конструктор лямбдами - адаптер не знает,
+ * что происходит дальше, и его можно использовать на любом экране
+ */
 class FavoriteListAdapter(
     private val onItemClicked: (RadioStationPresentation) -> Unit,
     private val onStarClicked: (RadioStationPresentation) -> Unit
 ) :
     RecyclerView.Adapter<FavoriteListAdapter.FavoriteListViewHolder>() {
+
     // Список станций. Адаптер создаётся один раз, а список обновляется: раньше при каждом изменении списка создавался новый адаптер
     var favouriteStationList: List<RadioStationPresentation> = emptyList()
         @SuppressLint("NotifyDataSetChanged") // список небольшой, а звезда меняется у элемента на месте
@@ -26,7 +33,9 @@ class FavoriteListAdapter(
             notifyDataSetChanged()
         }
 
-    var isClickableRecyclerView = false
+    // Можно ли выбрать станцию из списка. Выбор станции включает плейлист избранного в плеере, поэтому он разрешён,
+    // только когда этот плейлист уже скачан. Звезда работает всегда: добавление в избранное меняет только базу данных
+    var isStationClickable = false
 
     // Создаём элемент списка. Initialize itemView for each item
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FavoriteListViewHolder {
@@ -72,7 +81,7 @@ class FavoriteListAdapter(
         init {
             linearStationDescription.setOnClickListener {
 
-                if (isClickableRecyclerView) {
+                if (isStationClickable) {
                     // ОБРАБОТКА КЛИКА -> Передадим по клику нашу переменную, если она не null (передаём в нашу анонимную функцию)
                     radioStationFavourite?.let { nonNullRadioStationPresentation ->
                         onItemClicked(nonNullRadioStationPresentation)
@@ -80,16 +89,14 @@ class FavoriteListAdapter(
                 }
 
             }
-            // По клику на звезду у нас будет другая функция (добавить /удалить из избранного)
+            // По клику на звезду у нас будет другая функция (добавить / удалить из избранного).
+            // Звезда нажимается всегда, даже если в плеере сейчас другой плейлист: раньше она была заблокирована
+            // вместе со всем списком, и убрать станцию из избранного можно было, только скачав плейлист избранного
             linearImageStar.setOnClickListener {
-
-                if (isClickableRecyclerView) {
-                    // ОБРАБОТКА КЛИКА -> Передадим по клику нашу переменную, если она не null (передаём в нашу анонимную функцию)
-                    radioStationFavourite?.let { nonNullRadioStationPresentation ->
-                        onStarClicked(nonNullRadioStationPresentation)
-                    }
+                // ОБРАБОТКА КЛИКА -> Передадим по клику нашу переменную, если она не null (передаём в нашу анонимную функцию)
+                radioStationFavourite?.let { nonNullRadioStationPresentation ->
+                    onStarClicked(nonNullRadioStationPresentation)
                 }
-
             }
         }
 

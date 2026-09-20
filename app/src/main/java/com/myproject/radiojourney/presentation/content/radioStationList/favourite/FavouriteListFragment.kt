@@ -12,11 +12,11 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.myproject.radiojourney.R
-import com.myproject.radiojourney.presentation.model.RadioStationPresentation
 import com.myproject.radiojourney.presentation.MainViewModel
 import com.myproject.radiojourney.presentation.common.InfoDialog
 import com.myproject.radiojourney.presentation.common.collectWhenStarted
 import com.myproject.radiojourney.presentation.content.radioStationList.base.BaseRadioListFragmentAbstract
+import com.myproject.radiojourney.presentation.model.RadioStationPresentation
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
@@ -39,22 +39,31 @@ class FavouriteListFragment : BaseRadioListFragmentAbstract() {
     private val favouriteListAdapter = FavoriteListAdapter(
         onItemClicked = { radioStation -> openHomeRadio(radioStation) },
         // По клику нужно добавить либо удалить из избранного
-        onStarClicked = { radioStation -> viewModel.checkIsStationInFavouritesAndChangeTheStar(radioStation) }
+        onStarClicked = { radioStation ->
+            viewModel.checkIsStationInFavouritesAndChangeTheStar(
+                radioStation
+            )
+        }
     )
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        view.findViewById<AppCompatTextView>(R.id.text_myFavorites_title).text = getString(R.string.favouriteRadioStationList_title)
-        view.findViewById<AppCompatTextView>(R.id.text_radioStationDialogTitleSelect).isVisible = false
-        textRadioListSecondTitleDownload = view.findViewById(R.id.text_radioStationDialogTitleDownload)
+        view.findViewById<AppCompatTextView>(R.id.text_myFavorites_title).text =
+            getString(R.string.favouriteRadioStationList_title)
+        view.findViewById<AppCompatTextView>(R.id.text_radioStationDialogTitleSelect).isVisible =
+            false
+        textRadioListSecondTitleDownload =
+            view.findViewById(R.id.text_radioStationDialogTitleDownload)
         textFavouritesEmpty = view.findViewById(R.id.text_favouritesEmpty)
 
-        val recyclerViewRadioStationList = view.findViewById<RecyclerView>(R.id.recyclerView_radioStationList)
+        val recyclerViewRadioStationList =
+            view.findViewById<RecyclerView>(R.id.recyclerView_radioStationList)
         recyclerViewRadioStationList.adapter = favouriteListAdapter
         // Без мигания элемента при смене звезды
         recyclerViewRadioStationList.itemAnimator = object : DefaultItemAnimator() {
-            override fun canReuseUpdatedViewHolder(viewHolder: RecyclerView.ViewHolder): Boolean = true
+            override fun canReuseUpdatedViewHolder(viewHolder: RecyclerView.ViewHolder): Boolean =
+                true
         }
 
         infoDialog = InfoDialog(requireContext())
@@ -65,7 +74,8 @@ class FavouriteListFragment : BaseRadioListFragmentAbstract() {
                 findNavController().navigate(R.id.action_favouriteListFragment_to_homeRadioFragment)
             }
         }
-        view.findViewById<AppCompatImageView>(R.id.image_arrowBack).setOnClickListener(goToHomeRadio)
+        view.findViewById<AppCompatImageView>(R.id.image_arrowBack)
+            .setOnClickListener(goToHomeRadio)
         textFavouritesEmpty.setOnClickListener(goToHomeRadio)
 
         subscribeOnFlow()
@@ -101,17 +111,21 @@ class FavouriteListFragment : BaseRadioListFragmentAbstract() {
     // Если в плейере не плейлист избранного, показываем надпись "скачать" и не даём выбрать станцию.
     // В этом фрагменте могут быть только избранные радиостанции, поэтому проверять можно только список в плейере
     private fun changeTextDownloadOrNothing(favouriteStationList: List<RadioStationPresentation>) {
-        val countryCodeInPlayer = mainViewModel.currentPlaylistStations.firstOrNull()?.countryCode.orEmpty()
+        val countryCodeInPlayer =
+            mainViewModel.currentPlaylistStations.firstOrNull()?.countryCode.orEmpty()
         val isFavouritesInPlayer = countryCodeInPlayer.endsWith("_FAV", ignoreCase = true)
 
-        textRadioListSecondTitleDownload.isVisible = favouriteStationList.isNotEmpty() && !isFavouritesInPlayer
-        favouriteListAdapter.isClickableRecyclerView = isFavouritesInPlayer
+        textRadioListSecondTitleDownload.isVisible =
+            favouriteStationList.isNotEmpty() && !isFavouritesInPlayer
+        favouriteListAdapter.isStationClickable = isFavouritesInPlayer
     }
 
     private fun openHomeRadio(radioStation: RadioStationPresentation) {
         if (findNavController().currentDestination?.id == R.id.favouriteListFragment) {
             findNavController().navigate(
-                FavouriteListFragmentDirections.actionFavouriteListFragmentToHomeRadioFragment(radioStation)
+                FavouriteListFragmentDirections.actionFavouriteListFragmentToHomeRadioFragment(
+                    radioStation
+                )
             )
         }
     }
