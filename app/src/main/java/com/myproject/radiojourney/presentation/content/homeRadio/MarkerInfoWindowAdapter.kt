@@ -10,6 +10,12 @@ import com.myproject.radiojourney.R
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
+/**
+ * Своё окошко над маркером страны на карте Google (название страны и количество станций).
+ *
+ * Переиспользование: минимальный пример InfoWindowAdapter - getInfoContents() надувает свой layout,
+ * getInfoWindow() возвращает null, чтобы Google нарисовал стандартную "рамку" вокруг него
+ */
 class MarkerInfoWindowAdapter @Inject constructor(
     @ApplicationContext private val context: Context
 ) : GoogleMap.InfoWindowAdapter {

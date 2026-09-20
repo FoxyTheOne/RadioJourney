@@ -7,6 +7,14 @@ import com.myproject.radiojourney.data.localDatabaseRoom.entity.CountryLocal
 import com.myproject.radiojourney.data.localDatabaseRoom.entity.RadioStationLocal
 import com.myproject.radiojourney.data.localDatabaseRoom.entity.UserEntity
 
+/**
+ * База данных Room: страны для карты и сохранённые станции.
+ *
+ * @Database перечисляет таблицы и версию базы, @TypeConverters - классы, которые Room сам не умеет хранить
+ * (здесь LatLng от Google Maps). Экземпляр создаётся один раз в DataModule.
+ *
+ * Переиспользование: минимальный пример базы Room - класс базы, DAO, entity и конвертер
+ */
 @Database(
     entities = [UserEntity::class, CountryLocal::class, RadioStationLocal::class],
     version = 12,

@@ -3,6 +3,12 @@ package com.myproject.radiojourney.data.localDatabaseRoom
 import androidx.room.*
 import com.myproject.radiojourney.data.localDatabaseRoom.entity.RadioStationLocal
 
+/**
+ * DAO станций: избранное и станции, о которых приложение что-то помнит.
+ *
+ * setStationFavourite - пример @Transaction с двумя запросами: сначала вставка станции, если её ещё нет
+ * (OnConflictStrategy.IGNORE, чтобы не затереть чужие поля), потом обновление одного флага
+ */
 // Сравнение через "=", а не LIKE: LIKE - поиск по шаблону (символы % и _ в значении работают как подстановка, регистр не учитывается),
 // а здесь нужно точное совпадение id или флага
 @Dao

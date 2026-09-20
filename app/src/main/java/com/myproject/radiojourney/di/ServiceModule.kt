@@ -17,6 +17,13 @@ import dagger.hilt.android.components.ServiceComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.scopes.ServiceScoped
 
+/**
+ * Зависимости сервиса плеера: ExoPlayer и настройки воспроизведения.
+ *
+ * ServiceComponent - объекты живут столько же, сколько сам сервис (@ServiceScoped), и создаются заново при его перезапуске.
+ * Переиспользование: пример настройки ExoPlayer для интернет-радио - аудио-атрибуты (чтобы система понимала,
+ * что это музыка), пауза при звонке и DefaultMediaSourceFactory для потоков HLS
+ */
 // Часть API media3 помечена @UnstableApi: его могут изменить или удалить в новой версии media3 без предварительного deprecated.
 // @OptIn - "знаем об этом, используем осознанно". На работу приложения аннотация не влияет, это только проверка Android Lint
 @OptIn(UnstableApi::class) // DefaultMediaSourceFactory, setAllowCrossProtocolRedirects

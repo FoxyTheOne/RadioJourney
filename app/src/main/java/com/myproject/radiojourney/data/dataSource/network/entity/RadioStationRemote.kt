@@ -14,6 +14,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 For support, please feel free to contact me at https://www.linkedin.com/in/syedabsar */
 
 // data class сам создаёт equals, hashCode и toString по всем полям - раньше они были написаны вручную (сгенерированы json2kotlin)
+/**
+ * Радиостанция в том виде, в котором её присылает сервер (/json/stations/search).
+ *
+ * Полей у станции на сервере больше, здесь оставлены только нужные приложению: Gson пропускает остальные
+ */
 data class RadioStationRemote(
     @SerializedName("changeuuid") val changeuuid: String,
     @SerializedName("stationuuid") val stationuuid: String,

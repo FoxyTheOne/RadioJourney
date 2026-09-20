@@ -9,6 +9,11 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.AsyncListDiffer
 import com.myproject.radiojourney.R
 
+/**
+ * Адаптер плеера внизу экрана: одна станция - одна "страница" ViewPager2, станции листаются свайпом.
+ *
+ * Общая часть с обычным списком станций вынесена в BaseRadioStationAdapter (AsyncListDiffer, клик по элементу)
+ */
 class SwipeRadioStationAdapter :
     BaseRadioStationAdapter(R.layout.layout_radio_station_swipe_item_new) {
 

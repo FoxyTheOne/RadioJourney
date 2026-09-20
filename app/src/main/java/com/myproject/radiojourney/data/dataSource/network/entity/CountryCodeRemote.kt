@@ -13,6 +13,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 For support, please feel free to contact me at https://www.linkedin.com/in/syedabsar */
 
+/**
+ * Страна в том виде, в котором её присылает сервер (/json/countrycodes).
+ *
+ * Имена полей совпадают с именами в JSON, поэтому Gson разбирает ответ без аннотаций @SerializedName.
+ * Переиспользование: пример модели remote-слоя - такие модели не должны уезжать в экраны, для этого есть domain-модели
+ */
 data class CountryCodeRemote(
     @SerializedName("name") val name: String,
     @SerializedName("stationcount") val stationcount: Int

@@ -8,6 +8,12 @@ import okhttp3.Interceptor
 import okhttp3.Response
 import java.io.IOException
 
+/**
+ * Interceptor OkHttp, который добавляет заголовок User-Agent ко всем запросам ("RadioJourney/1.0").
+ *
+ * Автор API radio-browser просит представляться: по User-Agent он видит, какие приложения пользуются сервером.
+ * Переиспользование: готовый пример Interceptor'а - так же добавляют токен авторизации или язык
+ */
 class UserAgentInterceptor(context: Context) : Interceptor {
 
     companion object {

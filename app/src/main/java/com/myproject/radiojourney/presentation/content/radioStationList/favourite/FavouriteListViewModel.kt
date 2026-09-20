@@ -2,7 +2,7 @@ package com.myproject.radiojourney.presentation.content.radioStationList.favouri
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.myproject.radiojourney.domain.changeFavouriteUseCase.IChangeFavouriteUseCase
+import com.myproject.radiojourney.domain.сhangeFavouriteUseCase.IChangeFavouriteUseCase
 import com.myproject.radiojourney.domain.favouriteListUseCase.IFavouriteListUseCase
 import com.myproject.radiojourney.presentation.model.RadioStationPresentation
 import com.myproject.radiojourney.presentation.model.toDomain

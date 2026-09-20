@@ -8,6 +8,14 @@ import androidx.room.Transaction
 import com.myproject.radiojourney.data.localDatabaseRoom.entity.CountryLocal
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * DAO стран: Room сам пишет реализацию по этим аннотациям.
+ *
+ * Полезные приёмы, которые можно забрать в другой проект:
+ * - suspend-методы: Room выполняет их в фоновом потоке и ругается на обращение к базе из главного;
+ * - Flow: подписка на таблицу, новое значение приходит само после каждой записи;
+ * - @Transaction над обычным методом: несколько операций выполняются как одна (подписчики не увидят промежуточное состояние)
+ */
 @Dao
 interface ICountryDAO {
     @Insert(onConflict = OnConflictStrategy.REPLACE)

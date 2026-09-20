@@ -10,6 +10,11 @@ import androidx.media3.datasource.HttpDataSource.HttpDataSourceException
 import androidx.media3.exoplayer.source.UnrecognizedInputFormatException
 import com.myproject.radiojourney.utils.exoplayer.MusicService
 
+/**
+ * Слушатель ошибок плеера: станция не отвечает, поток не открывается, нет интернета.
+ *
+ * Показывает пользователю toast, а сервису сообщает, что воспроизведение не началось
+ */
 class MusicPlayerEventListener(
     private val musicService: MusicService
 ) : Player.Listener {

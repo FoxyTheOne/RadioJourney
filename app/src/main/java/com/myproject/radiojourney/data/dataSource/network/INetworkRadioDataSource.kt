@@ -4,6 +4,11 @@ import com.myproject.radiojourney.data.dataSource.network.entity.CountryCodeRemo
 import com.myproject.radiojourney.data.dataSource.network.entity.RadioStationRemote
 import com.myproject.radiojourney.other.Resource
 
+/**
+ * Remote data source: запросы к API radio-browser.
+ *
+ * Возвращает модели remote (как их присылает сервер). Преобразование в модели приложения - в репозитории
+ */
 interface INetworkRadioDataSource {
     suspend fun getCountryCodeList(): List<CountryCodeRemote>
 

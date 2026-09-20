@@ -22,7 +22,7 @@ import com.myproject.radiojourney.data.repository.MainRadioStationRepository
 import com.myproject.radiojourney.data.preference.AppPreferenceStorage
 import com.myproject.radiojourney.data.preference.IAppPreferenceStorage
 import com.myproject.radiojourney.domain.changeFavouriteUseCase.ChangeFavouriteUseCase
-import com.myproject.radiojourney.domain.changeFavouriteUseCase.IChangeFavouriteUseCase
+import com.myproject.radiojourney.domain.сhangeFavouriteUseCase.IChangeFavouriteUseCase
 import com.myproject.radiojourney.domain.favouriteListUseCase.FavouriteListUseCase
 import com.myproject.radiojourney.domain.favouriteListUseCase.IFavouriteListUseCase
 import com.myproject.radiojourney.domain.firstScreenLoadingUseCase.ILoginScreenUseCase
