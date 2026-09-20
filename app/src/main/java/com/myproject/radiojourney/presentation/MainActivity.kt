@@ -31,6 +31,7 @@ import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.ActivityMainBinding
 import com.myproject.radiojourney.presentation.model.RadioStationPresentation
 import com.myproject.radiojourney.other.Constants
+import com.myproject.radiojourney.presentation.common.PermissionSessionState
 import com.myproject.radiojourney.presentation.common.InfoDialog
 import com.myproject.radiojourney.presentation.common.collectWhenStarted
 import com.myproject.radiojourney.presentation.common.showPermissionDeniedDialog
@@ -41,6 +42,7 @@ import com.myproject.radiojourney.presentation.content.radioStationList.adapter.
 import com.myproject.radiojourney.utils.extension.startStationIndex
 import com.myproject.radiojourney.utils.exoplayer.PlaybackStateInfo
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 /**
  * This source code is free for studying purposes but you are not allowed to copy and use it in other applications (projects).
@@ -107,6 +109,10 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var infoDialog: InfoDialog
     private lateinit var navController: NavController
+
+    // Какие разрешения уже запрашивали за этот запуск приложения (см. PermissionSessionState)
+    @Inject
+    lateinit var permissionSessionState: PermissionSessionState
 
     // Действия, которые ждут, пока плейлист появится в ViewPager (см. whenPlaylistReady)
     private val pendingWhenPlaylistReady = mutableListOf<() -> Unit>()
@@ -261,9 +267,13 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
         ) {
-            // Сначала объясняем, зачем приложению уведомления, и только потом показываем системное окно
-            showPermissionRationale(R.string.permission_notification_title, R.string.permission_notification_text) {
-                requestPermissionLauncherNotification.launch(Manifest.permission.POST_NOTIFICATIONS)
+            // Сначала объясняем, зачем приложению уведомления, и только потом показываем системное окно.
+            // Объяснение и запрос - один раз за запуск приложения: Activity пересоздаётся при смене темы или языка,
+            // и окно появлялось бы заново (см. PermissionSessionState)
+            if (permissionSessionState.isFirstRequestInSession(Manifest.permission.POST_NOTIFICATIONS)) {
+                showPermissionRationale(R.string.permission_notification_title, R.string.permission_notification_text) {
+                    requestPermissionLauncherNotification.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
             }
         }
 

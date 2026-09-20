@@ -18,11 +18,13 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.LayoutFirstScreenLoadingBinding
+import com.myproject.radiojourney.presentation.common.PermissionSessionState
 import com.myproject.radiojourney.presentation.common.InfoDialog
 import com.myproject.radiojourney.presentation.common.collectWhenStarted
 import com.myproject.radiojourney.presentation.common.showPermissionDeniedDialog
 import com.myproject.radiojourney.presentation.common.showPermissionRationale
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -48,6 +50,10 @@ class FirstScreenLoadingFragment : Fragment() {
     private var binding: LayoutFirstScreenLoadingBinding? = null
     private val viewModel by viewModels<FirstScreenLoadingViewModel>()
     private lateinit var infoDialog: InfoDialog
+
+    // Какие разрешения уже запрашивали за этот запуск приложения (см. PermissionSessionState)
+    @Inject
+    lateinit var permissionSessionState: PermissionSessionState
 
     // Оформим запрос на PERMISSION, если он не был дан в предыдущий раз
     // !!! Т.к. запросов много, а не один, мы пишем .RequestMultiplePermissions() вместо .RequestPermission()
@@ -97,17 +103,25 @@ class FirstScreenLoadingFragment : Fragment() {
             if (isLocationPermissionGranted()) {
                 openHomeRadio()
             } else {
-                // Сначала объясняем, зачем приложению местоположение, и только потом показываем системное окно
-                requireContext().showPermissionRationale(
-                    R.string.permission_location_title,
-                    R.string.permission_location_text
-                ) {
+                // Сначала объясняем, зачем приложению местоположение, и только потом показываем системное окно.
+                // Объяснение показываем один раз за запуск приложения (см. PermissionSessionState)
+                val launchSystemRequest = {
                     requestLocationPermissionLauncher.launch(
                         arrayOf(
                             Manifest.permission.ACCESS_COARSE_LOCATION,
                             Manifest.permission.ACCESS_FINE_LOCATION
                         )
                     )
+                }
+
+                if (permissionSessionState.isFirstRequestInSession(Manifest.permission.ACCESS_COARSE_LOCATION)) {
+                    requireContext().showPermissionRationale(
+                        R.string.permission_location_title,
+                        R.string.permission_location_text,
+                        onContinue = launchSystemRequest
+                    )
+                } else {
+                    launchSystemRequest()
                 }
             }
         }

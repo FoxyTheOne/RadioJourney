@@ -32,6 +32,7 @@ import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.LayoutHomeRadioBinding
 import com.myproject.radiojourney.other.Constants.MAX_STATIONS_COUNT
 import com.myproject.radiojourney.presentation.MainViewModel
+import com.myproject.radiojourney.presentation.common.PermissionSessionState
 import com.myproject.radiojourney.presentation.common.InfoDialog
 import com.myproject.radiojourney.presentation.common.collectWhenStarted
 import com.myproject.radiojourney.presentation.common.showPermissionDeniedDialog
@@ -41,6 +42,7 @@ import com.myproject.radiojourney.presentation.model.CountryPresentation
 import com.myproject.radiojourney.presentation.model.RadioStationPresentation
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
+import javax.inject.Inject
 
 /**
  * Главная страница.
@@ -89,6 +91,10 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 
     private var locationCancellationTokenSource: CancellationTokenSource? = null
 
+    // Какие разрешения уже запрашивали за этот запуск приложения (см. PermissionSessionState)
+    @Inject
+    lateinit var permissionSessionState: PermissionSessionState
+
     // Запрос разрешения на местоположение. Регистрируется полем класса: Activity Result API требует регистрации
     // до создания фрагмента. Раньше регистрация была в onViewCreated и повторялась при каждом возвращении на карту
     private val requestPermissionLauncher =
@@ -109,18 +115,27 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             }
         }
 
-    // Объясняем, зачем приложению местоположение, и только потом показываем системное окно запроса
+    // Объясняем, зачем приложению местоположение, и только потом показываем системное окно запроса.
+    // Объяснение показываем один раз за запуск приложения: при повторном запросе (кнопка "вы здесь")
+    // пользователь уже знает, зачем это нужно, и сразу видит системное окно
     private fun requestLocationPermissionWithRationale() {
-        requireContext().showPermissionRationale(
-            R.string.permission_location_title,
-            R.string.permission_location_text
-        ) {
+        val launchSystemRequest = {
             requestPermissionLauncher.launch(
                 arrayOf(
                     Manifest.permission.ACCESS_COARSE_LOCATION,
                     Manifest.permission.ACCESS_FINE_LOCATION
                 )
             )
+        }
+
+        if (permissionSessionState.isFirstRequestInSession(Manifest.permission.ACCESS_COARSE_LOCATION)) {
+            requireContext().showPermissionRationale(
+                R.string.permission_location_title,
+                R.string.permission_location_text,
+                onContinue = launchSystemRequest
+            )
+        } else {
+            launchSystemRequest()
         }
     }
 
@@ -153,9 +168,12 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 
         setupToolbarMenu()
 
-        // Если каким-то образом мы попали на этот фрагмент минуя первый, загрузочный фрагмент - стоит ещё раз проверить разрешения
-        // Если разрешения нет - или запросить их, или перекинуть на загрузочный фрагмент и там запросить
-        if (!isLocationPermissionGranted()) {
+        // Если каким-то образом мы попали на этот фрагмент минуя первый, загрузочный фрагмент - стоит ещё раз проверить разрешения.
+        // Сами запрашиваем только один раз за запуск приложения: карта создаётся заново при каждом возвращении на неё
+        // и при повороте экрана, и запрос всплывал бы снова и снова. Позже его можно вызвать кнопкой "вы здесь"
+        if (!isLocationPermissionGranted() &&
+            !permissionSessionState.wasRequestedInSession(Manifest.permission.ACCESS_COARSE_LOCATION)
+        ) {
             requestLocationPermissionWithRationale()
         }
 
