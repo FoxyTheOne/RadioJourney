@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?><!-- Элемент списка "Мои радиостанции": название, ссылка на поток и кнопка удаления -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/background"
+    android:orientation="horizontal">
+
+    <LinearLayout
+        android:id="@+id/linear_myStationDescription"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/space_beforeOrAfterElement"
+        android:paddingTop="@dimen/space_beforeOrAfterElement"
+        android:paddingEnd="@dimen/space_beforeOrAfterElement"
+        android:paddingBottom="@dimen/space_beforeOrAfterElement">
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/text_myStationName"
+            style="@style/login_bottom_orange"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="2"
+            tools:text="Моё любимое радио" />
+
+        <!-- Ссылку показываем, чтобы было видно, что именно добавлено (и можно было заметить опечатку) -->
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/text_myStationUrl"
+            style="@style/login_bottom_small"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="middle"
+            android:maxLines="1"
+            tools:text="https://example.com/stream.mp3" />
+    </LinearLayout>
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/image_deleteMyStation"
+        android:layout_width="56dp"
+        android:layout_height="match_parent"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/myStations_delete_confirm"
+        android:padding="@dimen/space_beforeOrAfterElement"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_baseline_delete_24_orange" />
+
+</LinearLayout>

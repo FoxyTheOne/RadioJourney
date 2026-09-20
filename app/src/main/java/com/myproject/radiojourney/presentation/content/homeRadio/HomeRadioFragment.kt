@@ -2,7 +2,6 @@ package com.myproject.radiojourney.presentation.content.homeRadio
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.*
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.location.Location
@@ -10,8 +9,10 @@ import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import android.os.Parcelable
 import android.util.Log
-import android.view.*
-import android.widget.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
 import androidx.appcompat.content.res.AppCompatResources
@@ -24,16 +25,26 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
-import com.google.android.gms.location.*
-import com.google.android.gms.maps.*
-import com.google.android.gms.maps.model.*
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
+import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.LayoutHomeRadioBinding
 import com.myproject.radiojourney.other.Constants.MAX_STATIONS_COUNT
+import com.myproject.radiojourney.other.Constants.MY_STATIONS_COUNTRY_CODE
 import com.myproject.radiojourney.presentation.MainViewModel
-import com.myproject.radiojourney.presentation.common.PermissionSessionState
 import com.myproject.radiojourney.presentation.common.InfoDialog
+import com.myproject.radiojourney.presentation.common.PermissionSessionState
 import com.myproject.radiojourney.presentation.common.collectWhenStarted
 import com.myproject.radiojourney.presentation.common.showPermissionDeniedDialog
 import com.myproject.radiojourney.presentation.common.showPermissionRationale
@@ -41,7 +52,7 @@ import com.myproject.radiojourney.presentation.content.base.BaseContentFragmentA
 import com.myproject.radiojourney.presentation.model.CountryPresentation
 import com.myproject.radiojourney.presentation.model.RadioStationPresentation
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
@@ -198,6 +209,26 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             var stationUuid = ""
 
             // 2. Получаем радиостанцию из списка на предыдущей странице, если перешли сюда из списка радиостанций. Определяем это по ключу "radio_station"
+            // 2. Станция из списка "Мои радиостанции" (добавлена пользователем по ссылке)
+            arguments?.parcelable<RadioStationPresentation>("my_station")
+                ?.let { myStation ->
+                    Log.d(TAG, "!! PLAYLIST_UPDATE: Передан аргумент с ключом my_station")
+                    stationUuid = myStation.stationuuid
+
+                    val curCountryCode =
+                        mainViewModel.curPlayingSong.value?.mediaMetadata?.subtitle.toString()
+                    if (curCountryCode == MY_STATIONS_COUNTRY_CODE) {
+                        // Плейлист своих станций уже в плеере - просто включаем выбранную
+                        mainViewModel.showConnectingProgress()
+                    } else {
+                        // В плеере другой плейлист: сначала загружаем свои станции (из базы, без сети)
+                        mainViewModel.showDownloadingPlaylistProgress()
+                        mainViewModel.fetchSongs(MY_STATIONS_COUNTRY_CODE)
+                    }
+                    mainViewModel.playOrToggleSong(myStation, false)
+                    mainViewModel.notJustLaunchedEnableAutoplay()
+                }
+
             arguments?.parcelable<RadioStationPresentation>("radio_station")
                 ?.let { radioStation ->
                     Log.d(TAG, "!! PLAYLIST_UPDATE: Передан аргумент с ключом radio_station")
@@ -291,6 +322,7 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             // Аргумент обрабатываем один раз. Фрагмент остаётся в стеке навигации, и при возвращении на него кнопкой "Назад"
             // (например, из текущего плейлиста) onViewCreated вызывается снова с теми же аргументами - станция включалась
             // заново, даже если пользователь поставил плейер на паузу
+            arguments?.remove("my_station")
             arguments?.remove("radio_station")
             arguments?.remove("favourite_station")
 
@@ -372,6 +404,12 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             if (this.findNavController().currentDestination?.id == R.id.homeRadioFragment) {
                 this.findNavController()
                     .navigate(R.id.action_homeRadioFragment_to_settingsFragment)
+            }
+        }
+        binding?.buttonGoToMyStations?.setOnClickListener {
+            if (this.findNavController().currentDestination?.id == R.id.homeRadioFragment) {
+                this.findNavController()
+                    .navigate(R.id.action_homeRadioFragment_to_myStationsFragment)
             }
         }
         binding?.buttonGoToFavourites?.setOnClickListener {

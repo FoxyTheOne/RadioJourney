@@ -2,7 +2,10 @@ package com.myproject.radiojourney.presentation.content.radioStationList.adapter
 
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.recyclerview.widget.AsyncListDiffer
+import android.view.View
+import androidx.core.view.isVisible
 import com.myproject.radiojourney.R
+import com.myproject.radiojourney.other.Constants.MY_STATIONS_COUNTRY_CODE
 
 /**
  * Вертикальный список радиостанций (станции страны и текущий плейлист).
@@ -41,6 +44,9 @@ class ListRadioStationAdapter :
                 radioStation.stationName
             findViewById<AppCompatTextView>(R.id.text_radioStationClickCount2).text =
                 radioStation.clickCount.toString()
+            // У своих станций числа прослушиваний нет (его считает каталог radio-browser) - строку прячем
+            findViewById<View>(R.id.linear_radioStationClickCount).isVisible =
+                radioStation.countryCode != MY_STATIONS_COUNTRY_CODE
 
             setBackgroundResource(
                 if (radioStation.stationuuid == currentStationUuid) R.color.white_transparent_20 else R.color.background

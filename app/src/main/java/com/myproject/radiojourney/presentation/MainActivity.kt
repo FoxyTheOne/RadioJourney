@@ -1,21 +1,17 @@
 package com.myproject.radiojourney.presentation
 
 import android.Manifest
-import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
-import android.os.Bundle
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.LayerDrawable
-import android.view.Gravity
+import android.os.Build
+import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
 import android.view.View
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
@@ -29,18 +25,18 @@ import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.ActivityMainBinding
-import com.myproject.radiojourney.presentation.model.RadioStationPresentation
 import com.myproject.radiojourney.other.Constants
-import com.myproject.radiojourney.presentation.common.PermissionSessionState
 import com.myproject.radiojourney.presentation.common.InfoDialog
+import com.myproject.radiojourney.presentation.common.PermissionSessionState
 import com.myproject.radiojourney.presentation.common.collectWhenStarted
+import com.myproject.radiojourney.presentation.common.isInternetAvailable
 import com.myproject.radiojourney.presentation.common.showPermissionDeniedDialog
 import com.myproject.radiojourney.presentation.common.showPermissionRationale
-import com.myproject.radiojourney.presentation.common.isInternetAvailable
 import com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioFragmentDirections
 import com.myproject.radiojourney.presentation.content.radioStationList.adapter.SwipeRadioStationAdapter
-import com.myproject.radiojourney.utils.extension.startStationIndex
+import com.myproject.radiojourney.presentation.model.RadioStationPresentation
 import com.myproject.radiojourney.utils.exoplayer.PlaybackStateInfo
+import com.myproject.radiojourney.utils.extension.startStationIndex
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -152,7 +148,8 @@ class MainActivity : AppCompatActivity() {
 
         // Навигация. Условная навигация по рекомендации developer.android.com: стартовый экран выбирается до его создания.
         // Раньше первый экран открывался всегда, а уже в его onCreate выполнялся переход на карту (BaseAuthFragmentAbstract)
-        val navHostFragment = supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
         navController = navHostFragment.navController
         // Стартовый экран зависит от того, входил ли пользователь раньше. Значение хранится в DataStore и читается
         // с диска в фоновом потоке, поэтому граф навигации задаётся, как только придёт ответ (обычно в тот же кадр).
@@ -258,20 +255,31 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        infoDialog = InfoDialog(this, R.layout.layout_please_wait_dialog, R.id.title_pleaseWait, R.id.text_pleaseWait)
+        infoDialog = InfoDialog(
+            this,
+            R.layout.layout_please_wait_dialog,
+            R.id.title_pleaseWait,
+            R.id.text_pleaseWait
+        )
 
         // Запрос на разрешение notification (уведомление плеера).
         // Разрешение FOREGROUND_SERVICE раньше тоже запрашивалось здесь, но оно выдаётся при установке и в запросе не нуждается.
         // POST_NOTIFICATIONS появилось только в Android 13 (TIRAMISU): на более старых версиях уведомления
         // разрешены сразу после установки, и запрашивать нечего - поэтому проверка версии стоит первой
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
         ) {
             // Сначала объясняем, зачем приложению уведомления, и только потом показываем системное окно.
             // Объяснение и запрос - один раз за запуск приложения: Activity пересоздаётся при смене темы или языка,
             // и окно появлялось бы заново (см. PermissionSessionState)
             if (permissionSessionState.isFirstRequestInSession(Manifest.permission.POST_NOTIFICATIONS)) {
-                showPermissionRationale(R.string.permission_notification_title, R.string.permission_notification_text) {
+                showPermissionRationale(
+                    R.string.permission_notification_title,
+                    R.string.permission_notification_text
+                ) {
                     requestPermissionLauncherNotification.launch(Manifest.permission.POST_NOTIFICATIONS)
                 }
             }
@@ -391,7 +399,10 @@ class MainActivity : AppCompatActivity() {
 
         // Не удалось скачать плейлист: сервер недоступен (раньше - LocalBroadcastManager из MusicService)
         collectWhenStarted(mainViewModel.serverIsDown) {
-            infoDialog.show(R.string.dialogInternetTrouble_title4, R.string.dialogInternetTrouble_text4)
+            infoDialog.show(
+                R.string.dialogInternetTrouble_title4,
+                R.string.dialogInternetTrouble_text4
+            )
             mainViewModel.hideProgressAndSetClickable(true)
         }
 
@@ -413,7 +424,10 @@ class MainActivity : AppCompatActivity() {
 
                 // Favorite star. Если список радиостанций не пуст и код страны одинаковый в vpSong и плейере, скроется прогресс
                 if (swipeRadioStationAdapter.radioStationList.isNotEmpty()) {
-                    checkFavoriteStarIfCountryCodeIsRight(countryCode, swipeRadioStationAdapter.radioStationList[0].countryCode)
+                    checkFavoriteStarIfCountryCodeIsRight(
+                        countryCode,
+                        swipeRadioStationAdapter.radioStationList[0].countryCode
+                    )
                 }
             }
         }
@@ -448,7 +462,8 @@ class MainActivity : AppCompatActivity() {
         collectWhenStarted(mainViewModel.errorMessages) { message ->
             Log.d(TAG, "Error: $message")
             binding?.let { nonNullBinding ->
-                Snackbar.make(nonNullBinding.rootLayout.rootView, message, Snackbar.LENGTH_LONG).show()
+                Snackbar.make(nonNullBinding.rootLayout.rootView, message, Snackbar.LENGTH_LONG)
+                    .show()
             }
             mainViewModel.hideProgressAndSetClickable()
         }
@@ -456,7 +471,9 @@ class MainActivity : AppCompatActivity() {
         // Favourites: звезда нажата где угодно (в плейере, списке избранного).
         // Звезду в плейере меняем, только если показана именно эта станция. Признак в плейлисте обновляет MainViewModel
         collectWhenStarted(mainViewModel.favouriteChanges) { change ->
-            val shownStation = swipeRadioStationAdapter.radioStationList.getOrNull(binding?.vpSong?.currentItem ?: -1)
+            val shownStation = swipeRadioStationAdapter.radioStationList.getOrNull(
+                binding?.vpSong?.currentItem ?: -1
+            )
             if (shownStation?.stationuuid == change.station.stationuuid) {
                 binding?.imageStar?.setImageResource(
                     if (change.isFavourite) R.drawable.ic_baseline_star_24_orange else R.drawable.ic_baseline_star_border_24_orange
@@ -472,8 +489,12 @@ class MainActivity : AppCompatActivity() {
             binding?.text1Dp?.isVisible = isLoading
             binding?.progressBarHorizontalDp?.isVisible = isLoading
             when (loadingState) {
-                MainViewModel.LoadingState.DOWNLOADING_PLAYLIST -> binding?.text1Dp?.text = getString(R.string.downloading_playlist)
-                MainViewModel.LoadingState.CONNECTING_STATION -> binding?.text1Dp?.text = getString(R.string.downloading_radio_station)
+                MainViewModel.LoadingState.DOWNLOADING_PLAYLIST -> binding?.text1Dp?.text =
+                    getString(R.string.downloading_playlist)
+
+                MainViewModel.LoadingState.CONNECTING_STATION -> binding?.text1Dp?.text =
+                    getString(R.string.downloading_radio_station)
+
                 MainViewModel.LoadingState.NONE -> Unit
             }
         }
@@ -489,6 +510,12 @@ class MainActivity : AppCompatActivity() {
             return
         }
         shownPlaylistVersion = playlist.version
+
+        if (radioStations.isEmpty()) {
+            // Плейлист пуст (например, в "Моих радиостанциях" ещё ничего нет): показывать в плеере нечего,
+            // но и полосу загрузки держать незачем - иначе она висела бы до таймаута
+            mainViewModel.hideProgressAndSetClickable()
+        }
 
         if (radioStations.isNotEmpty()) {
             // Всё, что ниже, выполняем только после того, как адаптер применит новый список.
@@ -508,10 +535,14 @@ class MainActivity : AppCompatActivity() {
                     it.stationuuid == curPlayingSong?.mediaId &&
                             it.countryCode == curPlayingSong.mediaMetadata.subtitle.toString()
                 }
-                val startPosition = if (curPlayingIndex != -1) curPlayingIndex else radioStations.startStationIndex()
+                val startPosition =
+                    if (curPlayingIndex != -1) curPlayingIndex else radioStations.startStationIndex()
                 val vpSong = binding?.vpSong
                 if (vpSong != null && vpSong.currentItem != startPosition) {
-                    vpSong.setCurrentItem(startPosition, false) // ViewPager сам вызовет onPageSelected(startPosition)
+                    vpSong.setCurrentItem(
+                        startPosition,
+                        false
+                    ) // ViewPager сам вызовет onPageSelected(startPosition)
                 } else {
                     // Почему-то этот метод изредка не вызывается, хотя должен. На всякий случай дублирую вызов здесь
                     mOnPageChangeCallback?.onPageSelected(startPosition)
@@ -520,6 +551,8 @@ class MainActivity : AppCompatActivity() {
                 // Полоса прогресса: список показан
                 binding?.progressBarHorizontalDp?.progress = 85
 
+                updateStarVisibility()
+
                 // Если не включать плейер, а просто листать от списка к списку, onPageScrolled перестаёт вызываться на четвёртый раз
                 // и звезда перестаёт меняться (избранное/не избранное). Поэтому на всякий случай вызываю его дополнительно
                 mOnPageChangeCallback?.onPageScrolled(0, 0.0f, 0)
@@ -527,7 +560,10 @@ class MainActivity : AppCompatActivity() {
                 // Возвращаем ViewPager на станцию, которая сейчас в плейере. Берём её из метаданных, а не из curPlayingRadioStation:
                 // onPageSelected выше уже записал туда станцию списка
                 if (curPlayingSong != null) {
-                    switchViewPagerToCurrentSong(curPlayingSong.mediaId, curPlayingSong.mediaMetadata.subtitle.toString())
+                    switchViewPagerToCurrentSong(
+                        curPlayingSong.mediaId,
+                        curPlayingSong.mediaMetadata.subtitle.toString()
+                    )
                 }
             }
         }
@@ -548,10 +584,20 @@ class MainActivity : AppCompatActivity() {
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
             )
-            v.updatePadding(left = bars.left, top = bars.top, right = bars.right, bottom = bars.bottom)
+            v.updatePadding(
+                left = bars.left,
+                top = bars.top,
+                right = bars.right,
+                bottom = bars.bottom
+            )
 
             // Фон: сверху полоса цвета строки состояния, остальное - тёмный фон приложения
-            v.background = LayerDrawable(arrayOf(ColorDrawable(backgroundColor), ColorDrawable(statusBarColor))).apply {
+            v.background = LayerDrawable(
+                arrayOf(
+                    ColorDrawable(backgroundColor),
+                    ColorDrawable(statusBarColor)
+                )
+            ).apply {
                 setLayerGravity(1, Gravity.TOP or Gravity.FILL_HORIZONTAL)
                 setLayerHeight(1, bars.top)
             }
@@ -596,8 +642,9 @@ class MainActivity : AppCompatActivity() {
                             "2. FAV_STAR: Checking favorite star and hiding progress"
                         )
 
-                        val isStationInFavourite =
-                            swipeRadioStationAdapter.radioStationList[position].isStationInFavourite
+                        val currentStation = swipeRadioStationAdapter.radioStationList[position]
+                        val isStationInFavourite = currentStation.isStationInFavourite
+
                         Log.d(
                             TAG, "2. FAV_STAR: isStationInFavourite = $isStationInFavourite"
                         )
@@ -606,6 +653,8 @@ class MainActivity : AppCompatActivity() {
                         } else {
                             binding?.imageStar?.setImageResource(R.drawable.ic_baseline_star_border_24_orange)
                         }
+
+                        updateStarVisibility()
 
                         // Убираем прогресс и делаем кнопки снова кликабельными
                         mainViewModel.hideProgressAndSetClickable()
@@ -634,9 +683,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showBottomBar() {
-        binding?.imageStar?.isVisible = true
+        updateStarVisibility()
         binding?.vpSong?.isVisible = true
         binding?.ivPlayPause?.isVisible = true
+    }
+
+    // У своих станций ("Мои радиостанции") звезды нет: избранное собирается из станций каталога,
+    // а свою станцию добавляют и удаляют на её собственном экране.
+    // Проверяем это в одном месте: звезда появляется снова при каждом переходе между экранами (showBottomBar)
+    private fun updateStarVisibility() {
+        val shownStation =
+            swipeRadioStationAdapter.radioStationList.getOrNull(binding?.vpSong?.currentItem ?: -1)
+        binding?.imageStar?.isVisible =
+            shownStation?.countryCode != Constants.MY_STATIONS_COUNTRY_CODE
     }
 
     // Выполнить действие, когда плейлист показан в ViewPager (сразу, если уже показан).

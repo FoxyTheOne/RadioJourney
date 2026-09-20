@@ -25,6 +25,9 @@
             android:id="@+id/action_homeRadioFragment_to_favouriteListFragment"
             app:destination="@id/favouriteListFragment" />
         <action
+            android:id="@+id/action_homeRadioFragment_to_myStationsFragment"
+            app:destination="@id/myStationsFragment" />
+        <action
             android:id="@+id/action_homeRadioFragment_to_currentPlaylistFragment"
             app:destination="@id/currentPlaylistFragment" />
         <action
@@ -60,6 +63,21 @@
         </action>
     </fragment>
 
+    <!-- Мои радиостанции: станции, добавленные пользователем по ссылке на поток -->
+    <fragment
+        android:id="@+id/myStationsFragment"
+        android:name="com.myproject.radiojourney.presentation.content.radioStationList.myStations.MyStationsFragment"
+        android:label="MyStationsFragment">
+        <action
+            android:id="@+id/action_myStationsFragment_to_homeRadioFragment"
+            app:destination="@id/homeRadioFragment">
+
+            <argument
+                android:name="my_station"
+                app:argType="com.myproject.radiojourney.presentation.model.RadioStationPresentation" />
+        </action>
+    </fragment>
+
     <fragment
         android:id="@+id/firstScreenLoadingFragment"
         android:name="com.myproject.radiojourney.presentation.firstScreen.FirstScreenLoadingFragment"
@@ -78,7 +96,7 @@
     <fragment
         android:id="@+id/currentPlaylistFragment"
         android:name="com.myproject.radiojourney.presentation.content.radioStationList.current.CurrentPlaylistFragment"
-        android:label="CurrentPlaylistFragment">
+        android:label="CurrentPlaylistFragment" >
         <action
             android:id="@+id/action_currentPlaylistFragment_to_homeRadioFragment"
             app:destination="@id/homeRadioFragment">
@@ -91,7 +109,7 @@
     <fragment
         android:id="@+id/settingsFragment"
         android:name="com.myproject.radiojourney.presentation.content.settingsFragment.SettingsFragment"
-        android:label="SettingsFragment">
+        android:label="SettingsFragment" >
         <action
             android:id="@+id/action_settingsFragment_to_homeRadioFragment"
             app:destination="@id/homeRadioFragment" />

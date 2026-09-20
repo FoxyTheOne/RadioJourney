@@ -24,7 +24,10 @@ import com.myproject.radiojourney.other.Constants.ADD_SONGS
 import com.myproject.radiojourney.other.Constants.CANCEL_PLAYLIST_DOWNLOAD
 import com.myproject.radiojourney.other.Constants.COUNTRY_CODE_ID
 import com.myproject.radiojourney.other.Constants.DEFAULT_COUNTRY_CODE
+import com.myproject.radiojourney.other.Constants.FAVOURITES_COUNTRY_CODE
+import com.myproject.radiojourney.other.Constants.FAVOURITES_COUNTRY_CODE_SUFFIX
 import com.myproject.radiojourney.other.Constants.MEDIA_ROOT_ID
+import com.myproject.radiojourney.other.Constants.MY_STATIONS_COUNTRY_CODE
 import com.myproject.radiojourney.other.Constants.NETWORK_ERROR
 import com.myproject.radiojourney.utils.exoplayer.RadioPlaylistSource
 import com.myproject.radiojourney.utils.exoplayer.ReadinessState
@@ -164,13 +167,23 @@ class MusicLibrarySessionCallback(
             }
 
             when {
-                countryCode == "FAV" && lastCountryCode.orEmpty().endsWith("_FAV") ->
+                // Свои станции: список из Room, сети не требует
+                countryCode == MY_STATIONS_COUNTRY_CODE && lastCountryCode == MY_STATIONS_COUNTRY_CODE ->
+                    Log.d(TAG, "PLAYLIST_UPDATE: 5. Список своих станций уже скачан в exoplayer")
+
+                countryCode == MY_STATIONS_COUNTRY_CODE -> {
+                    Log.d(TAG, "PLAYLIST_UPDATE: 5. Загружаем список своих станций в exoplayer")
+                    radioPlaylistSource.fetchMyStationsMediaData()
+                }
+
+                countryCode == FAVOURITES_COUNTRY_CODE && lastCountryCode.orEmpty()
+                    .endsWith(FAVOURITES_COUNTRY_CODE_SUFFIX) ->
                     Log.d(
                         TAG,
                         "!! PLAYLIST_UPDATE: 5. FAV_STAR: Список избранного уже скачан в exoplayer"
                     )
 
-                countryCode == "FAV" -> {
+                countryCode == FAVOURITES_COUNTRY_CODE -> {
                     Log.d(
                         TAG,
                         "PLAYLIST_UPDATE: 5. FAV_STAR: Скачиваем список избранного в exoplayer"
@@ -179,7 +192,7 @@ class MusicLibrarySessionCallback(
                 }
 
                 lastCountryCode != countryCode || lastCountryCode?.endsWith(
-                    "_FAV",
+                    FAVOURITES_COUNTRY_CODE_SUFFIX,
                     true
                 ) == true -> {
                     Log.d(

@@ -3,9 +3,11 @@ package com.myproject.radiojourney.data.mapper
 import com.google.android.gms.maps.model.LatLng
 import com.myproject.radiojourney.data.dataSource.network.entity.RadioStationRemote
 import com.myproject.radiojourney.data.localDatabaseRoom.entity.CountryLocal
+import com.myproject.radiojourney.data.localDatabaseRoom.entity.MyStationLocal
 import com.myproject.radiojourney.data.localDatabaseRoom.entity.RadioStationLocal
 import com.myproject.radiojourney.domain.model.Country
 import com.myproject.radiojourney.domain.model.RadioStation
+import com.myproject.radiojourney.other.Constants.MY_STATIONS_COUNTRY_CODE
 
 /**
  * Преобразования моделей data слоя (Room, сервер) в модели domain и обратно.
@@ -56,4 +58,23 @@ fun Country.toLocal() = CountryLocal(
     stationcount = stationCount,
     countryName = countryName,
     countryLocation = LatLng(latitude, longitude)
+)
+
+// Своя станция пользователя. Кода страны у неё нет, поэтому ставим служебный MY_STATIONS_COUNTRY_CODE:
+// по нему плеер и экраны понимают, что это плейлист "Мои радиостанции"
+fun MyStationLocal.toDomain() = RadioStation(
+    stationUuid = stationUuid,
+    name = stationName,
+    urlResolved = urlResolved,
+    clickCount = 0, // число прослушиваний есть только у станций каталога radio-browser
+    country = "",
+    countryCode = MY_STATIONS_COUNTRY_CODE,
+    isFavourite = false
+)
+
+fun RadioStation.toMyStationLocal(addedAt: Long = System.currentTimeMillis()) = MyStationLocal(
+    stationUuid = stationUuid,
+    stationName = name,
+    urlResolved = urlResolved,
+    addedAt = addedAt
 )

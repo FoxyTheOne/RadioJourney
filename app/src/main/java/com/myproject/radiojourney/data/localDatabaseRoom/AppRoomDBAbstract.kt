@@ -4,6 +4,7 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.myproject.radiojourney.data.localDatabaseRoom.entity.CountryLocal
+import com.myproject.radiojourney.data.localDatabaseRoom.entity.MyStationLocal
 import com.myproject.radiojourney.data.localDatabaseRoom.entity.RadioStationLocal
 import com.myproject.radiojourney.data.localDatabaseRoom.entity.UserEntity
 
@@ -16,18 +17,16 @@ import com.myproject.radiojourney.data.localDatabaseRoom.entity.UserEntity
  * Переиспользование: минимальный пример базы Room - класс базы, DAO, entity и конвертер
  */
 @Database(
-    entities = [UserEntity::class, CountryLocal::class, RadioStationLocal::class],
-    version = 12,
+    entities = [UserEntity::class, CountryLocal::class, RadioStationLocal::class, MyStationLocal::class],
+    version = 13,
     exportSchema = true,
-//    autoMigrations = [
-//        AutoMigration(from = 11, to = 12)
-//    ]
 )
 @TypeConverters(LatLngConverter::class)
 // UserEntity (таблица от удалённых экранов входа) оставлена в @Database: удаление таблицы меняет схему базы и требует миграции
 abstract class AppRoomDBAbstract : RoomDatabase() {
     abstract fun getCountryDAO(): ICountryDAO
     abstract fun getRadioStationDAO(): IRadioStationDAO
+    abstract fun getMyStationDAO(): IMyStationDAO
 
     // If you just added a column - just add a defaultValue in column info for auto migration
 

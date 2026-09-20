@@ -8,7 +8,10 @@ import androidx.media3.common.MediaItem
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.domain.iRepository.IFavoriteStationRepository
 import com.myproject.radiojourney.domain.iRepository.IMainRadioStationRepository
+import com.myproject.radiojourney.domain.iRepository.IMyStationRepository
 import com.myproject.radiojourney.domain.model.RadioStation
+import com.myproject.radiojourney.other.Constants.FAVOURITES_COUNTRY_CODE_SUFFIX
+import com.myproject.radiojourney.other.Constants.MY_STATIONS_COUNTRY_CODE
 import com.myproject.radiojourney.other.Status
 import com.myproject.radiojourney.utils.exoplayer.State.STATE_INITIALIZED
 import com.myproject.radiojourney.utils.exoplayer.State.STATE_INITIALIZING
@@ -35,6 +38,7 @@ class RadioPlaylistSource @Inject constructor(
     @ApplicationContext private val context: Context,
     private val mainRadioStationRepository: IMainRadioStationRepository,
     private val favoriteStationRepository: IFavoriteStationRepository,
+    private val myStationRepository: IMyStationRepository,
     // Прогресс загрузки и "сервер недоступен" для экрана
     private val playlistDownloadStatus: PlaylistDownloadStatus
 ) {
@@ -53,7 +57,8 @@ class RadioPlaylistSource @Inject constructor(
         private set
 
     // Картинка для уведомления
-    private val artworkUri = "android.resource://${context.packageName}/drawable/radio_heissenstein_pixabay".toUri()
+    private val artworkUri =
+        "android.resource://${context.packageName}/drawable/radio_heissenstein_pixabay".toUri()
 
     // Номер последней начатой загрузки: отменённая загрузка не должна менять state, если после неё уже началась следующая
     private val fetchGeneration = AtomicInteger(0)
@@ -75,7 +80,10 @@ class RadioPlaylistSource @Inject constructor(
         } catch (e: CancellationException) {
             // Загрузку отменили (выбран другой плейлист или полоса загрузки висела слишком долго). Текущий плейлист остаётся рабочим.
             // state возвращаем, только если после этой загрузки не началась новая - она сама выставит state, когда закончит
-            Log.d(TAG, "PLAYLIST_UPDATE: Загрузка плейлиста $countryCode отменена, текущий плейлист не меняем")
+            Log.d(
+                TAG,
+                "PLAYLIST_UPDATE: Загрузка плейлиста $countryCode отменена, текущий плейлист не меняем"
+            )
             if (generation == fetchGeneration.get()) readiness.state = STATE_INITIALIZED
             throw e
         }
@@ -95,7 +103,10 @@ class RadioPlaylistSource @Inject constructor(
             return@withContext
         }
 
-        Log.d(TAG, "Загружаем метаданные fetchMediaData - $countryCode, listSize = ${radioStationList.size}")
+        Log.d(
+            TAG,
+            "Загружаем метаданные fetchMediaData - $countryCode, listSize = ${radioStationList.size}"
+        )
         setPlaylist(radioStationList)
     }
 
@@ -104,7 +115,10 @@ class RadioPlaylistSource @Inject constructor(
         fetchGeneration.incrementAndGet()
         readiness.state = STATE_INITIALIZING
         val favouriteRadioStations = favoriteStationRepository.getFavoriteRadioStationList()
-        Log.d(TAG, "Загружаем метаданные fetchMediaData - FAV, listSize = ${favouriteRadioStations.size}")
+        Log.d(
+            TAG,
+            "Загружаем метаданные fetchMediaData - FAV, listSize = ${favouriteRadioStations.size}"
+        )
 
         if (favouriteRadioStations.isEmpty()) {
             // Избранное пустое - текущий плейлист не меняем
@@ -114,7 +128,25 @@ class RadioPlaylistSource @Inject constructor(
         }
 
         // У станций плейлиста избранного код страны с суффиксом "_FAV" - так плеер отличает этот плейлист
-        setPlaylist(favouriteRadioStations.map { it.copy(countryCode = it.countryCode + "_FAV") })
+        setPlaylist(favouriteRadioStations.map { it.copy(countryCode = it.countryCode + FAVOURITES_COUNTRY_CODE_SUFFIX) })
+    }
+
+    // Загрузить плейлист своих станций из Room ("Мои радиостанции"). Сети здесь нет: станции добавил сам пользователь,
+    // и у них уже стоит код страны MY_STATIONS_COUNTRY_CODE (см. DataMappers)
+    suspend fun fetchMyStationsMediaData() = withContext(Dispatchers.IO) {
+        fetchGeneration.incrementAndGet()
+        readiness.state = STATE_INITIALIZING
+        val myStations = myStationRepository.getMyStationListOnce()
+        Log.d(TAG, "Загружаем метаданные fetchMediaData - MY, listSize = ${myStations.size}")
+
+        if (myStations.isEmpty()) {
+            // Своих станций пока нет - текущий плейлист не меняем
+            _playlistChanged.tryEmit(Unit)
+            readiness.state = STATE_INITIALIZED
+            return@withContext
+        }
+
+        setPlaylist(myStations)
     }
 
     // Общая часть обеих загрузок: преобразование в MediaItem с прогрессом каждые 10% и сообщение экрану, что плейлист готов
@@ -142,10 +174,14 @@ class RadioPlaylistSource @Inject constructor(
         readiness.state = STATE_INITIALIZED
     }
 
-    // Вторая строка уведомления: страна или "Избранное: страна"
+    // Вторая строка уведомления: страна, "Избранное: страна" или "Мои радиостанции"
     private fun notificationCountryText(countryCode: String): String {
-        val isFavourite = countryCode.endsWith("_FAV")
-        val countryName = Locale("", countryCode.removeSuffix("_FAV")).displayName
+        // У своих станций страны нет, а Locale("", "MY").displayName вернул бы "Малайзия" - поэтому отдельная ветка
+        if (countryCode == MY_STATIONS_COUNTRY_CODE) return context.getString(R.string.myStations_title)
+
+        val isFavourite = countryCode.endsWith(FAVOURITES_COUNTRY_CODE_SUFFIX)
+        val countryName =
+            Locale("", countryCode.removeSuffix(FAVOURITES_COUNTRY_CODE_SUFFIX)).displayName
         return if (isFavourite) context.getString(R.string.homeRadio_goToFavourites) + ": " + countryName else countryName
     }
 }

@@ -167,6 +167,21 @@
                 android:textStyle="bold"
                 app:backgroundTint="@null" / -->
 
+            <!-- Мои радиостанции: список, который пользователь собирает сам, по ссылкам на потоки.
+                 Кнопка рядом с избранным и такая же по оформлению - это два родственных списка -->
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/button_goToMyStations"
+                style="@style/Widget.AppCompat.ActionButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/space_small"
+                android:background="@drawable/button_rounded_corners"
+                android:text="@string/homeRadio_goToMyStations"
+                android:textColor="@color/white"
+                android:textSize="@dimen/button_text"
+                android:textStyle="bold"
+                app:backgroundTint="@null" />
+
             <!-- До того, как добавила кнопку "скрыть", было: -->
             <!-- android:layout_marginTop="@dimen/space_small"-->
             <!-- А в свойствах LinearLayout графы paddingTop не было -->

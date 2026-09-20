@@ -59,6 +59,28 @@
     <string name="settings_coffee">Support the project (Boosty)</string>
     <string name="settings_pixabay">The app uses images from pixabay.com</string>
 
+    <!-- my stations: the list the user fills in by hand, with links to streams -->
+    <string name="homeRadio_goToMyStations">My stations</string>
+    <string name="myStations_title">My stations</string>
+    <string name="myStations_hint">Stations you add yourself - for example, a local radio that is missing from the catalogue. Add a link to its stream and it will appear here.</string>
+    <string name="myStations_empty">The list is empty. Tap + to add a station by its stream link.</string>
+    <string name="myStations_addButton">Add a station</string>
+    <string name="myStations_added">Station added</string>
+    <string name="myStations_deleted">Station deleted</string>
+    <string name="myStations_delete_title">Delete the station?</string>
+    <string name="myStations_delete_text">%1$s will be removed from your list. The station itself stays available - you can add it again by the same link.</string>
+    <string name="myStations_delete_confirm">Delete</string>
+    <string name="myStations_delete_cancel">Cancel</string>
+    <string name="addMyStation_title">New station</string>
+    <string name="addMyStation_name">Station name</string>
+    <string name="addMyStation_url">Link to the stream</string>
+    <string name="addMyStation_urlHelp">The link usually ends with .mp3, .aac or .m3u8 and can be found on the station\'s website</string>
+    <string name="addMyStation_save">Save</string>
+    <string name="addMyStation_cancel">Cancel</string>
+    <string name="addMyStation_error_name">Enter a name - this is how the station will be shown in the list</string>
+    <string name="addMyStation_error_url">The link must start with http:// or https://</string>
+    <string name="addMyStation_error_duplicate">A station with this link is already in your list</string>
+
     <!-- exoplayer -->
     <string name="notification_channel_name">Radio station channel</string>
 

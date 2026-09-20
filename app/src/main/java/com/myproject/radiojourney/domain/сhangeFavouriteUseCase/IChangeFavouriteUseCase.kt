@@ -1,4 +1,4 @@
-package com.myproject.radiojourney.domain.сhangeFavouriteUseCase
+package com.myproject.radiojourney.domain.changeFavouriteUseCase
 
 import com.myproject.radiojourney.domain.model.RadioStation
 

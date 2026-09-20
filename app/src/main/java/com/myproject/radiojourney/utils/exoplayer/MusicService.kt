@@ -15,7 +15,9 @@ import androidx.media3.session.MediaSessionService
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.domain.iRepository.IMainRadioStationRepository
 import com.myproject.radiojourney.other.Constants.DEFAULT_COUNTRY_CODE
+import com.myproject.radiojourney.other.Constants.FAVOURITES_COUNTRY_CODE_SUFFIX
 import com.myproject.radiojourney.other.Constants.MEDIA_ROOT_ID
+import com.myproject.radiojourney.other.Constants.MY_STATIONS_COUNTRY_CODE
 import com.myproject.radiojourney.other.Constants.NOTIFICATION_CHANNEL_ID
 import com.myproject.radiojourney.other.Constants.NOTIFICATION_ID
 import com.myproject.radiojourney.other.Constants.PAUSED_NOTIFICATION_TIMEOUT
@@ -62,7 +64,8 @@ class MusicService : MediaLibraryService() {
     private val serviceExceptionHandler = CoroutineExceptionHandler { _, throwable ->
         Log.e(TAG, "Uncaught exception in MusicService coroutine", throwable)
     }
-    private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob + serviceExceptionHandler)
+    private val serviceScope =
+        CoroutineScope(Dispatchers.Main + serviceJob + serviceExceptionHandler)
 
     private lateinit var mediaLibrarySession: MediaLibrarySession
 
@@ -109,14 +112,28 @@ class MusicService : MediaLibraryService() {
         // Ошибки загрузки обрабатывает RadioPlaylistSource, а непредвиденные исключения - serviceExceptionHandler
         // (раньше здесь были catch SocketTimeoutException / IOException, которые не могли сработать)
         serviceScope.launch {
-            val lastPlayedCountryCode = mainRadioStationRepository.getLastUsedRadioStationCountryCode()
+            val lastPlayedCountryCode =
+                mainRadioStationRepository.getLastUsedRadioStationCountryCode()
             Log.d(TAG, "Узнаём последний используемый код страны - $lastPlayedCountryCode")
 
-            if (lastPlayedCountryCode.endsWith("_FAV", true)) {
-                radioPlaylistSource.fetchFavouriteMediaData()
-            } else {
-                radioPlaylistSource.fetchMediaData(
-                    lastPlayedCountryCode.takeIf { it.isNotBlank() && it != "null" } ?: DEFAULT_COUNTRY_CODE
+            when {
+                lastPlayedCountryCode.endsWith(FAVOURITES_COUNTRY_CODE_SUFFIX, true) ->
+                    radioPlaylistSource.fetchFavouriteMediaData()
+
+                // "MY" - это не страна, а плейлист своих станций. Без этой ветки при следующем запуске
+                // приложение приняло бы код за Малайзию и включило бы её станции вместо добавленных пользователем
+                lastPlayedCountryCode == MY_STATIONS_COUNTRY_CODE -> {
+                    radioPlaylistSource.fetchMyStationsMediaData()
+                    // Пользователь удалил все свои станции - плейлист оказался бы пустым, и плеер внизу экрана
+                    // остался бы без станций. В этом случае показываем плейлист по умолчанию
+                    if (radioPlaylistSource.radioStations.isEmpty()) {
+                        radioPlaylistSource.fetchMediaData(DEFAULT_COUNTRY_CODE)
+                    }
+                }
+
+                else -> radioPlaylistSource.fetchMediaData(
+                    lastPlayedCountryCode.takeIf { it.isNotBlank() && it != "null" }
+                        ?: DEFAULT_COUNTRY_CODE
                 )
             }
         }
@@ -168,7 +185,11 @@ class MusicService : MediaLibraryService() {
         // Раньше - LiveData с observeForever, которую нужно было не забыть отписать в onDestroy; корутина serviceScope отменится сама
         serviceScope.launch {
             radioPlaylistSource.playlistChanged.collect {
-                mediaLibrarySession.notifyChildrenChanged(MEDIA_ROOT_ID, radioPlaylistSource.radioStations.size, null)
+                mediaLibrarySession.notifyChildrenChanged(
+                    MEDIA_ROOT_ID,
+                    radioPlaylistSource.radioStations.size,
+                    null
+                )
             }
         }
 
@@ -189,7 +210,8 @@ class MusicService : MediaLibraryService() {
                 (exoPlayer.playbackState == Player.STATE_BUFFERING || exoPlayer.playbackState == Player.STATE_READY)
 
     // Сессия для подключающихся контроллеров (экран приложения, уведомление, наушники)
-    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession = mediaLibrarySession
+    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession =
+        mediaLibrarySession
 
     // Приложение закрыли (смахнули из недавних).
     // Радио играет - продолжаем играть, уведомление остаётся (на паузе оно уберётся само через PAUSED_NOTIFICATION_TIMEOUT).

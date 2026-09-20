@@ -10,12 +10,19 @@ package com.myproject.radiojourney.other
 object Constants {
     const val MAX_STATIONS_COUNT = 300
     const val DEFAULT_COUNTRY_CODE = "AQ"
+
+    // Служебные "коды страны" плейлистов, которых нет на карте:
+    // FAV - избранное (к коду страны станции добавляется суффикс _FAV), MY - свои станции пользователя
+    const val FAVOURITES_COUNTRY_CODE = "FAV"
+    const val FAVOURITES_COUNTRY_CODE_SUFFIX = "_FAV"
+    const val MY_STATIONS_COUNTRY_CODE = "MY"
     const val MEDIA_ROOT_ID = "root_id"
     const val NETWORK_ERROR = "NETWORK_ERROR"
 
     // Команды сервису плеера (MusicLibrarySessionCallback.onCustomCommand)
     const val ADD_SONGS = "Add Songs"
-    const val CANCEL_PLAYLIST_DOWNLOAD = "Cancel playlist download" // отменить загрузку плейлиста (по таймауту полосы загрузки)
+    const val CANCEL_PLAYLIST_DOWNLOAD =
+        "Cancel playlist download" // отменить загрузку плейлиста (по таймауту полосы загрузки)
     const val COUNTRY_CODE_ID = "Country code"
 
     // Notification from exoplayer
@@ -32,9 +39,12 @@ object Constants {
     const val SERVER_SEARCH_TIME = 40_000L // сколько времени перебираем серверы, прежде чем сдаться
     const val SERVER_RETRY_DELAY = 1_000L // пауза перед попыткой на следующем сервере
     const val DNS_RETRY_DELAY = 1_000L // пауза перед повторным DNS-запросом списка серверов
-    const val DNS_ATTEMPTS = 3 // сколько раз спрашиваем у DNS список серверов, прежде чем взять запасной
-    const val DNS_SERVER_LIST_NAME = "all.api.radio-browser.info" // имя, по которому DNS отдаёт все серверы radio-browser
-    const val FALLBACK_SERVER = "de1.api.radio-browser.info" // сервер из документации API - на случай, если DNS не ответил
+    const val DNS_ATTEMPTS =
+        3 // сколько раз спрашиваем у DNS список серверов, прежде чем взять запасной
+    const val DNS_SERVER_LIST_NAME =
+        "all.api.radio-browser.info" // имя, по которому DNS отдаёт все серверы radio-browser
+    const val FALLBACK_SERVER =
+        "de1.api.radio-browser.info" // сервер из документации API - на случай, если DNS не ответил
 
     // Сколько максимум может висеть полоса загрузки плейлиста/станции. Потом прячем её и показываем ошибку.
     // Должно быть больше, чем может занять перебор серверов, иначе полоса пропадёт раньше, чем придёт плейлист:

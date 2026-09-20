@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?><!-- Экран "Мои радиостанции": список станций, добавленных пользователем, и кнопка "+" для добавления новой.
+     Отдельная разметка, а не общая layout_radio_station_list_base: здесь нужна кнопка "+" и подсказка,
+     и не нужны заголовки "выберите станцию" / "скачать список" -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/home_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:elevation="4dp"
+        android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:menu="@menu/home_toolbar_menu"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+        app:title="@string/app_name"
+        tools:targetApi="lollipop" />
+
+    <LinearLayout
+        android:id="@+id/linear_myStationsTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/background_transparent"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/home_toolbar">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/image_arrowBack"
+            android:layout_width="48dp"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/myStations_title"
+            android:paddingTop="@dimen/space_small"
+            android:paddingBottom="@dimen/space_small"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_baseline_navigate_before_24_white" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/text_myStations_title"
+            style="@style/login_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:padding="@dimen/space_beforeOrAfterElement"
+            android:text="@string/myStations_title" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:layout_width="48dp"
+            android:layout_height="match_parent" />
+    </LinearLayout>
+
+    <!-- Подсказка, что это за экран: без неё непонятно, чем он отличается от избранного -->
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/text_myStations_hint"
+        style="@style/login_bottom_small"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/space_beforeOrAfterElement"
+        android:text="@string/myStations_hint"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linear_myStationsTitle" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView_myStations"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:paddingBottom="88dp"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/text_myStations_hint"
+        tools:listitem="@layout/layout_my_station_item" />
+
+    <!-- Текст, когда список пуст -->
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/text_myStations_empty"
+        style="@style/login_bottom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="@dimen/space_32"
+        android:text="@string/myStations_empty"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/text_myStations_hint"
+        tools:visibility="visible" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_addMyStation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/space_beforeOrAfterElement"
+        android:contentDescription="@string/myStations_addButton"
+        android:src="@drawable/ic_baseline_add_24_white"
+        app:backgroundTint="@color/orange"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

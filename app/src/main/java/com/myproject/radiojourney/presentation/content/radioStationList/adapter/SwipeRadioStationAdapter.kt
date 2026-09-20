@@ -8,6 +8,8 @@ import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.AsyncListDiffer
 import com.myproject.radiojourney.R
+import com.myproject.radiojourney.other.Constants.FAVOURITES_COUNTRY_CODE_SUFFIX
+import com.myproject.radiojourney.other.Constants.MY_STATIONS_COUNTRY_CODE
 
 /**
  * Адаптер плеера внизу экрана: одна станция - одна "страница" ViewPager2, станции листаются свайпом.
@@ -30,9 +32,18 @@ class SwipeRadioStationAdapter :
 
             // У станций из плейлиста избранного код страны с суффиксом "_FAV" (например "PL_FAV").
             // Показываем вместо суффикса сердечко перед названием: "♥ RMF FM - PL"
-            val isFavouritePlaylist = radioStation.countryCode.endsWith("_FAV")
-            val text =
-                "${radioStation.stationName} - ${radioStation.countryCode.removeSuffix("_FAV")}"
+            val isFavouritePlaylist =
+                radioStation.countryCode.endsWith(FAVOURITES_COUNTRY_CODE_SUFFIX)
+            // У своих станций страны нет, поэтому показываем одно название: код "MY" пользователю ничего не скажет
+            val text = if (radioStation.countryCode == MY_STATIONS_COUNTRY_CODE) {
+                radioStation.stationName
+            } else {
+                "${radioStation.stationName} - ${
+                    radioStation.countryCode.removeSuffix(
+                        FAVOURITES_COUNTRY_CODE_SUFFIX
+                    )
+                }"
+            }
 
             if (isFavouritePlaylist) {
                 // Сердечко - векторная картинка, а не символ "♥": символ в разных шрифтах и на разных телефонах

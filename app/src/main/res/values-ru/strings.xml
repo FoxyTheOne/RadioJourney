@@ -59,6 +59,28 @@
     <string name="settings_coffee">Поддержать проект (Boosty)</string>
     <string name="settings_pixabay">В приложении использовались изображения с сайта pixabay.com</string>
 
+    <!-- мои радиостанции: список, который пользователь собирает сам, по ссылкам на потоки -->
+    <string name="homeRadio_goToMyStations">Мои станции</string>
+    <string name="myStations_title">Мои радиостанции</string>
+    <string name="myStations_hint">Станции, которые вы добавили сами, - например, местное радио, которого нет в каталоге. Добавьте ссылку на поток, и станция появится здесь.</string>
+    <string name="myStations_empty">Список пуст. Нажмите +, чтобы добавить станцию по ссылке на поток.</string>
+    <string name="myStations_addButton">Добавить станцию</string>
+    <string name="myStations_added">Станция добавлена</string>
+    <string name="myStations_deleted">Станция удалена</string>
+    <string name="myStations_delete_title">Удалить станцию?</string>
+    <string name="myStations_delete_text">%1$s будет удалена из вашего списка. Сама станция никуда не денется - её можно добавить снова по той же ссылке.</string>
+    <string name="myStations_delete_confirm">Удалить</string>
+    <string name="myStations_delete_cancel">Отмена</string>
+    <string name="addMyStation_title">Новая станция</string>
+    <string name="addMyStation_name">Название станции</string>
+    <string name="addMyStation_url">Ссылка на поток</string>
+    <string name="addMyStation_urlHelp">Обычно ссылка заканчивается на .mp3, .aac или .m3u8 и есть на сайте радиостанции</string>
+    <string name="addMyStation_save">Сохранить</string>
+    <string name="addMyStation_cancel">Отмена</string>
+    <string name="addMyStation_error_name">Введите название - так станция будет называться в списке</string>
+    <string name="addMyStation_error_url">Ссылка должна начинаться с http:// или https://</string>
+    <string name="addMyStation_error_duplicate">Станция с такой ссылкой уже есть в списке</string>
+
     <!-- exoplayer -->
     <string name="notification_channel_name">Поток радиостанции</string>
 
