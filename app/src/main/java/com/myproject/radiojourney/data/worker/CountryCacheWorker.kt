@@ -39,27 +39,35 @@ class CountryCacheWorker @AssistedInject constructor(
     }
 
     override suspend fun doWork(): Result {
-        // Получаем список кодов стран из networkRadioDataSource
-        val countryCodeRemoteList = networkRadioDataSource.getCountryCodeList()
-        if (countryCodeRemoteList.isEmpty()) {
-            Log.d(TAG, "countryCodeRemoteList size = 0. The server is down. Please, try again later")
+        // Получаем список стран из networkRadioDataSource (/json/countries: код, название, число станций)
+        val countryRemoteList = networkRadioDataSource.getCountryList()
+        if (countryRemoteList.isEmpty()) {
+            Log.d(TAG, "countryRemoteList size = 0. The server is down. Please, try again later")
             // Сервер недоступен. Первый экран через несколько секунд покажет диалог о проблеме с сервером
             return Result.failure()
         }
 
-        // Коды стран могут прийти маленькими буквами: переводим в большие и суммируем количество станций по коду страны
-        val stationCountByCountryCode = countryCodeRemoteList
-            .groupBy({ it.name.uppercase() }, { it.stationcount })
-            .mapValues { (_, stationCounts) -> stationCounts.sum() }
+        // Коды стран могут прийти маленькими буквами: переводим в большие и суммируем количество станций по коду страны.
+        // Страны без кода пропускаем - поставить их на карту и запросить их станции всё равно нельзя
+        val countriesByCode = countryRemoteList
+            .filter { !it.countryCode.isNullOrBlank() }
+            .groupBy { it.countryCode!!.uppercase() }
 
-        val listSize = stationCountByCountryCode.size
+        val listSize = countriesByCode.size
         var percentCount = 10
         var countryCount = 0
         val countryList = mutableListOf<Country>()
 
-        for ((countryCode, stationCount) in stationCountByCountryCode) {
-            // Узнаем название страны
-            val countryName = Locale("", countryCode).displayName
+        for ((countryCode, remoteCountries) in countriesByCode) {
+            val stationCount = remoteCountries.sumOf { it.stationCount }
+
+            // Название страны - на языке телефона. Если Android такого кода не знает, он возвращает сам код ("XK"),
+            // и тогда берём английское название, которое прислал сервер: оно же поможет Geocoder найти координаты
+            val localName = Locale("", countryCode).displayName
+            val serverName =
+                remoteCountries.firstNotNullOfOrNull { it.name?.takeIf(String::isNotBlank) }
+            val countryName = if (localName.isBlank() || localName == countryCode) serverName
+                ?: countryCode else localName
 
             // Координаты - из файла assets/country_coordinates.csv, для новых стран - через Geocoder.
             // Страна без координат на карту не попадает (раньше её маркер ставился в точку 0, 0)
@@ -84,7 +92,10 @@ class CountryCacheWorker @AssistedInject constructor(
 
         // Теперь сохраним наши страны в Room (список целиком заменяет старый)
         localRadioDataSource.replaceCountryList(countryList.map { it.toLocal() })
-        Log.d(TAG, "Список стран сохранён в локальную базу данных: size = ${countryList.size} из $listSize")
+        Log.d(
+            TAG,
+            "Список стран сохранён в локальную базу данных: size = ${countryList.size} из $listSize"
+        )
         return Result.success()
     }
 }

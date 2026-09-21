@@ -1,6 +1,6 @@
 package com.myproject.radiojourney.data.dataSource.network.service
 
-import com.myproject.radiojourney.data.dataSource.network.entity.CountryCodeRemote
+import com.myproject.radiojourney.data.dataSource.network.entity.CountryRemote
 import com.myproject.radiojourney.data.dataSource.network.entity.RadioStationRemote
 import com.myproject.radiojourney.data.dataSource.network.entity.StreamInfoResult
 import com.myproject.radiojourney.other.Constants.MAX_STATIONS_COUNT
@@ -20,19 +20,22 @@ import retrofit2.http.Query
 interface IRadioService {
     companion object {
         private const val BASE_PATH = "json"
-        private const val COUNTRY_CODE_PATH = "countrycodes"
+        private const val COUNTRIES_PATH = "countries"
         private const val STATIONS_PATH = "stations"
         private const val BY_COUNTRY_CODE_EXACT_PATH = "bycountrycodeexact"
         private const val URL_PATH = "url"
     }
 
-    // Пример - http://de1.api.radio-browser.info/json/countrycodes?hidebroken=true
-    @GET("$BASE_PATH/{countrycodes}")
-    suspend fun getCountryCodeList(
-        @Path("countrycodes") countryCodes: String = COUNTRY_CODE_PATH,
+    // Пример - https://de1.api.radio-browser.info/json/countries?hidebroken=true
+    // Список стран с числом станций. Раньше - /json/countrycodes, он устарел (DEPRECATED с версии API 0.7.23)
+    @GET("$BASE_PATH/{countries}")
+    suspend fun getCountryList(
+        @Path("countries") countries: String = COUNTRIES_PATH,
+
         // Считать только работающие станции (как и в списке станций ниже)
         @Query("hidebroken") hideBroken: Boolean = true
-    ): List<CountryCodeRemote>
+
+    ): List<CountryRemote>
 
     // Пример - http://de1.api.radio-browser.info/{format}/stations/bycountrycodeexact/{searchterm}
     // Пример - http://de1.api.radio-browser.info/json/stations/bycountrycodeexact/US?hidebroken=true&order=clickcount&reverse=true&limit=500

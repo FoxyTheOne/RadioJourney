@@ -15,20 +15,25 @@ For support, please feel free to contact me at https://www.linkedin.com/in/syeda
 
 // data class сам создаёт equals, hashCode и toString по всем полям - раньше они были написаны вручную (сгенерированы json2kotlin)
 /**
- * Радиостанция в том виде, в котором её присылает сервер (/json/stations/search).
+ * Радиостанция в том виде, в котором её присылает сервер (/json/stations/bycountrycodeexact/{код}).
  *
- * Полей у станции на сервере больше, здесь оставлены только нужные приложению: Gson пропускает остальные
+ * Поля, которых сервер не знает, Gson просто пропускает (например, geo_distance, появившееся в новых версиях API).
+ *
+ * Важно про null: Gson заполняет поля через рефлексию и не проверяет, что Kotlin объявил их не-null.
+ * Если сервер пришлёт null в поле типа String, ошибки не будет - она появится позже, при первом обращении к полю.
+ * Поэтому поля, которые сервер действительно присылает пустыми (null), объявлены с "?"
  */
 data class RadioStationRemote(
     @SerializedName("changeuuid") val changeuuid: String,
     @SerializedName("stationuuid") val stationuuid: String,
-    @SerializedName("serveruuid") val serveruuid: String,
+    @SerializedName("serveruuid") val serveruuid: String?, // сервер присылает null
     @SerializedName("name") val name: String,
     @SerializedName("url") val url: String,
     @SerializedName("url_resolved") var url_resolved: String = "",
     @SerializedName("homepage") val homepage: String,
     @SerializedName("favicon") val favicon: String,
     @SerializedName("tags") val tags: String,
+    // DEPRECATED в документации API: сервер вычисляет его из countrycode. Для кода страны используем countrycode
     @SerializedName("country") val country: String,
     @SerializedName("countrycode") val countrycode: String,
     @SerializedName("iso_3166_2") val iso_3166_2: String,
@@ -53,7 +58,8 @@ data class RadioStationRemote(
     @SerializedName("clickcount") val clickcount: Int,
     @SerializedName("clicktrend") val clicktrend: Int,
     @SerializedName("ssl_error") val ssl_error: Int,
-    @SerializedName("geo_lat") val geo_lat: String,
-    @SerializedName("geo_long") val geo_long: String,
+    // Координаты станции - число или null, если станция их не указала (таких большинство)
+    @SerializedName("geo_lat") val geo_lat: Double?,
+    @SerializedName("geo_long") val geo_long: Double?,
     @SerializedName("has_extended_info") val has_extended_info: Boolean
 )

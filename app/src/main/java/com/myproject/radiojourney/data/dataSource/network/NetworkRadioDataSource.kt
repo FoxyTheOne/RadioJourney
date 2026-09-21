@@ -2,10 +2,10 @@ package com.myproject.radiojourney.data.dataSource.network
 
 import android.os.SystemClock
 import android.util.Log
+import com.myproject.radiojourney.data.dataSource.network.entity.CountryRemote
+import com.myproject.radiojourney.data.dataSource.network.entity.RadioStationRemote
 import com.myproject.radiojourney.data.dataSource.network.service.IRadioService
 import com.myproject.radiojourney.data.dataSource.network.service.IRadioServiceWrapper
-import com.myproject.radiojourney.data.dataSource.network.entity.CountryCodeRemote
-import com.myproject.radiojourney.data.dataSource.network.entity.RadioStationRemote
 import com.myproject.radiojourney.other.Constants.DNS_ATTEMPTS
 import com.myproject.radiojourney.other.Constants.DNS_RETRY_DELAY
 import com.myproject.radiojourney.other.Constants.DNS_SERVER_LIST_NAME
@@ -40,12 +40,12 @@ import javax.inject.Inject
  * (done +) Send a speaking http agent string (e.g. mycoolapp/1.4) -> UserAgentInterceptor
  * (done +) Send /json/url requests for every click the user makes, this helps to mark stations as popular and makes the database more usefull to other people.
  * -> sendGetRequestToMarkRadioStationAsPopular. Когда пользователь кликает по радиостанции, он попадает в HomeRadioFragment с аргументом, запрос отправляется оттуда
- * (ok +) Send feature requests/bugs to github
+ * (ok +) Send feature requests/bugs to GitLab (раньше в документации был GitHub)
  *
  * 4. Continue with the docs of the server
  * I try to keep them all at the same version, so they should always all be the same.
  * Here are some examples of working servers:
- * https://de1.api.radio-browser.info, https://nl.api.radio-browser.info, https://at1.api.radio-browser.info
+ * https://de1.api.radio-browser.info (на сентябрь 2026 в документации остался только он - он же FALLBACK_SERVER в Constants)
  * Click the links to find out about the API. Please remember that any of them may go down in the future, which means that you always should follow the previous steps in your app.
  */
 class NetworkRadioDataSource @Inject constructor(
@@ -55,8 +55,8 @@ class NetworkRadioDataSource @Inject constructor(
         private const val TAG = "NetworkRadioDataSource"
     }
 
-    override suspend fun getCountryCodeList(): List<CountryCodeRemote> =
-        requestFromAnyServer(isValidResult = { it.isNotEmpty() }) { getCountryCodeList() } ?: listOf()
+    override suspend fun getCountryList(): List<CountryRemote> =
+        requestFromAnyServer(isValidResult = { it.isNotEmpty() }) { getCountryList() } ?: listOf()
 
     // Список станций страны. Серверы перебираются по кругу, пока не пройдёт SERVER_SEARCH_TIME
     // (полоса загрузки PROGRESS_TIMEOUT рассчитана так, чтобы не пропасть раньше, чем закончится перебор)
@@ -110,9 +110,9 @@ class NetworkRadioDataSource @Inject constructor(
      *
      * Как читать сигнатуру:
      * - `<T>` - тип ответа. Метод не знает, что именно он получает: список стран, список станций или ответ "ok".
-     *   Тип подставит компилятор по лямбде [request] (для стран T = List<CountryCodeRemote> и т.д.);
+     *   Тип подставит компилятор по лямбде [request] (для стран T = List<CountryRemote> и т.д.);
      * - [request] - `suspend IRadioService.() -> T` - это "лямбда с приёмником": внутри неё `this` - это готовый
-     *   IRadioService нужного сервера, поэтому в вызове пишется просто `{ getCountryCodeList() }`, без имени переменной.
+     *   IRadioService нужного сервера, поэтому в вызове пишется просто `{ getCountryList() }`, без имени переменной.
      *   `suspend` - потому что внутри вызывается suspend-метод Retrofit;
      * - [isValidResult] - что считать удачей. Сервер может ответить 200 OK и прислать пустой список, а нам нужен
      *   следующий сервер. Для стран и станций это `{ it.isNotEmpty() }`, для отметки популярности - `{ it.ok != null }`;
@@ -180,31 +180,32 @@ class NetworkRadioDataSource @Inject constructor(
 
     // do the DNS request
     // suspend + withContext(IO): поиск DNS блокирует поток, а пауза между попытками - delay (не занимает поток, как Thread.sleep)
-    private suspend fun updateDNSList(attemptsLeft: Int = DNS_ATTEMPTS): List<String> = withContext(Dispatchers.IO) {
-        val listDNSResult = mutableListOf<String>()
-        try {
-            // add all round robin servers one by one to select them separately
-            val list = InetAddress.getAllByName(DNS_SERVER_LIST_NAME)
-            for (item in list) {
-                // canonicalHostName делает обратный DNS-запрос. Если он не удался, вместо имени сервера возвращается IP-адрес,
-                // а https-запрос по IP не пройдёт (сертификат выдан на имя) - такие результаты пропускаем
-                val hostName = item.canonicalHostName
-                if (hostName != item.hostAddress) listDNSResult.add(hostName)
+    private suspend fun updateDNSList(attemptsLeft: Int = DNS_ATTEMPTS): List<String> =
+        withContext(Dispatchers.IO) {
+            val listDNSResult = mutableListOf<String>()
+            try {
+                // add all round robin servers one by one to select them separately
+                val list = InetAddress.getAllByName(DNS_SERVER_LIST_NAME)
+                for (item in list) {
+                    // canonicalHostName делает обратный DNS-запрос. Если он не удался, вместо имени сервера возвращается IP-адрес,
+                    // а https-запрос по IP не пройдёт (сертификат выдан на имя) - такие результаты пропускаем
+                    val hostName = item.canonicalHostName
+                    if (hostName != item.hostAddress) listDNSResult.add(hostName)
+                }
+            } catch (e: UnknownHostException) {
+                Log.d(TAG, "DNS: ${e.message}")
             }
-        } catch (e: UnknownHostException) {
-            Log.d(TAG, "DNS: ${e.message}")
-        }
-        Log.d(TAG, "Серверы из DNS: $listDNSResult")
+            Log.d(TAG, "Серверы из DNS: $listDNSResult")
 
-        // Без интернета DNS не отвечает: несколько попыток, а потом сервер, известный из документации radio-browser
-        if (listDNSResult.isNotEmpty()) {
-            listDNSResult
-        } else if (attemptsLeft > 1) {
-            delay(DNS_RETRY_DELAY)
-            updateDNSList(attemptsLeft - 1)
-        } else {
-            Log.d(TAG, "Список серверов не получен, используем $FALLBACK_SERVER")
-            listOf(FALLBACK_SERVER)
+            // Без интернета DNS не отвечает: несколько попыток, а потом сервер, известный из документации radio-browser
+            if (listDNSResult.isNotEmpty()) {
+                listDNSResult
+            } else if (attemptsLeft > 1) {
+                delay(DNS_RETRY_DELAY)
+                updateDNSList(attemptsLeft - 1)
+            } else {
+                Log.d(TAG, "Список серверов не получен, используем $FALLBACK_SERVER")
+                listOf(FALLBACK_SERVER)
+            }
         }
-    }
 }
