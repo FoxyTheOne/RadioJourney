@@ -14,6 +14,7 @@
     <string name="homeRadio_goToFavourites">Favorites</string>
     <string name="homeRadio_mayNotWork">Also selected radio station may not work right now.</string>
     <string name="homeRadio_youAreHere">You are here</string>
+    <string name="homeRadio_closeInfo">Close</string>
 
     <string name="dialogInternetTrouble_title">Some internet trouble!</string>
     <string name="dialogInternetTrouble_title4">Obtained list is empty</string>

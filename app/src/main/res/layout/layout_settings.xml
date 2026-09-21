@@ -104,6 +104,25 @@
                 android:paddingBottom="@dimen/space_beforeOrAfterElement"
                 android:text="@string/settings_text3" />
 
+            <!-- Тот же текст, что в информационном блоке на карте: там его можно закрыть крестиком, а здесь - перечитать -->
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/text_aboutServer"
+                style="@style/login_bottom"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:paddingBottom="@dimen/space_beforeOrAfterElement"
+                android:text="@string/first_screen_text3" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/text_aboutMayNotWork"
+                style="@style/login_bottom"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:paddingBottom="@dimen/space_beforeOrAfterElement"
+                android:text="@string/homeRadio_mayNotWork" />
+
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/text_about4"
                 style="@style/login_bottom"

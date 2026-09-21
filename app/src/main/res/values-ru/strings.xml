@@ -14,6 +14,7 @@
     <string name="homeRadio_goToFavourites">Избранное</string>
     <string name="homeRadio_mayNotWork">Также выбранная радиостанция может не работать в данный момент.</string>
     <string name="homeRadio_youAreHere">Вы здесь</string>
+    <string name="homeRadio_closeInfo">Закрыть</string>
 
     <string name="dialogInternetTrouble_title">Проблема с соединением!</string>
     <string name="dialogInternetTrouble_title4">В ответ на запрос получен пустой список</string>

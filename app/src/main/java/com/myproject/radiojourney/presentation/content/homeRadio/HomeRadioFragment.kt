@@ -394,12 +394,10 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                 mMap.animateCamera(CameraUpdateFactory.zoomOut())
             }
 
-            // Спрятать или показать текст
-            buttonHide.setOnClickListener {
+            // Закрыть информационный блок. Навсегда: текст можно перечитать в "О программе" (кнопка "i").
+            // Раньше блок сворачивался стрелкой и разворачивался обратно
+            buttonCloseInfo.setOnClickListener {
                 viewModel.setIsHideInfoClicked(true)
-            }
-            buttonShow.setOnClickListener {
-                viewModel.setIsHideInfoClicked(false)
             }
         }
         binding?.imageSettings?.setOnClickListener {
@@ -424,7 +422,9 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
 
     private fun subscribeOnFlow() {
         viewLifecycleOwner.collectWhenStarted(viewModel.isInfoHidden) { isHidden ->
-            if (isHidden != null) hideOrShowInfo(isHidden) // null - ещё не прочитано из настроек
+            // Скрыть информационный блок. Состояние хранит HomeRadioViewModel (и записывает в настройки)
+            if (isHidden != null) binding?.linearInfo?.isVisible =
+                !isHidden // null - ещё не прочитано из настроек
         }
 
         // Полоса загрузки плейлиста или подключения к станции: блокируем кнопку избранного и показываем прогресс.
@@ -727,15 +727,6 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             mainViewModel.notJustLaunchedEnableAutoplay()
         }
 
-    }
-
-    // Показать или скрыть информационный блок. Состояние хранит HomeRadioViewModel (и записывает в настройки)
-    private fun hideOrShowInfo(isHidden: Boolean) {
-        binding?.apply {
-            linearSaveToGoogleSettings.isVisible = !isHidden
-            linearUp.isVisible = !isHidden
-            buttonShow.isVisible = isHidden
-        }
     }
 
     // VIEW BINDING -> 3. onDestroyView()
