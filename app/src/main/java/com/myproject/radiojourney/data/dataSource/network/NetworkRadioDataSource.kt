@@ -1,11 +1,14 @@
 package com.myproject.radiojourney.data.dataSource.network
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.SystemClock
 import android.util.Log
-import com.myproject.radiojourney.data.dataSource.network.entity.CountryRemote
-import com.myproject.radiojourney.data.dataSource.network.entity.RadioStationRemote
 import com.myproject.radiojourney.data.dataSource.network.service.IRadioService
 import com.myproject.radiojourney.data.dataSource.network.service.IRadioServiceWrapper
+import com.myproject.radiojourney.data.dataSource.network.entity.CountryRemote
+import com.myproject.radiojourney.data.dataSource.network.entity.RadioStationRemote
 import com.myproject.radiojourney.other.Constants.DNS_ATTEMPTS
 import com.myproject.radiojourney.other.Constants.DNS_RETRY_DELAY
 import com.myproject.radiojourney.other.Constants.DNS_SERVER_LIST_NAME
@@ -15,6 +18,7 @@ import com.myproject.radiojourney.other.Constants.SERVER_IS_DOWN
 import com.myproject.radiojourney.other.Constants.SERVER_RETRY_DELAY
 import com.myproject.radiojourney.other.Constants.SERVER_SEARCH_TIME
 import com.myproject.radiojourney.other.Resource
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -49,7 +53,8 @@ import javax.inject.Inject
  * Click the links to find out about the API. Please remember that any of them may go down in the future, which means that you always should follow the previous steps in your app.
  */
 class NetworkRadioDataSource @Inject constructor(
-    private val radioServiceWrapper: IRadioServiceWrapper
+    private val radioServiceWrapper: IRadioServiceWrapper,
+    @ApplicationContext private val context: Context
 ) : INetworkRadioDataSource {
     companion object {
         private const val TAG = "NetworkRadioDataSource"
@@ -167,6 +172,13 @@ class NetworkRadioDataSource @Inject constructor(
                 Log.d(TAG, "Сервер $baseURL: ${e.javaClass.simpleName}: ${e.message}")
             }
 
+            // Телефон вообще не подключён к сети (режим полёта, выключены Wi-Fi и мобильные данные) - перебирать серверы
+            // бессмысленно: каждый ответит той же ошибкой. Раньше пользователь ждал до конца SERVER_SEARCH_TIME
+            if (!hasNetworkConnection()) {
+                Log.d(TAG, "Нет подключения к сети - перебор серверов прекращаем")
+                return null
+            }
+
             // Пауза перед следующей попыткой - чтобы не завалить серверы запросами, если они отвечают ошибкой мгновенно.
             // Условие то же, что у цикла: паузу делаем, только если следующая попытка вообще будет.
             // delay() не занимает поток (в отличие от Thread.sleep) и умеет отменяться вместе с корутиной
@@ -176,6 +188,14 @@ class NetworkRadioDataSource @Inject constructor(
         // Никто не ответил. Что это значит для пользователя, решает вызывающий код:
         // для станций - Resource.error и диалог "сервер недоступен", для стран - пустой список
         return null
+    }
+
+    // Есть ли у телефона подключение, через которое вообще можно выйти в интернет (Wi-Fi, мобильная сеть, Ethernet).
+    // Работает ли сам интернет, не проверяем: это и выясняет перебор серверов
+    private fun hasNetworkConnection(): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val capabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork) ?: return false
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 
     // do the DNS request
@@ -200,7 +220,7 @@ class NetworkRadioDataSource @Inject constructor(
             // Без интернета DNS не отвечает: несколько попыток, а потом сервер, известный из документации radio-browser
             if (listDNSResult.isNotEmpty()) {
                 listDNSResult
-            } else if (attemptsLeft > 1) {
+            } else if (attemptsLeft > 1 && hasNetworkConnection()) { // без сети повторять DNS-запрос незачем
                 delay(DNS_RETRY_DELAY)
                 updateDNSList(attemptsLeft - 1)
             } else {
