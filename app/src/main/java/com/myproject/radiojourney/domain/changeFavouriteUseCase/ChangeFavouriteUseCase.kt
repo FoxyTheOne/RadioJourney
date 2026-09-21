@@ -2,7 +2,7 @@ package com.myproject.radiojourney.domain.changeFavouriteUseCase
 
 import com.myproject.radiojourney.domain.iRepository.IMainRadioStationRepository
 import com.myproject.radiojourney.domain.model.RadioStation
-import com.myproject.radiojourney.domain.сhangeFavouriteUseCase.IChangeFavouriteUseCase
+import com.myproject.radiojourney.domain.changeFavouriteUseCase.IChangeFavouriteUseCase
 import javax.inject.Inject
 
 /**

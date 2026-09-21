@@ -8,7 +8,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import com.google.android.gms.maps.model.CameraPosition
 import com.myproject.radiojourney.data.worker.CountryCacheScheduler
-import com.myproject.radiojourney.domain.сhangeFavouriteUseCase.IChangeFavouriteUseCase
+import com.myproject.radiojourney.domain.changeFavouriteUseCase.IChangeFavouriteUseCase
 import com.myproject.radiojourney.domain.firstScreenLoadingUseCase.ILoginScreenUseCase
 import com.myproject.radiojourney.domain.mainRadioUseCase.IMainRadioUseCase
 import com.myproject.radiojourney.R

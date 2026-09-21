@@ -34,9 +34,9 @@ object Constants {
     // Запросы к серверу radio-browser (RadioServiceWrapper, NetworkRadioDataSource).
     // Все константы, которые влияют друг на друга по времени, собраны здесь, чтобы их можно было сравнить глазами
     const val NETWORK_CONNECT_TIMEOUT = 5_000L // подключение к одному адресу сервера
-    const val NETWORK_READ_TIMEOUT = 15_000L // пауза в получении данных
+    const val NETWORK_READ_TIMEOUT = 10_000L // пауза в получении данных
     const val NETWORK_CALL_TIMEOUT = 30_000L // один запрос целиком
-    const val SERVER_SEARCH_TIME = 40_000L // сколько времени перебираем серверы, прежде чем сдаться
+    const val SERVER_SEARCH_TIME = 35_000L // сколько времени перебираем серверы, прежде чем сдаться
     const val SERVER_RETRY_DELAY = 1_000L // пауза перед попыткой на следующем сервере
     const val DNS_RETRY_DELAY = 1_000L // пауза перед повторным DNS-запросом списка серверов
     const val DNS_ATTEMPTS =
@@ -51,7 +51,7 @@ object Constants {
     // DNS (DNS_ATTEMPTS попыток с паузой DNS_RETRY_DELAY) + перебор серверов (SERVER_SEARCH_TIME)
     // + последний начатый запрос, который успел стартовать до конца перебора (NETWORK_CALL_TIMEOUT) + запас
     const val PROGRESS_TIMEOUT =
-        DNS_ATTEMPTS * DNS_RETRY_DELAY + SERVER_SEARCH_TIME + NETWORK_CALL_TIMEOUT + 20_000L
+        DNS_ATTEMPTS * DNS_RETRY_DELAY + SERVER_SEARCH_TIME + NETWORK_CALL_TIMEOUT + 5_000L
 
     // Через сколько убрать уведомление, если радио стоит на паузе (или остановлено ошибкой)
     const val PAUSED_NOTIFICATION_TIMEOUT = 5 * 60_000L

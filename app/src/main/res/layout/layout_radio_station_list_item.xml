@@ -19,7 +19,9 @@
         android:paddingEnd="@dimen/space_beforeOrAfterElement"
         tools:text="Radio station name" />
 
+    <!-- Строка "число прослушиваний". id нужен, чтобы спрятать её у своих станций (у них этого числа нет) -->
     <LinearLayout
+        android:id="@+id/linear_radioStationClickCount"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
