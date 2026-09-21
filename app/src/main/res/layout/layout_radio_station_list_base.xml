@@ -47,7 +47,7 @@
                 android:layout_width="48dp"
                 android:layout_height="match_parent"
                 android:paddingTop="@dimen/space_small"
-                android:paddingBottom="@dimen/space_small"/>
+                android:paddingBottom="@dimen/space_small" />
         </LinearLayout>
 
         <!-- View только для обычных списков, не My favourites -->
@@ -72,11 +72,11 @@
             style="@style/login_bottom_orange"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@color/orange_transparent"
             android:gravity="center"
             android:padding="@dimen/space_beforeOrAfterElement"
-            android:background="@color/orange_transparent"
-            android:textColor="@color/white"
             android:text="@string/radioStationList_title_download"
+            android:textColor="@color/white"
             app:layout_constraintBottom_toTopOf="@+id/recyclerView_radioStationList"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

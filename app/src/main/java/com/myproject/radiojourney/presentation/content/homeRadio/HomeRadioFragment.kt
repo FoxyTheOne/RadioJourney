@@ -13,6 +13,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
 import androidx.appcompat.content.res.AppCompatResources
@@ -25,7 +26,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.fragment.findNavController
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
@@ -39,6 +39,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.tasks.CancellationTokenSource
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.LayoutHomeRadioBinding
 import com.myproject.radiojourney.other.Constants.MAX_STATIONS_COUNT
@@ -47,6 +48,7 @@ import com.myproject.radiojourney.presentation.MainViewModel
 import com.myproject.radiojourney.presentation.common.InfoDialog
 import com.myproject.radiojourney.presentation.common.PermissionSessionState
 import com.myproject.radiojourney.presentation.common.collectWhenStarted
+import com.myproject.radiojourney.presentation.common.navigateSafely
 import com.myproject.radiojourney.presentation.common.showPermissionDeniedDialog
 import com.myproject.radiojourney.presentation.common.showPermissionRationale
 import com.myproject.radiojourney.presentation.model.CountryPresentation
@@ -173,6 +175,12 @@ class HomeRadioFragment : Fragment(), OnMapReadyCallback {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // Карта - первый экран в стеке, и системная кнопка "Назад" здесь закрывает приложение.
+        // Нажать её можно случайно, поэтому переспрашиваем. Колбэк привязан к viewLifecycleOwner:
+        // на других экранах (избранное, списки) "Назад" работает как обычно - возвращает на карту
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) { confirmExit() }
+
 
         // Если каким-то образом мы попали на этот фрагмент минуя первый, загрузочный фрагмент - стоит ещё раз проверить разрешения.
         // Сами запрашиваем только один раз за запуск приложения: карта создаётся заново при каждом возвращении на неё
@@ -396,22 +404,13 @@ class HomeRadioFragment : Fragment(), OnMapReadyCallback {
             }
         }
         binding?.imageSettings?.setOnClickListener {
-            if (this.findNavController().currentDestination?.id == R.id.homeRadioFragment) {
-                this.findNavController()
-                    .navigate(R.id.action_homeRadioFragment_to_settingsFragment)
-            }
+            navigateSafely(R.id.action_homeRadioFragment_to_settingsFragment)
         }
         binding?.buttonGoToMyStations?.setOnClickListener {
-            if (this.findNavController().currentDestination?.id == R.id.homeRadioFragment) {
-                this.findNavController()
-                    .navigate(R.id.action_homeRadioFragment_to_myStationsFragment)
-            }
+            navigateSafely(R.id.action_homeRadioFragment_to_myStationsFragment)
         }
         binding?.buttonGoToFavourites?.setOnClickListener {
-            if (this.findNavController().currentDestination?.id == R.id.homeRadioFragment) {
-                this.findNavController()
-                    .navigate(R.id.action_homeRadioFragment_to_favouriteListFragment)
-            }
+            navigateSafely(R.id.action_homeRadioFragment_to_favouriteListFragment)
         }
     }
 
@@ -662,14 +661,12 @@ class HomeRadioFragment : Fragment(), OnMapReadyCallback {
                         )
 
                     // Перенесём countryCode на RadioListFragment для запроса списка станций
-                    val direction =
+                    navigateSafely(
                         HomeRadioFragmentDirections.actionHomeRadioFragmentToRadioListFragment(
                             country.countryCode,
                             country.countryName
                         )
-                    if (this.findNavController().currentDestination?.id == R.id.homeRadioFragment) {
-                        this.findNavController().navigate(direction)
-                    }
+                    )
 
                 }
             }
@@ -722,6 +719,16 @@ class HomeRadioFragment : Fragment(), OnMapReadyCallback {
             mainViewModel.notJustLaunchedEnableAutoplay()
         }
 
+    }
+
+    // Окно "Выйти из приложения?". Раньше похожее окно открывала кнопка выхода на верхней полосе (LogOutDialogFragment
+    // со своей разметкой), теперь это обычный MaterialAlertDialogBuilder - как остальные окна приложения
+    private fun confirmExit() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.exit_title)
+            .setPositiveButton(R.string.exit_confirm) { _, _ -> requireActivity().finish() }
+            .setNegativeButton(R.string.exit_cancel, null)
+            .show()
     }
 
     // VIEW BINDING -> 3. onDestroyView()

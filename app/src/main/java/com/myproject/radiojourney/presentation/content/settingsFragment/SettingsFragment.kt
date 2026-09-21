@@ -7,9 +7,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
-import androidx.navigation.fragment.findNavController
-import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.LayoutSettingsBinding
+import com.myproject.radiojourney.presentation.common.popBackStackSafely
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
@@ -38,9 +37,7 @@ class SettingsFragment : Fragment() {
 
     private fun initListeners() {
         // Назад на карту - так же, как системная кнопка "Назад" (см. комментарий в app_navigation.xml)
-        binding?.imageArrowBack?.setOnClickListener {
-            if (findNavController().currentDestination?.id == R.id.settingsFragment) findNavController().popBackStack()
-        }
+        binding?.imageArrowBack?.setOnClickListener { popBackStackSafely() }
         binding?.linearForCoffee?.setOnClickListener {
             val browserIntent =
                 Intent(Intent.ACTION_VIEW, "https://boosty.to/foxynest/donate".toUri())

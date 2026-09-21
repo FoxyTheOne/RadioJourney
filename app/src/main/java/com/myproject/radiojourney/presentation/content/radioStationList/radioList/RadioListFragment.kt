@@ -8,12 +8,13 @@ import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
-import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.presentation.MainViewModel
 import com.myproject.radiojourney.presentation.common.InfoDialog
 import com.myproject.radiojourney.presentation.common.collectWhenStarted
+import com.myproject.radiojourney.presentation.common.navigateSafely
+import com.myproject.radiojourney.presentation.common.popBackStackSafely
 import com.myproject.radiojourney.presentation.content.radioStationList.adapter.ListRadioStationAdapter
 import com.myproject.radiojourney.presentation.content.radioStationList.base.BaseRadioListFragmentAbstract
 import com.myproject.radiojourney.presentation.model.RadioStationPresentation
@@ -63,9 +64,8 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
         }
 
         // Назад на карту - так же, как системная кнопка "Назад" (см. комментарий в app_navigation.xml)
-        view.findViewById<AppCompatImageView>(R.id.image_arrowBack).setOnClickListener {
-            if (findNavController().currentDestination?.id == R.id.radioListFragment) findNavController().popBackStack()
-        }
+        view.findViewById<AppCompatImageView>(R.id.image_arrowBack)
+            .setOnClickListener { popBackStackSafely() }
 
         subscribeOnFlow()
     }
@@ -119,11 +119,11 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
     }
 
     private fun openHomeRadio(radioStation: RadioStationPresentation) {
-        if (findNavController().currentDestination?.id == R.id.radioListFragment) {
-            findNavController().navigate(
-                RadioListFragmentDirections.actionRadioListFragmentToHomeRadioFragment(radioStation)
+        navigateSafely(
+            RadioListFragmentDirections.actionRadioListFragmentToHomeRadioFragment(
+                radioStation
             )
-        }
+        )
     }
 
     override fun onDestroyView() {

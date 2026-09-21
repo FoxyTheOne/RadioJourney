@@ -9,7 +9,6 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
-import androidx.navigation.fragment.findNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
@@ -18,6 +17,8 @@ import com.myproject.radiojourney.databinding.LayoutMyStationsBinding
 import com.myproject.radiojourney.other.Constants.MY_STATIONS_COUNTRY_CODE
 import com.myproject.radiojourney.presentation.MainViewModel
 import com.myproject.radiojourney.presentation.common.collectWhenStarted
+import com.myproject.radiojourney.presentation.common.navigateSafely
+import com.myproject.radiojourney.presentation.common.popBackStackSafely
 import com.myproject.radiojourney.presentation.model.RadioStationPresentation
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -113,16 +114,16 @@ class MyStationsFragment : Fragment() {
     // Включаем станцию: возвращаемся на главный экран и передаём её туда аргументом - так же,
     // как это делают список станций страны и список избранного
     private fun openHomeRadioAndPlay(station: RadioStationPresentation) {
-        if (findNavController().currentDestination?.id == R.id.myStationsFragment) {
-            findNavController().navigate(
-                MyStationsFragmentDirections.actionMyStationsFragmentToHomeRadioFragment(station)
+        navigateSafely(
+            MyStationsFragmentDirections.actionMyStationsFragmentToHomeRadioFragment(
+                station
             )
-        }
+        )
     }
 
     // Назад на карту - так же, как системная кнопка "Назад" (см. комментарий в app_navigation.xml)
     private fun goToHomeRadio() {
-        if (findNavController().currentDestination?.id == R.id.myStationsFragment) findNavController().popBackStack()
+        popBackStackSafely()
     }
 
     // Если в плеере сейчас плейлист своих станций, он держит их старые названия и ссылки - просим перечитать список.

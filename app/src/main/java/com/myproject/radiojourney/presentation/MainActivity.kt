@@ -30,6 +30,7 @@ import com.myproject.radiojourney.presentation.common.InfoDialog
 import com.myproject.radiojourney.presentation.common.PermissionSessionState
 import com.myproject.radiojourney.presentation.common.collectWhenStarted
 import com.myproject.radiojourney.presentation.common.isInternetAvailable
+import com.myproject.radiojourney.presentation.common.navigateSafely
 import com.myproject.radiojourney.presentation.common.showPermissionDeniedDialog
 import com.myproject.radiojourney.presentation.common.showPermissionRationale
 import com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioFragmentDirections
@@ -299,11 +300,7 @@ class MainActivity : AppCompatActivity() {
 
         // При нажатии на плейер, открывается список радиостанций в текущем плейлисте
         swipeRadioStationAdapter.setItemClickListener {
-            val direction =
-                HomeRadioFragmentDirections.actionHomeRadioFragmentToCurrentPlaylistFragment()
-            if (navController.currentDestination?.id == R.id.homeRadioFragment) {
-                navController.navigate(direction)
-            }
+            navController.navigateSafely(HomeRadioFragmentDirections.actionHomeRadioFragmentToCurrentPlaylistFragment())
         }
 
         // Let's add a listener to our NavController to hide BottomBar when we are on the first page, where we are cashing

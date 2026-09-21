@@ -8,13 +8,14 @@ import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
-import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.presentation.MainViewModel
 import com.myproject.radiojourney.presentation.common.InfoDialog
 import com.myproject.radiojourney.presentation.common.collectWhenStarted
+import com.myproject.radiojourney.presentation.common.navigateSafely
+import com.myproject.radiojourney.presentation.common.popBackStackSafely
 import com.myproject.radiojourney.presentation.content.radioStationList.base.BaseRadioListFragmentAbstract
 import com.myproject.radiojourney.presentation.model.RadioStationPresentation
 import dagger.hilt.android.AndroidEntryPoint
@@ -71,9 +72,7 @@ class FavouriteListFragment : BaseRadioListFragmentAbstract() {
 
         // Назад на карту - так же, как системная кнопка "Назад" (см. комментарий в app_navigation.xml)
         // (проверка экрана - на случай двойного нажатия: второе закрыло бы и саму карту)
-        val goToHomeRadio = View.OnClickListener {
-            if (findNavController().currentDestination?.id == R.id.favouriteListFragment) findNavController().popBackStack()
-        }
+        val goToHomeRadio = View.OnClickListener { popBackStackSafely() }
         view.findViewById<AppCompatImageView>(R.id.image_arrowBack)
             .setOnClickListener(goToHomeRadio)
         textFavouritesEmpty.setOnClickListener(goToHomeRadio)
@@ -121,13 +120,11 @@ class FavouriteListFragment : BaseRadioListFragmentAbstract() {
     }
 
     private fun openHomeRadio(radioStation: RadioStationPresentation) {
-        if (findNavController().currentDestination?.id == R.id.favouriteListFragment) {
-            findNavController().navigate(
-                FavouriteListFragmentDirections.actionFavouriteListFragmentToHomeRadioFragment(
-                    radioStation
-                )
+        navigateSafely(
+            FavouriteListFragmentDirections.actionFavouriteListFragmentToHomeRadioFragment(
+                radioStation
             )
-        }
+        )
     }
 
     override fun onDestroyView() {

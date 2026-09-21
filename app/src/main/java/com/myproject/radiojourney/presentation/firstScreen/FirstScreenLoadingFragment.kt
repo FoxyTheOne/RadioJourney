@@ -15,19 +15,19 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.fragment.findNavController
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.LayoutFirstScreenLoadingBinding
-import com.myproject.radiojourney.presentation.common.PermissionSessionState
 import com.myproject.radiojourney.presentation.common.InfoDialog
+import com.myproject.radiojourney.presentation.common.PermissionSessionState
 import com.myproject.radiojourney.presentation.common.collectWhenStarted
+import com.myproject.radiojourney.presentation.common.navigateSafely
 import com.myproject.radiojourney.presentation.common.showPermissionDeniedDialog
 import com.myproject.radiojourney.presentation.common.showPermissionRationale
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * Фрагмент для загрузки и входа в приложение.
@@ -155,10 +155,7 @@ class FirstScreenLoadingFragment : Fragment() {
                 ) == PackageManager.PERMISSION_GRANTED
 
     private fun openHomeRadio() {
-        if (this.findNavController().currentDestination?.id == R.id.firstScreenLoadingFragment) {
-            this.findNavController()
-                .navigate(R.id.action_firstScreenLoadingFragment_to_homeRadioFragment)
-        }
+        navigateSafely(R.id.action_firstScreenLoadingFragment_to_homeRadioFragment)
     }
 
     private fun subscribeOnFlow() {

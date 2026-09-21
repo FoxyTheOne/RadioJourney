@@ -12,6 +12,9 @@
     <string name="homeRadio_mayNotWork">Также выбранная радиостанция может не работать в данный момент.</string>
     <string name="homeRadio_youAreHere">Вы здесь</string>
     <string name="homeRadio_closeInfo">Закрыть</string>
+    <string name="exit_title">Выйти из приложения?</string>
+    <string name="exit_confirm">Выйти</string>
+    <string name="exit_cancel">Отмена</string>
 
     <string name="dialogInternetTrouble_title">Проблема с соединением!</string>
     <string name="dialogInternetTrouble_title4">В ответ на запрос получен пустой список</string>
