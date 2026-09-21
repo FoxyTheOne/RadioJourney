@@ -216,7 +216,10 @@ class MainActivity : AppCompatActivity() {
                     // экран уходил в фон (collectWhenStarted переставал получать события) - тогда станция наконец начинала играть.
                     // Сразу после запуска приложения (isNotJustLaunched == false) свайп только выбирает станцию, включит её кнопка play
                     if (isUserSwiping && mainViewModel.isNotJustLaunched.value) {
-                        Log.d(TAG, "PLAYLIST_UPDATE: 4.$TAG. onPageSelected() - пользователь выбрал свайпом ${station.stationName}")
+                        Log.d(
+                            TAG,
+                            "PLAYLIST_UPDATE: 4.$TAG. onPageSelected() - пользователь выбрал свайпом ${station.stationName}"
+                        )
                         mainViewModel.playOrToggleSong(station)
                     }
                 }
@@ -520,7 +523,8 @@ class MainActivity : AppCompatActivity() {
                             it.countryCode == curPlayingSong.mediaMetadata.subtitle.toString()
                 }
                 val knownIndex = if (requestedIndex != -1) requestedIndex else curPlayingIndex
-                val startPosition = if (knownIndex != -1) knownIndex else radioStations.startStationIndex()
+                val startPosition =
+                    if (knownIndex != -1) knownIndex else radioStations.startStationIndex()
                 val vpSong = binding?.vpSong
                 if (vpSong != null && vpSong.currentItem != startPosition) {
                     vpSong.setCurrentItem(

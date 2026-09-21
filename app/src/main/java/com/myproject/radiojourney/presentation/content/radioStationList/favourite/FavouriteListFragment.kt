@@ -69,15 +69,10 @@ class FavouriteListFragment : BaseRadioListFragmentAbstract() {
         infoDialog = InfoDialog(requireContext())
         infoDialog.showIfNoInternet()
 
+        // Назад на карту - так же, как системная кнопка "Назад" (см. комментарий в app_navigation.xml)
+        // (проверка экрана - на случай двойного нажатия: второе закрыло бы и саму карту)
         val goToHomeRadio = View.OnClickListener {
-            // Возвращаемся на карту, которая уже есть в стеке. Раньше здесь был navigate(): он открывал ещё одну карту
-            // поверх старой, и с каждым заходом в избранное стек рос (системная кнопка "Назад" проходила их все по очереди)
-            val navController = findNavController()
-            if (navController.currentDestination?.id == R.id.favouriteListFragment &&
-                !navController.popBackStack(R.id.homeRadioFragment, false)
-            ) {
-                navController.navigate(R.id.action_favouriteListFragment_to_homeRadioFragment)
-            }
+            if (findNavController().currentDestination?.id == R.id.favouriteListFragment) findNavController().popBackStack()
         }
         view.findViewById<AppCompatImageView>(R.id.image_arrowBack)
             .setOnClickListener(goToHomeRadio)

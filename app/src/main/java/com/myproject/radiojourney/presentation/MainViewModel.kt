@@ -7,11 +7,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import com.google.android.gms.maps.model.CameraPosition
+import com.myproject.radiojourney.R
 import com.myproject.radiojourney.data.worker.CountryCacheScheduler
 import com.myproject.radiojourney.domain.changeFavouriteUseCase.IChangeFavouriteUseCase
 import com.myproject.radiojourney.domain.firstScreenLoadingUseCase.ILoginScreenUseCase
 import com.myproject.radiojourney.domain.mainRadioUseCase.IMainRadioUseCase
-import com.myproject.radiojourney.R
 import com.myproject.radiojourney.other.Constants.ADD_SONGS
 import com.myproject.radiojourney.other.Constants.CANCEL_PLAYLIST_DOWNLOAD
 import com.myproject.radiojourney.other.Constants.COUNTRY_CODE_ID
@@ -32,14 +32,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -96,7 +96,8 @@ class MainViewModel @Inject constructor(
 
     // Иногда сбивается и в уведомлении показывает правильную станцию, а в плейере - нет. Страховка: MainActivity ещё раз переключает ViewPager
     private val _switchViewPagerOnceAgain = Channel<RadioStationPresentation>(Channel.CONFLATED)
-    val switchViewPagerOnceAgain: Flow<RadioStationPresentation> = _switchViewPagerOnceAgain.receiveAsFlow()
+    val switchViewPagerOnceAgain: Flow<RadioStationPresentation> =
+        _switchViewPagerOnceAgain.receiveAsFlow()
 
     // Состояние плеера и станция в плеере
     val playbackState: StateFlow<PlaybackStateInfo?> = musicServiceConnection.playbackState
@@ -104,7 +105,8 @@ class MainViewModel @Inject constructor(
 
     // Сообщения об ошибках: подключение к сервису, сеть, долгая загрузка
     private val _errorMessages = Channel<String>(Channel.BUFFERED)
-    val errorMessages: Flow<String> = merge(_errorMessages.receiveAsFlow(), musicServiceConnection.errorMessages)
+    val errorMessages: Flow<String> =
+        merge(_errorMessages.receiveAsFlow(), musicServiceConnection.errorMessages)
 
     private val _loadingState = MutableStateFlow(LoadingState.NONE)
     val loadingState: StateFlow<LoadingState> = _loadingState.asStateFlow()
@@ -133,7 +135,8 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             // Данные подтягиваются из MusicLibrarySessionCallback.onGetChildren() в MusicService.
             // MediaItem (media3) -> станция domain -> признак избранного из Room -> станция для экрана
-            val radioStations = mainRadioInteractor.withFavouriteFlags(children.map { it.toRadioStation() })
+            val radioStations =
+                mainRadioInteractor.withFavouriteFlags(children.map { it.toRadioStation() })
             val version = (_playlist.value?.version ?: 0) + 1
             _playlist.value = Playlist(radioStations.map { it.toPresentation() }, version)
             Log.d(TAG, "PLAYLIST_UPDATE: 3.$TAG, onChildrenLoaded(). Данные загружены")
@@ -185,12 +188,21 @@ class MainViewModel @Inject constructor(
                 playbackState.isPlaying -> {
                     // Станция одна и та же, но одна из них из избранного, а другая нет (разные плейлисты) - включаем её заново,
                     // иначе в уведомлении и в плейере окажутся разные плейлисты
-                    val isCurCountryCodeFAV = curPlayingSong.value?.mediaMetadata?.subtitle.toString().endsWith("_FAV", true)
+                    val isCurCountryCodeFAV =
+                        curPlayingSong.value?.mediaMetadata?.subtitle.toString()
+                            .endsWith("_FAV", true)
                     val isToggleCountryCodeFAV = mediaItem.countryCode.endsWith("_FAV", true)
                     if (isCurCountryCodeFAV != isToggleCountryCodeFAV) {
-                        Log.d(TAG, "Станция одна и та же, но одна из них не из избранного: ${mediaItem.stationName}, ${mediaItem.countryCode}")
+                        Log.d(
+                            TAG,
+                            "Станция одна и та же, но одна из них не из избранного: ${mediaItem.stationName}, ${mediaItem.countryCode}"
+                        )
                         requestedStation = mediaItem
-                        musicServiceConnection.playFromMediaId(mediaItem.stationuuid, mediaItem.stationName, mediaItem.countryCode)
+                        musicServiceConnection.playFromMediaId(
+                            mediaItem.stationuuid,
+                            mediaItem.stationName,
+                            mediaItem.countryCode
+                        )
                     }
 
                     if (toggle) musicServiceConnection.pause()
@@ -206,7 +218,11 @@ class MainViewModel @Inject constructor(
             // if we want to play another song
             Log.d(TAG, "Включаем другую станцию ${mediaItem.stationName}")
             requestedStation = mediaItem
-            musicServiceConnection.playFromMediaId(mediaItem.stationuuid, mediaItem.stationName, mediaItem.countryCode)
+            musicServiceConnection.playFromMediaId(
+                mediaItem.stationuuid,
+                mediaItem.stationName,
+                mediaItem.countryCode
+            )
             saveLastUsedRadioStationUrlAndCode(mediaItem.urlResolved, mediaItem.countryCode)
             _switchViewPagerOnceAgain.trySend(mediaItem)
         }
@@ -233,7 +249,8 @@ class MainViewModel @Inject constructor(
     fun showConnectingProgress() = showProgress(LoadingState.CONNECTING_STATION)
 
     private fun showProgress(state: LoadingState) {
-        connectingProgressShownAt = if (state == LoadingState.CONNECTING_STATION) SystemClock.elapsedRealtime() else null
+        connectingProgressShownAt =
+            if (state == LoadingState.CONNECTING_STATION) SystemClock.elapsedRealtime() else null
         _loadingState.value = state
 
         // Страховка: полоса загрузки перекрывает весь экран, и если по какой-то причине её не убрали,
@@ -241,7 +258,10 @@ class MainViewModel @Inject constructor(
         progressTimeoutJob?.cancel()
         progressTimeoutJob = viewModelScope.launch {
             delay(PROGRESS_TIMEOUT)
-            Log.d(TAG, "Прогресс висит дольше $PROGRESS_TIMEOUT мс - прячем его и показываем ошибку")
+            Log.d(
+                TAG,
+                "Прогресс висит дольше $PROGRESS_TIMEOUT мс - прячем его и показываем ошибку"
+            )
             _errorMessages.trySend("Loading is taking too long. Please check your internet connection and try again")
             if (state == LoadingState.DOWNLOADING_PLAYLIST) {
                 // Отменяем загрузку в сервисе, чтобы её результат (например, диалог "получен пустой список")
@@ -289,7 +309,10 @@ class MainViewModel @Inject constructor(
     // Сообщить всем экранам, что станция добавлена в избранное или убрана из него (изменение в базе уже сделано)
     fun notifyFavouriteChanged(station: RadioStationPresentation, isFavourite: Boolean) {
         // В плейлисте избранного код страны с суффиксом "_FAV" - в самом событии он не нужен (по нему список избранного показывает страну)
-        val changedStation = station.copy(isStationInFavourite = isFavourite, countryCode = station.countryCode.removeSuffix("_FAV"))
+        val changedStation = station.copy(
+            isStationInFavourite = isFavourite,
+            countryCode = station.countryCode.removeSuffix("_FAV")
+        )
         _favouriteChanges.tryEmit(FavouriteChange(changedStation, isFavourite))
 
         // Звезда в плейлисте плеера: создаём новый список с изменённой станцией. Раньше MainActivity меняла поле

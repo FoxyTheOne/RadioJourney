@@ -35,9 +35,12 @@ class CurrentPlaylistFragment : BaseRadioListFragmentAbstract() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        view.findViewById<AppCompatTextView>(R.id.text_myFavorites_title).text = getString(R.string.currentPlaylist_title)
-        view.findViewById<AppCompatTextView>(R.id.text_radioStationDialogTitleSelect).isVisible = false
-        view.findViewById<AppCompatTextView>(R.id.text_radioStationDialogTitleDownload).isVisible = false
+        view.findViewById<AppCompatTextView>(R.id.text_myFavorites_title).text =
+            getString(R.string.currentPlaylist_title)
+        view.findViewById<AppCompatTextView>(R.id.text_radioStationDialogTitleSelect).isVisible =
+            false
+        view.findViewById<AppCompatTextView>(R.id.text_radioStationDialogTitleDownload).isVisible =
+            false
         recyclerViewRadioStationList = view.findViewById(R.id.recyclerView_radioStationList)
 
         infoDialog = InfoDialog(requireContext())
@@ -51,7 +54,9 @@ class CurrentPlaylistFragment : BaseRadioListFragmentAbstract() {
                 // Открываем по клику другой фрагмент, передаём туда нашу радиостанцию
                 if (findNavController().currentDestination?.id == R.id.currentPlaylistFragment) {
                     findNavController().navigate(
-                        CurrentPlaylistFragmentDirections.actionCurrentPlaylistFragmentToHomeRadioFragment(radioStation)
+                        CurrentPlaylistFragmentDirections.actionCurrentPlaylistFragmentToHomeRadioFragment(
+                            radioStation
+                        )
                     )
                 }
             }
@@ -73,10 +78,9 @@ class CurrentPlaylistFragment : BaseRadioListFragmentAbstract() {
             }
         }
 
+        // Назад на карту - так же, как системная кнопка "Назад" (см. комментарий в app_navigation.xml)
         view.findViewById<AppCompatImageView>(R.id.image_arrowBack).setOnClickListener {
-            if (findNavController().currentDestination?.id == R.id.currentPlaylistFragment) {
-                findNavController().navigate(R.id.action_currentPlaylistFragment_to_homeRadioFragment)
-            }
+            if (findNavController().currentDestination?.id == R.id.currentPlaylistFragment) findNavController().popBackStack()
         }
     }
 

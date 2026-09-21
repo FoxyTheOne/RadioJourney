@@ -11,12 +11,12 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import com.myproject.radiojourney.R
-import com.myproject.radiojourney.presentation.model.RadioStationPresentation
 import com.myproject.radiojourney.presentation.MainViewModel
 import com.myproject.radiojourney.presentation.common.InfoDialog
 import com.myproject.radiojourney.presentation.common.collectWhenStarted
 import com.myproject.radiojourney.presentation.content.radioStationList.adapter.ListRadioStationAdapter
 import com.myproject.radiojourney.presentation.content.radioStationList.base.BaseRadioListFragmentAbstract
+import com.myproject.radiojourney.presentation.model.RadioStationPresentation
 import com.myproject.radiojourney.utils.extension.startStationIndex
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -41,13 +41,15 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        view.findViewById<AppCompatTextView>(R.id.text_myFavorites_title).text = viewModel.countryName
+        view.findViewById<AppCompatTextView>(R.id.text_myFavorites_title).text =
+            viewModel.countryName
 
         textRadioListSecondTitleSelect = view.findViewById(R.id.text_radioStationDialogTitleSelect)
         textRadioListSecondTitleSelect.isVisible = true
         textRadioListSecondTitleSelect.text = getString(R.string.radioStationList_title_loading)
 
-        textRadioListSecondTitleDownload = view.findViewById(R.id.text_radioStationDialogTitleDownload)
+        textRadioListSecondTitleDownload =
+            view.findViewById(R.id.text_radioStationDialogTitleDownload)
         textRadioStationsEmpty = view.findViewById(R.id.text_radioStationsEmpty)
         recyclerViewRadioStationList = view.findViewById(R.id.recyclerView_radioStationList)
 
@@ -60,10 +62,9 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
             openHomeRadio(radioStation)
         }
 
+        // Назад на карту - так же, как системная кнопка "Назад" (см. комментарий в app_navigation.xml)
         view.findViewById<AppCompatImageView>(R.id.image_arrowBack).setOnClickListener {
-            if (findNavController().currentDestination?.id == R.id.radioListFragment) {
-                findNavController().navigate(R.id.action_radioListFragment_to_homeRadioFragment)
-            }
+            if (findNavController().currentDestination?.id == R.id.radioListFragment) findNavController().popBackStack()
         }
 
         subscribeOnFlow()
@@ -75,9 +76,13 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
                 RadioListViewModel.UiState.Loading -> return@collectWhenStarted
                 RadioListViewModel.UiState.ServerIsDown -> {
                     // Диалоговое окно при ошибке сервера
-                    infoDialog.show(R.string.dialogInternetTrouble_title4, R.string.dialogInternetTrouble_text4)
+                    infoDialog.show(
+                        R.string.dialogInternetTrouble_title4,
+                        R.string.dialogInternetTrouble_text4
+                    )
                     return@collectWhenStarted
                 }
+
                 is RadioListViewModel.UiState.Loaded -> uiState.radioStations
             }
 

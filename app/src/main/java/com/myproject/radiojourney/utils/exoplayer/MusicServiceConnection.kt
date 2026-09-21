@@ -7,9 +7,9 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
-import androidx.media3.common.MediaMetadata
 import androidx.core.content.ContextCompat
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.session.LibraryResult
 import androidx.media3.session.MediaBrowser
@@ -207,12 +207,15 @@ class MusicServiceConnection(private val context: Context) {
     // Название и код страны передаём сразу: MediaBrowser показывает этот MediaItem текущим ещё до ответа сессии.
     // Без кода страны (subtitle) экран в эти доли секунды не знал, из какого плейлиста станция (избранное или страна),
     // считал её "той же станцией из другого плейлиста" и запускал её второй раз - буферизация начиналась заново
-    fun playFromMediaId(mediaId: String, title: String, countryCode: String) = withBrowser { browser ->
-        val metadata = MediaMetadata.Builder().setTitle(title).setSubtitle(countryCode).build()
-        browser.setMediaItem(MediaItem.Builder().setMediaId(mediaId).setMediaMetadata(metadata).build())
-        browser.prepare()
-        browser.play()
-    }
+    fun playFromMediaId(mediaId: String, title: String, countryCode: String) =
+        withBrowser { browser ->
+            val metadata = MediaMetadata.Builder().setTitle(title).setSubtitle(countryCode).build()
+            browser.setMediaItem(
+                MediaItem.Builder().setMediaId(mediaId).setMediaMetadata(metadata).build()
+            )
+            browser.prepare()
+            browser.play()
+        }
 
     // Команды сервису: загрузить плейлист, отменить загрузку
     fun sendCommand(command: String, parameters: Bundle?) = withBrowser { browser ->

@@ -5,10 +5,10 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.SystemClock
 import android.util.Log
-import com.myproject.radiojourney.data.dataSource.network.service.IRadioService
-import com.myproject.radiojourney.data.dataSource.network.service.IRadioServiceWrapper
 import com.myproject.radiojourney.data.dataSource.network.entity.CountryRemote
 import com.myproject.radiojourney.data.dataSource.network.entity.RadioStationRemote
+import com.myproject.radiojourney.data.dataSource.network.service.IRadioService
+import com.myproject.radiojourney.data.dataSource.network.service.IRadioServiceWrapper
 import com.myproject.radiojourney.other.Constants.DNS_ATTEMPTS
 import com.myproject.radiojourney.other.Constants.DNS_RETRY_DELAY
 import com.myproject.radiojourney.other.Constants.DNS_SERVER_LIST_NAME
@@ -193,8 +193,11 @@ class NetworkRadioDataSource @Inject constructor(
     // Есть ли у телефона подключение, через которое вообще можно выйти в интернет (Wi-Fi, мобильная сеть, Ethernet).
     // Работает ли сам интернет, не проверяем: это и выясняет перебор серверов
     private fun hasNetworkConnection(): Boolean {
-        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val capabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork) ?: return false
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val capabilities =
+            connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+                ?: return false
         return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 

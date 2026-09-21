@@ -40,11 +40,9 @@ class SettingsFragment : BaseContentFragmentAbstract() {
     }
 
     private fun initListeners() {
+        // Назад на карту - так же, как системная кнопка "Назад" (см. комментарий в app_navigation.xml)
         binding?.imageArrowBack?.setOnClickListener {
-            if (this.findNavController().currentDestination?.id == R.id.settingsFragment) {
-                this.findNavController()
-                    .navigate(R.id.action_settingsFragment_to_homeRadioFragment)
-            }
+            if (findNavController().currentDestination?.id == R.id.settingsFragment) findNavController().popBackStack()
         }
         binding?.linearForCoffee?.setOnClickListener {
             val browserIntent =

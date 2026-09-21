@@ -123,10 +123,9 @@ class MyStationsFragment : BaseContentFragmentAbstract() {
         }
     }
 
+    // Назад на карту - так же, как системная кнопка "Назад" (см. комментарий в app_navigation.xml)
     private fun goToHomeRadio() {
-        if (findNavController().currentDestination?.id == R.id.myStationsFragment) {
-            findNavController().navigate(R.id.action_myStationsFragment_to_homeRadioFragment)
-        }
+        if (findNavController().currentDestination?.id == R.id.myStationsFragment) findNavController().popBackStack()
     }
 
     // Если в плеере сейчас плейлист своих станций, он держит их старые названия и ссылки - просим перечитать список.
