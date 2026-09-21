@@ -148,7 +148,7 @@
             android:gravity="end"
             android:orientation="horizontal"
             android:paddingTop="@dimen/space_beforeOrAfterElement"
-            android:paddingBottom="@dimen/space_beforeOrAfterElement"
+            android:paddingBottom="@dimen/space_32"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/linear_up">
