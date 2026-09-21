@@ -7,6 +7,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
+import androidx.media3.common.MediaMetadata
 import androidx.core.content.ContextCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -202,9 +203,13 @@ class MusicServiceConnection(private val context: Context) {
     fun pause() = withBrowser { it.pause() }
 
     // Включить станцию по stationuuid (раньше transportControls.playFromMediaId). Сессия (MusicLibrarySessionCallback.onSetMediaItems)
-    // заменит этот MediaItem на весь плейлист и начнёт с нужной станции
-    fun playFromMediaId(mediaId: String) = withBrowser { browser ->
-        browser.setMediaItem(MediaItem.Builder().setMediaId(mediaId).build())
+    // заменит этот MediaItem на весь плейлист и начнёт с нужной станции.
+    // Название и код страны передаём сразу: MediaBrowser показывает этот MediaItem текущим ещё до ответа сессии.
+    // Без кода страны (subtitle) экран в эти доли секунды не знал, из какого плейлиста станция (избранное или страна),
+    // считал её "той же станцией из другого плейлиста" и запускал её второй раз - буферизация начиналась заново
+    fun playFromMediaId(mediaId: String, title: String, countryCode: String) = withBrowser { browser ->
+        val metadata = MediaMetadata.Builder().setTitle(title).setSubtitle(countryCode).build()
+        browser.setMediaItem(MediaItem.Builder().setMediaId(mediaId).setMediaMetadata(metadata).build())
         browser.prepare()
         browser.play()
     }

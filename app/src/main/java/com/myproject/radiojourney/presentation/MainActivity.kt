@@ -98,6 +98,9 @@ class MainActivity : AppCompatActivity() {
 
     // Variable for currently playing song
     private var curPlayingRadioStation: RadioStationPresentation? = null
+
+    // Пользователь сейчас листает станции пальцем (см. onPageScrollStateChanged)
+    private var isUserSwiping = false
     private var playbackState: PlaybackStateInfo? = null
 
     private var mOnPageChangeCallback: ViewPager2.OnPageChangeCallback? = null
@@ -186,61 +189,36 @@ class MainActivity : AppCompatActivity() {
                 super.onPageScrolled(position, positionOffset, positionOffsetPixels)
             }
 
+            // Страницу листает пользователь (а не программа через setCurrentItem): состояние DRAGGING бывает только у пальца.
+            // Порядок событий при свайпе: DRAGGING -> SETTLING -> onPageSelected -> IDLE
+            override fun onPageScrollStateChanged(state: Int) {
+                super.onPageScrollStateChanged(state)
+                when (state) {
+                    ViewPager2.SCROLL_STATE_DRAGGING -> isUserSwiping = true
+                    ViewPager2.SCROLL_STATE_IDLE -> isUserSwiping = false
+                }
+            }
+
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
 
-                // Если выбрать радиостанцию US (2000 Rock ...), а после неё первое Белорусское радио в списке (альфарадио) - вылетает IndexOutOfBoundsException, т.к. сначала ищет 300+ индекс в списке из 53х
-                val swipeRadioStationList = swipeRadioStationAdapter.radioStationList
-                val maxRadioStationListIndex = swipeRadioStationAdapter.radioStationList.size - 1
-                if (swipeRadioStationList.isNotEmpty() && maxRadioStationListIndex >= position) {
+                // getOrNull: при смене плейлиста позиция может быть из старого, более длинного списка (раньше - IndexOutOfBoundsException)
+                val station = swipeRadioStationAdapter.radioStationList.getOrNull(position)
+                if (station != null) {
+                    curPlayingRadioStation = station
 
-                    try {
-                        // Нам нужно вернуться в onPrepareFromMediaId, если мы выбрали песню из другого плейлиста и включить её. НО! Нам не нужно включать станцию сразу при включении программы
-                        val isNotJustLaunched = mainViewModel.isNotJustLaunched.value
-
-                        // We must check, if player is playing
-                        // Добавляю "&& isNotJustLaunched == true" для того, чтобы туда не заходило при повторном запуске приложения (когда станция играет из уведомления и ты кликаешь на уведомление)
-                        if (playbackState?.isPlaying == true && isNotJustLaunched) {
-                            mainViewModel.playOrToggleSong(swipeRadioStationList[position])
-                            Log.d(
-                                TAG,
-                                "PLAYLIST_UPDATE: 4.$TAG. Метод onPageSelected() -> Плейер проигрывает радиостанцию. Программа не только что запущена. Вызываем mainViewModel.playOrToggleSong(swipeRadioStationList[position])"
-                            )
-                        } else {
-                            // При включении программы и загрузке контента так же попадаем сюда
-                            curPlayingRadioStation = swipeRadioStationList[position]
-
-                            // Первый запуск
-                            if (!isNotJustLaunched) {
-                                switchViewPagerToCurrentSong(
-                                    swipeRadioStationList[position].stationuuid,
-                                    swipeRadioStationList[position].countryCode
-                                )
-                                Log.d(
-                                    TAG,
-                                    "PLAYLIST_UPDATE: 4.$TAG. Метод onPageSelected() -> Плейер остановлен. Программа только что запущена. Вызываем switchViewPagerToCurrentSong()"
-                                )
-                            }
-
-                            // Не первый запуск
-                            if (isNotJustLaunched) {
-                                // Здесь мы точно перешли из списка в HomeRadioFragment и хотим включить радио
-                                mainViewModel.playOrToggleSong(
-                                    swipeRadioStationList[position],
-                                    true
-                                )
-                                Log.d(
-                                    TAG,
-                                    "PLAYLIST_UPDATE: 4.$TAG. Метод onPageSelected() -> Плейер остановлен. Программа не только что запущена. Вызываем mainViewModel.playOrToggleSong(swipeRadioStationList[position], true)"
-                                )
-                                // Если список пуст, значит это список избранного, который не заполнен. Но проверку на заполненность списка мы уже сделали
-                            }
-                        }
-                    } catch (e: IndexOutOfBoundsException) {
-                        Log.d(TAG, "CAUGHT IndexOutOfBoundsException!")
-                        e.printStackTrace()
+                    // Командуем плейеру, только если станцию пролистал пользователь.
+                    // Раньше плейер включал станцию при любой смене страницы, в том числе когда её переключала сама программа
+                    // (switchViewPagerToCurrentSong - "покажи станцию, которая в плейере"). Получалась петля: плейер ещё не успел
+                    // сообщить о новой станции -> экран возвращал страницу на старую -> onPageSelected включал старую станцию ->
+                    // экран переключал на новую -> ... Станция в плейере и в уведомлении мигала, свайп не работал,
+                    // а буферизация всё время начиналась заново, поэтому звука не было. Петля останавливалась, только когда
+                    // экран уходил в фон (collectWhenStarted переставал получать события) - тогда станция наконец начинала играть.
+                    // Сразу после запуска приложения (isNotJustLaunched == false) свайп только выбирает станцию, включит её кнопка play
+                    if (isUserSwiping && mainViewModel.isNotJustLaunched.value) {
+                        Log.d(TAG, "PLAYLIST_UPDATE: 4.$TAG. onPageSelected() - пользователь выбрал свайпом ${station.stationName}")
+                        mainViewModel.playOrToggleSong(station)
                     }
-
                 }
 
                 // Тестово добавляю это сюда тоже, т.к. прогресс не всегда убирается
@@ -525,6 +503,12 @@ class MainActivity : AppCompatActivity() {
             swipeRadioStationAdapter.submitRadioStationList(radioStations) {
                 binding?.vpSong?.adapter = swipeRadioStationAdapter
 
+                // Станцию из этого плейлиста уже попросили включить (выбрали в списке избранного или страны), но плейер
+                // мог ещё не успеть на неё переключиться - тогда открываемся на ней, а не на самой популярной
+                val requestedStation = mainViewModel.requestedStation
+                val requestedIndex = radioStations.indexOfFirst {
+                    it.stationuuid == requestedStation?.stationuuid && it.countryCode == requestedStation.countryCode
+                }
                 // !!! Новый плейлист начинаем не с первой по алфавиту станции (во многих странах это одни и те же
                 // станции вроде ".Quran" или "# TOP 100 ..."), а с самой популярной.
                 // Но если в плеере уже станция из этого же плейлиста (например, Activity пересоздана при смене темы),
@@ -535,8 +519,8 @@ class MainActivity : AppCompatActivity() {
                     it.stationuuid == curPlayingSong?.mediaId &&
                             it.countryCode == curPlayingSong.mediaMetadata.subtitle.toString()
                 }
-                val startPosition =
-                    if (curPlayingIndex != -1) curPlayingIndex else radioStations.startStationIndex()
+                val knownIndex = if (requestedIndex != -1) requestedIndex else curPlayingIndex
+                val startPosition = if (knownIndex != -1) knownIndex else radioStations.startStationIndex()
                 val vpSong = binding?.vpSong
                 if (vpSong != null && vpSong.currentItem != startPosition) {
                     vpSong.setCurrentItem(
@@ -544,8 +528,15 @@ class MainActivity : AppCompatActivity() {
                         false
                     ) // ViewPager сам вызовет onPageSelected(startPosition)
                 } else {
-                    // Почему-то этот метод изредка не вызывается, хотя должен. На всякий случай дублирую вызов здесь
+                    // Страница уже на этой позиции - onPageSelected не придёт, а он запоминает станцию для кнопки play
                     mOnPageChangeCallback?.onPageSelected(startPosition)
+                }
+
+                // Раньше станцию нового плейлиста включал onPageSelected. Теперь он включает только то, что пролистал пользователь,
+                // поэтому включаем здесь - и только если ни одна станция этого плейлиста ещё не выбрана
+                // (например, на карте выбрали страну). Сразу после запуска приложения ничего сами не включаем
+                if (knownIndex == -1 && mainViewModel.isNotJustLaunched.value) {
+                    mainViewModel.playOrToggleSong(radioStations[startPosition])
                 }
 
                 // Полоса прогресса: список показан
@@ -656,8 +647,8 @@ class MainActivity : AppCompatActivity() {
 
                         updateStarVisibility()
 
-                        // Убираем прогресс и делаем кнопки снова кликабельными
-                        mainViewModel.hideProgressAndSetClickable()
+                        // Плейлист показан: убираем "Downloading playlist" (или сменяем на "Connecting", если станция ещё не заиграла)
+                        mainViewModel.onPlaylistShown()
                         Log.d(
                             TAG,
                             "BROADCAST: Прячем прогресс. Вызываем метод hideProgressAndSetClickable()"

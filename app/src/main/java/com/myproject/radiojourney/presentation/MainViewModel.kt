@@ -167,6 +167,11 @@ class MainViewModel @Inject constructor(
         isPlaylistReady = true
     }
 
+    // Станция, которую экран последний раз попросил включить. Плейер узнаёт о ней не сразу: команды MediaBrowser асинхронные,
+    // а если плейлист ещё скачивается, сессия ждёт его. Нужна MainActivity, чтобы новый плейлист открылся именно на этой станции
+    var requestedStation: RadioStationPresentation? = null
+        private set
+
     // Включить станцию, поставить на паузу или продолжить. Вызывается в главном потоке
     fun playOrToggleSong(mediaItem: RadioStationPresentation, toggle: Boolean = false) {
         val playbackState = playbackState.value
@@ -184,9 +189,8 @@ class MainViewModel @Inject constructor(
                     val isToggleCountryCodeFAV = mediaItem.countryCode.endsWith("_FAV", true)
                     if (isCurCountryCodeFAV != isToggleCountryCodeFAV) {
                         Log.d(TAG, "Станция одна и та же, но одна из них не из избранного: ${mediaItem.stationName}, ${mediaItem.countryCode}")
-                        musicServiceConnection.playFromMediaId(mediaItem.stationuuid)
-                        if (toggle) musicServiceConnection.pause()
-                        _switchViewPagerOnceAgain.trySend(mediaItem)
+                        requestedStation = mediaItem
+                        musicServiceConnection.playFromMediaId(mediaItem.stationuuid, mediaItem.stationName, mediaItem.countryCode)
                     }
 
                     if (toggle) musicServiceConnection.pause()
@@ -201,7 +205,8 @@ class MainViewModel @Inject constructor(
         } else {
             // if we want to play another song
             Log.d(TAG, "Включаем другую станцию ${mediaItem.stationName}")
-            musicServiceConnection.playFromMediaId(mediaItem.stationuuid)
+            requestedStation = mediaItem
+            musicServiceConnection.playFromMediaId(mediaItem.stationuuid, mediaItem.stationName, mediaItem.countryCode)
             saveLastUsedRadioStationUrlAndCode(mediaItem.urlResolved, mediaItem.countryCode)
             _switchViewPagerOnceAgain.trySend(mediaItem)
         }
@@ -243,6 +248,20 @@ class MainViewModel @Inject constructor(
                 // не появился позже, когда пользователь уже делает что-то другое
                 musicServiceConnection.sendCommand(CANCEL_PLAYLIST_DOWNLOAD, null)
             }
+            hideProgressAndSetClickable()
+        }
+    }
+
+    // Плейлист показан в плейере. Полосу "Downloading playlist" убираем, но если станция ещё подключается (буферизация),
+    // сменяем её на "Connecting to radio station" - её уберёт первый звук или ошибка плейера (см. MainActivity).
+    // Раньше полоса пропадала сразу, и плейер выглядел играющим, хотя звука ещё не было.
+    // "Connecting to radio station" здесь не трогаем - только плейер знает, когда станция заиграла
+    fun onPlaylistShown() {
+        if (_loadingState.value != LoadingState.DOWNLOADING_PLAYLIST) return
+        val state = playbackState.value
+        if (state != null && state.isPlaying && !state.isActuallyPlaying && !state.hasError) {
+            showConnectingProgress()
+        } else {
             hideProgressAndSetClickable()
         }
     }

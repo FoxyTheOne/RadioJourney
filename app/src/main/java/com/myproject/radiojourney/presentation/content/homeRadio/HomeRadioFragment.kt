@@ -285,6 +285,8 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
                         mainViewModel.showDownloadingPlaylistProgress()
 
                         mainViewModel.fetchSongs(radioStation.countryCode)
+                        // Список стран передаёт ту станцию, с которой начнётся плейлист (самую популярную) - её и включаем
+                        mainViewModel.playOrToggleSong(radioStation, false)
                         mainViewModel.notJustLaunchedEnableAutoplay()
                     }
                 }
@@ -709,6 +711,9 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
             mainViewModel.showDownloadingPlaylistProgress()
 
             mainViewModel.fetchSongs("FAV")
+            // Включаем именно переданную станцию: сессия дождётся плейлиста (onSetMediaItems).
+            // Раньше станцию выбирала MainActivity сама, и порядок станций в плейлисте плеера не совпадал со списком избранного
+            mainViewModel.playOrToggleSong(argRadioStationFavourite, false)
             mainViewModel.notJustLaunchedEnableAutoplay()
         } else {
             // Был включен FAV - Выбор из того же плейлиста
