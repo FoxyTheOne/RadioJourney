@@ -4,15 +4,15 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import com.myproject.radiojourney.databinding.LayoutRadioStationListBaseBinding
-import com.myproject.radiojourney.presentation.content.base.BaseContentFragmentAbstract
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
- * Базовый фрагмент для фрагментов со списком радиостанций: общая разметка, toolbar и меню выхода
+ * Базовый фрагмент для фрагментов со списком радиостанций: общая разметка
  */
 @AndroidEntryPoint
-abstract class BaseRadioListFragmentAbstract : BaseContentFragmentAbstract() {
+abstract class BaseRadioListFragmentAbstract : Fragment() {
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -20,13 +20,6 @@ abstract class BaseRadioListFragmentAbstract : BaseContentFragmentAbstract() {
         savedInstanceState: Bundle?
     ): View {
         val binding = LayoutRadioStationListBaseBinding.inflate(inflater, container, false)
-        // TOOLBAR - где будет находиться в нашем layout
-        setToolbar(binding.homeToolbar)
         return binding.root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        setupToolbarMenu()
     }
 }

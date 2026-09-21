@@ -5,5 +5,4 @@
     <dimen name="space_32">32dp</dimen>
 
     <dimen name="button_text">14sp</dimen>
-    <dimen name="button_smallText">14sp</dimen>
 </resources>

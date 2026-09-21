@@ -9,5 +9,4 @@ import kotlinx.coroutines.flow.Flow
 interface IAuthRepository {
     suspend fun onLoginClicked()
     fun isLoggedIn(): Flow<Boolean>
-    suspend fun logout()
 }

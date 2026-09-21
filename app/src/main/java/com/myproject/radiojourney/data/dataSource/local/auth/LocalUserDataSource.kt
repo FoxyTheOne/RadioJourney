@@ -19,11 +19,4 @@ class LocalUserDataSource @Inject constructor(
     }
 
     override fun isLoggedIn(): Flow<Boolean> = preferenceStorage.isLoggedIn
-
-    // Выход из аккаунта
-    override suspend fun logout() {
-        preferenceStorage.saveToken(null)
-
-        preferenceStorage.setIsFirstStart(isFirstStart = true)
-    }
 }

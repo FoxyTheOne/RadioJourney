@@ -6,9 +6,6 @@
     <string name="first_screen_text3">The functionality of the program depends on the availability of the server from which information about radio stations is obtained.</string>
     <string name="first_screen_button">Start journey</string>
 
-
-    <string name="logout_intention_question">Do you want to exit?</string>
-
     <string name="homeRadio_zoomPlus">+</string>
     <string name="homeRadio_zoomMinus">-</string>
     <string name="homeRadio_goToFavourites">Favorites</string>

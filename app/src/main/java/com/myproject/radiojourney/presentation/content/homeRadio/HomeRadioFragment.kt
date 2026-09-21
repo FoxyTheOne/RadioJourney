@@ -19,6 +19,7 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
@@ -48,7 +49,6 @@ import com.myproject.radiojourney.presentation.common.PermissionSessionState
 import com.myproject.radiojourney.presentation.common.collectWhenStarted
 import com.myproject.radiojourney.presentation.common.showPermissionDeniedDialog
 import com.myproject.radiojourney.presentation.common.showPermissionRationale
-import com.myproject.radiojourney.presentation.content.base.BaseContentFragmentAbstract
 import com.myproject.radiojourney.presentation.model.CountryPresentation
 import com.myproject.radiojourney.presentation.model.RadioStationPresentation
 import dagger.hilt.android.AndroidEntryPoint
@@ -67,7 +67,7 @@ import javax.inject.Inject
  * GOOGLE MAPS -> 2. В инструкции от google всё делается в activity, а у нас - фрагмент. Следовательно, будут небольшие изменения
  */
 @AndroidEntryPoint
-class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
+class HomeRadioFragment : Fragment(), OnMapReadyCallback {
 
     companion object {
         private const val TAG = "HomeRadioFragment"
@@ -168,16 +168,11 @@ class HomeRadioFragment : BaseContentFragmentAbstract(), OnMapReadyCallback {
     ): View? {
         // VIEW BINDING -> 2. Инициализация
         binding = LayoutHomeRadioBinding.inflate(inflater, container, false)
-        // TOOLBAR
-        // TOOLBAR - где будет находиться в нашем layout
-        binding?.let { setToolbar(it.homeToolbar) }
         return binding?.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        setupToolbarMenu()
 
         // Если каким-то образом мы попали на этот фрагмент минуя первый, загрузочный фрагмент - стоит ещё раз проверить разрешения.
         // Сами запрашиваем только один раз за запуск приложения: карта создаётся заново при каждом возвращении на неё

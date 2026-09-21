@@ -6,17 +6,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.net.toUri
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.LayoutSettingsBinding
-import com.myproject.radiojourney.presentation.content.base.BaseContentFragmentAbstract
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * Страница настроек.
  */
 @AndroidEntryPoint
-class SettingsFragment : BaseContentFragmentAbstract() {
+class SettingsFragment : Fragment() {
     // VIEW BINDING -> 1. Объявляем переменную. This property is only valid between onCreateView and onDestroyView
     private var binding: LayoutSettingsBinding? = null
 
@@ -27,15 +27,12 @@ class SettingsFragment : BaseContentFragmentAbstract() {
     ): View? {
         // VIEW BINDING -> 2. Инициализация
         binding = LayoutSettingsBinding.inflate(inflater, container, false)
-        // TOOLBAR
-        binding?.let { setToolbar(it.homeToolbar) }
         return binding?.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        setupToolbarMenu()
         initListeners()
     }
 

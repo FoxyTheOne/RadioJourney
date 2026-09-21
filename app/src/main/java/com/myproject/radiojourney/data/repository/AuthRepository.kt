@@ -18,6 +18,4 @@ class AuthRepository @Inject constructor(
     override suspend fun onLoginClicked() = localUserDataSource.onLoginClicked()
 
     override fun isLoggedIn(): Flow<Boolean> = localUserDataSource.isLoggedIn()
-
-    override suspend fun logout() = localUserDataSource.logout()
 }

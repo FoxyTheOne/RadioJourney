@@ -38,8 +38,6 @@ import com.myproject.radiojourney.domain.iRepository.IAuthRepository
 import com.myproject.radiojourney.domain.iRepository.IFavoriteStationRepository
 import com.myproject.radiojourney.domain.iRepository.IMainRadioStationRepository
 import com.myproject.radiojourney.domain.iRepository.IMyStationRepository
-import com.myproject.radiojourney.domain.logOutUseCase.ILogOutUseCase
-import com.myproject.radiojourney.domain.logOutUseCase.LogOutUseCase
 import com.myproject.radiojourney.domain.mainRadioUseCase.IMainRadioUseCase
 import com.myproject.radiojourney.domain.mainRadioUseCase.MainRadioUseCase
 import com.myproject.radiojourney.domain.myStationsUseCase.IMyStationsUseCase
@@ -182,9 +180,6 @@ abstract class DomainModule {
 
     @Binds
     abstract fun bindsHomeRadioInteractor(homeRadioInteractor: HomeRadioUseCase): IHomeRadioUseCase
-
-    @Binds
-    abstract fun bindsLogOutInteractor(logOutInteractor: LogOutUseCase): ILogOutUseCase
 
     @Binds
     abstract fun bindsRadioListInteractor(radioListInteractor: RadioListUseCase): IRadioListUseCase

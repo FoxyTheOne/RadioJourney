@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -17,7 +18,6 @@ import com.myproject.radiojourney.databinding.LayoutMyStationsBinding
 import com.myproject.radiojourney.other.Constants.MY_STATIONS_COUNTRY_CODE
 import com.myproject.radiojourney.presentation.MainViewModel
 import com.myproject.radiojourney.presentation.common.collectWhenStarted
-import com.myproject.radiojourney.presentation.content.base.BaseContentFragmentAbstract
 import com.myproject.radiojourney.presentation.model.RadioStationPresentation
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -30,7 +30,7 @@ import dagger.hilt.android.AndroidEntryPoint
  * Клик по станции включает её так же, как и станцию из каталога: плееру всё равно, откуда пришёл адрес потока
  */
 @AndroidEntryPoint
-class MyStationsFragment : BaseContentFragmentAbstract() {
+class MyStationsFragment : Fragment() {
 
     private val viewModel by viewModels<MyStationsViewModel>()
 
@@ -57,14 +57,11 @@ class MyStationsFragment : BaseContentFragmentAbstract() {
     ): View {
         // VIEW BINDING -> 2. Инициализация
         binding = LayoutMyStationsBinding.inflate(inflater, container, false)
-        // TOOLBAR - где будет находиться в нашем layout
-        binding?.let { setToolbar(it.homeToolbar) }
         return binding!!.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupToolbarMenu()
 
         binding?.recyclerViewMyStations?.adapter = myStationAdapter
 

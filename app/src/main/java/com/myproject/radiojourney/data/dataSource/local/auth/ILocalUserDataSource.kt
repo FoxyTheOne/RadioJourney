@@ -12,6 +12,4 @@ interface ILocalUserDataSource {
 
     // Пользователь уже входил (есть токен и это не первый запуск) - первый экран пропускаем
     fun isLoggedIn(): Flow<Boolean>
-
-    suspend fun logout()
 }

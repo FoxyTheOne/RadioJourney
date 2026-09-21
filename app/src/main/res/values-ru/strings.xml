@@ -6,9 +6,6 @@
     <string name="first_screen_text3">Работоспособность программы зависит от доступности сервера, откуда берется информация о радиостанциях.</string>
     <string name="first_screen_button">Начать путешествие</string>
 
-
-    <string name="logout_intention_question">Хотите выйти?</string>
-
     <string name="homeRadio_zoomPlus">+</string>
     <string name="homeRadio_zoomMinus">-</string>
     <string name="homeRadio_goToFavourites">Избранное</string>
