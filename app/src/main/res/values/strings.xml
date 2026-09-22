@@ -17,10 +17,15 @@
     <string name="exit_cancel">Cancel</string>
 
     <string name="dialogInternetTrouble_title">Some internet trouble!</string>
-    <string name="dialogInternetTrouble_title4">Obtained list is empty</string>
     <string name="dialogInternetTrouble_text">Some internet or account trouble occurred. Try to repeat last action or check your internet connection.</string>
     <string name="dialogInternetTrouble_text3">Please check your internet connection.</string>
-    <string name="dialogInternetTrouble_text4"> It looks like the radio station information server is down. Please try again later or check your internet connection.</string>
+    <!-- Could not get data from the radio-browser server - by reason (ServerError) -->
+    <string name="serverError_noNetwork_title">No internet connection</string>
+    <string name="serverError_noNetwork_text">Check that Wi-Fi or mobile data is on and try again.</string>
+    <string name="serverError_notResponding_title">The server is not responding</string>
+    <string name="serverError_notResponding_text">The radio-browser.info server, where the app gets the radio station lists, is not responding right now. Please try again later.</string>
+    <string name="serverError_connectionCut_title">The connection keeps breaking</string>
+    <string name="serverError_connectionCut_text">The radio-browser.info server responds, but the connection breaks before the whole answer arrives. It looks like your internet provider limits access to it - in some networks this happens with servers abroad. Please try again later or use a different network.</string>
     <string name="dialogPleaseWait_title">Please wait!</string>
     <string name="dialogPleaseWait_text">I\'m trying to connect to the radio station</string>
     <string name="dialog_close">(Click on free space to close the window)</string>

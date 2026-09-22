@@ -17,10 +17,15 @@
     <string name="exit_cancel">Отмена</string>
 
     <string name="dialogInternetTrouble_title">Проблема с соединением!</string>
-    <string name="dialogInternetTrouble_title4">В ответ на запрос получен пустой список</string>
     <string name="dialogInternetTrouble_text">Возникла проблема при запросе на сервер. Попробуйте повторить последнее действие или проверье ваше интернет соединение.</string>
     <string name="dialogInternetTrouble_text3">Пожалуйста, проверье ваше интернет соединение.</string>
-    <string name="dialogInternetTrouble_text4">Похоже, что сервер с информацией о радиостанциях временно не работает. Пожалуйста, попробуйте ещё раз позже или проверье ваше интернет соединение.</string>
+    <!-- Не удалось получить данные с сервера radio-browser - по причинам (ServerError) -->
+    <string name="serverError_noNetwork_title">Нет подключения к интернету</string>
+    <string name="serverError_noNetwork_text">Проверьте, включены ли Wi-Fi или мобильный интернет, и попробуйте ещё раз.</string>
+    <string name="serverError_notResponding_title">Сервер не отвечает</string>
+    <string name="serverError_notResponding_text">Сервер radio-browser.info, откуда приложение берёт списки радиостанций, сейчас не отвечает. Попробуйте позже.</string>
+    <string name="serverError_connectionCut_title">Соединение обрывается</string>
+    <string name="serverError_connectionCut_text">Сервер radio-browser.info отвечает, но соединение с ним обрывается раньше, чем приходит весь ответ. Похоже, доступ к нему ограничивает ваш интернет-провайдер - в некоторых сетях так бывает с зарубежными серверами. Попробуйте позже или через другую сеть.</string>
     <string name="dialogPleaseWait_title">Пожалуйста, подождите!</string>
     <string name="dialogPleaseWait_text">Пытаюсь подключиться к радиостанции</string>
     <string name="dialog_close">(Нажмите на свободное место, чтобы закрыть окно)</string>

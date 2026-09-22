@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myproject.radiojourney.domain.radioListUseCase.IRadioListUseCase
+import com.myproject.radiojourney.other.ServerError
 import com.myproject.radiojourney.other.Status
 import com.myproject.radiojourney.presentation.model.RadioStationPresentation
 import com.myproject.radiojourney.presentation.model.toPresentation
@@ -28,7 +29,7 @@ class RadioListViewModel @Inject constructor(
     sealed interface UiState {
         data object Loading : UiState
         data class Loaded(val radioStations: List<RadioStationPresentation>) : UiState
-        data object ServerIsDown : UiState
+        data class ServerIsDown(val reason: ServerError) : UiState
     }
 
     // Аргументы навигации (код и название страны) ViewModel получает сама через SavedStateHandle
@@ -58,7 +59,7 @@ class RadioListViewModel @Inject constructor(
         viewModelScope.launch {
             val radioStationResource = radioListInteractor.getRadioStationList(countryCode)
             _uiState.value = if (radioStationResource.status == Status.ERROR) {
-                UiState.ServerIsDown
+                UiState.ServerIsDown(ServerError.fromMessage(radioStationResource.message))
             } else {
                 UiState.Loaded(radioStationResource.data.orEmpty().map { it.toPresentation() })
             }

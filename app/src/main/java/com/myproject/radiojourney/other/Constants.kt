@@ -29,8 +29,6 @@ object Constants {
     const val NOTIFICATION_CHANNEL_ID = "music"
     const val NOTIFICATION_ID = 1
 
-    const val SERVER_IS_DOWN = "SERVER_IS_DOWN"
-
     // Запросы к серверу radio-browser (RadioServiceWrapper, NetworkRadioDataSource).
     // Все константы, которые влияют друг на друга по времени, собраны здесь, чтобы их можно было сравнить глазами
     const val NETWORK_CONNECT_TIMEOUT = 5_000L // подключение к одному адресу сервера

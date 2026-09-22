@@ -1,5 +1,6 @@
 package com.myproject.radiojourney.utils.exoplayer
 
+import com.myproject.radiojourney.other.ServerError
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -23,9 +24,9 @@ class PlaylistDownloadStatus @Inject constructor() {
     private val _progressPercent = MutableStateFlow(0)
     val progressPercent: StateFlow<Int> = _progressPercent.asStateFlow()
 
-    // Событие "не удалось скачать плейлист: сервер недоступен"
-    private val _serverIsDown = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    val serverIsDown: SharedFlow<Unit> = _serverIsDown.asSharedFlow()
+    // Событие "не удалось скачать плейлист" с причиной: нет сети, сервер не отвечает или ответ обрывается
+    private val _serverIsDown = MutableSharedFlow<ServerError>(extraBufferCapacity = 1)
+    val serverIsDown: SharedFlow<ServerError> = _serverIsDown.asSharedFlow()
 
     fun resetProgress() {
         _progressPercent.value = 0
@@ -35,7 +36,7 @@ class PlaylistDownloadStatus @Inject constructor() {
         if (listSize > 0) _progressPercent.value = 100 * processedCount / listSize
     }
 
-    fun notifyServerIsDown() {
-        _serverIsDown.tryEmit(Unit)
+    fun notifyServerIsDown(reason: ServerError) {
+        _serverIsDown.tryEmit(reason)
     }
 }

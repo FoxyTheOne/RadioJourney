@@ -74,12 +74,9 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
         viewLifecycleOwner.collectWhenStarted(viewModel.uiState) { uiState ->
             val radioStationList = when (uiState) {
                 RadioListViewModel.UiState.Loading -> return@collectWhenStarted
-                RadioListViewModel.UiState.ServerIsDown -> {
-                    // Диалоговое окно при ошибке сервера
-                    infoDialog.show(
-                        R.string.dialogInternetTrouble_title4,
-                        R.string.dialogInternetTrouble_text4
-                    )
+                is RadioListViewModel.UiState.ServerIsDown -> {
+                    // Диалоговое окно при ошибке сервера: текст зависит от причины (нет сети, сервер молчит, ответ обрывается)
+                    infoDialog.showServerError(uiState.reason)
                     return@collectWhenStarted
                 }
 

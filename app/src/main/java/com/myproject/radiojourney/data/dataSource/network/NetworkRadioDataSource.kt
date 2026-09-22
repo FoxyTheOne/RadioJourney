@@ -5,6 +5,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.SystemClock
 import android.util.Log
+import com.google.gson.JsonParseException
 import com.myproject.radiojourney.data.dataSource.network.entity.CountryRemote
 import com.myproject.radiojourney.data.dataSource.network.entity.RadioStationRemote
 import com.myproject.radiojourney.data.dataSource.network.service.IRadioService
@@ -14,18 +15,25 @@ import com.myproject.radiojourney.other.Constants.DNS_RETRY_DELAY
 import com.myproject.radiojourney.other.Constants.DNS_SERVER_LIST_NAME
 import com.myproject.radiojourney.other.Constants.FALLBACK_SERVER
 import com.myproject.radiojourney.other.Constants.MAX_STATIONS_COUNT
-import com.myproject.radiojourney.other.Constants.SERVER_IS_DOWN
 import com.myproject.radiojourney.other.Constants.SERVER_RETRY_DELAY
 import com.myproject.radiojourney.other.Constants.SERVER_SEARCH_TIME
 import com.myproject.radiojourney.other.Resource
+import com.myproject.radiojourney.other.ServerError
+import com.myproject.radiojourney.other.Status
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import retrofit2.HttpException
+import java.io.IOException
+import java.net.ConnectException
 import java.net.InetAddress
+import java.net.NoRouteToHostException
+import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import javax.inject.Inject
+import javax.net.ssl.SSLHandshakeException
 
 /**
  * These steps should be done in your APP or program.
@@ -61,17 +69,24 @@ class NetworkRadioDataSource @Inject constructor(
     }
 
     override suspend fun getCountryList(): List<CountryRemote> =
-        requestFromAnyServer(isValidResult = { it.isNotEmpty() }) { getCountryList() } ?: listOf()
+        requestFromAnyServer(isValidResult = { it.isNotEmpty() }) { getCountryList() }.data
+            ?: listOf()
 
     // Список станций страны. Серверы перебираются по кругу, пока не пройдёт SERVER_SEARCH_TIME
-    // (полоса загрузки PROGRESS_TIMEOUT рассчитана так, чтобы не пропасть раньше, чем закончится перебор)
+    // (полоса загрузки PROGRESS_TIMEOUT рассчитана так, чтобы не пропасть раньше, чем закончится перебор).
+    // При ошибке в Resource.message - причина (ServerError), по ней экран выбирает, что написать пользователю
     override suspend fun getRadioStationList(countryCode: String): Resource<List<RadioStationRemote>> {
-        val radioStationRemoteList = requestFromAnyServer(
+        val response = requestFromAnyServer(
             searchTimeMs = SERVER_SEARCH_TIME,
             isValidResult = { it.isNotEmpty() }
         ) {
             getRadioStationList(searchTerm = countryCode.uppercase())
-        } ?: return Resource.error(SERVER_IS_DOWN, listOf())
+        }
+        val radioStationRemoteList = response.data
+            ?: return Resource.error(
+                response.message ?: ServerError.SERVER_NOT_RESPONDING.name,
+                listOf()
+            )
 
         // !!! ПРОБЛЕМА:
         // Иногда получаем слишком длинный список радиостанций, из-за чего программа зависает.
@@ -96,7 +111,7 @@ class NetworkRadioDataSource @Inject constructor(
         } catch (e: RuntimeException) {
             // Например, у станции нет названия (null пришёл в не-null поле)
             Log.d(TAG, "Ошибка обработки списка станций: ${e.message}")
-            Resource.error(SERVER_IS_DOWN, listOf())
+            Resource.error(ServerError.SERVER_NOT_RESPONDING.name, listOf())
         }
     }
 
@@ -104,7 +119,7 @@ class NetworkRadioDataSource @Inject constructor(
     override suspend fun sendGetRequestToMarkRadioStationAsPopular(stationUuid: String): Boolean =
         requestFromAnyServer(isValidResult = { it.ok != null }) {
             markStationAsPopular(stationUuid = stationUuid)
-        } == null
+        }.status == Status.ERROR
 
     /**
      * Выполнить запрос на одном из серверов radio-browser и вернуть первый подходящий ответ.
@@ -125,13 +140,14 @@ class NetworkRadioDataSource @Inject constructor(
      *   Долго перебираем только плейлист станций (SERVER_SEARCH_TIME): без него пользователь увидит ошибку
      *   из-за одного неудачного сервера, а список стран и отметка популярности могут подождать до следующего запуска.
      *
-     * @return ответ первого сервера, для которого [isValidResult] вернул true, или null, если не ответил никто
+     * @return Resource.success с ответом первого сервера, для которого [isValidResult] вернул true,
+     * или Resource.error, если не ответил никто. В message - причина неудачи (имя из [ServerError])
      */
     private suspend fun <T> requestFromAnyServer(
         searchTimeMs: Long = 0L,
         isValidResult: (T) -> Boolean,
         request: suspend IRadioService.() -> T
-    ): T? {
+    ): Resource<T> {
         // Шаг 1 документации API: получить список доступных серверов через DNS.
         // distinct() - у одного сервера несколько IP-адресов (IPv4 и IPv6), и DNS возвращает его имя столько раз,
         // сколько у него адресов. Без distinct() мы бы ходили на один и тот же сервер по два раза подряд.
@@ -142,6 +158,13 @@ class NetworkRadioDataSource @Inject constructor(
         // если пользователь (или сеть) переведёт часы, поэтому для измерения длительности берут именно его
         val searchStartTime = SystemClock.elapsedRealtime()
         var attempt = 0
+
+        // Что пошло не так. Если хоть раз ответ оборвался на середине, сообщаем именно об этом:
+        // это самая полезная для пользователя подсказка (см. ServerError.CONNECTION_CUT)
+        var failure = ServerError.SERVER_NOT_RESPONDING
+        // Сколько попыток подряд ответ обрывался. Обрыв повторяется на каждой попытке, а каждая ждёт таймаута чтения,
+        // поэтому, когда все серверы по разу (но не меньше двух раз) оборвали ответ, перебор прекращаем
+        var cutsInRow = 0
 
         // Условие цикла читается так: пока есть куда ходить И (мы ещё не обошли каждый сервер по одному разу
         // ИЛИ нам разрешено ходить по кругу и время перебора ещё не вышло)
@@ -158,8 +181,9 @@ class NetworkRadioDataSource @Inject constructor(
                 // а .request() выполняет на нём тот метод API, который передали в параметре
                 val result = radioServiceWrapper.getRadioService(baseURL).request()
                 // Ответ получен. Если он нас устраивает - выходим из цикла и из метода, остальные серверы не трогаем
-                if (isValidResult(result)) return result
+                if (isValidResult(result)) return Resource.success(result)
                 Log.d(TAG, "Сервер $baseURL прислал пустой ответ")
+                cutsInRow = 0
             } catch (e: CancellationException) {
                 // Корутину отменили (например, пользователь выбрал другой плейлист, и старая загрузка больше не нужна).
                 // Отмену нельзя "проглатывать" вместе с остальными ошибками: если её поймать и продолжить цикл,
@@ -169,14 +193,26 @@ class NetworkRadioDataSource @Inject constructor(
                 // Любая ошибка этого сервера - не повод сдаваться, просто пробуем следующий:
                 // IOException (нет сети, таймаут), HttpException (например, 502 или 503),
                 // JsonSyntaxException (сервер жив, но ответил не тем, что мы ждём)
-                Log.d(TAG, "Сервер $baseURL: ${e.javaClass.simpleName}: ${e.message}")
+                val reason = failureReason(e)
+                Log.d(TAG, "Сервер $baseURL: ${e.javaClass.simpleName}: ${e.message} -> $reason")
+                if (reason == ServerError.CONNECTION_CUT) {
+                    failure = ServerError.CONNECTION_CUT
+                    cutsInRow++
+                } else {
+                    cutsInRow = 0
+                }
             }
 
             // Телефон вообще не подключён к сети (режим полёта, выключены Wi-Fi и мобильные данные) - перебирать серверы
             // бессмысленно: каждый ответит той же ошибкой. Раньше пользователь ждал до конца SERVER_SEARCH_TIME
             if (!hasNetworkConnection()) {
                 Log.d(TAG, "Нет подключения к сети - перебор серверов прекращаем")
-                return null
+                return Resource.error(ServerError.NO_NETWORK.name, null)
+            }
+
+            if (cutsInRow >= maxOf(2, servers.size)) {
+                Log.d(TAG, "Ответ обрывается на каждом сервере - перебор прекращаем")
+                break
             }
 
             // Пауза перед следующей попыткой - чтобы не завалить серверы запросами, если они отвечают ошибкой мгновенно.
@@ -186,12 +222,34 @@ class NetworkRadioDataSource @Inject constructor(
         }
 
         // Никто не ответил. Что это значит для пользователя, решает вызывающий код:
-        // для станций - Resource.error и диалог "сервер недоступен", для стран - пустой список
-        return null
+        // для станций - диалог с причиной, для стран - пустой список
+        return Resource.error(failure.name, null)
+    }
+
+    // На каком этапе сломался запрос - по типу ошибки.
+    // - До ответа: не нашли сервер, не подключились, сервер ответил ошибкой (HttpException, например 503) -
+    //   сервер не отвечает (или недоступен совсем).
+    // - После начала ответа: соединение сбросили, данные перестали приходить (таймаут чтения), ответ кончился
+    //   раньше времени (EOFException, "unexpected end of stream"), и Gson не смог разобрать обрезанный JSON -
+    //   ответ оборвался. Так выглядит ограничение провайдера "первые 16 КБ, дальше обрыв".
+    // Это догадка по косвенным признакам: медленный, но рабочий сервер тоже может не успеть до таймаута чтения.
+    // Поэтому в тексте для пользователя "похоже" и "возможно", а не "точно"
+    private fun failureReason(e: Exception): ServerError = when (e) {
+        is UnknownHostException, is ConnectException, is NoRouteToHostException, is SSLHandshakeException, is HttpException ->
+            ServerError.SERVER_NOT_RESPONDING
+        // OkHttp пишет "failed to connect to ...", если не дождался подключения, и просто "timeout" / "Read timed out",
+        // если не дождался данных уже после подключения
+        is SocketTimeoutException ->
+            if (e.message.orEmpty()
+                    .startsWith("failed to connect")
+            ) ServerError.SERVER_NOT_RESPONDING else ServerError.CONNECTION_CUT
+
+        is IOException, is JsonParseException -> ServerError.CONNECTION_CUT
+        else -> ServerError.SERVER_NOT_RESPONDING
     }
 
     // Есть ли у телефона подключение, через которое вообще можно выйти в интернет (Wi-Fi, мобильная сеть, Ethernet).
-    // Работает ли сам интернет, не проверяем: это и выясняет перебор серверов
+// Работает ли сам интернет, не проверяем: это и выясняет перебор серверов
     private fun hasNetworkConnection(): Boolean {
         val connectivityManager =
             context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -202,7 +260,7 @@ class NetworkRadioDataSource @Inject constructor(
     }
 
     // do the DNS request
-    // suspend + withContext(IO): поиск DNS блокирует поток, а пауза между попытками - delay (не занимает поток, как Thread.sleep)
+// suspend + withContext(IO): поиск DNS блокирует поток, а пауза между попытками - delay (не занимает поток, как Thread.sleep)
     private suspend fun updateDNSList(attemptsLeft: Int = DNS_ATTEMPTS): List<String> =
         withContext(Dispatchers.IO) {
             val listDNSResult = mutableListOf<String>()

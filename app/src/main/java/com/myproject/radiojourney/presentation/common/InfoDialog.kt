@@ -7,6 +7,7 @@ import androidx.annotation.LayoutRes
 import androidx.annotation.StringRes
 import androidx.appcompat.widget.AppCompatTextView
 import com.myproject.radiojourney.R
+import com.myproject.radiojourney.other.ServerError
 
 /**
  * Диалог с заголовком и текстом ("нет интернета", "сервер недоступен" и т.п.).
@@ -29,6 +30,25 @@ class InfoDialog(
         dialog.findViewById<AppCompatTextView>(titleViewId).text = context.getString(titleId)
         dialog.findViewById<AppCompatTextView>(textViewId).text = context.getString(textId)
         dialog.show()
+    }
+
+    // Не удалось получить данные с сервера radio-browser. Раньше при любой неудаче было одно окно
+    // "В ответ на запрос получен пустой список" - теперь текст объясняет, что именно случилось
+    fun showServerError(reason: ServerError) = when (reason) {
+        ServerError.NO_NETWORK -> show(
+            R.string.serverError_noNetwork_title,
+            R.string.serverError_noNetwork_text
+        )
+
+        ServerError.SERVER_NOT_RESPONDING -> show(
+            R.string.serverError_notResponding_title,
+            R.string.serverError_notResponding_text
+        )
+
+        ServerError.CONNECTION_CUT -> show(
+            R.string.serverError_connectionCut_title,
+            R.string.serverError_connectionCut_text
+        )
     }
 
     // Показать диалог "нет интернета", если подключения нет

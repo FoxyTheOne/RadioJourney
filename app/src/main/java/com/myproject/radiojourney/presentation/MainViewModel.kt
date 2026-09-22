@@ -17,6 +17,7 @@ import com.myproject.radiojourney.other.Constants.CANCEL_PLAYLIST_DOWNLOAD
 import com.myproject.radiojourney.other.Constants.COUNTRY_CODE_ID
 import com.myproject.radiojourney.other.Constants.MEDIA_ROOT_ID
 import com.myproject.radiojourney.other.Constants.PROGRESS_TIMEOUT
+import com.myproject.radiojourney.other.ServerError
 import com.myproject.radiojourney.presentation.model.RadioStationPresentation
 import com.myproject.radiojourney.presentation.model.toDomain
 import com.myproject.radiojourney.presentation.model.toPresentation
@@ -77,7 +78,7 @@ class MainViewModel @Inject constructor(
 
     // Прогресс загрузки плейлиста (0..100) и ошибка "сервер недоступен" - из сервиса плеера
     val playlistDownloadProgress: StateFlow<Int> = playlistDownloadStatus.progressPercent
-    val serverIsDown: SharedFlow<Unit> = playlistDownloadStatus.serverIsDown
+    val serverIsDown: SharedFlow<ServerError> = playlistDownloadStatus.serverIsDown
 
     // null - плейлист ещё загружается
     private val _playlist = MutableStateFlow<Playlist?>(null)

@@ -7,8 +7,8 @@ import com.myproject.radiojourney.data.mapper.toLocal
 import com.myproject.radiojourney.domain.iRepository.IMainRadioStationRepository
 import com.myproject.radiojourney.domain.model.Country
 import com.myproject.radiojourney.domain.model.RadioStation
-import com.myproject.radiojourney.other.Constants
 import com.myproject.radiojourney.other.Resource
+import com.myproject.radiojourney.other.ServerError
 import com.myproject.radiojourney.other.Status
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -45,7 +45,11 @@ class MainRadioStationRepository @Inject constructor(
         return if (radioStationRemoteListResource.status == Status.SUCCESS && radioStationRemoteList != null) {
             Resource.success(radioStationRemoteList.map { it.toDomain() })
         } else {
-            Resource.error(Constants.SERVER_IS_DOWN, listOf())
+            // Причину неудачи (ServerError) передаём дальше как есть - по ней экран выберет текст сообщения
+            Resource.error(
+                radioStationRemoteListResource.message ?: ServerError.SERVER_NOT_RESPONDING.name,
+                listOf()
+            )
         }
     }
 

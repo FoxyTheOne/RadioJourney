@@ -375,12 +375,9 @@ class MainActivity : AppCompatActivity() {
             binding?.progressBarHorizontalDp?.progress = 70 * percent / 100
         }
 
-        // Не удалось скачать плейлист: сервер недоступен (раньше - LocalBroadcastManager из MusicService)
-        collectWhenStarted(mainViewModel.serverIsDown) {
-            infoDialog.show(
-                R.string.dialogInternetTrouble_title4,
-                R.string.dialogInternetTrouble_text4
-            )
+        // Не удалось скачать плейлист (раньше - LocalBroadcastManager из MusicService). Текст зависит от причины
+        collectWhenStarted(mainViewModel.serverIsDown) { reason ->
+            infoDialog.showServerError(reason)
             mainViewModel.hideProgressAndSetClickable(true)
         }
 

@@ -12,6 +12,7 @@ import com.myproject.radiojourney.domain.iRepository.IMyStationRepository
 import com.myproject.radiojourney.domain.model.RadioStation
 import com.myproject.radiojourney.other.Constants.FAVOURITES_COUNTRY_CODE_SUFFIX
 import com.myproject.radiojourney.other.Constants.MY_STATIONS_COUNTRY_CODE
+import com.myproject.radiojourney.other.ServerError
 import com.myproject.radiojourney.other.Status
 import com.myproject.radiojourney.utils.exoplayer.State.STATE_INITIALIZED
 import com.myproject.radiojourney.utils.exoplayer.State.STATE_INITIALIZING
@@ -98,7 +99,7 @@ class RadioPlaylistSource @Inject constructor(
             )
             // radioStations не трогаем: плейер продолжает играть текущий плейлист, список в плейере остаётся прежним.
             // MainActivity покажет диалог и уберёт полосу загрузки
-            playlistDownloadStatus.notifyServerIsDown()
+            playlistDownloadStatus.notifyServerIsDown(ServerError.fromMessage(radioStationsResource.message))
             readiness.state = STATE_INITIALIZED
             return@withContext
         }
