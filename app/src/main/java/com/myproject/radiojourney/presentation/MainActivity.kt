@@ -29,9 +29,9 @@ import com.myproject.radiojourney.other.Constants
 import com.myproject.radiojourney.presentation.common.InfoDialog
 import com.myproject.radiojourney.presentation.common.PermissionSessionState
 import com.myproject.radiojourney.presentation.common.collectWhenStarted
+import com.myproject.radiojourney.presentation.common.fallbackStationListMessage
 import com.myproject.radiojourney.presentation.common.isInternetAvailable
 import com.myproject.radiojourney.presentation.common.navigateSafely
-import com.myproject.radiojourney.presentation.common.savedStationListMessage
 import com.myproject.radiojourney.presentation.common.showPermissionDeniedDialog
 import com.myproject.radiojourney.presentation.common.showPermissionRationale
 import com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioFragmentDirections
@@ -377,16 +377,17 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Не удалось скачать плейлист (раньше - LocalBroadcastManager из MusicService). Текст зависит от причины
-        // Сервер не ответил, но у этой страны есть сохранённый список - плейлист собран из него
-        collectWhenStarted(mainViewModel.savedPlaylistUsed) { savedAt ->
+        // Плейлист собран из запасного списка: сохранённого при прошлом скачивании или только самых популярных станций
+        collectWhenStarted(mainViewModel.fallbackPlaylistUsed) { list ->
+            val message =
+                fallbackStationListMessage(list.savedAt, list.isOnlyPopular, list.stations.size)
+                    ?: return@collectWhenStarted
             binding?.let {
-                Snackbar.make(
-                    it.rootLayout.rootView,
-                    savedStationListMessage(savedAt),
-                    Snackbar.LENGTH_LONG
-                ).setTextMaxLines(4).show()
+                Snackbar.make(it.rootLayout.rootView, message, Snackbar.LENGTH_LONG)
+                    .setTextMaxLines(4).show()
             }
         }
+
         collectWhenStarted(mainViewModel.serverIsDown) { reason ->
             infoDialog.showServerError(reason)
             mainViewModel.hideProgressAndSetClickable(true)

@@ -27,9 +27,10 @@
     <string name="serverError_connectionCut_title">Соединение обрывается</string>
     <string name="serverError_connectionCut_text">Сервер radio-browser.info отвечает, но соединение с ним обрывается раньше, чем приходит весь ответ. Похоже, доступ к нему ограничивает ваш интернет-провайдер - в некоторых сетях так бывает с зарубежными серверами. Попробуйте позже или через другую сеть.</string>
     <string name="savedStationList_used">Сервер radio-browser.info недоступен. Показан список, сохранённый %1$s</string>
+    <string name="stationList_onlyPopular">Весь список не загрузился: соединение с сервером radio-browser.info обрывается. Показаны только %1$d самых популярных станций</string>
     <string name="dialogPleaseWait_title">Пожалуйста, подождите!</string>
     <string name="dialogPleaseWait_text">Пытаюсь подключиться к радиостанции</string>
-    <string name="dialog_close">(Нажмите на свободное место, чтобы закрыть окно)</string>
+    <string name="dialog_close">(Нажмите на свободное место, чтобы закрыть lокно)</string>
     <string name="dialogPleaseWait_title2">Что-то пошло не так</string>
     <string name="dialogPleaseWait_text2">Похоже, что сервер с информацией о радиостанциях временно не работает. Пожалуйста, попробуйте ещё раз позже</string>
     <string name="dialogPleaseWait_text5">Во время последнего запроса сервер с информацией о радиостанциях был недоступен. Вы можете попробовать повторить запрос или зайти в программу позже</string>

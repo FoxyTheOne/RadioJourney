@@ -29,10 +29,12 @@ class RadioListViewModel @Inject constructor(
     sealed interface UiState {
         data object Loading : UiState
 
-        // savedAt - сервер не ответил, и показан список, сохранённый в это время (null - список свежий, с сервера)
+        // Список запасной (см. RadioStationList): savedAt - сервер не ответил, и показан список, сохранённый в это время;
+        // isOnlyPopular - полный список обрывался, и показаны только самые популярные станции. Обычный список - null и false
         data class Loaded(
             val radioStations: List<RadioStationPresentation>,
-            val savedAt: Long? = null
+            val savedAt: Long? = null,
+            val isOnlyPopular: Boolean = false
         ) : UiState
 
         data class ServerIsDown(val reason: ServerError) : UiState
@@ -71,7 +73,8 @@ class RadioListViewModel @Inject constructor(
                 } else {
                     UiState.Loaded(
                         radioStationList.stations.map { it.toPresentation() },
-                        radioStationList.savedAt
+                        radioStationList.savedAt,
+                        radioStationList.isOnlyPopular
                     )
                 }
         }

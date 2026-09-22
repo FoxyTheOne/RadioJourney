@@ -107,12 +107,9 @@ class RadioPlaylistSource @Inject constructor(
             TAG,
             "Загружаем метаданные fetchMediaData - $countryCode, listSize = ${radioStationList.size}"
         )
-        // Сервер не ответил, и плейлист взят из сохранённого - экран скажет об этом пользователю
-        radioStationsResource.data?.savedAt?.let { savedAt ->
-            playlistDownloadStatus.notifySavedPlaylistUsed(
-                savedAt
-            )
-        }
+        // Плейлист запасной (сохранённый или только популярные станции) - экран скажет об этом пользователю
+        radioStationsResource.data?.takeIf { it.isFallback }
+            ?.let { playlistDownloadStatus.notifyFallbackPlaylistUsed(it) }
     }
 
     // Загрузить плейлист избранного из Room

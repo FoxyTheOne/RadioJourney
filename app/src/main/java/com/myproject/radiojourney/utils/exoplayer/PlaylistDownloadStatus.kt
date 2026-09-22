@@ -1,5 +1,6 @@
 package com.myproject.radiojourney.utils.exoplayer
 
+import com.myproject.radiojourney.domain.model.RadioStationList
 import com.myproject.radiojourney.other.ServerError
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,9 +29,10 @@ class PlaylistDownloadStatus @Inject constructor() {
     private val _serverIsDown = MutableSharedFlow<ServerError>(extraBufferCapacity = 1)
     val serverIsDown: SharedFlow<ServerError> = _serverIsDown.asSharedFlow()
 
-    // Событие "сервер не ответил, плейлист взят из сохранённого". Значение - когда список был сохранён
-    private val _savedPlaylistUsed = MutableSharedFlow<Long>(extraBufferCapacity = 1)
-    val savedPlaylistUsed: SharedFlow<Long> = _savedPlaylistUsed.asSharedFlow()
+    // Событие "плейлист не свежий и полный, а запасной": сохранённый при прошлом скачивании или только самые популярные станции
+    // (см. RadioStationList.isFallback). Экран скажет об этом пользователю
+    private val _fallbackPlaylistUsed = MutableSharedFlow<RadioStationList>(extraBufferCapacity = 1)
+    val fallbackPlaylistUsed: SharedFlow<RadioStationList> = _fallbackPlaylistUsed.asSharedFlow()
 
     fun resetProgress() {
         _progressPercent.value = 0
@@ -44,7 +46,7 @@ class PlaylistDownloadStatus @Inject constructor() {
         _serverIsDown.tryEmit(reason)
     }
 
-    fun notifySavedPlaylistUsed(savedAt: Long) {
-        _savedPlaylistUsed.tryEmit(savedAt)
+    fun notifyFallbackPlaylistUsed(radioStationList: RadioStationList) {
+        _fallbackPlaylistUsed.tryEmit(radioStationList)
     }
 }

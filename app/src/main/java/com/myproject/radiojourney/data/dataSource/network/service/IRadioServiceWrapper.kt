@@ -7,5 +7,6 @@ package com.myproject.radiojourney.data.dataSource.network.service
  * поэтому Retrofit нельзя создать один раз в модуле Hilt - его создаёт этот класс, по одному на адрес
  */
 interface IRadioServiceWrapper {
-    fun getRadioService(baseURL: String): IRadioService
+    // freshConnection = true - каждый запрос по новому соединению, без переиспользования уже открытых (см. RadioServiceWrapper)
+    fun getRadioService(baseURL: String, freshConnection: Boolean = false): IRadioService
 }

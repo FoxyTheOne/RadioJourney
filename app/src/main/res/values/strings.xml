@@ -27,6 +27,7 @@
     <string name="serverError_connectionCut_title">The connection keeps breaking</string>
     <string name="serverError_connectionCut_text">The radio-browser.info server responds, but the connection breaks before the whole answer arrives. It looks like your internet provider limits access to it - in some networks this happens with servers abroad. Please try again later or use a different network.</string>
     <string name="savedStationList_used">The radio-browser.info server is unavailable. Showing the list saved on %1$s</string>
+    <string name="stationList_onlyPopular">The full list could not be loaded: the connection to the radio-browser.info server keeps breaking. Showing only the %1$d most popular stations</string>
     <string name="dialogPleaseWait_title">Please wait!</string>
     <string name="dialogPleaseWait_text">I\'m trying to connect to the radio station</string>
     <string name="dialog_close">(Click on free space to close the window)</string>

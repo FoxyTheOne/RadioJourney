@@ -14,9 +14,9 @@ import com.myproject.radiojourney.R
 import com.myproject.radiojourney.presentation.MainViewModel
 import com.myproject.radiojourney.presentation.common.InfoDialog
 import com.myproject.radiojourney.presentation.common.collectWhenStarted
+import com.myproject.radiojourney.presentation.common.fallbackStationListMessage
 import com.myproject.radiojourney.presentation.common.navigateSafely
 import com.myproject.radiojourney.presentation.common.popBackStackSafely
-import com.myproject.radiojourney.presentation.common.savedStationListMessage
 import com.myproject.radiojourney.presentation.content.radioStationList.adapter.ListRadioStationAdapter
 import com.myproject.radiojourney.presentation.content.radioStationList.base.BaseRadioListFragmentAbstract
 import com.myproject.radiojourney.presentation.model.RadioStationPresentation
@@ -83,13 +83,14 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
                 }
 
                 is RadioListViewModel.UiState.Loaded -> {
-                    // Сервер не ответил, и показан сохранённый список - говорим об этом, не закрывая список
-                    uiState.savedAt?.let { savedAt ->
-                        Snackbar.make(
-                            requireView(),
-                            requireContext().savedStationListMessage(savedAt),
-                            Snackbar.LENGTH_LONG
-                        ).setTextMaxLines(4).show()
+                    // Список запасной (сохранённый или только популярные станции) - говорим об этом, не закрывая список
+                    requireContext().fallbackStationListMessage(
+                        uiState.savedAt,
+                        uiState.isOnlyPopular,
+                        uiState.radioStations.size
+                    )?.let { message ->
+                        Snackbar.make(requireView(), message, Snackbar.LENGTH_LONG)
+                            .setTextMaxLines(4).show()
                     }
                     uiState.radioStations
                 }

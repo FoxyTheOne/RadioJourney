@@ -9,6 +9,11 @@ package com.myproject.radiojourney.other
  */
 object Constants {
     const val MAX_STATIONS_COUNT = 300
+
+    // Сколько самых популярных станций запросить, если полный список страны обрывается на середине (ServerError.CONNECTION_CUT).
+    // В некоторых сетях с сервера radio-browser проходят только первые ~16 КБ ответа. Одна станция - около 1,2 КБ,
+    // 10 станций - около 11 КБ: такой ответ укладывается, и пользователь получает хотя бы самые популярные станции
+    const val POPULAR_STATIONS_FALLBACK_COUNT = 10
     const val DEFAULT_COUNTRY_CODE = "AQ"
 
     // Служебные "коды страны" плейлистов, которых нет на карте:

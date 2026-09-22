@@ -11,6 +11,7 @@ import com.myproject.radiojourney.domain.model.Country
 import com.myproject.radiojourney.domain.model.RadioStation
 import com.myproject.radiojourney.domain.model.RadioStationList
 import com.myproject.radiojourney.other.Constants.DEFAULT_COUNTRY_CODE
+import com.myproject.radiojourney.other.Constants.POPULAR_STATIONS_FALLBACK_COUNT
 import com.myproject.radiojourney.other.Resource
 import com.myproject.radiojourney.other.ServerError
 import com.myproject.radiojourney.other.Status
@@ -43,7 +44,8 @@ class MainRadioStationRepository @Inject constructor(
     override suspend fun setStationFavourite(radioStation: RadioStation, isFavourite: Boolean) =
         localRadioDataSource.setStationFavourite(radioStation.toLocal(), isFavourite)
 
-    // Список станций страны: с сервера, а если сервер недоступен - сохранённый при прошлом удачном скачивании.
+    // Список станций страны: с сервера, а если сервер недоступен - сохранённый при прошлом удачном скачивании
+    // или (если ответ сервера обрывается) только самые популярные станции.
     // Здесь репозиторий и делает то, ради чего существует: решает, откуда взять данные
     override suspend fun getRadioStationList(countryCode: String): Resource<RadioStationList> {
         val listCountryCode = countryCode.uppercase(Locale.ROOT)
@@ -69,7 +71,8 @@ class MainRadioStationRepository @Inject constructor(
             return Resource.success(RadioStationList(stations))
         }
 
-        // Сервер не отдал список. Если этот список уже скачивали раньше - отдаём сохранённый (с датой сохранения)
+        // Сервер не отдал список. Если этот список уже скачивали раньше - отдаём сохранённый (с датой сохранения):
+        // полный, пусть и не самый свежий, лучше, чем короткий
         val savedStations = localRadioDataSource.getSavedStationList(listCountryCode)
         if (savedStations.isNotEmpty()) {
             return Resource.success(
@@ -80,10 +83,27 @@ class MainRadioStationRepository @Inject constructor(
             )
         }
 
-        // Сохранённого нет. Причину неудачи (ServerError) передаём дальше как есть - по ней экран выберет текст сообщения
-        return Resource.error(
-            radioStationRemoteListResource.message ?: ServerError.SERVER_NOT_RESPONDING.name, null
-        )
+        // Сохранённого нет, а ответ сервера обрывался на середине - просим только самые популярные станции.
+        // Такой ответ маленький (~11 КБ) и проходит там, где большой обрывается (см. POPULAR_STATIONS_FALLBACK_COUNT).
+        // Его не сохраняем: он неполный и не должен заменить собой полный список, когда тот удастся скачать
+        val failure = ServerError.fromMessage(radioStationRemoteListResource.message)
+        if (failure == ServerError.CONNECTION_CUT) {
+            val popularStations = networkRadioDataSource.getRadioStationList(
+                listCountryCode,
+                POPULAR_STATIONS_FALLBACK_COUNT
+            ).data
+            if (!popularStations.isNullOrEmpty()) {
+                return Resource.success(
+                    RadioStationList(
+                        popularStations.map { it.toDomain() },
+                        isOnlyPopular = true
+                    )
+                )
+            }
+        }
+
+        // Ничего не вышло. Причину неудачи (ServerError) передаём дальше как есть - по ней экран выберет текст сообщения
+        return Resource.error(failure.name, null)
     }
 
     // Страна для первого плейлиста: та, что знает телефон (сотовая сеть, SIM, регион - см. DeviceCountryDataSource).

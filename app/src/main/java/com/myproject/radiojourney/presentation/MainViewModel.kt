@@ -12,6 +12,7 @@ import com.myproject.radiojourney.data.worker.CountryCacheScheduler
 import com.myproject.radiojourney.domain.changeFavouriteUseCase.IChangeFavouriteUseCase
 import com.myproject.radiojourney.domain.firstScreenLoadingUseCase.ILoginScreenUseCase
 import com.myproject.radiojourney.domain.mainRadioUseCase.IMainRadioUseCase
+import com.myproject.radiojourney.domain.model.RadioStationList
 import com.myproject.radiojourney.other.Constants.ADD_SONGS
 import com.myproject.radiojourney.other.Constants.CANCEL_PLAYLIST_DOWNLOAD
 import com.myproject.radiojourney.other.Constants.COUNTRY_CODE_ID
@@ -80,8 +81,9 @@ class MainViewModel @Inject constructor(
     val playlistDownloadProgress: StateFlow<Int> = playlistDownloadStatus.progressPercent
     val serverIsDown: SharedFlow<ServerError> = playlistDownloadStatus.serverIsDown
 
-    // Сервер не ответил, плейлист взят из сохранённого (значение - когда он был сохранён)
-    val savedPlaylistUsed: SharedFlow<Long> = playlistDownloadStatus.savedPlaylistUsed
+    // Плейлист запасной: сохранённый при прошлом скачивании или только самые популярные станции
+    val fallbackPlaylistUsed: SharedFlow<RadioStationList> =
+        playlistDownloadStatus.fallbackPlaylistUsed
 
     // null - плейлист ещё загружается
     private val _playlist = MutableStateFlow<Playlist?>(null)

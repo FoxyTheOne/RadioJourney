@@ -2,6 +2,7 @@ package com.myproject.radiojourney.data.dataSource.network
 
 import com.myproject.radiojourney.data.dataSource.network.entity.CountryRemote
 import com.myproject.radiojourney.data.dataSource.network.entity.RadioStationRemote
+import com.myproject.radiojourney.other.Constants.MAX_STATIONS_COUNT
 import com.myproject.radiojourney.other.Resource
 
 /**
@@ -12,9 +13,12 @@ import com.myproject.radiojourney.other.Resource
 interface INetworkRadioDataSource {
     suspend fun getCountryList(): List<CountryRemote>
 
-    //    suspend fun getRadioStationList(countryCode: String): List<RadioStationRemote>
-    suspend fun getRadioStationList(countryCode: String): Resource<List<RadioStationRemote>>
+    // limit - сколько самых популярных станций страны запросить. Меньше MAX_STATIONS_COUNT - запасной короткий список
+    // (см. POPULAR_STATIONS_FALLBACK_COUNT): его запрашивают сразу после неудачи с полным, поэтому серверы перебираются один раз
+    suspend fun getRadioStationList(
+        countryCode: String,
+        limit: Int = MAX_STATIONS_COUNT
+    ): Resource<List<RadioStationRemote>>
 
-    //    suspend fun getAllRadioStationsList(): List<RadioStationRemote>
     suspend fun sendGetRequestToMarkRadioStationAsPopular(stationUuid: String): Boolean
 }

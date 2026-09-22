@@ -75,12 +75,20 @@ class NetworkRadioDataSource @Inject constructor(
     // Список станций страны. Серверы перебираются по кругу, пока не пройдёт SERVER_SEARCH_TIME
     // (полоса загрузки PROGRESS_TIMEOUT рассчитана так, чтобы не пропасть раньше, чем закончится перебор).
     // При ошибке в Resource.message - причина (ServerError), по ней экран выбирает, что написать пользователю
-    override suspend fun getRadioStationList(countryCode: String): Resource<List<RadioStationRemote>> {
+    override suspend fun getRadioStationList(
+        countryCode: String,
+        limit: Int
+    ): Resource<List<RadioStationRemote>> {
         val response = requestFromAnyServer(
-            searchTimeMs = SERVER_SEARCH_TIME,
+            // Полный список ищем долго: без него плеер останется без станций. Короткий запасной - один проход по серверам:
+            // его просят сразу после долгой неудачи с полным, и пользователь уже подождал
+            searchTimeMs = if (limit >= MAX_STATIONS_COUNT) SERVER_SEARCH_TIME else 0L,
+            // Короткий список - по новому соединению: в сетях с ограничением "первые ~16-20 КБ соединения"
+            // он не должен делить соединение с другими запросами (см. RadioServiceWrapper)
+            freshConnection = limit < MAX_STATIONS_COUNT,
             isValidResult = { it.isNotEmpty() }
         ) {
-            getRadioStationList(searchTerm = countryCode.uppercase())
+            getRadioStationList(searchTerm = countryCode.uppercase(), limit = limit)
         }
         val radioStationRemoteList = response.data
             ?: return Resource.error(
@@ -139,12 +147,14 @@ class NetworkRadioDataSource @Inject constructor(
      * - [searchTimeMs] - сколько времени перебирать серверы по кругу. 0 - обойти каждый сервер ровно один раз.
      *   Долго перебираем только плейлист станций (SERVER_SEARCH_TIME): без него пользователь увидит ошибку
      *   из-за одного неудачного сервера, а список стран и отметка популярности могут подождать до следующего запуска.
+     * - [freshConnection] - каждую попытку делать по новому соединению, не переиспользуя открытые (см. RadioServiceWrapper).
      *
      * @return Resource.success с ответом первого сервера, для которого [isValidResult] вернул true,
      * или Resource.error, если не ответил никто. В message - причина неудачи (имя из [ServerError])
      */
     private suspend fun <T> requestFromAnyServer(
         searchTimeMs: Long = 0L,
+        freshConnection: Boolean = false,
         isValidResult: (T) -> Boolean,
         request: suspend IRadioService.() -> T
     ): Resource<T> {
@@ -179,7 +189,7 @@ class NetworkRadioDataSource @Inject constructor(
             try {
                 // Вот здесь вызывается лямбда: getRadioService(baseURL) даёт IRadioService этого сервера,
                 // а .request() выполняет на нём тот метод API, который передали в параметре
-                val result = radioServiceWrapper.getRadioService(baseURL).request()
+                val result = radioServiceWrapper.getRadioService(baseURL, freshConnection).request()
                 // Ответ получен. Если он нас устраивает - выходим из цикла и из метода, остальные серверы не трогаем
                 if (isValidResult(result)) return Resource.success(result)
                 Log.d(TAG, "Сервер $baseURL прислал пустой ответ")
