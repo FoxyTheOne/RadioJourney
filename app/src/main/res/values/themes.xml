@@ -16,6 +16,10 @@
         <item name="colorOnSecondary">@color/black</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
+        <!-- Панель навигации внизу (жесты или кнопки "назад / домой / приложения") - того же оранжевого цвета.
+             Без этого цвет брался из системы: на одних телефонах чёрный, на других белый.
+             Работает до Android 14, на Android 15+ цвет рисует MainActivity.applySystemBarInsets -->
+        <item name="android:navigationBarColor">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->
         <item name="fontFamily">@font/comfortaa_variable_font_wght</item>
         <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.MyApp.SmallComponent

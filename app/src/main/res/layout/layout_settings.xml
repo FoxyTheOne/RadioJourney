@@ -89,6 +89,17 @@
                 android:paddingBottom="@dimen/space_beforeOrAfterElement"
                 android:text="@string/settings_text3" />
 
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/text_about4"
+                style="@style/login_bottom"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:textStyle="bold"
+                app:fontWeight="800"
+                android:paddingBottom="@dimen/space_beforeOrAfterElement"
+                android:text="@string/settings_text4" />
+
             <!-- Тот же текст, что в информационном блоке на карте: там его можно закрыть крестиком, а здесь - перечитать -->
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/text_aboutServer"
@@ -107,15 +118,6 @@
                 android:layout_gravity="center_vertical"
                 android:paddingBottom="@dimen/space_beforeOrAfterElement"
                 android:text="@string/homeRadio_mayNotWork" />
-
-            <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/text_about4"
-                style="@style/login_bottom"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:paddingBottom="@dimen/space_beforeOrAfterElement"
-                android:text="@string/settings_text4" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/text_about5"

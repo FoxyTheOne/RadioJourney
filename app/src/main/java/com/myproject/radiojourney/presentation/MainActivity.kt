@@ -567,9 +567,10 @@ class MainActivity : AppCompatActivity() {
     // Начиная с targetSdk 35, на Android 15+ окно всегда рисуется под строкой состояния и панелью навигации (edge-to-edge),
     // а цвет строки состояния из темы (android:statusBarColor) не применяется: заголовок заходил под часы,
     // а плеер внизу - под полоску жестов. Добавляем отступы на размер системных панелей и сами рисуем
-    // оранжевый фон под строкой состояния, как было раньше. На старых версиях Android отступы равны 0
+    // оранжевый фон под строкой состояния и панелью навигации. На старых версиях Android отступы равны 0,
+    // а цвета панелей берутся из темы (android:statusBarColor, android:navigationBarColor)
     private fun applySystemBarInsets(rootView: View) {
-        val statusBarColor = ContextCompat.getColor(this, R.color.orange)
+        val barColor = ContextCompat.getColor(this, R.color.orange)
         val backgroundColor = ContextCompat.getColor(this, R.color.background)
 
         ViewCompat.setOnApplyWindowInsetsListener(rootView) { v, insets ->
@@ -583,20 +584,38 @@ class MainActivity : AppCompatActivity() {
                 bottom = bars.bottom
             )
 
-            // Фон: сверху полоса цвета строки состояния, остальное - тёмный фон приложения
+            // Фон: тёмный фон приложения, а по краям, под системными панелями, - оранжевые полосы.
+            // Сверху строка состояния, снизу панель навигации. Слева и справа - тоже она (и вырез камеры),
+            // если телефон повернули и кнопки навигации оказались сбоку
             v.background = LayerDrawable(
                 arrayOf(
-                    ColorDrawable(backgroundColor),
-                    ColorDrawable(statusBarColor)
-                )
+                    backgroundColor,
+                    barColor,
+                    barColor,
+                    barColor,
+                    barColor
+                ).map { ColorDrawable(it) }.toTypedArray()
             ).apply {
                 setLayerGravity(1, Gravity.TOP or Gravity.FILL_HORIZONTAL)
                 setLayerHeight(1, bars.top)
+                setLayerGravity(2, Gravity.BOTTOM or Gravity.FILL_HORIZONTAL)
+                setLayerHeight(2, bars.bottom)
+                setLayerGravity(3, Gravity.START or Gravity.FILL_VERTICAL)
+                setLayerWidth(3, bars.left)
+                setLayerGravity(4, Gravity.END or Gravity.FILL_VERTICAL)
+                setLayerWidth(4, bars.right)
             }
             WindowInsetsCompat.CONSUMED
         }
 
-        // Светлые значки на оранжевой строке состояния и тёмной панели навигации
+        // На Android 10+ система кладёт под кнопки навигации ("назад / домой / приложения") полупрозрачную подложку,
+        // чтобы кнопки были видны на любом фоне. На светлой теме телефона она белая - из-за неё полоса и была белой.
+        // Наш фон оранжевый и однотонный, кнопки на нём видны и так, поэтому подложку отключаем
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            window.isNavigationBarContrastEnforced = false
+        }
+
+        // Светлые значки на оранжевых строке состояния и панели навигации
         WindowCompat.getInsetsController(window, rootView).apply {
             isAppearanceLightStatusBars = false
             isAppearanceLightNavigationBars = false
