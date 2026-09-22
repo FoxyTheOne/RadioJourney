@@ -30,7 +30,7 @@
     <string name="stationList_onlyPopular">Весь список не загрузился: соединение с сервером radio-browser.info обрывается. Показаны только %1$d самых популярных станций</string>
     <string name="dialogPleaseWait_title">Пожалуйста, подождите!</string>
     <string name="dialogPleaseWait_text">Пытаюсь подключиться к радиостанции</string>
-    <string name="dialog_close">(Нажмите на свободное место, чтобы закрыть lокно)</string>
+    <string name="dialog_close">(Нажмите на свободное место, чтобы закрыть окно)</string>
     <string name="dialogPleaseWait_title2">Что-то пошло не так</string>
     <string name="dialogPleaseWait_text2">Похоже, что сервер с информацией о радиостанциях временно не работает. Пожалуйста, попробуйте ещё раз позже</string>
     <string name="dialogPleaseWait_text5">Во время последнего запроса сервер с информацией о радиостанциях был недоступен. Вы можете попробовать повторить запрос или зайти в программу позже</string>

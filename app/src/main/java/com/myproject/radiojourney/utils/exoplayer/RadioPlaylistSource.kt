@@ -107,6 +107,8 @@ class RadioPlaylistSource @Inject constructor(
             TAG,
             "Загружаем метаданные fetchMediaData - $countryCode, listSize = ${radioStationList.size}"
         )
+        setPlaylist(radioStationList)
+
         // Плейлист запасной (сохранённый или только популярные станции) - экран скажет об этом пользователю
         radioStationsResource.data?.takeIf { it.isFallback }
             ?.let { playlistDownloadStatus.notifyFallbackPlaylistUsed(it) }

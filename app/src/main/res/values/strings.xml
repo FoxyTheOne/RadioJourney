@@ -95,7 +95,7 @@
     <!-- exoplayer -->
     <string name="notification_channel_name">Radio station channel</string>
 
-    !-- permissions: why the app asks for them (shown before the system dialog) -->
+    <!-- permissions: why the app asks for them (shown before the system dialog) -->
     <string name="permission_button_continue">Continue</string>
     <string name="permission_button_notNow">Not now</string>
     <string name="permission_button_ok">OK</string>
