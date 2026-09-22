@@ -9,12 +9,14 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.presentation.MainViewModel
 import com.myproject.radiojourney.presentation.common.InfoDialog
 import com.myproject.radiojourney.presentation.common.collectWhenStarted
 import com.myproject.radiojourney.presentation.common.navigateSafely
 import com.myproject.radiojourney.presentation.common.popBackStackSafely
+import com.myproject.radiojourney.presentation.common.savedStationListMessage
 import com.myproject.radiojourney.presentation.content.radioStationList.adapter.ListRadioStationAdapter
 import com.myproject.radiojourney.presentation.content.radioStationList.base.BaseRadioListFragmentAbstract
 import com.myproject.radiojourney.presentation.model.RadioStationPresentation
@@ -80,7 +82,17 @@ class RadioListFragment : BaseRadioListFragmentAbstract() {
                     return@collectWhenStarted
                 }
 
-                is RadioListViewModel.UiState.Loaded -> uiState.radioStations
+                is RadioListViewModel.UiState.Loaded -> {
+                    // Сервер не ответил, и показан сохранённый список - говорим об этом, не закрывая список
+                    uiState.savedAt?.let { savedAt ->
+                        Snackbar.make(
+                            requireView(),
+                            requireContext().savedStationListMessage(savedAt),
+                            Snackbar.LENGTH_LONG
+                        ).setTextMaxLines(4).show()
+                    }
+                    uiState.radioStations
+                }
             }
 
             if (radioStationList.isEmpty()) {

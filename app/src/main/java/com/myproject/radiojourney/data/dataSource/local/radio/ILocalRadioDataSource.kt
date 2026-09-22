@@ -2,6 +2,7 @@ package com.myproject.radiojourney.data.dataSource.local.radio
 
 import com.myproject.radiojourney.data.localDatabaseRoom.entity.CountryLocal
 import com.myproject.radiojourney.data.localDatabaseRoom.entity.RadioStationLocal
+import com.myproject.radiojourney.data.localDatabaseRoom.entity.SavedStationLocal
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -19,6 +20,10 @@ interface ILocalRadioDataSource {
 
     // Заменить весь список стран: страны, которых больше нет (или у которых нет координат), удаляются из базы
     suspend fun replaceCountryList(countryLocalList: List<CountryLocal>)
+
+    // Последний удачно скачанный список станций страны - на случай, если сервер недоступен (см. SavedStationLocal)
+    suspend fun getSavedStationList(countryCode: String): List<SavedStationLocal>
+    suspend fun replaceSavedStationList(countryCode: String, stations: List<SavedStationLocal>)
 
     suspend fun saveLastUsedRadioStationUrlAndCode(urlResolved: String, countryCode: String)
     suspend fun getLastUsedRadioStationUrl(): String

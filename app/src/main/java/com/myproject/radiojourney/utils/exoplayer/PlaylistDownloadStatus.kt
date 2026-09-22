@@ -28,6 +28,10 @@ class PlaylistDownloadStatus @Inject constructor() {
     private val _serverIsDown = MutableSharedFlow<ServerError>(extraBufferCapacity = 1)
     val serverIsDown: SharedFlow<ServerError> = _serverIsDown.asSharedFlow()
 
+    // Событие "сервер не ответил, плейлист взят из сохранённого". Значение - когда список был сохранён
+    private val _savedPlaylistUsed = MutableSharedFlow<Long>(extraBufferCapacity = 1)
+    val savedPlaylistUsed: SharedFlow<Long> = _savedPlaylistUsed.asSharedFlow()
+
     fun resetProgress() {
         _progressPercent.value = 0
     }
@@ -38,5 +42,9 @@ class PlaylistDownloadStatus @Inject constructor() {
 
     fun notifyServerIsDown(reason: ServerError) {
         _serverIsDown.tryEmit(reason)
+    }
+
+    fun notifySavedPlaylistUsed(savedAt: Long) {
+        _savedPlaylistUsed.tryEmit(savedAt)
     }
 }

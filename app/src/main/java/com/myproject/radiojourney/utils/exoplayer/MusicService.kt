@@ -108,7 +108,7 @@ class MusicService : MediaLibraryService() {
     override fun onCreate() {
         super.onCreate()
 
-        // Загружаем плейлист, который слушали в прошлый раз (при первом запуске - DEFAULT_COUNTRY_CODE).
+        // Загружаем плейлист, который слушали в прошлый раз (при первом запуске - страну телефона, см. fetchDefaultPlaylist).
         // Ошибки загрузки обрабатывает RadioPlaylistSource, а непредвиденные исключения - serviceExceptionHandler
         // (раньше здесь были catch SocketTimeoutException / IOException, которые не могли сработать)
         serviceScope.launch {
@@ -126,15 +126,14 @@ class MusicService : MediaLibraryService() {
                     radioPlaylistSource.fetchMyStationsMediaData()
                     // Пользователь удалил все свои станции - плейлист оказался бы пустым, и плеер внизу экрана
                     // остался бы без станций. В этом случае показываем плейлист по умолчанию
-                    if (radioPlaylistSource.radioStations.isEmpty()) {
-                        radioPlaylistSource.fetchMediaData(DEFAULT_COUNTRY_CODE)
-                    }
+                    if (radioPlaylistSource.radioStations.isEmpty()) fetchDefaultPlaylist()
                 }
 
-                else -> radioPlaylistSource.fetchMediaData(
-                    lastPlayedCountryCode.takeIf { it.isNotBlank() && it != "null" }
-                        ?: DEFAULT_COUNTRY_CODE
-                )
+                lastPlayedCountryCode.isNotBlank() && lastPlayedCountryCode != "null" ->
+                    radioPlaylistSource.fetchMediaData(lastPlayedCountryCode)
+
+                // Первый запуск: ещё ничего не слушали
+                else -> fetchDefaultPlaylist()
             }
         }
 
@@ -204,6 +203,19 @@ class MusicService : MediaLibraryService() {
     // Запущенный сервис будет работать пока у него не вызван stopSelf().
     // Передавать данные в сервис можно так же с помощью startService(intent),
     // новый сервис запускаться при этом не будет, а у запущенного сервиса будет вызван onStartCommand.
+
+    // Плейлист по умолчанию: страна телефона (по сотовой сети, SIM-карте или региону - см. getHomeCountryCode).
+    // Если её список не скачался (например, провайдер обрывает соединение с сервером) и сохранённого нет,
+    // берём Антарктиду: её список маленький (~14 КБ) и проходит даже там, где большие списки обрываются.
+    // Раньше Антарктида была всегда
+    private suspend fun fetchDefaultPlaylist() {
+        val homeCountryCode = mainRadioStationRepository.getHomeCountryCode()
+        Log.d(TAG, "Плейлист по умолчанию - страна телефона $homeCountryCode")
+        radioPlaylistSource.fetchMediaData(homeCountryCode)
+        if (radioPlaylistSource.radioStations.isEmpty() && homeCountryCode != DEFAULT_COUNTRY_CODE) {
+            radioPlaylistSource.fetchMediaData(DEFAULT_COUNTRY_CODE)
+        }
+    }
 
     private fun isPlayingOrStarting(): Boolean =
         exoPlayer.playWhenReady &&

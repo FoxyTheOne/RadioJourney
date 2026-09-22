@@ -2,6 +2,7 @@ package com.myproject.radiojourney.domain.iRepository
 
 import com.myproject.radiojourney.domain.model.Country
 import com.myproject.radiojourney.domain.model.RadioStation
+import com.myproject.radiojourney.domain.model.RadioStationList
 import com.myproject.radiojourney.other.Resource
 import kotlinx.coroutines.flow.Flow
 
@@ -20,8 +21,11 @@ interface IMainRadioStationRepository {
     // Добавить в избранное или убрать из него: меняется только флаг избранного
     suspend fun setStationFavourite(radioStation: RadioStation, isFavourite: Boolean)
 
-    // Станции страны с сервера. Ошибка сервера - Resource.error
-    suspend fun getRadioStationList(countryCode: String): Resource<List<RadioStation>>
+    // Список станций страны. Если сервер недоступен - сохранённый при прошлом скачивании (RadioStationList.savedAt)
+    suspend fun getRadioStationList(countryCode: String): Resource<RadioStationList>
+
+    // Код страны для первого плейлиста (по сотовой сети, SIM-карте или региону телефона)
+    suspend fun getHomeCountryCode(): String
 
     suspend fun saveLastUsedRadioStationUrlAndCode(urlResolved: String, countryCode: String)
     suspend fun getLastUsedRadioStationUrl(): String

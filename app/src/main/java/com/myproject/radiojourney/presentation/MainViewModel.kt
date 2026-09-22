@@ -80,6 +80,9 @@ class MainViewModel @Inject constructor(
     val playlistDownloadProgress: StateFlow<Int> = playlistDownloadStatus.progressPercent
     val serverIsDown: SharedFlow<ServerError> = playlistDownloadStatus.serverIsDown
 
+    // Сервер не ответил, плейлист взят из сохранённого (значение - когда он был сохранён)
+    val savedPlaylistUsed: SharedFlow<Long> = playlistDownloadStatus.savedPlaylistUsed
+
     // null - плейлист ещё загружается
     private val _playlist = MutableStateFlow<Playlist?>(null)
     val playlist: StateFlow<Playlist?> = _playlist.asStateFlow()

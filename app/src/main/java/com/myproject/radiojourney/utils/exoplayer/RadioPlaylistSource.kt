@@ -89,9 +89,8 @@ class RadioPlaylistSource @Inject constructor(
             throw e
         }
 
-        val radioStationList = radioStationsResource.data
-        // Пустой список - тоже ошибка: NetworkRadioDataSource возвращает его, если ни один сервер не ответил
-        // (на карте есть только те страны, где радиостанции есть)
+        val radioStationList = radioStationsResource.data?.stations
+        // Пустой список - тоже ошибка (на карте есть только те страны, где радиостанции есть)
         if (radioStationsResource.status == Status.ERROR || radioStationList.isNullOrEmpty()) {
             Log.d(
                 TAG,
@@ -108,7 +107,12 @@ class RadioPlaylistSource @Inject constructor(
             TAG,
             "Загружаем метаданные fetchMediaData - $countryCode, listSize = ${radioStationList.size}"
         )
-        setPlaylist(radioStationList)
+        // Сервер не ответил, и плейлист взят из сохранённого - экран скажет об этом пользователю
+        radioStationsResource.data?.savedAt?.let { savedAt ->
+            playlistDownloadStatus.notifySavedPlaylistUsed(
+                savedAt
+            )
+        }
     }
 
     // Загрузить плейлист избранного из Room

@@ -19,7 +19,9 @@ import com.myproject.radiojourney.data.localDatabaseRoom.AppRoomDBAbstract
 import com.myproject.radiojourney.data.localDatabaseRoom.ICountryDAO
 import com.myproject.radiojourney.data.localDatabaseRoom.IMyStationDAO
 import com.myproject.radiojourney.data.localDatabaseRoom.IRadioStationDAO
+import com.myproject.radiojourney.data.localDatabaseRoom.ISavedStationDAO
 import com.myproject.radiojourney.data.localDatabaseRoom.MIGRATION_12_13
+import com.myproject.radiojourney.data.localDatabaseRoom.MIGRATION_13_14
 import com.myproject.radiojourney.data.preference.AppPreferenceStorage
 import com.myproject.radiojourney.data.preference.IAppPreferenceStorage
 import com.myproject.radiojourney.data.repository.AuthRepository
@@ -78,7 +80,7 @@ abstract class DataModule {
         fun providesAppDatabase(@ApplicationContext appContext: Context): AppRoomDBAbstract =
             Room.databaseBuilder(appContext, AppRoomDBAbstract::class.java, "AppRoomDatabase")
                 // Миграция нужна, чтобы у тех, кто уже пользуется приложением, не пропали избранные станции (см. DatabaseMigrations)
-                .addMigrations(MIGRATION_12_13)
+                .addMigrations(MIGRATION_12_13, MIGRATION_13_14)
                 .build()
 
         @Provides
@@ -92,6 +94,10 @@ abstract class DataModule {
         @Provides
         fun providesMyStationDAO(appDatabase: AppRoomDBAbstract): IMyStationDAO =
             appDatabase.getMyStationDAO()
+
+        @Provides
+        fun providesSavedStationDAO(appDatabase: AppRoomDBAbstract): ISavedStationDAO =
+            appDatabase.getSavedStationDAO()
 
         // Scope приложения для работы, которая не должна отменяться вместе с экраном (см. ApplicationScope)
         @Provides

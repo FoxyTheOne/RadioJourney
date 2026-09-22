@@ -28,7 +28,13 @@ class RadioListViewModel @Inject constructor(
     // Состояние экрана: список загружается, загружен или сервер недоступен
     sealed interface UiState {
         data object Loading : UiState
-        data class Loaded(val radioStations: List<RadioStationPresentation>) : UiState
+
+        // savedAt - сервер не ответил, и показан список, сохранённый в это время (null - список свежий, с сервера)
+        data class Loaded(
+            val radioStations: List<RadioStationPresentation>,
+            val savedAt: Long? = null
+        ) : UiState
+
         data class ServerIsDown(val reason: ServerError) : UiState
     }
 
@@ -52,17 +58,22 @@ class RadioListViewModel @Inject constructor(
         loadRadioStationList()
     }
 
-    // Получаем список радиостанций, преобразуем. Сохранять в Room не будем. Радиостанций очень много, будет занимать много места на телефоне.
-    // Кроме того, списки на сервере постоянно обновляются. Возможно какой-то радиостанции в списке уже не будет, а в локальной БД она ещё осталась.
+    // Получаем список радиостанций, преобразуем. Список всегда запрашивается с сервера: там он постоянно обновляется.
+    // Сохранённый в телефоне список (последний удачно скачанный) репозиторий отдаёт, только если сервер недоступен.
     // Сетевой запрос сам выполняется в фоновом потоке (Retrofit suspend), Dispatchers.IO не нужен
     private fun loadRadioStationList() {
         viewModelScope.launch {
             val radioStationResource = radioListInteractor.getRadioStationList(countryCode)
-            _uiState.value = if (radioStationResource.status == Status.ERROR) {
-                UiState.ServerIsDown(ServerError.fromMessage(radioStationResource.message))
-            } else {
-                UiState.Loaded(radioStationResource.data.orEmpty().map { it.toPresentation() })
-            }
+            val radioStationList = radioStationResource.data
+            _uiState.value =
+                if (radioStationResource.status == Status.ERROR || radioStationList == null) {
+                    UiState.ServerIsDown(ServerError.fromMessage(radioStationResource.message))
+                } else {
+                    UiState.Loaded(
+                        radioStationList.stations.map { it.toPresentation() },
+                        radioStationList.savedAt
+                    )
+                }
         }
     }
 }

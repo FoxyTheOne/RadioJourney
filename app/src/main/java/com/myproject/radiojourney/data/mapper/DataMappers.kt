@@ -5,6 +5,7 @@ import com.myproject.radiojourney.data.dataSource.network.entity.RadioStationRem
 import com.myproject.radiojourney.data.localDatabaseRoom.entity.CountryLocal
 import com.myproject.radiojourney.data.localDatabaseRoom.entity.MyStationLocal
 import com.myproject.radiojourney.data.localDatabaseRoom.entity.RadioStationLocal
+import com.myproject.radiojourney.data.localDatabaseRoom.entity.SavedStationLocal
 import com.myproject.radiojourney.domain.model.Country
 import com.myproject.radiojourney.domain.model.RadioStation
 import com.myproject.radiojourney.other.Constants.MY_STATIONS_COUNTRY_CODE
@@ -78,3 +79,28 @@ fun RadioStation.toMyStationLocal(addedAt: Long = System.currentTimeMillis()) = 
     urlResolved = urlResolved,
     addedAt = addedAt
 )
+
+// Станция сохранённого списка страны (см. SavedStationLocal). Признак избранного не храним:
+// его, как и у свежего списка, проставляют по таблице избранного уже потом
+fun SavedStationLocal.toDomain() = RadioStation(
+    stationUuid = stationUuid,
+    name = stationName,
+    urlResolved = urlResolved,
+    clickCount = clickCount,
+    country = country,
+    countryCode = stationCountryCode,
+    isFavourite = false
+)
+
+fun RadioStation.toSavedStationLocal(listCountryCode: String, position: Int, savedAt: Long) =
+    SavedStationLocal(
+        countryCode = listCountryCode,
+        stationUuid = stationUuid,
+        stationName = name,
+        urlResolved = urlResolved,
+        clickCount = clickCount,
+        country = country,
+        stationCountryCode = countryCode,
+        position = position,
+        savedAt = savedAt
+    )
