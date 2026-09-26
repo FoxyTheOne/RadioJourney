@@ -13,6 +13,16 @@ plugins {
     id 'org.jetbrains.kotlin.plugin.parcelize'
 }
 
+// Данные ключа подписи для релиза берутся из файла keystore.properties рядом с проектом.
+// Сам файл и ключ в репозиторий не попадают (см. .gitignore): тот, у кого есть ключ, может выпускать
+// обновления приложения от имени автора. Если файла нет (например, проект скачал кто-то другой),
+// релиз просто соберётся без подписи, а отладочная сборка работает как обычно
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace 'com.myproject.radiojourney'
     compileSdk 36

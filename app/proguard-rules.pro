@@ -1,21 +1,29 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
+# Правила для R8 - он уменьшает и запутывает код релизной сборки (minifyEnabled в app/build.gradle).
 #
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# Что делает R8: выбрасывает классы и методы, которые никто не вызывает, и переименовывает оставшиеся
+# в короткие имена (a, b, c). Приложение становится меньше и его труднее разбирать. Проблема одна:
+# R8 видит только явные вызовы в коде. Если до класса добираются через рефлексию (по имени, во время работы),
+# R8 об этом не знает - выбросит или переименует, и приложение упадёт уже у пользователя.
+# Поэтому такие классы перечисляют здесь.
+#
+# Большинство библиотек приносят свои правила с собой (Room, Hilt, media3, Retrofit, OkHttp) - их писать не нужно.
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Модели ответов сервера: Gson создаёт их и заполняет поля по именам из JSON, то есть через рефлексию.
+# Без этого правила поля получат имена a, b, c, и все ответы сервера станут пустыми
+-keep class com.myproject.radiojourney.data.dataSource.network.entity.** { *; }
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Имена полей нужны Gson и при разборе обобщённых типов (List<RadioStationRemote>)
+-keepattributes Signature
+-keepattributes *Annotation*
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Понятные отчёты о падениях: строки исходника остаются в стектрейсе, а имя файла прячется.
+# Google Play расшифрует такие стектрейсы обратно по файлу mapping.txt (его загружает Android Gradle plugin)
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
+
+# Отладочные сообщения (Log.d / Log.v) выбрасываются из релизной сборки: пользователю они не нужны,
+# а в логе телефона их видят другие приложения. Log.w и Log.e остаются - по ним видно настоящие проблемы
+-assumenosideeffects class android.util.Log {
+    public static int d(...);
+    public static int v(...);
+}
