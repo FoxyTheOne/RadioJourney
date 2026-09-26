@@ -1,76 +1,172 @@
-# RADIO_JOURNEY
-It is a repository for preparing graduate work. I will continue improving the project in private repository.
+# RadioJourney
 
-This source code is free for studying purposes but you are not allowed to copy and use it in other applications (projects).
+Android-приложение для прослушивания интернет-радио со всего мира: выбираете страну на карте —
+слушаете её станции.
 
-Created by Alina Piatrova.
+Автор — Алина Петрова (Alina Piatrova). Проект начинался как дипломная работа, сейчас это личный проект, который я
+продолжаю развивать.
 
-------------------
+*[English version below](#english)*
 
-My graduate work is an application for listening to Internet radio stations. I am using API.radio-browser.info which allows you to access to collected internet radio stations from all over the world (https://www.radio-browser.info/). This API is available for free. The author allows to use it in free and commercial software without restrictions.
+<p>
+  <img src="docs/screenshots/map.jpg" width="200" alt="Карта с маркерами стран"/>
+  <img src="docs/screenshots/current-playlist.jpg" width="200" alt="Текущий плейлист"/>
+  <img src="docs/screenshots/my-stations.jpg" width="200" alt="Мои радиостанции"/>
+  <img src="docs/screenshots/new-station.jpg" width="200" alt="Добавление своей станции"/>
+</p>
 
-On the main page you will find a google map with markers, by clicking on which you can see the number of available Internet radio stations in this country. A list of Internet radio stations in the selected country (recycler view) can be opened by clicking on this message and then you can select the radio you are interested in.
+---
 
-By clicking on the radio, the user returns to the main screen and can listen to it if this radio is currently working.
+## Что умеет приложение
 
-There are Sign up and Sign in screens with minimal checks of data entry. They are implemented just for practice. Before entering the application, you are asked for your location permission.
+- **Карта мира с маркерами стран.** На маркере видно, сколько в стране радиостанций; по клику
+  открывается их список.
+- **Плеер внизу экрана.** Виден на всех экранах, станции листаются свайпом, играет в фоне и
+  управляется из уведомления.
+- **Избранное.** Звезда на станции — и она попадает в отдельный список, который можно включить как
+  плейлист.
+- **Свои станции.** Станцию, которой нет в каталоге, можно добавить самому по ссылке на поток, а
+  потом изменить или удалить.
+- **Текущий плейлист.** Список станций, которые сейчас в плеере, с подсветкой играющей станции.
+- **Работа при плохой связи.** Списки станций сохраняются в телефоне: если сервер каталога
+  недоступен, приложение покажет сохранённый список и объяснит, что произошло.
 
-- The project uses the MVVM architectural pattern and the Clean Architecture concept;
-- Hilt is used here, as well as Navigation component and View Binding;
-- To store small key-value pairs (token for instance), I use Shared preferences;
-- The Room database is used to store marker locations on the map, as well as to store favorite radio stations. You need to wait for the end of caching at the first start. Further the data is taken from the subscription to the local database. User registration is done for practice, so the logged data is also stored in the Room;
-- I use Foreground service to display caching progress in notification;
-- I make all requests to the server, or to the local database from the ViewModel, through Coroutines;
-- For the request to the server, Retrofit2 is used.
+Данные о станциях приложение берёт из открытого
+каталога [radio-browser.info](https://www.radio-browser.info/). Каталог бесплатный, автор разрешает
+использовать его в бесплатных и платных программах.
 
-------------------
+## Как устроен проект
 
-Данный проект представляет собой приложение для прослушивания интернет радиостанций. Я использую API.radio-browser.info, который предоставляет доступ к собранным интернет-радиостанциям со всего мира (https://www.radio-browser.info/). Этот API доступен бесплатно. Автор разрешает его использовать в бесплатном и платном программном обеспечении без ограничений.
+Приложение написано на Kotlin, по MVVM и чистой архитектуре (три слоя: `data`, `domain`,
+`presentation`).
 
-На главной странице вы найдете google карту с маркерами, нажимая на которые можно увидеть количество доступных в этой стране интернет радиостанций. Нажав на это сообщение, открывается список интернет радиостанций в выбранной стране (recycler view), где можно выбрать интересующее радио.
+| Что                    | Чем сделано                                                                      |
+|------------------------|----------------------------------------------------------------------------------|
+| Внедрение зависимостей | Hilt (+ KSP)                                                                     |
+| Экраны                 | View (не Compose), View Binding, Navigation Component с Safe Args                |
+| Асинхронность          | Coroutines, Flow (StateFlow / SharedFlow / Channel)                              |
+| Сеть                   | Retrofit2 + OkHttp + Gson                                                        |
+| База данных            | Room (страны для карты, избранное, свои станции, сохранённые списки)             |
+| Настройки              | DataStore Preferences                                                            |
+| Фоновая загрузка       | WorkManager (список стран)                                                       |
+| Радио                  | media3 (ExoPlayer + MediaLibraryService), фоновое воспроизведение с уведомлением |
+| Карта                  | Google Maps SDK for Android                                                      |
 
-По клику на радио, пользователь возвращается на главный экран и может его прослушать, если это радио в данный момент работает.
+Комментарии в коде — на русском: проект заодно служит мне конспектом, поэтому в классах написано не
+только *что* они делают, но и *почему* сделано именно так.
 
-Перед входом в приложение для практики реализованы экраны Sign up и Sign in с минимальными проверками правильности ввода данных. Перед входом в приложение запрашивается разрешение на доступ к местоположению.
+Указатель «какая задача где решена» — в [REUSE.md](REUSE.md).
 
-- В проекте используется архитектурный паттерн MVVM и подход Clean Architecture;
-- Используется DI – Hilt, а также Navigation component и View Binding;
-- Для хранения небольших пар ключ-значение (логин и пароль, токен и тп.) я использую Shared preferences;
-- Для сохранения локаций маркеров на карте, а также для хранения избранных радиостанций используется реляционная база данных Room. При первом запуске нужно дождаться окончания кеширования, в дальнейшем данные берутся из подписки на локальную базу данных. Регистрация пользователя сделана для примера, поэтому регистрируемые данные так же сохраняются в Room;
-- Для отображения прогресса кеширования в уведомлении используется Foreground service;
-- Все запросы на сервер, либо в локальную БД из ViewModel я делаю через Coroutines;
-- Для запроса на сервер используется Retrofit2.
+## Сборка
 
-------------------
+Нужен свой ключ Google Maps: получите его в Google Cloud Console (Maps SDK for Android) и положите в
+`local.properties`:
 
-При использовании функции родного android геокодера для получения местоположения по адресу - geocoder.getFromLocationName(), довольно часто приходит исключение «grpc failed». 
+```
+MAPS_API_KEY=ваш_ключ
+```
 
-Процитирую один из комментариев по этому поводу с сайта stackoverflow.com:
+Файл `local.properties` в репозиторий не попадает. Дальше — обычная сборка в Android Studio.
 
-It looks like this is ongoing issue that was reported in the Google issue tracker both for real devices and emulators. You can refer to the following bugs:
+## Условия использования
 
-https://issuetracker.google.com/issues/64418751
+**© 2022–2026 Alina Piatrova. Все права защищены.**
 
-https://issuetracker.google.com/issues/64247769
+Исходный код открыт для чтения и изучения. Это **не** разрешение использовать его в своих проектах.
 
-Unfortunately, Google haven't solved these issues yet.
+Без моего письменного разрешения нельзя:
 
-As a workaround you can consider using the Geocoding API web service. Please note that there is a Java client library for web services that you can find on Github:
+- копировать код, целиком или частями, в другие проекты;
+- публиковать приложение или его переделку в магазинах приложений;
+- использовать оформление приложения — экраны, цвета, иконки, тексты и название RadioJourney.
 
-https://github.com/googlemaps/google-maps-services-java
+Что можно: читать код, учиться по нему, обсуждать его со мной, задавать вопросы в Issues.
 
-Using Java client library for web services you can implement reverse geocoding lookup that shouldn't give you the error that you experience with native Android geocoder.
+Если хотите что-то из этого использовать — напишите мне, я почти наверняка не против, мне важно
+знать, где и как.
 
-The Javadoc for client library is located at
+Сторонние материалы, которые в приложении используются на условиях их авторов: каталог
+станций [radio-browser.info](https://www.radio-browser.info/), изображения
+с [pixabay.com](https://pixabay.com/), координаты стран
+из [Google public data](https://developers.google.com/public-data/), а также библиотеки с открытыми
+лицензиями (см. `app/build.gradle`).
 
-https://googlemaps.github.io/google-maps-services-java/v0.2.5/javadoc/
+---
 
-I hope this helps!
+<a name="english"></a>
 
-В своём проекте я не использовала Geocoding API на данный момент, т.к. он платный. Если при первом запуске программы во время кэширования возникнет ошибка, следует закрыть программу и все его уведомления (если они есть), затем включить и выключить авиа режим, после чего запустить приложение снова.
+# RadioJourney (English)
 
-Это имеет значение только при первом запуске программы. При дальнейшем использовании программа будет работать даже если во время кеширования возникнет сбой.
+An Android app for listening to internet radio from all over the world: pick a country on the map
+and listen to its stations.
 
-------------------
+Made by Alina Piatrova. It started as my graduate work and is now a personal project that I keep
+improving.
 
-Copyright 2022, Piatrova Alina. All rights reserved.
+<p>
+  <img src="docs/screenshots/map.jpg" width="200" alt="Map with country markers"/>
+  <img src="docs/screenshots/current-playlist.jpg" width="200" alt="Current playlist"/>
+  <img src="docs/screenshots/my-stations.jpg" width="200" alt="My stations"/>
+  <img src="docs/screenshots/new-station.jpg" width="200" alt="Adding your own station"/>
+</p>
+
+## Features
+
+- **World map with country markers.** A marker shows how many stations the country has; tapping it
+  opens the list.
+- **Player at the bottom of the screen.** Visible on every screen, stations are switched by swiping,
+  plays in the background and is controlled from the notification.
+- **Favourites.** Tap the star and the station goes to a separate list that can be played as a
+  playlist.
+- **Your own stations.** A station that is missing from the catalogue can be added by its stream
+  link, then edited or deleted.
+- **Current playlist.** The stations currently loaded in the player, with the playing one
+  highlighted.
+- **Works on a poor connection.** Station lists are kept on the phone: if the catalogue server is
+  unavailable, the app shows the saved list and explains what happened.
+
+Station data comes from the open [radio-browser.info](https://www.radio-browser.info/) catalogue,
+which is free to use in both free and commercial software.
+
+## Tech stack
+
+Kotlin, MVVM and clean architecture (`data`, `domain`, `presentation`).
+
+Hilt (KSP), Views with View Binding, Navigation Component with Safe Args, Coroutines and Flow,
+Retrofit2 + OkHttp + Gson, Room, DataStore Preferences, WorkManager, media3 (ExoPlayer +
+MediaLibraryService), Google Maps SDK for Android.
+
+Code comments are in Russian: the project doubles as my own study notes, so classes explain not only
+*what* they do but *why* it is done this way.
+
+## Building
+
+You need your own Google Maps key (Maps SDK for Android) in `local.properties`:
+
+```
+MAPS_API_KEY=your_key
+```
+
+## Terms of use
+
+**© 2022–2026 Alina Piatrova. All rights reserved.**
+
+The source code is open to read and to learn from. That is **not** a permission to use it in your
+own projects.
+
+Without my written permission you may not:
+
+- copy the code, in whole or in part, into other projects;
+- publish the app or a modified version of it in app stores;
+- use the app's design — screens, colours, icons, texts or the RadioJourney name.
+
+You may read the code, learn from it, discuss it with me and ask questions in Issues.
+
+If you would like to use any of it, please write to me — I am very likely fine with it, I just want
+to know where and how.
+
+Third-party material used under its own terms:
+the [radio-browser.info](https://www.radio-browser.info/) catalogue, images
+from [pixabay.com](https://pixabay.com/), country coordinates
+from [Google public data](https://developers.google.com/public-data/), and open-source libraries (
+see `app/build.gradle`).
