@@ -95,16 +95,16 @@ dependencies {
 
     // For activityViewModels working:
     // Java language implementation, Kotlin
-    implementation "androidx.fragment:fragment-ktx:1.9.0"
+    implementation "androidx.fragment:fragment-ktx:1.9.1"
     // Testing Fragments in Isolation
-    debugImplementation "androidx.fragment:fragment-testing:1.9.0"
+    debugImplementation "androidx.fragment:fragment-testing:1.9.1"
 
 //    //  Glide
 //    implementation 'com.github.bumptech.glide:glide:4.12.0'
 //    annotationProcessor 'com.github.bumptech.glide:compiler:4.12.0'
 
     // Navigation
-    implementation 'androidx.navigation:navigation-fragment-ktx:2.9.8'
+    implementation 'androidx.navigation:navigation-fragment-ktx:2.9.8' // 2.10 требует minSdk 24
     implementation 'androidx.navigation:navigation-ui-ktx:2.9.8'
 
     // Location
@@ -120,13 +120,13 @@ dependencies {
     implementation "androidx.media3:media3-session:$media3_version"
 
     // WorkManager - фоновая загрузка списка стран (CountryCacheWorker), hilt-work - @Inject в Worker
-    implementation 'androidx.work:work-runtime-ktx:2.11.2'
+    implementation 'androidx.work:work-runtime-ktx:2.11.2' // 2.12 требует minSdk 24
     implementation 'androidx.hilt:hilt-work:1.4.0'
     ksp 'androidx.hilt:hilt-compiler:1.4.0'
 
     // DataStore - хранилище пар ключ-значение вместо SharedPreferences (см. AppPreferenceStorage)
-    implementation 'androidx.datastore:datastore-preferences:1.1.7'
+    implementation 'androidx.datastore:datastore-preferences:1.2.1'
 
     // Interceptor
-    implementation 'com.squareup.okhttp3:logging-interceptor:5.4.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:5.4.0' // 5.5.0 требует compileSdk 37
 }

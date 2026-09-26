@@ -1,9 +1,8 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     ext {
-        // AGP 9.2 - самая новая версия, которую поддерживает Android Studio Panda 4 (2025.3.4).
-        // Более новая AGP потребует обновить Android Studio
-        agp_version = '9.2.1'
+        // AGP 9.4 - версия под Android Studio 2026.1. Более новая AGP потребует обновить Android Studio
+        agp_version = '9.4.1'
         // С AGP 9 Kotlin встроен в Android Gradle plugin; здесь задаём его версию
         kotlin_version = '2.3.21'
         hilt_version = '2.60.1'

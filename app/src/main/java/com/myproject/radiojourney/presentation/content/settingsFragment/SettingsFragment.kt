@@ -43,7 +43,7 @@ class SettingsFragment : Fragment() {
         binding?.imageArrowBack?.setOnClickListener { popBackStackSafely() }
         binding?.linearForCoffee?.setOnClickListener {
             val browserIntent =
-                Intent(Intent.ACTION_VIEW, "https://boosty.to/foxynest/donate".toUri())
+                Intent(Intent.ACTION_VIEW, "https://foxytheone.github.io/".toUri())
             startActivity(browserIntent)
         }
         binding?.mail?.setOnClickListener {
