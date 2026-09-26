@@ -6,7 +6,10 @@ import androidx.room.PrimaryKey
 import com.google.android.gms.maps.model.LatLng
 
 /**
- * Класс для сохранения в базе данных Room локаций
+ * Страна в таблице Room: код, название, число станций и координаты маркера на карте.
+ *
+ * Список заполняет фоновая загрузка (CountryCacheWorker) и обновляет целиком, поэтому карта работает без сети.
+ * Координаты хранятся как LatLng (класс Google Maps) - его Room не умеет записывать сам, для этого есть LatLngConverter
  */
 @Entity
 data class CountryLocal(

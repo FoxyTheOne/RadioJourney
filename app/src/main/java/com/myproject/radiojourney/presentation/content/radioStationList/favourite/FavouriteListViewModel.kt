@@ -19,8 +19,10 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * Presentation layer, ViewModel. Работа с компонентами Android. Работает только с UseCase.
- * Здесь осуществляется подписка, запрос через корутины.
+ * ViewModel экрана "Избранное": список станций со звездой из базы и снятие или возврат звезды прямо в списке.
+ *
+ * Звезду можно нажать и в плеере, поэтому изменения ходят в обе стороны: этот экран сообщает о своих
+ * (stationFavouriteChanged), а о чужих узнаёт от MainViewModel (applyFavouriteChangeFromOutside)
  */
 @HiltViewModel
 class FavouriteListViewModel @Inject constructor(
@@ -31,16 +33,20 @@ class FavouriteListViewModel @Inject constructor(
     // Список избранного. Звезда меняется у станции в списке; убранная из избранного станция остаётся в списке без звезды,
     // чтобы её можно было вернуть (из списка она пропадёт при следующем открытии экрана). null - список ещё загружается
     private val _radioStationFavouriteList = MutableStateFlow<List<RadioStationPresentation>?>(null)
-    val radioStationFavouriteList: StateFlow<List<RadioStationPresentation>?> = _radioStationFavouriteList.asStateFlow()
+    val radioStationFavouriteList: StateFlow<List<RadioStationPresentation>?> =
+        _radioStationFavouriteList.asStateFlow()
 
     // Звезду нажали в этом списке - экран сообщит плейеру (MainViewModel.notifyFavouriteChanged), какая станция изменилась
-    private val _stationFavouriteChanged = MutableSharedFlow<RadioStationPresentation>(extraBufferCapacity = 8)
-    val stationFavouriteChanged: SharedFlow<RadioStationPresentation> = _stationFavouriteChanged.asSharedFlow()
+    private val _stationFavouriteChanged =
+        MutableSharedFlow<RadioStationPresentation>(extraBufferCapacity = 8)
+    val stationFavouriteChanged: SharedFlow<RadioStationPresentation> =
+        _stationFavouriteChanged.asSharedFlow()
 
     init {
         // Room сам выполняет suspend-запросы в фоновом потоке, отдельный Dispatchers.IO не нужен
         viewModelScope.launch {
-            _radioStationFavouriteList.value = favouriteListInteractor.getRadioStationFavouriteList().map { it.toPresentation() }
+            _radioStationFavouriteList.value =
+                favouriteListInteractor.getRadioStationFavouriteList().map { it.toPresentation() }
         }
     }
 
@@ -54,11 +60,18 @@ class FavouriteListViewModel @Inject constructor(
     }
 
     // Звезду нажали в плейере, пока открыт этот список: меняем звезду у той же станции или добавляем станцию в список
-    fun applyFavouriteChangeFromOutside(radioStation: RadioStationPresentation, isFavourite: Boolean) {
+    fun applyFavouriteChangeFromOutside(
+        radioStation: RadioStationPresentation,
+        isFavourite: Boolean
+    ) {
         _radioStationFavouriteList.update { radioStationList ->
             when {
                 radioStationList == null -> null // список ещё загружается из базы - он придёт уже с изменением
-                radioStationList.any { it.stationuuid == radioStation.stationuuid } -> radioStationList.withFavourite(radioStation.stationuuid, isFavourite)
+                radioStationList.any { it.stationuuid == radioStation.stationuuid } -> radioStationList.withFavourite(
+                    radioStation.stationuuid,
+                    isFavourite
+                )
+
                 isFavourite -> radioStationList + radioStation.copy(isStationInFavourite = true)
                 else -> radioStationList
             }
@@ -70,6 +83,9 @@ class FavouriteListViewModel @Inject constructor(
         _radioStationFavouriteList.update { it?.withFavourite(stationUuid, isFavourite) }
     }
 
-    private fun List<RadioStationPresentation>.withFavourite(stationUuid: String, isFavourite: Boolean) =
+    private fun List<RadioStationPresentation>.withFavourite(
+        stationUuid: String,
+        isFavourite: Boolean
+    ) =
         map { if (it.stationuuid == stationUuid) it.copy(isStationInFavourite = isFavourite) else it }
 }

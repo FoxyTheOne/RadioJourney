@@ -12,7 +12,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Состояние загрузки плейлиста: от сервиса плеера (FirebaseMusicSource) к экрану (MainViewModel -> MainActivity).
+ * Как идёт загрузка плейлиста - от сервиса плеера (RadioPlaylistSource) к экрану (MainViewModel -> MainActivity):
+ * прогресс в процентах, "сервер недоступен" с причиной и "показан запасной список" (сохранённый или короткий).
  *
  * Раньше сервис отправлял это бродкастами (обычным и LocalBroadcastManager). Сервис и экран работают в одном процессе,
  * поэтому достаточно общего объекта (@Singleton) с Flow: не нужны Intent, ключи и регистрация приёмников,

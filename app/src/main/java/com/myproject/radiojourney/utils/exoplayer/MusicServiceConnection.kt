@@ -28,7 +28,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 
 /**
- * A class for connection between activity or fragment with MusicService.
+ * Связь экрана с сервисом плеера (MusicService): через неё экран включает станции и узнаёт, что играет.
+ *
  * С media3 подключение к сервису - через MediaBrowser (раньше MediaBrowserCompat + MediaControllerCompat).
  * MediaBrowser - это одновременно и "пульт" плеера (play, pause, выбор станции), и доступ к списку станций.
  *

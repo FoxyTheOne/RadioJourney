@@ -9,7 +9,10 @@ import com.myproject.radiojourney.databinding.LayoutRadioStationListBaseBinding
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
- * Базовый фрагмент для фрагментов со списком радиостанций: общая разметка
+ * Общий родитель экранов со списками станций (страна, избранное, текущий плейлист): у всех одна разметка
+ * layout_radio_station_list_base.xml - заголовок со стрелкой "назад" и RecyclerView.
+ *
+ * Сами экраны отличаются только тем, что показывают в этой разметке, поэтому здесь остался лишь onCreateView
  */
 @AndroidEntryPoint
 abstract class BaseRadioListFragmentAbstract : Fragment() {

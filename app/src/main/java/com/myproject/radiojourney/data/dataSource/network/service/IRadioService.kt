@@ -9,13 +9,14 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 /**
- * Retrofit2
- * 1. Превращаем JSON в объекты и сохраняем в папку model -> remote
- * 2. Запрос нам нужно будет делать по динамической BASE_URL. Поэтому retrofit инициал. в hilt не на прямую, а с помощью "обёртки".
- *  Составляем end point нашего запроса, создаём для этого интерфейс (IRadioService)
- * 3. Создаём обертку, которую будем инициализировать с помощью hilt (класс RadioServiceWrapper и интерфейс).
- * В ней создаём retrofit сервис.
- * 4. Описываем метод в файле Module для hilt
+ * Запросы к API radio-browser в виде интерфейса: Retrofit сам напишет по нему код запросов.
+ *
+ * Как это читается: аннотация над методом - это адрес запроса (@GET), @Path подставляет часть адреса,
+ * @Query добавляет параметр после "?". Метод suspend - Retrofit выполнит запрос в фоновом потоке,
+ * а возвращаемый тип (например, List<RadioStationRemote>) Gson соберёт из JSON.
+ *
+ * Адрес сервера здесь не указан: он разный (см. NetworkRadioDataSource), поэтому Retrofit создаётся
+ * не в модуле Hilt, а обёрткой RadioServiceWrapper - по одному экземпляру на адрес сервера
  */
 interface IRadioService {
     companion object {

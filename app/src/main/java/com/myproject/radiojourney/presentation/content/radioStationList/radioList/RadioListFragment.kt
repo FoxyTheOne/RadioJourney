@@ -24,7 +24,11 @@ import com.myproject.radiojourney.utils.extension.startStationIndex
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
- * Страница со списком радиостанций по конкретной стране
+ * Экран со списком станций одной страны (открывается с карты).
+ *
+ * Пока плейлист этой страны не загружен в плеер, станции выбрать нельзя: вверху надпись "скачать и включить".
+ * Если сервер недоступен, а список этой страны уже скачивали раньше, показывается сохранённый - с сообщением,
+ * когда он был сохранён (см. RadioStationList)
  */
 @AndroidEntryPoint
 class RadioListFragment : BaseRadioListFragmentAbstract() {

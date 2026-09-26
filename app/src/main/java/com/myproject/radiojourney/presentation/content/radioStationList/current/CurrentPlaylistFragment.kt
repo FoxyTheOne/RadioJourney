@@ -21,7 +21,10 @@ import com.myproject.radiojourney.presentation.content.radioStationList.base.Bas
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
- * Страница со списком радиостанций в текущем плейлисте
+ * Экран "Текущий плейлист": станции, которые сейчас загружены в плеер (открывается кликом по названию станции внизу экрана).
+ *
+ * Список никуда не ходит за данными: он берёт готовый плейлист у MainViewModel. Играющая станция подсвечена,
+ * и список сразу открывается на ней
  */
 @AndroidEntryPoint
 class CurrentPlaylistFragment : BaseRadioListFragmentAbstract() {

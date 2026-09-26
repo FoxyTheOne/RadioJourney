@@ -5,7 +5,10 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 /**
- * Local data source входа в приложение: достаёт данные из локального хранилища (DataStore) и сохраняет их туда
+ * Local data source первого экрана: читает и пишет отметку "экран пройден" в настройках (DataStore).
+ *
+ * Токен - наследство от удалённых экранов регистрации и входа: сейчас это просто случайное число,
+ * по наличию которого приложение понимает, что первый экран уже был пройден
  */
 class LocalUserDataSource @Inject constructor(
     private val preferenceStorage: IAppPreferenceStorage

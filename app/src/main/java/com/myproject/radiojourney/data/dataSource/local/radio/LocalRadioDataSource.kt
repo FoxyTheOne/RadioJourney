@@ -11,7 +11,8 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 /**
- * Data layer, Local data source. Работа с Room и Shared Preference
+ * Data layer, Local data source радио: страны, сохранённые списки станций и избранное - в Room,
+ * настройки и последняя станция - в DataStore (раньше SharedPreferences, см. AppPreferenceStorage)
  */
 class LocalRadioDataSource @Inject constructor(
     private val countryDAO: ICountryDAO,

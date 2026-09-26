@@ -36,29 +36,21 @@ import javax.inject.Inject
 import javax.net.ssl.SSLHandshakeException
 
 /**
- * These steps should be done in your APP or program.
- * 1. Get a list of available servers
- * Do a DNS-lookup of 'all.api.radio-browser.info'. This gives you a list of all available servers. To get the nice names you can do a reverse DNS-Lookup of the entries from the first request and display them to the user. There are some examples of how to do this in different languages: NodeJS (prefered), NodeJS, Python 2, Python 3, Java (Android), C#, Javascript(Browser)
- * Now you have a list of multiple names of servers which you can use to directly connect to with HTTP and preferably HTTPS.
- * Example: https://de1.api.radio-browser.info, https://de2.api.radio-browser.info, ..
+ * Remote data source: все запросы к каталогу радиостанций radio-browser (список стран, станции страны,
+ * отметка "станцию слушают").
  *
- * (Alternative: query the DNS SRV record of _api._tcp.radio-browser.info which gives you the list of server names directly without reverse dns lookups.)
+ * Автор API просит обращаться к серверам не по постоянному адресу, а так (https://api.radio-browser.info/):
+ * 1. Взять список серверов DNS-запросом имени all.api.radio-browser.info (updateDNSList). Обратный DNS-запрос
+ *    даёт имя сервера: по IP-адресу https-запрос не пройдёт, сертификат выдан на имя.
+ *    Если DNS не ответил, берём сервер из документации (FALLBACK_SERVER).
+ * 2. Перемешать список и ходить по нему по очереди, пока сервер не ответит (requestFromAnyServer),
+ *    чтобы все приложения не нагружали один и тот же сервер. На сентябрь 2026 сервер в списке всё равно один - de1.
+ * 3. Представляться заголовком User-Agent (UserAgentInterceptor).
+ * 4. На каждый выбор станции пользователем отправлять /json/url/{uuid} - так каталог считает популярность станций
+ *    (sendGetRequestToMarkRadioStationAsPopular, вызывается из HomeRadioFragment).
  *
- * 2. Randomize the list
- * Either let the user choose one server from the list with a dialog or
- * just randomize the list and choose the first entry of the now random list. If a request fails just retry the request with the next entry in the list.
- *
- * 3. Remember the following things
- * (done +) Send a speaking http agent string (e.g. mycoolapp/1.4) -> UserAgentInterceptor
- * (done +) Send /json/url requests for every click the user makes, this helps to mark stations as popular and makes the database more usefull to other people.
- * -> sendGetRequestToMarkRadioStationAsPopular. Когда пользователь кликает по радиостанции, он попадает в HomeRadioFragment с аргументом, запрос отправляется оттуда
- * (ok +) Send feature requests/bugs to GitLab (раньше в документации был GitHub)
- *
- * 4. Continue with the docs of the server
- * I try to keep them all at the same version, so they should always all be the same.
- * Here are some examples of working servers:
- * https://de1.api.radio-browser.info (на сентябрь 2026 в документации остался только он - он же FALLBACK_SERVER в Constants)
- * Click the links to find out about the API. Please remember that any of them may go down in the future, which means that you always should follow the previous steps in your app.
+ * Здесь же разбираются неудачи: почему запрос не удался (см. failureReason и ServerError) - от этого зависит,
+ * что приложение скажет пользователю и стоит ли пробовать дальше
  */
 class NetworkRadioDataSource @Inject constructor(
     private val radioServiceWrapper: IRadioServiceWrapper,

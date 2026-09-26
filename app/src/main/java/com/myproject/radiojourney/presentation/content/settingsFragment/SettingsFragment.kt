@@ -12,7 +12,10 @@ import com.myproject.radiojourney.presentation.common.popBackStackSafely
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
- * Страница настроек.
+ * Экран "О программе" (кнопка "i" на карте): о приложении, откуда берутся станции,
+ * и ссылки - поддержать автора и написать письмо.
+ *
+ * Настроек здесь пока нет, отсюда и название файла: экран остался от задуманных настроек
  */
 @AndroidEntryPoint
 class SettingsFragment : Fragment() {

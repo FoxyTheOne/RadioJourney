@@ -15,8 +15,10 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * Presentation layer, ViewModel. Работа с компонентами Android. Работает только с UseCase.
- * Здесь осуществляется подписка, запрос через корутины.
+ * ViewModel главного экрана (карты): страны для маркеров и состояние информационного блока над картой.
+ *
+ * Страны приходят подпиской из базы (Flow), поэтому карта сама обновится, когда фоновая загрузка (CountryCacheWorker)
+ * положит их в Room. Плеер внизу экрана к этой ViewModel не относится - им заведует MainViewModel
  */
 @HiltViewModel
 class HomeRadioViewModel @Inject constructor(

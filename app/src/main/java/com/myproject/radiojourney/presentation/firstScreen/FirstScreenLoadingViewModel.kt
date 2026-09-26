@@ -14,10 +14,11 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * Presentation layer, ViewModel. Работа с компонентами Android. Работает только с Interactor.
+ * ViewModel приветственного экрана: прогресс загрузки списка стран, есть ли уже страны в базе
+ * и переход на карту по кнопке "Start journey".
  *
- * Interactor - объект, который реализует UseCase, используя бизнес-объекты Entities.
- * Здесь осуществляется подписка, запрос через корутины.
+ * ViewModel хранит состояние экрана и переживает поворот телефона. Данные она берёт только у UseCase
+ * (в этом проекте они называются Interactor), а Android-классов (View, Context) не касается
  */
 @HiltViewModel
 class FirstScreenLoadingViewModel @Inject constructor(

@@ -21,7 +21,10 @@ import com.myproject.radiojourney.presentation.model.RadioStationPresentation
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
- * Страница с избранным
+ * Экран "Избранное": станции, отмеченные звездой.
+ *
+ * Если в плеере сейчас другой плейлист, станции выбрать нельзя - вверху появляется надпись
+ * "скачать и включить этот список": плеер умеет играть только один плейлист, и сначала нужно загрузить избранное
  */
 @AndroidEntryPoint
 class FavouriteListFragment : BaseRadioListFragmentAbstract() {

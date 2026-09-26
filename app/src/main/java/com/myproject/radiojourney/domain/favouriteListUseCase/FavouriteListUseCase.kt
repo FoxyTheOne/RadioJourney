@@ -5,8 +5,8 @@ import com.myproject.radiojourney.domain.model.RadioStation
 import javax.inject.Inject
 
 /**
- * Domain layer, UseCase. Бизнес-логика, Kotlin. Работает только с Repository.
- * Добавление в избранное и удаление из него - в общем ChangeFavouriteUseCase
+ * Domain layer, UseCase экрана "Избранное": отдаёт список станций со звездой.
+ * Сама звезда (добавить или убрать) - в общем ChangeFavouriteUseCase: её нажимают ещё на двух экранах
  */
 class FavouriteListUseCase @Inject constructor(
     private val favoriteStationRepository: IFavoriteStationRepository

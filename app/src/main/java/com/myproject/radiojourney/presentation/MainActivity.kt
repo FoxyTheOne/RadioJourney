@@ -43,49 +43,21 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 /**
- * This source code is free for studying purposes but you are not allowed to copy and use it in other applications (projects).
+ * Единственная Activity приложения: держит экраны навигации и плеер внизу экрана.
  *
- * Данный проект представляет собой приложение для прослушивания интернет радиостанций. Я использую API.radio-browser.info,
- * который предоставляет доступ к собранным интернет-радиостанциям со всего мира (https://www.radio-browser.info/).
- * Этот API доступен бесплатно. Автор разрешает его использовать в бесплатном и платном программном обеспечении без ограничений.
+ * Экраны (карта, списки станций, "О программе") - фрагменты одного графа навигации (res/navigation/app_navigation.xml),
+ * а нижняя панель плеера принадлежит Activity, поэтому она видна на всех экранах и не пересоздаётся при переходах.
+ * Станции в панели листаются свайпом (ViewPager2 + SwipeRadioStationAdapter), звезда добавляет станцию в избранное,
+ * клик по названию открывает текущий плейлист.
  *
- * На главной странице вы найдете google карту с маркерами, нажимая на которые можно увидеть количество доступных в этой стране
- * интернет радиостанций. Нажав на это сообщение, открывается список интернет радиостанций в выбранной стране (recycler view),
- * где можно выбрать интересующее радио.
+ * Что ещё делает этот класс:
+ * - выбирает стартовый экран (первый запуск или сразу карта) по данным MainViewModel;
+ * - показывает полосы загрузки, диалоги и сообщения, о которых просит MainViewModel;
+ * - держит панель плеера и содержимое в согласии с плеером: какая станция играет, какой плейлист загружен (см. onPlaylistChanged);
+ * - рисует фон под строкой состояния и панелью навигации (edge-to-edge, см. applySystemBarInsets);
+ * - спрашивает разрешение на уведомления (Android 13+).
  *
- * По клику на радио, пользователь возвращается на главный экран и может его прослушать, если это радио в данный момент работает.
- *
- * Перед входом в приложение запрашивается разрешение на доступ к местоположению.
- *
- * - В проекте используется архитектурный паттерн MVVM и подход Clean Architecture;
- * - Используется DI – Hilt, а также Navigation component и View Binding;
- * - Для хранения небольших пар ключ-значение (токен и т.п.) используется DataStore (пришёл на смену Shared preferences);
- * - Для сохранения локаций маркеров на карте, а также для хранения избранных радиостанций используется реляционная база данных Room.
- * При первом запуске нужно дождаться окончания кеширования, в дальнейшем данные берутся из подписки на локальную базу данных;
- * - Список стран для карты загружается в фоне с помощью WorkManager;
- * - Все запросы на сервер, либо в локальную БД из ViewModel я делаю через Coroutines;
- * - Для запроса на сервер используется Retrofit2.
- *
- * This project is an application for listening to Internet radio stations. I am using API.radio-browser.info
- * which allows you to access to collected internet radio stations from all over the world (https://www.radio-browser.info/).
- * This API is available for free. The author allows to use it in free and commercial software without restrictions.
- *
- * On the main page you will find a google map with markers, by clicking on which you can see the number of available
- * Internet radio stations in this country. A list of Internet radio stations in the selected country (recycler view)
- * can be opened by clicking on this message and then you can select the radio you are interested in.
- *
- * By clicking on the radio, the user returns to the main screen and can listen to it if this radio is currently working.
- *
- * Before entering the application, you are asked for your location permission.
- *
- * - The project uses the MVVM architectural pattern and the Clean Architecture concept;
- * - Hilt is used here, as well as Navigation component and View Binding;
- * - To store small key-value pairs (token for instance), DataStore is used (the replacement for Shared preferences);
- * - The Room database is used to store marker locations on the map, as well as to store favorite radio stations.
- * You need to wait until caching ends at the first start. Further the data is taken from the subscription to the local database;
- * - The country list for the map is loaded in the background with WorkManager;
- * - I make all requests to the server, or to the local database from the ViewModel, through Coroutines;
- * - For the request to the server, Retrofit2 is used.
+ * Логики радио здесь нет: за неё отвечают MainViewModel и сервис плеера (utils/exoplayer/MusicService)
  */
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {

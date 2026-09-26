@@ -8,7 +8,10 @@ import java.util.UUID
 import javax.inject.Inject
 
 /**
- * Domain layer, UseCase. Бизнес-логика, Kotlin. Работает только с Repository
+ * Domain layer, UseCase экрана "Мои радиостанции": список своих станций, добавление, правка и удаление.
+ *
+ * Здесь же проверки того, что ввёл пользователь: название не пустое, ссылка похожа на адрес потока
+ * и такой ссылки ещё нет в списке. Это правила приложения, а не оформление экрана, поэтому им место в domain
  */
 class MyStationsUseCase @Inject constructor(
     private val myStationRepository: IMyStationRepository

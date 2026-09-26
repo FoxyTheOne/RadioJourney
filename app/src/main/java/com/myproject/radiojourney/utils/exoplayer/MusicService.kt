@@ -34,13 +34,16 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * Сервис с плеером (media3).
- * MusicService наследуется от MediaLibraryService (media3) - раньше MediaBrowserServiceCompat.
- * Медиасессия (MediaLibrarySession) соединяет плеер с экраном приложения (MusicServiceConnection), уведомлением,
- * наушниками и т.п. Уведомление и foreground-режим сервиса media3 ведёт сама (раньше - PlayerNotificationManager
- * и MusicPlayerNotificationListener).
- * Создаём CoroutineScope для задач, решаемых в сервисе, чтобы не перегружать наш main thread (don't forget serviceScope.cancel() in onDestroy!)
- * Fetching our metadata from our class, created earlier (radioPlaylistSource)
+ * Сервис с плеером (media3): играет радио, когда приложение свёрнуто или закрыто, и показывает уведомление.
+ *
+ * Наследуется от MediaLibraryService (раньше MediaBrowserServiceCompat). Медиасессия (MediaLibrarySession) соединяет
+ * плеер с экраном приложения (MusicServiceConnection), уведомлением, наушниками и кнопками в машине.
+ * Уведомление и foreground-режим media3 ведёт сама (раньше - PlayerNotificationManager и MusicPlayerNotificationListener).
+ *
+ * Что делает сам класс: создаёт сессию и плеер, при запуске загружает последний слушанный плейлист
+ * (при первом запуске - станции страны телефона, см. fetchDefaultPlaylist), прячет уведомление, если радио
+ * долго стоит на паузе, и отдаёт свой CoroutineScope для фоновых задач сервиса (не забыть serviceScope.cancel() в onDestroy).
+ * Сам плейлист и станции - в RadioPlaylistSource, команды от экрана - в MusicLibrarySessionCallback
  */
 // @OptIn, а не @UnstableApi: @UnstableApi на классе требовал бы такой же пометки везде, где упоминается MusicService
 @OptIn(UnstableApi::class) // setForegroundServiceTimeoutMs, setShowNotificationForIdlePlayer, isPlaybackOngoing, DefaultMediaNotificationProvider.setSmallIcon

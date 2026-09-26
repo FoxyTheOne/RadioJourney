@@ -6,11 +6,10 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 /**
- * Data layer, Repository. Работает с Local и Remote data source.
+ * Data layer, Repository первого экрана: пройден ли он (см. ILocalUserDataSource).
  *
- * Repository - объект, предоставляющий доступ к данным с возможностью выбора источника данных в зависимости от условий.
- * Подписка на локальную базу данных Room. Раскладываем данные.
- * При работе с model, здесь происходит запрос в remote, преобразование remote -> local, сохранение результата в базу данных.
+ * Repository - объект, который решает, откуда брать данные. Здесь источник один, настройки в DataStore,
+ * поэтому класс совсем короткий: он нужен, чтобы domain не знал, где именно хранится эта отметка
  */
 class AuthRepository @Inject constructor(
     private val localUserDataSource: ILocalUserDataSource

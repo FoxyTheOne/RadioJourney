@@ -6,7 +6,10 @@ import com.myproject.radiojourney.other.Resource
 import javax.inject.Inject
 
 /**
- * Domain layer, UseCase. Бизнес-логика, Kotlin. Работает только с Repository.
+ * Domain layer, UseCase экрана со списком станций страны.
+ *
+ * Своей логики у него нет - он просто просит список у репозитория. Класс всё равно оставлен:
+ * ViewModel обращается к domain, а не к data напрямую, и если правила появятся, их будет куда добавить
  */
 class RadioListUseCase @Inject constructor(
     private val mainRadioStationRepository: IMainRadioStationRepository

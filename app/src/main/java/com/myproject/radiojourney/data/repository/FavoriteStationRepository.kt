@@ -7,10 +7,8 @@ import com.myproject.radiojourney.domain.model.RadioStation
 import javax.inject.Inject
 
 /**
- * Data layer, Repository. Работает с Local и Remote data source.
- *
- * Repository - объект, предоставляющий доступ к данным с возможностью выбора источника данных в зависимости от условий.
- * Отдаёт наружу модели domain: преобразование local -> domain происходит здесь
+ * Data layer, Repository избранного: станции со звездой. Источник один - таблица в Room,
+ * наружу отдаются модели domain (преобразование local -> domain происходит здесь)
  */
 class FavoriteStationRepository @Inject constructor(
     private val localFavoriteDataSource: ILocalFavoriteDataSource

@@ -10,7 +10,8 @@ import com.myproject.radiojourney.data.localDatabaseRoom.entity.SavedStationLoca
 import com.myproject.radiojourney.data.localDatabaseRoom.entity.UserEntity
 
 /**
- * База данных Room: страны для карты и сохранённые станции.
+ * База данных Room. Таблицы: страны для карты (CountryLocal), избранные станции (RadioStationLocal),
+ * свои станции пользователя (MyStationLocal) и сохранённые списки станций по странам (SavedStationLocal).
  *
  * @Database перечисляет таблицы и версию базы, @TypeConverters - классы, которые Room сам не умеет хранить
  * (здесь LatLng от Google Maps). Экземпляр создаётся один раз в DataModule.

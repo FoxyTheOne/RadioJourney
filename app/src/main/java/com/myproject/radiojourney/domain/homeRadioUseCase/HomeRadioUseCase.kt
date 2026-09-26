@@ -6,7 +6,8 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 /**
- * Domain layer, UseCase. Бизнес-логика, Kotlin. Работает только с Repository.
+ * Domain layer, UseCase главного экрана: подписка на страны для маркеров карты
+ * и состояние информационного блока над картой (закрыт крестиком или нет)
  */
 class HomeRadioUseCase @Inject constructor(
     private val mainRadioStationRepository: IMainRadioStationRepository

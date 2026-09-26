@@ -22,11 +22,13 @@ import java.util.Locale
 import javax.inject.Inject
 
 /**
- * Data layer, Repository. Работает с Local и Remote data source.
+ * Data layer, главный репозиторий радио: страны для карты, списки станций, последняя станция.
  *
- * Repository - объект, предоставляющий доступ к данным с возможностью выбора источника данных в зависимости от условий.
- * Подписка на локальную базу данных Room. Раскладываем данные.
- * Отдаёт наружу модели domain: преобразование remote / local -> domain происходит здесь
+ * Repository - объект, который решает, откуда взять данные. Здесь это видно лучше всего в getRadioStationList:
+ * сначала сервер, при неудаче - список, сохранённый в телефоне, а если и его нет - несколько самых популярных станций.
+ * Экран и domain об этом не знают, они получают готовый RadioStationList.
+ *
+ * Наружу отдаёт только модели domain: преобразование remote / local -> domain происходит здесь (см. data/mapper/DataMappers.kt)
  */
 class MainRadioStationRepository @Inject constructor(
     private val networkRadioDataSource: INetworkRadioDataSource,

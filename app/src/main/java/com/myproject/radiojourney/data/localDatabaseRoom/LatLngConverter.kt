@@ -4,7 +4,10 @@ import androidx.room.TypeConverter
 import com.google.android.gms.maps.model.LatLng
 
 /**
- * Конвертер для LatLng
+ * Конвертер типов для Room: LatLng (координаты Google Maps) <-> строка "широта,долгота".
+ *
+ * Room умеет хранить только простые типы. Если нужно положить в колонку свой класс, ему показывают такую пару методов
+ * (@TypeConverter): один переводит объект в простой тип, другой - обратно. Класс подключается в @TypeConverters базы
  */
 object LatLngConverter {
     private const val ENTRY_SEPARATOR = "||"

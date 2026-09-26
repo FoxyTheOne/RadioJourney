@@ -16,8 +16,11 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * Presentation layer, ViewModel. Работа с компонентами Android. Работает только с UseCase.
- * Здесь осуществляется подписка, запрос через корутины.
+ * ViewModel экрана со списком станций одной страны.
+ *
+ * Состояние экрана - одно поле uiState (загрузка / список / сервер недоступен): так экран не может показать
+ * одновременно список и ошибку. Код и название страны ViewModel берёт из аргументов навигации сама (SavedStateHandle),
+ * а список запрашивает один раз при создании - при возвращении на экран кнопкой "назад" он не скачивается заново
  */
 @HiltViewModel
 class RadioListViewModel @Inject constructor(
