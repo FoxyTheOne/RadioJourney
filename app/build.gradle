@@ -18,9 +18,11 @@ android {
     compileSdk 36
 
     defaultConfig {
-        applicationId "com.myproject.radiojourney"
-        // Новые версии AndroidX и Google Play services поддерживают Android 6.0 (API 23) и выше
-        minSdk 23
+        // Адрес приложения в Google Play. Меняется только до первой публикации: потом это ключ всех обновлений.
+        // io.github.<имя на GitHub> - обычный способ для проекта без своего домена
+        applicationId "io.github.foxytheone.radiojourney"
+        // Android 7.0 и выше: свежие Navigation и WorkManager не поддерживают Android 6, а это 0,3% устройств
+        minSdk 24
         targetSdk 36
         versionCode 3
         versionName "1.0"
@@ -104,8 +106,8 @@ dependencies {
 //    annotationProcessor 'com.github.bumptech.glide:compiler:4.12.0'
 
     // Navigation
-    implementation 'androidx.navigation:navigation-fragment-ktx:2.9.8' // 2.10 требует minSdk 24
-    implementation 'androidx.navigation:navigation-ui-ktx:2.9.8'
+    implementation 'androidx.navigation:navigation-fragment-ktx:2.10.2'
+    implementation 'androidx.navigation:navigation-ui-ktx:2.10.2'
 
     // Location
     implementation 'com.google.android.gms:play-services-location:21.4.0'
@@ -120,7 +122,7 @@ dependencies {
     implementation "androidx.media3:media3-session:$media3_version"
 
     // WorkManager - фоновая загрузка списка стран (CountryCacheWorker), hilt-work - @Inject в Worker
-    implementation 'androidx.work:work-runtime-ktx:2.11.2' // 2.12 требует minSdk 24
+    implementation 'androidx.work:work-runtime-ktx:2.12.0'
     implementation 'androidx.hilt:hilt-work:1.4.0'
     ksp 'androidx.hilt:hilt-compiler:1.4.0'
 

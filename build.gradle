@@ -25,7 +25,7 @@ buildscript {
         // Hilt
         classpath "com.google.dagger:hilt-android-gradle-plugin:$hilt_version"
         // Navigation pass data
-        classpath "androidx.navigation:navigation-safe-args-gradle-plugin:2.9.8"
+        classpath "androidx.navigation:navigation-safe-args-gradle-plugin:2.10.2"
         // Google maps
         classpath "com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin:2.0.1"
     }
