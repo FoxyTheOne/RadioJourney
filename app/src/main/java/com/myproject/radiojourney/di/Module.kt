@@ -57,9 +57,6 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ViewModelComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
@@ -98,13 +95,6 @@ abstract class DataModule {
         @Provides
         fun providesSavedStationDAO(appDatabase: AppRoomDBAbstract): ISavedStationDAO =
             appDatabase.getSavedStationDAO()
-
-        // Scope приложения для работы, которая не должна отменяться вместе с экраном (см. ApplicationScope)
-        @Provides
-        @Singleton
-        @ApplicationScope
-        fun providesApplicationScope(): CoroutineScope =
-            CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
         @Provides
         @Singleton

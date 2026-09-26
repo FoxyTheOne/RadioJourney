@@ -12,13 +12,12 @@
 
 ## Настройка проекта
 
-| Задача                                                                     | Где смотреть                                                        |
-|----------------------------------------------------------------------------|---------------------------------------------------------------------|
-| Hilt: точка входа приложения, WorkManager с `@Inject` в Worker             | `App.kt`, `AndroidManifest.xml` (удаление `InitializationProvider`) |
-| Hilt-модули: что в SingletonComponent, что в ViewModelComponent            | `di/Module.kt`                                                      |
-| Hilt для сервиса (свой компонент и scope)                                  | `di/ServiceModule.kt`                                               |
-| Scope приложения для работы, которая не должна отмениться вместе с экраном | `di/ApplicationScope.kt`                                            |
-| Gradle: KSP вместо kapt, secrets-plugin для ключа карт, имя APK с датой    | `app/build.gradle`                                                  |
+| Задача                                                                  | Где смотреть                                                        |
+|-------------------------------------------------------------------------|---------------------------------------------------------------------|
+| Hilt: точка входа приложения, WorkManager с `@Inject` в Worker          | `App.kt`, `AndroidManifest.xml` (удаление `InitializationProvider`) |
+| Hilt-модули: что в SingletonComponent, что в ViewModelComponent         | `di/Module.kt`                                                      |
+| Hilt для сервиса (свой компонент и scope)                               | `di/ServiceModule.kt`                                               |
+| Gradle: KSP вместо kapt, secrets-plugin для ключа карт, имя APK с датой | `app/build.gradle`                                                  |
 
 ## Данные
 
