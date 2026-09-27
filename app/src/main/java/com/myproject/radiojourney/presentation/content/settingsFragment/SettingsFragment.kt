@@ -1,5 +1,6 @@
 package com.myproject.radiojourney.presentation.content.settingsFragment
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -7,6 +8,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
+import com.google.android.material.snackbar.Snackbar
+import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.LayoutSettingsBinding
 import com.myproject.radiojourney.presentation.common.popBackStackSafely
 import dagger.hilt.android.AndroidEntryPoint
@@ -19,6 +22,15 @@ import dagger.hilt.android.AndroidEntryPoint
  */
 @AndroidEntryPoint
 class SettingsFragment : Fragment() {
+    companion object {
+        private const val SITE_URL = "https://foxytheone.github.io/"
+
+        // Политику конфиденциальности требует Google Play. Страница лежит в этом же репозитории (docs/privacy-policy.html)
+        // и публикуется через GitHub Pages - так она всегда совпадает с тем, что делает приложение
+        private const val PRIVACY_POLICY_URL =
+            "https://foxytheone.github.io/RadioJourney/privacy-policy.html"
+    }
+
     // VIEW BINDING -> 1. Объявляем переменную. This property is only valid between onCreateView and onDestroyView
     private var binding: LayoutSettingsBinding? = null
 
@@ -41,11 +53,8 @@ class SettingsFragment : Fragment() {
     private fun initListeners() {
         // Назад на карту - так же, как системная кнопка "Назад" (см. комментарий в app_navigation.xml)
         binding?.imageArrowBack?.setOnClickListener { popBackStackSafely() }
-        binding?.linearForCoffee?.setOnClickListener {
-            val browserIntent =
-                Intent(Intent.ACTION_VIEW, "https://foxytheone.github.io/".toUri())
-            startActivity(browserIntent)
-        }
+        binding?.linearSite?.setOnClickListener { openLink(SITE_URL) }
+        binding?.linearPrivacy?.setOnClickListener { openLink(PRIVACY_POLICY_URL) }
         binding?.mail?.setOnClickListener {
             val subject = "RadioJourney app"
             val message = "Input your message"
@@ -66,6 +75,20 @@ class SettingsFragment : Fragment() {
                     "Choose an Email client :"
                 )
             )
+        }
+    }
+
+    // Открыть страницу в браузере. Если браузера на телефоне нет (бывает на "чистых" прошивках),
+    // startActivity бросил бы ActivityNotFoundException и приложение упало бы - поэтому ловим её и показываем сообщение
+    private fun openLink(url: String) {
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
+        } catch (e: ActivityNotFoundException) {
+            Snackbar.make(
+                requireView(),
+                getString(R.string.settings_noBrowser),
+                Snackbar.LENGTH_LONG
+            ).show()
         }
     }
 

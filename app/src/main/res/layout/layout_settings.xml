@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true">
@@ -88,17 +89,6 @@
                 android:paddingBottom="@dimen/space_beforeOrAfterElement"
                 android:text="@string/settings_text3" />
 
-            <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/text_about4"
-                style="@style/login_bottom"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:paddingBottom="@dimen/space_beforeOrAfterElement"
-                android:text="@string/settings_text4"
-                android:textStyle="bold"
-                app:fontWeight="800" />
-
             <!-- Тот же текст, что в информационном блоке на карте: там его можно закрыть крестиком, а здесь - перечитать -->
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/text_aboutServer"
@@ -119,14 +109,21 @@
                 android:text="@string/homeRadio_mayNotWork" />
 
             <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/text_about4"
+                style="@style/login_bottom"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:paddingBottom="@dimen/space_beforeOrAfterElement"
+                android:text="@string/settings_text4" />
+
+            <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/text_about5"
                 style="@style/login_bottom"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:text="@string/settings_text5"
-                android:textStyle="bold"
-                app:fontWeight="800" />
+                android:text="@string/settings_text5" />
         </LinearLayout>
 
         <LinearLayout
@@ -254,8 +251,10 @@
                 android:text="@string/settings_restoreLocalStorage" />
         </LinearLayout>
 
+        <!-- Сайт проекта. Раньше здесь была ссылка на Boosty с картинкой кофейной кружки: просьба о поддержке
+             в приложении без рекламы и покупок выглядит странно, да и Google Play к таким ссылкам относится настороженно -->
         <LinearLayout
-            android:id="@+id/linear_forCoffee"
+            android:id="@+id/linear_site"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="start"
@@ -268,20 +267,51 @@
             app:layout_constraintTop_toBottomOf="@+id/linear_restoreFromLocalStorageSettings">
 
             <androidx.appcompat.widget.AppCompatImageView
-                android:id="@+id/image_forCoffee"
+                android:id="@+id/image_site"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_marginEnd="@dimen/space_beforeOrAfterElement"
                 android:scaleType="centerCrop"
-                android:src="@drawable/ic_baseline_coffee_24_orange" />
+                android:src="@drawable/ic_baseline_public_24_orange" />
 
             <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/text_forCoffee"
+                android:id="@+id/text_site"
                 style="@style/login_bottom"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:text="@string/settings_coffee" />
+                android:text="@string/settings_site" />
+        </LinearLayout>
+
+        <!-- Политика конфиденциальности: её требует Google Play, и пользователю удобно открыть её прямо из приложения -->
+        <LinearLayout
+            android:id="@+id/linear_privacy"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/space_32"
+            android:paddingEnd="@dimen/space_32"
+            android:paddingBottom="@dimen/space_beforeOrAfterElement"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/linear_site">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/image_privacy"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="@dimen/space_beforeOrAfterElement"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_baseline_privacy_24_orange" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/text_privacy"
+                style="@style/login_bottom"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="@string/settings_privacy" />
         </LinearLayout>
 
         <androidx.appcompat.widget.AppCompatImageView
@@ -292,7 +322,7 @@
             app:layout_constraintBottom_toTopOf="@+id/text_mail"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linear_forCoffee" />
+            app:layout_constraintTop_toBottomOf="@+id/linear_privacy" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/text_mail"

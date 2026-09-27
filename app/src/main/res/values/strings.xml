@@ -44,10 +44,8 @@
     <string name="downloading_playlist">Downloading playlist</string>
     <string name="downloading_radio_station">Connecting to the radio station</string>
 
-
     <string name="favouriteRadioStationList_title">My favourites:</string>
     <string name="favouriteRadioStationList_empty">It\'s empty here. Try adding stars to your favourite stations.</string>
-
 
     <string name="currentPlaylist_title">Current playlist</string>
     <string name="currentPlaylist_empty">Playlist is empty</string>
@@ -57,14 +55,16 @@
     <string name="settings_text2">Therefor we use database https://www.radio-browser.info/ that contains information about Internet radio stations all over the world.</string>
     <string name="settings_text3">Just click on the place on the map you are insterested in, chose radiostation from the list and enjoy!</string>
     <string name="settings_text4">The app also uses images from pixabay.com and country coordinates from https://developers.google.com/public-data/ (sep. 2023). Country names are taken from external sources and may not correspond to modern realities.</string>
-    <string name="settings_text5">The application is totally free and without ads. Therefore, I will be pleased if you support me:</string>
+    <string name="settings_text5">The app is free, has no ads and needs no sign up. It does not collect your data: favourites, your own stations and settings stay on your phone.</string>
     <string name="settings_saveToGoogle">Save to Google Drive</string>
     <string name="settings_restoreFromGoogle">Restore from Google Drive</string>
     <string name="settings_saveToLocalStorage">Save to local storage</string>
     <string name="settings_restoreLocalStorage">Restore from local storage</string>
     <string name="settings_textMail">Mail for your feedbacks</string>
     <string name="settings_mail">gartel.av@gmail.com</string>
-    <string name="settings_coffee">Support the project (Boosty)</string>
+    <string name="settings_site">Project website</string>
+    <string name="settings_privacy">Privacy policy</string>
+    <string name="settings_noBrowser">No app found to open the link</string>
     <string name="settings_pixabay">The app uses images from pixabay.com</string>
 
     <!-- my stations: the list the user fills in by hand, with links to streams -->
