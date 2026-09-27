@@ -8,6 +8,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.HttpDataSource.HttpDataSourceException
 import androidx.media3.exoplayer.source.UnrecognizedInputFormatException
+import com.myproject.radiojourney.R
 import com.myproject.radiojourney.utils.exoplayer.MusicService
 
 /**
@@ -36,7 +37,7 @@ class MusicPlayerEventListener(
                     TAG,
                     "An error occurred in onPlayerError. UnrecognizedInputFormatException is caught. PrintStackTrace:"
                 )
-                Toast.makeText(musicService, "Exoplayer can't read the stream", Toast.LENGTH_LONG)
+                Toast.makeText(musicService, R.string.playerError_stream, Toast.LENGTH_LONG)
                     .show()
             }
 
@@ -45,7 +46,7 @@ class MusicPlayerEventListener(
                     TAG,
                     "An error occurred in onPlayerError. HttpDataSourceException is caught. PrintStackTrace:"
                 )
-                Toast.makeText(musicService, "Exoplayer can't read this url", Toast.LENGTH_LONG)
+                Toast.makeText(musicService, R.string.playerError_url, Toast.LENGTH_LONG)
                     .show()
             }
 
@@ -54,7 +55,7 @@ class MusicPlayerEventListener(
                     TAG,
                     "An unknown error occurred in onPlayerError. Not UnrecognizedInputFormatException is caught. PrintStackTrace:"
                 )
-                Toast.makeText(musicService, "An unknown error occurred", Toast.LENGTH_LONG).show()
+                Toast.makeText(musicService, R.string.playerError_unknown, Toast.LENGTH_LONG).show()
             }
         }
         error.printStackTrace()

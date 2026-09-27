@@ -16,7 +16,7 @@ import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * Экран "О программе" (кнопка "i" на карте): о приложении, откуда берутся станции,
- * и ссылки - поддержать автора и написать письмо.
+ * ссылки на сайт проекта и политику конфиденциальности, письмо автору.
  *
  * Настроек здесь пока нет, отсюда и название файла: экран остался от задуманных настроек
  */
@@ -57,8 +57,8 @@ class SettingsFragment : Fragment() {
         binding?.linearPrivacy?.setOnClickListener { openLink(PRIVACY_POLICY_URL) }
         binding?.mail?.setOnClickListener {
             val subject = "RadioJourney app"
-            val message = "Input your message"
-            val email = "gartel.av@gmail.com"
+            val message = getString(R.string.settings_mailMessage)
+            val email = getString(R.string.settings_mail)
 
             val selectorIntent = Intent(Intent.ACTION_SENDTO)
             selectorIntent.data = "mailto:".toUri() // only email apps should handle this
@@ -72,7 +72,7 @@ class SettingsFragment : Fragment() {
             requireActivity().startActivity(
                 Intent.createChooser(
                     emailIntent,
-                    "Choose an Email client :"
+                    getString(R.string.settings_mailChooser)
                 )
             )
         }

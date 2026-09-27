@@ -418,10 +418,10 @@ class MainActivity : AppCompatActivity() {
 
         // Ошибки подключения к сервису, сети и прочие: сообщение, убираем прогресс и делаем кнопки снова кликабельными.
         // Раньше - три одинаковых наблюдателя LiveData с классом Event
-        collectWhenStarted(mainViewModel.errorMessages) { message ->
-            Log.d(TAG, "Error: $message")
+        collectWhenStarted(mainViewModel.errorMessages) { messageRes ->
+            Log.d(TAG, "Error: ${getString(messageRes)}")
             binding?.let { nonNullBinding ->
-                Snackbar.make(nonNullBinding.rootLayout.rootView, message, Snackbar.LENGTH_LONG)
+                Snackbar.make(nonNullBinding.rootLayout.rootView, messageRes, Snackbar.LENGTH_LONG)
                     .show()
             }
             mainViewModel.hideProgressAndSetClickable()

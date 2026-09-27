@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true">
@@ -126,131 +125,6 @@
                 android:text="@string/settings_text5" />
         </LinearLayout>
 
-        <LinearLayout
-            android:id="@+id/linear_saveToGoogleSettings"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="start"
-            android:orientation="horizontal"
-            android:paddingStart="@dimen/space_32"
-            android:paddingTop="@dimen/space_beforeOrAfterElement"
-            android:paddingEnd="@dimen/space_32"
-            android:paddingBottom="@dimen/space_beforeOrAfterElement"
-            android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linear_textAbout">
-
-            <androidx.appcompat.widget.AppCompatImageView
-                android:id="@+id/image_saveToGoogle"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginEnd="@dimen/space_beforeOrAfterElement"
-                android:scaleType="centerCrop"
-                android:src="@drawable/ic_baseline_cloud_upload_24_orange" />
-
-            <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/text_saveToGoogle"
-                style="@style/login_bottom"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:text="@string/settings_saveToGoogle" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/linear_restoreFromGoogleSettings"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="start"
-            android:orientation="horizontal"
-            android:paddingStart="@dimen/space_32"
-            android:paddingEnd="@dimen/space_32"
-            android:paddingBottom="@dimen/space_beforeOrAfterElement"
-            android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linear_saveToGoogleSettings">
-
-            <androidx.appcompat.widget.AppCompatImageView
-                android:id="@+id/image_restoreFromGoogle"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginEnd="@dimen/space_beforeOrAfterElement"
-                android:scaleType="centerCrop"
-                android:src="@drawable/ic_baseline_cloud_download_24_orange" />
-
-            <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/text_restoreFromGoogle"
-                style="@style/login_bottom"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:text="@string/settings_restoreFromGoogle" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/linear_saveToLocalStorageSettings"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="start"
-            android:orientation="horizontal"
-            android:paddingStart="@dimen/space_32"
-            android:paddingEnd="@dimen/space_32"
-            android:paddingBottom="@dimen/space_beforeOrAfterElement"
-            android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linear_restoreFromGoogleSettings">
-
-            <androidx.appcompat.widget.AppCompatImageView
-                android:id="@+id/image_saveToLocalStorage"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginEnd="@dimen/space_beforeOrAfterElement"
-                android:scaleType="centerCrop"
-                android:src="@drawable/ic_baseline_data_saver_on_24_orange" />
-
-            <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/text_saveToLocalStorage"
-                style="@style/login_bottom"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:text="@string/settings_saveToLocalStorage" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/linear_restoreFromLocalStorageSettings"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="start"
-            android:orientation="horizontal"
-            android:paddingStart="@dimen/space_32"
-            android:paddingEnd="@dimen/space_32"
-            android:paddingBottom="@dimen/space_beforeOrAfterElement"
-            android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linear_saveToLocalStorageSettings">
-
-            <androidx.appcompat.widget.AppCompatImageView
-                android:id="@+id/image_restoreFromLocalStorage"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginEnd="@dimen/space_beforeOrAfterElement"
-                android:scaleType="centerCrop"
-                android:src="@drawable/ic_baseline_restore_24_orange" />
-
-            <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/text_restoreFromLocalStorage"
-                style="@style/login_bottom"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:text="@string/settings_restoreLocalStorage" />
-        </LinearLayout>
-
         <!-- Сайт проекта. Раньше здесь была ссылка на Boosty с картинкой кофейной кружки: просьба о поддержке
              в приложении без рекламы и покупок выглядит странно, да и Google Play к таким ссылкам относится настороженно -->
         <LinearLayout
@@ -264,7 +138,7 @@
             android:paddingBottom="@dimen/space_beforeOrAfterElement"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linear_restoreFromLocalStorageSettings">
+            app:layout_constraintTop_toBottomOf="@+id/linear_textAbout">
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/image_site"
@@ -350,42 +224,9 @@
             android:paddingBottom="@dimen/space_32"
             android:text="@string/settings_mail"
             android:textAlignment="center"
-            app:layout_constraintBottom_toTopOf="@+id/pixabay"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
-
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/pixabay"
-            style="@style/login_bottom_small"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="@dimen/space_beforeOrAfterElement"
-            android:text="@string/settings_pixabay"
-            android:textAlignment="center"
-            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
-
-        <!-- layout для ProgressBar -->
-        <FrameLayout
-            android:id="@+id/frameLayout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/black_transparent_22"
-            android:visibility="gone" />
-
-        <ProgressBar
-            android:id="@+id/progressCircular"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </ScrollView>

@@ -7,17 +7,17 @@
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/tvPrimary"
-        android:ellipsize="end"
-        android:maxLines="2"
         style="@style/vpSong"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:ellipsize="end"
         android:gravity="center"
-        android:text="Title"
+        android:maxLines="2"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:background="@color/background_transparent" />
+        tools:background="@color/background_transparent"
+        tools:text="Title" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

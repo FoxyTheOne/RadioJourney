@@ -65,7 +65,7 @@ object ServiceModule {
     ) = DefaultDataSource.Factory(context, httpDataSourceFactory)
 
     // User-Agent: без него отправляется "Dalvik/2.1.0 (Linux; ...)", и часть серверов (например, streaming.live365.com)
-    // отвечает 403 -> toast "Exoplayer can't read this url".
+    // отвечает 403 -> toast playerError_url ("Станция не отвечает по этой ссылке").
     // setAllowCrossProtocolRedirects: некоторые станции перенаправляют с http на https, а по умолчанию ExoPlayer такой редирект не выполняет
     @Provides
     fun provideHttpDataSource(

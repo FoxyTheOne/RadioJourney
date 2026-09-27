@@ -1,24 +1,22 @@
 <resources>
-    <string name="app_name">RadioJourney</string>
-
     <string name="first_screen_tittle">Приветствуем в RadioJourney!</string>
-    <string name="first_screen_text1_2">Если это первый запуск - пожалуйста, дождитесь окончания кеширования. В случае ошибки проверье ваше интернет соединение, после чего перезапустите программу.</string>
+    <string name="first_screen_text1_2">Если это первый запуск - пожалуйста, дождитесь окончания кеширования. В случае ошибки проверьте подключение к интернету, после чего перезапустите программу.</string>
     <string name="first_screen_text3">Работоспособность программы зависит от доступности сервера, откуда берется информация о радиостанциях.</string>
     <string name="first_screen_button">Начать путешествие</string>
 
-    <string name="homeRadio_zoomPlus">+</string>
-    <string name="homeRadio_zoomMinus">-</string>
     <string name="homeRadio_goToFavourites">Избранное</string>
     <string name="homeRadio_mayNotWork">Также выбранная радиостанция может не работать в данный момент.</string>
     <string name="homeRadio_youAreHere">Вы здесь</string>
     <string name="homeRadio_closeInfo">Закрыть</string>
+    <string name="homeRadio_loadingData">Загрузка данных…</string>
+    <string name="homeRadio_serverDown">Что-то пошло не так: сервер недоступен. Попробуйте позже</string>
     <string name="exit_title">Выйти из приложения?</string>
     <string name="exit_confirm">Выйти</string>
     <string name="exit_cancel">Отмена</string>
 
     <string name="dialogInternetTrouble_title">Проблема с соединением!</string>
-    <string name="dialogInternetTrouble_text">Возникла проблема при запросе на сервер. Попробуйте повторить последнее действие или проверье ваше интернет соединение.</string>
-    <string name="dialogInternetTrouble_text3">Пожалуйста, проверье ваше интернет соединение.</string>
+    <string name="dialogInternetTrouble_text">Возникла проблема при запросе на сервер. Попробуйте повторить последнее действие или проверьте подключение к интернету.</string>
+    <string name="dialogInternetTrouble_text3">Пожалуйста, проверьте подключение к интернету.</string>
     <!-- Не удалось получить данные с сервера radio-browser - по причинам (ServerError) -->
     <string name="serverError_noNetwork_title">Нет подключения к интернету</string>
     <string name="serverError_noNetwork_text">Проверьте, включены ли Wi-Fi или мобильный интернет, и попробуйте ещё раз.</string>
@@ -34,6 +32,11 @@
     <string name="dialogPleaseWait_title2">Что-то пошло не так</string>
     <string name="dialogPleaseWait_text2">Похоже, что сервер с информацией о радиостанциях временно не работает. Пожалуйста, попробуйте ещё раз позже</string>
     <string name="dialogPleaseWait_text5">Во время последнего запроса сервер с информацией о радиостанциях был недоступен. Вы можете попробовать повторить запрос или зайти в программу позже</string>
+    <!-- короткие сообщения внизу экрана (Snackbar) -->
+    <string name="error_loadingTooLong">Загрузка идёт слишком долго. Проверьте подключение к интернету и попробуйте ещё раз</string>
+    <string name="error_noServerConnection">Не удалось подключиться к серверу. Проверьте подключение к интернету</string>
+    <string name="error_playerDisconnected">Связь с плеером прервалась</string>
+    <string name="error_playerNotStarted">Не удалось запустить плеер</string>
 
     <string name="radioStationList_title_loading">Обращение к серверу для получения списка названий радиостанций…</string>
     <string name="radioStationList_title_select">Список радиостанций. Выберите:</string>
@@ -56,16 +59,12 @@
     <string name="settings_text3">Просто нажмите на интересующее место на карте, выберите радиостанцию из появившегося списка и наслаждайтесь!</string>
     <string name="settings_text4">В приложении также используются изображения с сайта pixabay.com и координаты стран с сайта https://developers.google.com/public-data/ (сент. 2023). Названия стран взяты из внешних источников и могут не соответствовать современным реалиям.</string>
     <string name="settings_text5">Приложение бесплатное, без рекламы и без регистрации. Оно не собирает ваши данные: избранное, свои станции и настройки хранятся только на вашем телефоне.</string>
-    <string name="settings_saveToGoogle">Сохранить на Google Drive</string>
-    <string name="settings_restoreFromGoogle">Восстановить из Google Drive</string>
-    <string name="settings_saveToLocalStorage">Сохранить в локальное хранилище</string>
-    <string name="settings_restoreLocalStorage">Восстановить из локального хранилища</string>
     <string name="settings_textMail">Почта для обратной связи</string>
-    <string name="settings_mail">gartel.av@gmail.com</string>
+    <string name="settings_mailMessage">Ваше сообщение</string>
+    <string name="settings_mailChooser">Выберите почтовое приложение</string>
     <string name="settings_site">Сайт проекта</string>
     <string name="settings_privacy">Политика конфиденциальности</string>
     <string name="settings_noBrowser">Не нашлось приложения, которое откроет ссылку</string>
-    <string name="settings_pixabay">В приложении использовались изображения с сайта pixabay.com</string>
 
     <!-- мои радиостанции: список, который пользователь собирает сам, по ссылкам на потоки -->
     <string name="homeRadio_goToMyStations">Мои станции</string>
@@ -94,6 +93,9 @@
 
     <!-- exoplayer -->
     <string name="notification_channel_name">Поток радиостанции</string>
+    <string name="playerError_stream">Поток этой станции не удаётся воспроизвести</string>
+    <string name="playerError_url">Станция не отвечает по этой ссылке</string>
+    <string name="playerError_unknown">Не удалось включить станцию</string>
 
     <!-- разрешения: зачем они приложению (показывается до системного окна) -->
     <string name="permission_button_continue">Продолжить</string>

@@ -19,6 +19,7 @@ import androidx.media3.session.SessionResult
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
+import com.myproject.radiojourney.R
 import com.myproject.radiojourney.other.Constants.NETWORK_ERROR
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -42,9 +43,11 @@ class MusicServiceConnection(private val context: Context) {
     }
 
     // Ошибки подключения к сервису и сети - сообщение для экрана. Channel: каждое сообщение получит один подписчик (MainActivity),
-    // и оно не потеряется, если экран в этот момент не виден. Раньше - две LiveData<Event<Resource<Boolean>>>
-    private val _errorMessages = Channel<String>(Channel.BUFFERED)
-    val errorMessages: Flow<String> = _errorMessages.receiveAsFlow()
+    // и оно не потеряется, если экран в этот момент не виден. Раньше - две LiveData<Event<Resource<Boolean>>>.
+    // В канал кладём не готовый текст, а id строки (R.string...): текст на языке телефона достанет из ресурсов экран.
+    // Иначе сообщение было бы только на одном языке - то, что написано в коде, не переводится
+    private val _errorMessages = Channel<Int>(Channel.BUFFERED)
+    val errorMessages: Flow<Int> = _errorMessages.receiveAsFlow()
 
     // Is player playing or not. StateFlow вместо LiveData: новый подписчик сразу получает текущее состояние
     private val _playbackState = MutableStateFlow<PlaybackStateInfo?>(null)
@@ -95,7 +98,7 @@ class MusicServiceConnection(private val context: Context) {
         // (например, сервис завершился). При следующей команде подключимся заново
         override fun onDisconnected(controller: MediaController) {
             mediaBrowser = null
-            _errorMessages.trySend("The connection was suspended")
+            _errorMessages.trySend(R.string.error_playerDisconnected)
         }
     }
 
@@ -142,7 +145,7 @@ class MusicServiceConnection(private val context: Context) {
                 actions.forEach { it(browser) }
             } catch (e: Exception) {
                 Log.d(TAG, "Couldn't connect to MusicService: ${e.message}")
-                _errorMessages.trySend("Couldn't connect to media browser")
+                _errorMessages.trySend(R.string.error_playerNotStarted)
             }
         }, ContextCompat.getMainExecutor(context))
     }
@@ -244,6 +247,6 @@ class MusicServiceConnection(private val context: Context) {
     }
 
     private fun postNetworkError() {
-        _errorMessages.trySend("Couldn't connect to the server. Please check your internet connection.")
+        _errorMessages.trySend(R.string.error_noServerConnection)
     }
 }

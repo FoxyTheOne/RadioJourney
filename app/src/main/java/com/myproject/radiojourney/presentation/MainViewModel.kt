@@ -109,9 +109,10 @@ class MainViewModel @Inject constructor(
     val playbackState: StateFlow<PlaybackStateInfo?> = musicServiceConnection.playbackState
     val curPlayingSong: StateFlow<MediaItem?> = musicServiceConnection.curPlayingSong
 
-    // Сообщения об ошибках: подключение к сервису, сеть, долгая загрузка
-    private val _errorMessages = Channel<String>(Channel.BUFFERED)
-    val errorMessages: Flow<String> =
+    // Сообщения об ошибках: подключение к сервису, сеть, долгая загрузка. Это id строк (R.string...), а не готовый текст -
+    // экран сам возьмёт текст на языке телефона (см. MusicServiceConnection.errorMessages)
+    private val _errorMessages = Channel<Int>(Channel.BUFFERED)
+    val errorMessages: Flow<Int> =
         merge(_errorMessages.receiveAsFlow(), musicServiceConnection.errorMessages)
 
     private val _loadingState = MutableStateFlow(LoadingState.NONE)
@@ -268,7 +269,7 @@ class MainViewModel @Inject constructor(
                 TAG,
                 "Прогресс висит дольше $PROGRESS_TIMEOUT мс - прячем его и показываем ошибку"
             )
-            _errorMessages.trySend("Loading is taking too long. Please check your internet connection and try again")
+            _errorMessages.trySend(R.string.error_loadingTooLong)
             if (state == LoadingState.DOWNLOADING_PLAYLIST) {
                 // Отменяем загрузку в сервисе, чтобы её результат (например, диалог "получен пустой список")
                 // не появился позже, когда пользователь уже делает что-то другое

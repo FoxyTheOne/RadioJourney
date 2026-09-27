@@ -448,7 +448,7 @@ class HomeRadioFragment : Fragment(), OnMapReadyCallback {
                         showProgress()
                         Toast.makeText(
                             context,
-                            "Something went wrong. The server is down. Please, try again later",
+                            R.string.homeRadio_serverDown,
                             Toast.LENGTH_LONG
                         ).show()
 

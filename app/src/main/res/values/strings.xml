@@ -1,23 +1,28 @@
 <resources>
-    <string name="app_name">RadioJourney</string>
+    <!-- translatable="false" - строки, которые не переводятся (название, символы, адрес почты): в переводах их нет,
+         и Android берёт их отсюда. Чтобы добавить язык, создайте values-XX/strings.xml (например, values-be для белорусского)
+         и переведите в нём все остальные строки -->
+    <string name="app_name" translatable="false">RadioJourney</string>
 
     <string name="first_screen_tittle">Welcome to RadioJourney!</string>
-    <string name="first_screen_text1_2">If it is the first start - please wait until cashing ends. If it failed, check your internet connection and then restart the program.</string>
+    <string name="first_screen_text1_2">If it is the first start - please wait until caching ends. If it failed, check your internet connection and then restart the program.</string>
     <string name="first_screen_text3">The functionality of the program depends on the availability of the server from which information about radio stations is obtained.</string>
     <string name="first_screen_button">Start journey</string>
 
-    <string name="homeRadio_zoomPlus">+</string>
-    <string name="homeRadio_zoomMinus">-</string>
+    <string name="homeRadio_zoomPlus" translatable="false">+</string>
+    <string name="homeRadio_zoomMinus" translatable="false">-</string>
     <string name="homeRadio_goToFavourites">Favorites</string>
     <string name="homeRadio_mayNotWork">Also selected radio station may not work right now.</string>
     <string name="homeRadio_youAreHere">You are here</string>
     <string name="homeRadio_closeInfo">Close</string>
+    <string name="homeRadio_loadingData">Loading data…</string>
+    <string name="homeRadio_serverDown">Something went wrong: the server is unavailable. Please try again later</string>
     <string name="exit_title">Exit the app?</string>
     <string name="exit_confirm">Exit</string>
     <string name="exit_cancel">Cancel</string>
 
     <string name="dialogInternetTrouble_title">Some internet trouble!</string>
-    <string name="dialogInternetTrouble_text">Some internet or account trouble occurred. Try to repeat last action or check your internet connection.</string>
+    <string name="dialogInternetTrouble_text">Something went wrong with the request to the server. Try to repeat the last action or check your internet connection.</string>
     <string name="dialogInternetTrouble_text3">Please check your internet connection.</string>
     <!-- Could not get data from the radio-browser server - by reason (ServerError) -->
     <string name="serverError_noNetwork_title">No internet connection</string>
@@ -34,6 +39,11 @@
     <string name="dialogPleaseWait_title2">Something went wrong</string>
     <string name="dialogPleaseWait_text2">It looks like the radio station information server is down. Please try again later</string>
     <string name="dialogPleaseWait_text5">The radio station information server was unavailable during the last request. You can try to repeat your request or restart the program later</string>
+    <!-- short messages at the bottom of the screen (Snackbar) -->
+    <string name="error_loadingTooLong">Loading is taking too long. Please check your internet connection and try again</string>
+    <string name="error_noServerConnection">Couldn\'t connect to the server. Please check your internet connection</string>
+    <string name="error_playerDisconnected">The connection to the player was lost</string>
+    <string name="error_playerNotStarted">Couldn\'t start the player</string>
 
     <string name="radioStationList_title_loading">Asking server for a list of radio station names…</string>
     <string name="radioStationList_title_select">Radio station list. Select one:</string>
@@ -56,16 +66,13 @@
     <string name="settings_text3">Just click on the place on the map you are insterested in, chose radiostation from the list and enjoy!</string>
     <string name="settings_text4">The app also uses images from pixabay.com and country coordinates from https://developers.google.com/public-data/ (sep. 2023). Country names are taken from external sources and may not correspond to modern realities.</string>
     <string name="settings_text5">The app is free, has no ads and needs no sign up. It does not collect your data: favourites, your own stations and settings stay on your phone.</string>
-    <string name="settings_saveToGoogle">Save to Google Drive</string>
-    <string name="settings_restoreFromGoogle">Restore from Google Drive</string>
-    <string name="settings_saveToLocalStorage">Save to local storage</string>
-    <string name="settings_restoreLocalStorage">Restore from local storage</string>
     <string name="settings_textMail">Mail for your feedbacks</string>
-    <string name="settings_mail">gartel.av@gmail.com</string>
+    <string name="settings_mail" translatable="false">gartel.av@gmail.com</string>
+    <string name="settings_mailMessage">Your message</string>
+    <string name="settings_mailChooser">Choose an email app</string>
     <string name="settings_site">Project website</string>
     <string name="settings_privacy">Privacy policy</string>
     <string name="settings_noBrowser">No app found to open the link</string>
-    <string name="settings_pixabay">The app uses images from pixabay.com</string>
 
     <!-- my stations: the list the user fills in by hand, with links to streams -->
     <string name="homeRadio_goToMyStations">My stations</string>
@@ -94,6 +101,9 @@
 
     <!-- exoplayer -->
     <string name="notification_channel_name">Radio station channel</string>
+    <string name="playerError_stream">This station\'s stream can\'t be played</string>
+    <string name="playerError_url">The station doesn\'t respond at this link</string>
+    <string name="playerError_unknown">Couldn\'t play the station</string>
 
     <!-- permissions: why the app asks for them (shown before the system dialog) -->
     <string name="permission_button_continue">Continue</string>
