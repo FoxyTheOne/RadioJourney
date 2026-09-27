@@ -123,9 +123,7 @@ class HomeRadioFragment : Fragment(), OnMapReadyCallback {
         registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
         ) { permissionsMap ->
-            if (permissionsMap[Manifest.permission.ACCESS_COARSE_LOCATION] != true &&
-                permissionsMap[Manifest.permission.ACCESS_FINE_LOCATION] != true
-            ) {
+            if (permissionsMap[Manifest.permission.ACCESS_COARSE_LOCATION] != true) {
                 // Объясняем, что изменится без разрешения (раньше был Toast с текстом прямо в коде, без перевода)
                 requireContext().showPermissionDeniedDialog(
                     R.string.permission_location_title,
@@ -142,12 +140,7 @@ class HomeRadioFragment : Fragment(), OnMapReadyCallback {
     // пользователь уже знает, зачем это нужно, и сразу видит системное окно
     private fun requestLocationPermissionWithRationale() {
         val launchSystemRequest = {
-            requestPermissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                )
-            )
+            requestPermissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION))
         }
 
         if (permissionSessionState.isFirstRequestInSession(Manifest.permission.ACCESS_COARSE_LOCATION)) {
@@ -161,16 +154,13 @@ class HomeRadioFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
+    // Приложению хватает приблизительного местоположения: по нему определяется страна, карта открывается на ней.
+    // Точное (ACCESS_FINE_LOCATION) не запрашивается - см. комментарий в манифесте
     private fun isLocationPermissionGranted(): Boolean =
         ContextCompat.checkSelfPermission(
             requireContext(),
             Manifest.permission.ACCESS_COARSE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
-                ||
-                ContextCompat.checkSelfPermission(
-                    requireContext(),
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
 
     override fun onCreateView(
         inflater: LayoutInflater,

@@ -8,10 +8,11 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!--
-    Разрешения для Foreground location:
+    Местоположение: только приблизительное. По нему приложение определяет страну и открывает на ней карту -
+    для этого точность до метров не нужна. Точное местоположение (ACCESS_FINE_LOCATION) не запрашивается:
+    лишние разрешения Google Play проверяет строже, а пользователю труднее понять, зачем они
      -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <!-- 1.
     Разрешение для Foreground Service (плеер MusicService). Выдаётся при установке, запрашивать у пользователя не нужно
      -->

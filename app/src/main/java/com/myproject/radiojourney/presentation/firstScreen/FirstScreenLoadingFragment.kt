@@ -67,10 +67,7 @@ class FirstScreenLoadingFragment : Fragment() {
         registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
         ) { permissionsMap ->
-            if (permissionsMap[Manifest.permission.ACCESS_COARSE_LOCATION] == true
-                ||
-                permissionsMap[Manifest.permission.ACCESS_FINE_LOCATION] == true
-            ) {
+            if (permissionsMap[Manifest.permission.ACCESS_COARSE_LOCATION] == true) {
                 // Если дано одно из разрешений, открываем следующий фрагмент
                 openHomeRadio()
             } else {
@@ -108,12 +105,7 @@ class FirstScreenLoadingFragment : Fragment() {
                 // Сначала объясняем, зачем приложению местоположение, и только потом показываем системное окно.
                 // Объяснение показываем один раз за запуск приложения (см. PermissionSessionState)
                 val launchSystemRequest = {
-                    requestLocationPermissionLauncher.launch(
-                        arrayOf(
-                            Manifest.permission.ACCESS_COARSE_LOCATION,
-                            Manifest.permission.ACCESS_FINE_LOCATION
-                        )
-                    )
+                    requestLocationPermissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION))
                 }
 
                 if (permissionSessionState.isFirstRequestInSession(Manifest.permission.ACCESS_COARSE_LOCATION)) {
@@ -150,11 +142,6 @@ class FirstScreenLoadingFragment : Fragment() {
             requireContext(),
             Manifest.permission.ACCESS_COARSE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
-                ||
-                ContextCompat.checkSelfPermission(
-                    requireContext(),
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
 
     private fun openHomeRadio() {
         navigateSafely(R.id.action_firstScreenLoadingFragment_to_homeRadioFragment)
