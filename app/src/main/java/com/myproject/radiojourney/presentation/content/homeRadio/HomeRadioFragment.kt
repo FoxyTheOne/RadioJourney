@@ -510,8 +510,6 @@ class HomeRadioFragment : Fragment(), OnMapReadyCallback {
             ) // Проверяем получение ширины и долготы в логе
 
             // GOOGLE MAPS -> 2.4. Покажем на карте, где мы находимся (один раз). Создадим метод showMyLocation() и передадим туда текущее местоположение
-            // <!-- 004 claude
-
             showMyLocation(LatLng(location.latitude, location.longitude), moveCamera)
         }
 
@@ -542,8 +540,6 @@ class HomeRadioFragment : Fragment(), OnMapReadyCallback {
     }
 
     // GOOGLE MAPS -> 2.5. Покажем на карте, где мы находимся. Создадим метод showMyLocation() и передадим туда текущее местоположение
-    // <!-- 004 claude
-
     private fun showMyLocation(latLng: LatLng, moveCamera: Boolean = true) {
 
         Log.d(
@@ -566,8 +562,6 @@ class HomeRadioFragment : Fragment(), OnMapReadyCallback {
             )
         }
         // И передвинем камеру
-        // <!-- 004 claude
-
         if (moveCamera) mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 5f))
     }
 
@@ -601,7 +595,7 @@ class HomeRadioFragment : Fragment(), OnMapReadyCallback {
                                 MAX_STATIONS_COUNT
                             )
                         })"
-                    ) // 004 claude // загружается не больше MAX_STATIONS_COUNT станций
+                    )
                     .position(countryPresentation.countryLocation)
                     .icon(BitmapDescriptorFactory.fromBitmap(customBitmapMarker))
             )
