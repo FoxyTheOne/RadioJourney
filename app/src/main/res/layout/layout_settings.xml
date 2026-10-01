@@ -96,8 +96,7 @@
                 android:layout_gravity="center_vertical"
                 android:paddingBottom="@dimen/space_beforeOrAfterElement"
                 android:text="@string/settings_text4"
-                android:textStyle="bold"
-                app:fontWeight="800" />
+                android:textStyle="bold" />
 
             <!-- Тот же текст, что в информационном блоке на карте: там его можно закрыть крестиком, а здесь - перечитать -->
             <androidx.appcompat.widget.AppCompatTextView
@@ -125,8 +124,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:text="@string/settings_text5"
-                android:textStyle="bold"
-                app:fontWeight="800" />
+                android:textStyle="bold" />
         </LinearLayout>
 
         <!-- Сайт проекта. Раньше здесь была ссылка на Boosty с картинкой кофейной кружки: просьба о поддержке

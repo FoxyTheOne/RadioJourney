@@ -13,7 +13,7 @@ import com.myproject.radiojourney.data.dataSource.network.service.IRadioServiceW
 import com.myproject.radiojourney.other.Constants.DNS_ATTEMPTS
 import com.myproject.radiojourney.other.Constants.DNS_RETRY_DELAY
 import com.myproject.radiojourney.other.Constants.DNS_SERVER_LIST_NAME
-import com.myproject.radiojourney.other.Constants.FALLBACK_SERVER
+import com.myproject.radiojourney.other.Constants.FALLBACK_SERVERS
 import com.myproject.radiojourney.other.Constants.MAX_STATIONS_COUNT
 import com.myproject.radiojourney.other.Constants.SERVER_RETRY_DELAY
 import com.myproject.radiojourney.other.Constants.SERVER_SEARCH_TIME
@@ -42,7 +42,7 @@ import javax.net.ssl.SSLHandshakeException
  * Автор API просит обращаться к серверам не по постоянному адресу, а так (https://api.radio-browser.info/):
  * 1. Взять список серверов DNS-запросом имени all.api.radio-browser.info (updateDNSList). Обратный DNS-запрос
  *    даёт имя сервера: по IP-адресу https-запрос не пройдёт, сертификат выдан на имя.
- *    Если DNS не ответил, берём сервер из документации (FALLBACK_SERVER).
+ *    Если DNS не ответил, берём запасные серверы (FALLBACK_SERVERS).
  * 2. Перемешать список и ходить по нему по очереди, пока сервер не ответит (requestFromAnyServer),
  *    чтобы все приложения не нагружали один и тот же сервер. На сентябрь 2026 сервер в списке всё равно один - de1.
  * 3. Представляться заголовком User-Agent (UserAgentInterceptor).
@@ -280,15 +280,16 @@ class NetworkRadioDataSource @Inject constructor(
             }
             Log.d(TAG, "Серверы из DNS: $listDNSResult")
 
-            // Без интернета DNS не отвечает: несколько попыток, а потом сервер, известный из документации radio-browser
+            // Без интернета DNS не отвечает: несколько попыток, а потом запасные серверы. Обратный DNS-запрос не проходит и в некоторых
+            // сетях (например, в эмуляторе Android): тогда без запасного списка приложение ходило бы только на de1 и при его сбое сдавалось
             if (listDNSResult.isNotEmpty()) {
                 listDNSResult
             } else if (attemptsLeft > 1 && hasNetworkConnection()) { // без сети повторять DNS-запрос незачем
                 delay(DNS_RETRY_DELAY)
                 updateDNSList(attemptsLeft - 1)
             } else {
-                Log.d(TAG, "Список серверов не получен, используем $FALLBACK_SERVER")
-                listOf(FALLBACK_SERVER)
+                Log.d(TAG, "Список серверов не получен, используем $FALLBACK_SERVERS")
+                FALLBACK_SERVERS
             }
         }
 }
