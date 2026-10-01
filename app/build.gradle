@@ -25,7 +25,10 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace 'com.myproject.radiojourney'
-    compileSdk 36
+    // compileSdk - с какой версией Android собирается код (какие функции системы видны компилятору).
+    // targetSdk - под какую версию приложение проверено: система включает для него новые правила этой версии.
+    // Google Play требует targetSdk не старше, чем примерно год от последней версии Android
+    compileSdk 37
 
     defaultConfig {
         // Адрес приложения в Google Play. Меняется только до первой публикации: потом это ключ всех обновлений.
@@ -33,7 +36,7 @@ android {
         applicationId "io.github.foxytheone.radiojourney"
         // Android 7.0 и выше: свежие Navigation и WorkManager не поддерживают Android 6, а это 0,3% устройств
         minSdk 24
-        targetSdk 36
+        targetSdk 37
         versionCode 3
         versionName "1.0"
 
@@ -78,9 +81,11 @@ ksp {
 
 
 dependencies {
-    implementation 'androidx.core:core-ktx:1.18.0' // Also needed for doOnLayout
+    implementation 'androidx.core:core-ktx:1.19.1' // Also needed for doOnLayout
     implementation 'androidx.appcompat:appcompat:1.8.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.2.2'
+    // Библиотеки для тестов. Самих тестов пока нет (шаблонные от Android Studio удалены - они ничего не проверяли),
+    // но с этими строками новый тест можно написать сразу. В приложение они не попадают
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.3.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
@@ -108,12 +113,6 @@ dependencies {
     // For activityViewModels working:
     // Java language implementation, Kotlin
     implementation "androidx.fragment:fragment-ktx:1.9.1"
-    // Testing Fragments in Isolation
-    debugImplementation "androidx.fragment:fragment-testing:1.9.1"
-
-//    //  Glide
-//    implementation 'com.github.bumptech.glide:glide:4.12.0'
-//    annotationProcessor 'com.github.bumptech.glide:compiler:4.12.0'
 
     // Navigation
     implementation 'androidx.navigation:navigation-fragment-ktx:2.10.2'
@@ -140,5 +139,5 @@ dependencies {
     implementation 'androidx.datastore:datastore-preferences:1.2.1'
 
     // Interceptor
-    implementation 'com.squareup.okhttp3:logging-interceptor:5.4.0' // 5.5.0 требует compileSdk 37
+    implementation 'com.squareup.okhttp3:logging-interceptor:5.5.0'
 }
