@@ -6,9 +6,14 @@ import com.myproject.radiojourney.data.worker.CountryCacheScheduler
 import com.myproject.radiojourney.domain.firstScreenLoadingUseCase.ILoginScreenUseCase
 import com.myproject.radiojourney.domain.homeRadioUseCase.IHomeRadioUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -37,6 +42,32 @@ class FirstScreenLoadingViewModel @Inject constructor(
     // Подписка на локальную БД, для проверки (если БД пуста, нужно ждать окончания кеширования). Самих стран этому экрану не нужно
     val hasCountries: Flow<Boolean> =
         homeRadioInteractor.subscribeOnCountryList().map { it.isNotEmpty() }
+
+    // Почему стран нет: null - всё в порядке (страны есть или загрузка идёт), иначе - что сказать пользователю.
+    // combine пересчитывает ответ при каждом изменении базы или состояния загрузки; mapLatest отменяет начатую
+    // паузу, если состояние успело смениться (загрузка стартовала - "нет интернета" так и не появится)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val countryListProblem: Flow<CountryListProblem?> =
+        combine(hasCountries, countryCacheScheduler.status) { hasCountries, status ->
+            if (hasCountries) null else status
+        }.mapLatest { status ->
+            when (status) {
+                CountryCacheScheduler.Status.FAILED -> CountryListProblem.SERVER_UNAVAILABLE
+                CountryCacheScheduler.Status.WAITING_FOR_NETWORK -> {
+                    delay(NO_NETWORK_MESSAGE_DELAY)
+                    CountryListProblem.NO_NETWORK
+                }
+
+                else -> null
+            }
+        }.distinctUntilChanged()
+
+    enum class CountryListProblem { NO_NETWORK, SERVER_UNAVAILABLE }
+
+    companion object {
+        // Сколько ждём, прежде чем сказать "нет интернета": задача в очереди бывает и на долю секунды перед запуском
+        private const val NO_NETWORK_MESSAGE_DELAY = 3_000L
+    }
 
     // Раньше здесь были LiveData ошибки и диалога "нет интернета" в catch (AccountsException / IOException),
     // но сохранение токена такие исключения не бросает - эти ветки не могли сработать

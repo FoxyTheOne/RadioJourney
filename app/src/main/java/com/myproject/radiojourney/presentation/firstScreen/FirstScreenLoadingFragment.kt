@@ -24,8 +24,6 @@ import com.myproject.radiojourney.presentation.common.navigateSafely
 import com.myproject.radiojourney.presentation.common.showPermissionDeniedDialog
 import com.myproject.radiojourney.presentation.common.showPermissionRationale
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -42,11 +40,9 @@ import javax.inject.Inject
 class FirstScreenLoadingFragment : Fragment() {
     companion object {
         private const val TAG = "FirstScreenLoading"
-        private const val EMPTY_LIST_DIALOG_DELAY = 7_000L
     }
 
     private var countryListIsNotEmpty = false
-    private var emptyListDialogJob: Job? = null
 
     // VIEW BINDING -> 1. Объявляем переменную. This property is only valid between onCreateView and onDestroyView
     private var binding: LayoutFirstScreenLoadingBinding? = null
@@ -62,7 +58,7 @@ class FirstScreenLoadingFragment : Fragment() {
     // Т.обр., в лямбду к нам залетает не boolean, а map. ключом этого map будет string (наши permissions), а второе значение - это boolean
     // Следовательно, для обращения к определенному PERMISSION, мы обращаемся к нему по ключу типа permissionsMap[...] == true
     // Регистрируется полем класса: Activity Result API требует регистрации до создания фрагмента (раньше - в onViewCreated).
-    // Разрешения на уведомления запрашивает MainActivity, а FOREGROUND_SERVICE выдаётся при установке и запроса не требует
+    // Разрешение на уведомления приложению не нужно (см. AndroidManifest.xml), а FOREGROUND_SERVICE выдаётся при установке
     private val requestLocationPermissionLauncher =
         registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
@@ -163,38 +159,33 @@ class FirstScreenLoadingFragment : Fragment() {
 
                 viewModel.hasCountries.collect { hasCountries ->
                     if (hasCountries) {
-                        emptyListDialogJob?.cancel()
-                        infoDialog.hide()
-                        Log.d(
-                            TAG,
-                            "При сборе данных в viewModel.hasCountries.collect список кодов стран НЕ пустой"
-                        )
+                        Log.d(TAG, "Список стран в базе НЕ пустой - показываем кнопку входа")
                         countryListIsNotEmpty = true
-
                         binding?.buttonLogIn?.isVisible = true
                         binding?.progressBarHorizontal?.isVisible = false
-                    } else {
-                        // Раньше - Handler.postDelayed: он срабатывал и после закрытия экрана, и dialog.show() у закрытой Activity
-                        // ронял приложение (BadTokenException). Корутина viewLifecycleOwner отменяется вместе с экраном
-                        emptyListDialogJob?.cancel()
-                        emptyListDialogJob = viewLifecycleOwner.lifecycleScope.launch {
-                            delay(EMPTY_LIST_DIALOG_DELAY)
-
-                            // После задержки проверяем, может что-то поменялось
-                            if (!countryListIsNotEmpty) {
-                                Log.d(
-                                    TAG,
-                                    "При сборе данных в viewModel.hasCountries.collect список кодов стран всё ещё пустой, вызываем диалоговое окно"
-                                )
-                                // Показываем диалоговое окно о проблеме с сервером
-                                infoDialog.show(
-                                    R.string.dialogPleaseWait_title2,
-                                    R.string.dialogPleaseWait_text2
-                                )
-                            }
-                        }
                     }
                 }
+            }
+        }
+
+        // Сообщение о проблеме - только когда она действительно есть: загрузка не удалась или не может начаться без интернета.
+        // Раньше его показывал таймер через 7 секунд после открытия экрана, если стран ещё нет. Первая загрузка часто
+        // идёт дольше, и "сервер не работает" мелькало и тут же исчезало, хотя всё было в порядке
+        viewLifecycleOwner.collectWhenStarted(viewModel.countryListProblem) { problem ->
+            when (problem) {
+                FirstScreenLoadingViewModel.CountryListProblem.SERVER_UNAVAILABLE ->
+                    infoDialog.show(
+                        R.string.dialogPleaseWait_title2,
+                        R.string.dialogPleaseWait_text2
+                    )
+
+                FirstScreenLoadingViewModel.CountryListProblem.NO_NETWORK ->
+                    infoDialog.show(
+                        R.string.serverError_noNetwork_title,
+                        R.string.serverError_noNetwork_text
+                    )
+
+                null -> infoDialog.hide()
             }
         }
     }

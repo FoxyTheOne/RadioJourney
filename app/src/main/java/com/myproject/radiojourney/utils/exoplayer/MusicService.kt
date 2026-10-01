@@ -2,6 +2,10 @@ package com.myproject.radiojourney.utils.exoplayer
 
 import android.app.PendingIntent
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.os.Bundle
 import android.util.Log
 import androidx.annotation.OptIn
@@ -74,6 +78,10 @@ class MusicService : MediaLibraryService() {
 
     private lateinit var musicPlayerEventListener: MusicPlayerEventListener
 
+    // Ожидание интернета, чтобы повторить загрузку плейлиста по умолчанию (см. retryDefaultPlaylistWhenOnline)
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
+    private var retryJob: Job? = null
+
     // Уведомление на паузе. media3 показывает уведомление, пока плеер подготовлен (не STATE_IDLE), и после паузы держит
     // сервис в foreground не дольше 10 минут - потом уведомление остаётся уже без foreground-сервиса.
     // Xiaomi (MIUI) в таком состоянии убивает процесс при смахивании приложения, и уведомление остаётся "мёртвым".
@@ -138,6 +146,9 @@ class MusicService : MediaLibraryService() {
                 // Первый запуск: ещё ничего не слушали
                 else -> fetchDefaultPlaylist()
             }
+            // Ничего не скачалось (обычно - первый запуск без интернета, когда сохранённых списков ещё нет).
+            // Раньше плеер так и оставался пустым: на карте висела "Загрузка плейлиста", хотя её никто не вёл
+            if (radioPlaylistSource.radioStations.isEmpty()) retryDefaultPlaylistWhenOnline()
         }
 
         // Pending intent for opening our activity when we click on notification
@@ -237,9 +248,42 @@ class MusicService : MediaLibraryService() {
         pauseAllPlayersAndStopSelf()
     }
 
+    // Ждём интернет и скачиваем плейлист по умолчанию ещё раз. NetworkCallback.onAvailable система вызывает, когда сеть
+    // появилась (и сразу, если она уже есть). Подписка одна на весь сервис: networkCallback != null - уже ждём
+    private fun retryDefaultPlaylistWhenOnline() {
+        if (networkCallback != null) return
+        val connectivityManager = getSystemService(ConnectivityManager::class.java) ?: return
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                // onAvailable приходит в фоновом потоке - переходим в serviceScope (главный поток сервиса)
+                serviceScope.launch {
+                    // Повтор уже идёт (сеть "появилась" дважды) или пользователь сам выбрал страну - не мешаем
+                    if (retryJob?.isActive == true || radioPlaylistSource.radioStations.isNotEmpty()) return@launch
+                    retryJob = launch {
+                        Log.d(TAG, "Появилась сеть - ещё раз скачиваем плейлист по умолчанию")
+                        fetchDefaultPlaylist()
+                        if (radioPlaylistSource.radioStations.isNotEmpty()) stopWaitingForNetwork()
+                    }
+                }
+            }
+        }
+        val request =
+            NetworkRequest.Builder().addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .build()
+        connectivityManager.registerNetworkCallback(request, callback)
+        networkCallback = callback
+    }
+
+    private fun stopWaitingForNetwork() {
+        val callback = networkCallback ?: return
+        networkCallback = null
+        getSystemService(ConnectivityManager::class.java)?.unregisterNetworkCallback(callback)
+    }
+
     override fun onDestroy() {
         Log.d(TAG, "MUSIC SERVICE IS DESTROYED -> вызван метод onDestroy()")
 
+        stopWaitingForNetwork()
         serviceScope.cancel()
 
         exoPlayer.removeListener(musicPlayerEventListener)

@@ -24,10 +24,8 @@
         android:minSdkVersion="34" />
     <!-- FOREGROUND_SERVICE_DATA_SYNC убрано вместе с ProgressForegroundService (список стран теперь загружает WorkManager).
          SYSTEM_ALERT_WINDOW (окна поверх других приложений) убрано: нигде не использовалось -->
-    <!--
-        When targeting Android 13 or higher, posting a permission requires holding the `POST_NOTIFICATIONS` permission:
-    -->
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- POST_NOTIFICATIONS не нужно: единственное уведомление приложения - уведомление плеера (медиасессия media3),
+         а Android 13+ показывает уведомления медиасессий и без этого разрешения -->
 
     <application
         android:name=".App"

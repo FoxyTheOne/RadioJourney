@@ -43,7 +43,7 @@ class CountryCacheWorker @AssistedInject constructor(
         val countryRemoteList = networkRadioDataSource.getCountryList()
         if (countryRemoteList.isEmpty()) {
             Log.d(TAG, "countryRemoteList size = 0. The server is down. Please, try again later")
-            // Сервер недоступен. Первый экран через несколько секунд покажет диалог о проблеме с сервером
+            // Сервер недоступен. Первый экран увидит, что задача завершилась неудачей (CountryCacheScheduler.status), и покажет диалог
             return Result.failure()
         }
 

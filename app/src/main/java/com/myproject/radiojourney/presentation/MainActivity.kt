@@ -1,7 +1,5 @@
 package com.myproject.radiojourney.presentation
 
-import android.Manifest
-import android.content.pm.PackageManager
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.LayerDrawable
 import android.os.Build
@@ -9,7 +7,6 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
 import android.view.View
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -27,20 +24,16 @@ import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.ActivityMainBinding
 import com.myproject.radiojourney.other.Constants
 import com.myproject.radiojourney.presentation.common.InfoDialog
-import com.myproject.radiojourney.presentation.common.PermissionSessionState
 import com.myproject.radiojourney.presentation.common.collectWhenStarted
 import com.myproject.radiojourney.presentation.common.fallbackStationListMessage
 import com.myproject.radiojourney.presentation.common.isInternetAvailable
 import com.myproject.radiojourney.presentation.common.navigateSafely
-import com.myproject.radiojourney.presentation.common.showPermissionDeniedDialog
-import com.myproject.radiojourney.presentation.common.showPermissionRationale
 import com.myproject.radiojourney.presentation.content.homeRadio.HomeRadioFragmentDirections
 import com.myproject.radiojourney.presentation.content.radioStationList.adapter.SwipeRadioStationAdapter
 import com.myproject.radiojourney.presentation.model.RadioStationPresentation
 import com.myproject.radiojourney.utils.exoplayer.PlaybackStateInfo
 import com.myproject.radiojourney.utils.extension.startStationIndex
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 /**
  * Единственная Activity приложения: держит экраны навигации и плеер внизу экрана.
@@ -54,8 +47,7 @@ import javax.inject.Inject
  * - выбирает стартовый экран (первый запуск или сразу карта) по данным MainViewModel;
  * - показывает полосы загрузки, диалоги и сообщения, о которых просит MainViewModel;
  * - держит панель плеера и содержимое в согласии с плеером: какая станция играет, какой плейлист загружен (см. onPlaylistChanged);
- * - рисует фон под строкой состояния и панелью навигации (edge-to-edge, см. applySystemBarInsets);
- * - спрашивает разрешение на уведомления (Android 13+).
+ * - рисует фон под строкой состояния и панелью навигации (edge-to-edge, см. applySystemBarInsets).
  *
  * Логики радио здесь нет: за неё отвечают MainViewModel и сервис плеера (utils/exoplayer/MusicService)
  */
@@ -83,10 +75,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var infoDialog: InfoDialog
     private lateinit var navController: NavController
 
-    // Какие разрешения уже запрашивали за этот запуск приложения (см. PermissionSessionState)
-    @Inject
-    lateinit var permissionSessionState: PermissionSessionState
-
     // Действия, которые ждут, пока плейлист появится в ViewPager (см. whenPlaylistReady)
     private val pendingWhenPlaylistReady = mutableListOf<() -> Unit>()
 
@@ -95,24 +83,6 @@ class MainActivity : AppCompatActivity() {
 
     // Версия плейлиста, которая уже показана в ViewPager (см. onPlaylistChanged)
     private var shownPlaylistVersion = 0
-
-    // Запрос на разрешение notification. Регистрируется полем класса - до создания Activity, как требует Activity Result API
-    private val requestPermissionLauncherNotification =
-        registerForActivityResult(
-            ActivityResultContracts.RequestPermission()
-        ) { isGranted: Boolean ->
-            if (!isGranted) {
-                // Раньше здесь был Toast с текстом прямо в коде (без перевода). Теперь объясняем, что именно пропадёт,
-                // а если система больше не покажет запрос - предлагаем открыть настройки приложения
-                val isPermanentlyDenied = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                        !shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)
-                showPermissionDeniedDialog(
-                    R.string.permission_notification_title,
-                    R.string.permission_notification_denied_text,
-                    isPermanentlyDenied
-                )
-            }
-        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -217,28 +187,11 @@ class MainActivity : AppCompatActivity() {
             R.id.text_pleaseWait
         )
 
-        // Запрос на разрешение notification (уведомление плеера).
-        // Разрешение FOREGROUND_SERVICE раньше тоже запрашивалось здесь, но оно выдаётся при установке и в запросе не нуждается.
-        // POST_NOTIFICATIONS появилось только в Android 13 (TIRAMISU): на более старых версиях уведомления
-        // разрешены сразу после установки, и запрашивать нечего - поэтому проверка версии стоит первой
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // Сначала объясняем, зачем приложению уведомления, и только потом показываем системное окно.
-            // Объяснение и запрос - один раз за запуск приложения: Activity пересоздаётся при смене темы или языка,
-            // и окно появлялось бы заново (см. PermissionSessionState)
-            if (permissionSessionState.isFirstRequestInSession(Manifest.permission.POST_NOTIFICATIONS)) {
-                showPermissionRationale(
-                    R.string.permission_notification_title,
-                    R.string.permission_notification_text
-                ) {
-                    requestPermissionLauncherNotification.launch(Manifest.permission.POST_NOTIFICATIONS)
-                }
-            }
-        }
+        // Разрешение на уведомления (POST_NOTIFICATIONS) здесь больше не запрашивается. Уведомление плеера - это уведомление
+        // медиасессии (media3), а Android 13+ показывает такие уведомления и без этого разрешения (проверено на эмуляторе
+        // с Android 17: разрешение не выдано, а уведомление с кнопками есть). Других уведомлений у приложения нет.
+        // Раньше окно "Зачем нужны уведомления" появлялось сразу при запуске, поверх первого экрана, и путало:
+        // его "Не сейчас" принимали за отказ от местоположения
 
         // COUNTRY LIST MARKERS ON MAP -> 1. Список стран загружается в MainViewModel (WorkManager, CountryCacheWorker) - один раз за запуск приложения
 
@@ -361,6 +314,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         collectWhenStarted(mainViewModel.serverIsDown) { reason ->
+            // На первом экране плейлист по умолчанию скачивается заранее, пока пользователь читает приветствие.
+            // Если он не скачался, второе окно поверх окна первого экрана ("нет интернета") только мешает:
+            // сервис сам повторит загрузку, когда появится сеть (MusicService.retryDefaultPlaylistWhenOnline)
+            if (navController.currentDestination?.id == R.id.firstScreenLoadingFragment) return@collectWhenStarted
             infoDialog.showServerError(reason)
             mainViewModel.hideProgressAndSetClickable(true)
         }
