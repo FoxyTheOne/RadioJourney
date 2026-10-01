@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ресурсы, которые сжатие ресурсов (shrinkResources в релизе) должно оставить, хотя в коде на них нет ссылок R.drawable...
+     radio_heissenstein_pixabay - обложка станции в уведомлении: RadioPlaylistSource подключает её по адресу-строке
+     "android.resource://.../drawable/radio_heissenstein_pixabay", и сборщик такую ссылку может не распознать.
+     Сам этот файл в приложение не попадает -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/radio_heissenstein_pixabay" />
