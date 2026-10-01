@@ -109,9 +109,12 @@ class FirstScreenLoadingFragment : Fragment() {
                 }
 
                 if (permissionSessionState.isFirstRequestInSession(Manifest.permission.ACCESS_COARSE_LOCATION)) {
+                    // "Не сейчас" - сразу на карту без разрешения, как и обещает текст окна. Раньше пользователь оставался
+                    // на первом экране, а повторное нажатие кнопки сразу показывало системный запрос, от которого он отказался
                     requireContext().showPermissionRationale(
                         R.string.permission_location_title,
                         R.string.permission_location_text,
+                        onNotNow = { openHomeRadio() },
                         onContinue = launchSystemRequest
                     )
                 } else {

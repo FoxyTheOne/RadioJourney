@@ -15,13 +15,15 @@ import com.myproject.radiojourney.R
  * developer.android.com рекомендует объяснять причину своим окном до системного запроса - тогда пользователь
  * понимает, что он разрешает, и реже отказывает.
  *
- * [onContinue] вызывается, когда пользователь готов увидеть системное окно. Если он отказался - не делаем ничего:
- * запрашивать разрешение повторно сразу же нельзя (это навязчиво, а после двух отказов система вообще
- * перестаёт показывать окно запроса)
+ * [onContinue] вызывается, когда пользователь готов увидеть системное окно.
+ * [onNotNow] - когда он отказался ("Не сейчас" или касание мимо окна). Разрешение тогда не запрашиваем:
+ * повторный запрос сразу же навязчив, а после двух отказов система вообще перестаёт показывать окно запроса.
+ * Но экран должен продолжить работу без разрешения - например, первый экран открывает карту
  */
 fun Context.showPermissionRationale(
     @StringRes titleId: Int,
     @StringRes textId: Int,
+    onNotNow: () -> Unit = {},
     onContinue: () -> Unit
 ) {
     // MaterialAlertDialogBuilder, а не AlertDialog.Builder: он берёт оформление окна из темы приложения
@@ -30,7 +32,9 @@ fun Context.showPermissionRationale(
         .setTitle(titleId)
         .setMessage(textId)
         .setPositiveButton(R.string.permission_button_continue) { _, _ -> onContinue() }
-        .setNegativeButton(R.string.permission_button_notNow, null)
+        .setNegativeButton(R.string.permission_button_notNow) { _, _ -> onNotNow() }
+        // Касание мимо окна и кнопка "Назад" закрывают окно так же, как "Не сейчас"
+        .setOnCancelListener { onNotNow() }
         .show()
 }
 
