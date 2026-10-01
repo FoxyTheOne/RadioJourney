@@ -43,10 +43,28 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        release {
+            if (keystorePropertiesFile.exists()) {
+                storeFile rootProject.file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
+        }
+    }
+
     buildTypes {
         release {
-            minifyEnabled false
+            // R8 выбрасывает неиспользуемый код и переименовывает оставшийся: приложение меньше и его труднее разбирать.
+            // Что нужно оставить как есть - в proguard-rules.pro
+            minifyEnabled true
+            // Заодно выбрасываются картинки и строки, на которые никто не ссылается
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (keystorePropertiesFile.exists()) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 
