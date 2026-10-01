@@ -61,12 +61,12 @@
     <string name="currentPlaylist_empty">Playlist is empty</string>
 
     <string name="settings_tittle2">About</string>
-    <string name="settings_text1">This application is created for listening to Internet radio stations.</string>
-    <string name="settings_text2">Therefor we use database https://www.radio-browser.info/ that contains information about Internet radio stations all over the world.</string>
-    <string name="settings_text3">Just click on the place on the map you are insterested in, chose radiostation from the list and enjoy!</string>
-    <string name="settings_text4">The app also uses images from pixabay.com and country coordinates from https://developers.google.com/public-data/ (sep. 2023). Country names are taken from external sources and may not correspond to modern realities.</string>
+    <string name="settings_text1">RadioJourney is an app with internet radio stations from all over the world on one map.</string>
+    <string name="settings_text2">Tap a country, download its playlist and choose a station to listen to. Star the stations you like. Stations missing from the catalogue can be added in “My stations”.</string>
+    <string name="settings_text3">Station lists come from the open radio-browser.info catalogue. If it is unavailable, the app shows the last saved list. Stations broadcast on their own, so one of them may be silent for a while.</string>
+    <string name="settings_text4">The map and country borders are shown by Google Maps, country coordinates come from Google Public Data, images from pixabay.com. Country names come from external sources and may differ from official ones.</string>
     <string name="settings_text5">The app is free, has no ads and needs no sign up. It does not collect your data: favourites, your own stations and settings stay on your phone.</string>
-    <string name="settings_textMail">Mail for your feedbacks</string>
+    <string name="settings_textMail">Questions and ideas</string>
     <string name="settings_mail" translatable="false">gartel.av@gmail.com</string>
     <string name="settings_mailMessage">Your message</string>
     <string name="settings_mailChooser">Choose an email app</string>

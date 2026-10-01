@@ -54,12 +54,12 @@
     <string name="currentPlaylist_empty">Здесь пусто</string>
 
     <string name="settings_tittle2">О программе</string>
-    <string name="settings_text1">Данное приложение создано для прослушивания интернет радиостанций.</string>
-    <string name="settings_text2">Для этого используется база данных https://www.radio-browser.info/, содержащая информацию об интернет-радиостанциях со всего мира.</string>
-    <string name="settings_text3">Просто нажмите на интересующее место на карте, выберите радиостанцию из появившегося списка и наслаждайтесь!</string>
-    <string name="settings_text4">В приложении также используются изображения с сайта pixabay.com и координаты стран с сайта https://developers.google.com/public-data/ (сент. 2023). Названия стран взяты из внешних источников и могут не соответствовать современным реалиям.</string>
+    <string name="settings_text1">RadioJourney — приложение с интернет-радиостанциями со всего мира на одной карте.</string>
+    <string name="settings_text2">Нажмите на страну, скачайте плейлист и выбирайте радиостанцию для прослушивания. Понравившиеся станции отмечайте звёздочкой, а станции, которых нет в каталоге, можно добавить в «Мои станции».</string>
+    <string name="settings_text3">Списки станций приходят из открытого каталога radio-browser.info. Если он недоступен, приложение покажет последний сохранённый список. Эфир ведут сами радиостанции, поэтому какая-то из них может временно молчать.</string>
+    <string name="settings_text4">Карту и границы стран показывает Google Maps, координаты стран взяты из Google Public Data, изображения — с pixabay.com. Названия стран получены из внешних источников и могут не совпадать с официальными.</string>
     <string name="settings_text5">Приложение бесплатное, без рекламы и без регистрации. Оно не собирает ваши данные: избранное, свои станции и настройки хранятся только на вашем телефоне.</string>
-    <string name="settings_textMail">Почта для обратной связи</string>
+    <string name="settings_textMail">Вопросы и предложения</string>
     <string name="settings_mailMessage">Ваше сообщение</string>
     <string name="settings_mailChooser">Выберите почтовое приложение</string>
     <string name="settings_site">Сайт проекта</string>
