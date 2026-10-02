@@ -16,7 +16,6 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.LayoutFirstScreenLoadingBinding
 import com.myproject.radiojourney.presentation.common.InfoDialog
@@ -25,6 +24,7 @@ import com.myproject.radiojourney.presentation.common.collectWhenStarted
 import com.myproject.radiojourney.presentation.common.navigateSafely
 import com.myproject.radiojourney.presentation.common.showPermissionDeniedDialog
 import com.myproject.radiojourney.presentation.common.showPermissionRationale
+import com.myproject.radiojourney.presentation.common.showRetryDialog
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -199,18 +199,15 @@ class FirstScreenLoadingFragment : Fragment() {
         }
     }
 
-    // Сервер не дал список стран. Без него войти на карту нельзя, поэтому в окне есть кнопка "Повторить", и закрыть
-    // окно мимо неё нельзя (setCancelable(false)): иначе пользователь остался бы на экране, где ничего не происходит.
-    // Раньше было окно "попробуйте позже" без кнопки - помогал только перезапуск приложения.
-    // MaterialAlertDialogBuilder - как у окон разрешений (см. PermissionRationale): оформление берётся из темы приложения
+    // Сервер не дал список стран. Без него войти на карту нельзя, поэтому в окне есть кнопка "Повторить"
+    // (см. showRetryDialog в presentation/common/Dialogs.kt). Раньше было окно "попробуйте позже" без кнопки -
+    // помогал только перезапуск приложения
     private fun showServerErrorDialog() {
         if (serverErrorDialog?.isShowing == true) return
-        serverErrorDialog = MaterialAlertDialogBuilder(requireContext())
-            .setTitle(R.string.serverError_notResponding_title)
-            .setMessage(R.string.serverError_notResponding_text)
-            .setCancelable(false)
-            .setPositiveButton(R.string.button_retry) { _, _ -> viewModel.retryCountryList() }
-            .show()
+        serverErrorDialog = requireContext().showRetryDialog(
+            R.string.serverError_notResponding_title,
+            R.string.serverError_notResponding_text
+        ) { viewModel.retryCountryList() }
     }
 
     private fun hideServerErrorDialog() {

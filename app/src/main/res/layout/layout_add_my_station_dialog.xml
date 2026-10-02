@@ -67,7 +67,7 @@
             style="@style/Widget.AppCompat.Button.Borderless"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/addMyStation_cancel"
+            android:text="@string/button_cancel"
             android:textColor="@color/orange"
             android:textSize="@dimen/button_text"
             android:textStyle="bold" />

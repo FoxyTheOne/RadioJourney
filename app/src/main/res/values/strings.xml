@@ -20,7 +20,6 @@
     <string name="homeRadio_serverDown">Something went wrong: the server is unavailable. Please try again later</string>
     <string name="exit_title">Exit the app?</string>
     <string name="exit_confirm">Exit</string>
-    <string name="exit_cancel">Cancel</string>
 
     <string name="dialogInternetTrouble_title">Some internet trouble!</string>
     <string name="dialogInternetTrouble_text">Something went wrong with the request to the server. Try to repeat the last action or check your internet connection.</string>
@@ -31,6 +30,7 @@
     <string name="serverError_notResponding_title">The server is not responding</string>
     <string name="serverError_notResponding_text">The radio-browser.info server, where the app gets the radio station lists, is not responding right now. Please try again later.</string>
     <string name="button_retry">Try again</string>
+    <string name="button_cancel">Cancel</string>
     <string name="serverError_connectionCut_title">The connection keeps breaking</string>
     <string name="serverError_connectionCut_text">The radio-browser.info server responds, but the connection breaks before the whole answer arrives. It looks like your internet provider limits access to it - in some networks this happens with servers abroad. Please try again later or use a different network.</string>
     <string name="savedStationList_used">The radio-browser.info server is unavailable. Showing the list saved on %1$s</string>
@@ -89,14 +89,12 @@
     <string name="myStations_delete_title">Delete the station?</string>
     <string name="myStations_delete_text">%1$s will be removed from your list. The station itself stays available - you can add it again by the same link.</string>
     <string name="myStations_delete_confirm">Delete</string>
-    <string name="myStations_delete_cancel">Cancel</string>
     <string name="addMyStation_title">New station</string>
     <string name="addMyStation_titleEdit">Edit the station</string>
     <string name="addMyStation_name">Station name</string>
     <string name="addMyStation_url">Link to the stream</string>
     <string name="addMyStation_urlHelp">The link usually ends with .mp3, .aac or .m3u8 and can be found on the station\'s website</string>
     <string name="addMyStation_save">Save</string>
-    <string name="addMyStation_cancel">Cancel</string>
     <string name="addMyStation_error_name">Enter a name - this is how the station will be shown in the list</string>
     <string name="addMyStation_error_url">The link must start with http:// or https://</string>
     <string name="addMyStation_error_duplicate">A station with this link is already in your list</string>

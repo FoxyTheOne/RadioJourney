@@ -39,7 +39,6 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.tasks.CancellationTokenSource
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.LayoutHomeRadioBinding
 import com.myproject.radiojourney.other.Constants.MAX_STATIONS_COUNT
@@ -49,6 +48,7 @@ import com.myproject.radiojourney.presentation.common.InfoDialog
 import com.myproject.radiojourney.presentation.common.PermissionSessionState
 import com.myproject.radiojourney.presentation.common.collectWhenStarted
 import com.myproject.radiojourney.presentation.common.navigateSafely
+import com.myproject.radiojourney.presentation.common.showConfirmDialog
 import com.myproject.radiojourney.presentation.common.showPermissionDeniedDialog
 import com.myproject.radiojourney.presentation.common.showPermissionRationale
 import com.myproject.radiojourney.presentation.model.CountryPresentation
@@ -715,13 +715,11 @@ class HomeRadioFragment : Fragment(), OnMapReadyCallback {
     }
 
     // Окно "Выйти из приложения?". Раньше похожее окно открывала кнопка выхода на верхней полосе (LogOutDialogFragment
-    // со своей разметкой), теперь это обычный MaterialAlertDialogBuilder - как остальные окна приложения
+    // со своей разметкой), теперь это общее окно подтверждения (см. presentation/common/Dialogs.kt)
     private fun confirmExit() {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(R.string.exit_title)
-            .setPositiveButton(R.string.exit_confirm) { _, _ -> requireActivity().finish() }
-            .setNegativeButton(R.string.exit_cancel, null)
-            .show()
+        requireContext().showConfirmDialog(R.string.exit_title, confirmId = R.string.exit_confirm) {
+            requireActivity().finish()
+        }
     }
 
     // VIEW BINDING -> 3. onDestroyView()

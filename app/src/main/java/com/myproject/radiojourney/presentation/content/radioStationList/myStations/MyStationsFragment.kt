@@ -9,7 +9,6 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.R
@@ -19,6 +18,7 @@ import com.myproject.radiojourney.presentation.MainViewModel
 import com.myproject.radiojourney.presentation.common.collectWhenStarted
 import com.myproject.radiojourney.presentation.common.navigateSafely
 import com.myproject.radiojourney.presentation.common.popBackStackSafely
+import com.myproject.radiojourney.presentation.common.showConfirmDialog
 import com.myproject.radiojourney.presentation.model.RadioStationPresentation
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -99,16 +99,15 @@ class MyStationsFragment : Fragment() {
     // Удаление - действие необратимое, поэтому переспрашиваем. В тексте показываем название станции,
     // чтобы было видно, какую именно удаляем (кнопок удаления в списке много)
     private fun confirmDelete(station: RadioStationPresentation) {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(R.string.myStations_delete_title)
-            .setMessage(getString(R.string.myStations_delete_text, station.stationName))
-            .setPositiveButton(R.string.myStations_delete_confirm) { _, _ ->
-                viewModel.deleteMyStation(station.stationuuid)
-                showMessage(R.string.myStations_deleted)
-                reloadPlayerPlaylistIfMyStations()
-            }
-            .setNegativeButton(R.string.myStations_delete_cancel, null)
-            .show()
+        requireContext().showConfirmDialog(
+            R.string.myStations_delete_title,
+            message = getString(R.string.myStations_delete_text, station.stationName),
+            confirmId = R.string.myStations_delete_confirm
+        ) {
+            viewModel.deleteMyStation(station.stationuuid)
+            showMessage(R.string.myStations_deleted)
+            reloadPlayerPlaylistIfMyStations()
+        }
     }
 
     // Включаем станцию: возвращаемся на главный экран и передаём её туда аргументом - так же,

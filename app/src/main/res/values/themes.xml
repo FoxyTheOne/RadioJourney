@@ -41,7 +41,7 @@
          а не прописывать их в разметке. Тогда все окна одинаковые, и оформление меняется в одном месте -->
 
     <!-- Окна с заголовком, текстом и кнопками: "Удалить станцию?", объяснения к разрешениям.
-         Создаются через MaterialAlertDialogBuilder -->
+         Создаются функциями из presentation/common/Dialogs.kt (MaterialAlertDialogBuilder) -->
     <style name="ThemeOverlay.RadioJourney.AlertDialog" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
         <item name="colorSurface">@color/background</item>
         <!-- В тёмной теме Material осветляет поверхность тем сильнее, чем выше элемент "приподнят" над экраном.
