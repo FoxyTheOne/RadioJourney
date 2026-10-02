@@ -357,6 +357,9 @@ class HomeRadioFragment : Fragment(), OnMapReadyCallback {
             googleMap.setInfoWindowAdapter(MarkerInfoWindowAdapter(requireContext()))
             googleMap.uiSettings.isZoomControlsEnabled =
                 false // отключаем кнопки по умолчанию, чтобы настроить свои
+            // После нажатия на маркер Google Maps сам показывает справа внизу кнопки "Маршрут" и "Открыть в Google Картах".
+            // Они прятались под нашей кнопкой местоположения, а маршрут до страны радио не нужен - отключаем
+            googleMap.uiSettings.isMapToolbarEnabled = false
         }
 
         // Иконки маркеров: векторная иконка, переведённая в Bitmap нужного размера.
