@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -15,6 +16,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.LayoutFirstScreenLoadingBinding
 import com.myproject.radiojourney.presentation.common.InfoDialog
@@ -48,6 +50,9 @@ class FirstScreenLoadingFragment : Fragment() {
     private var binding: LayoutFirstScreenLoadingBinding? = null
     private val viewModel by viewModels<FirstScreenLoadingViewModel>()
     private lateinit var infoDialog: InfoDialog
+
+    // Окно "сервер не отвечает" с кнопкой "Повторить" (см. showServerErrorDialog). null - сейчас не показано
+    private var serverErrorDialog: AlertDialog? = null
 
     // Какие разрешения уже запрашивали за этот запуск приложения (см. PermissionSessionState)
     @Inject
@@ -173,27 +178,51 @@ class FirstScreenLoadingFragment : Fragment() {
         // идёт дольше, и "сервер не работает" мелькало и тут же исчезало, хотя всё было в порядке
         viewLifecycleOwner.collectWhenStarted(viewModel.countryListProblem) { problem ->
             when (problem) {
-                FirstScreenLoadingViewModel.CountryListProblem.SERVER_UNAVAILABLE ->
-                    infoDialog.show(
-                        R.string.dialogPleaseWait_title2,
-                        R.string.dialogPleaseWait_text2
-                    )
-
-                FirstScreenLoadingViewModel.CountryListProblem.NO_NETWORK ->
+                FirstScreenLoadingViewModel.CountryListProblem.SERVER_UNAVAILABLE -> {
+                    infoDialog.hide()
+                    showServerErrorDialog()
+                }
+                // "Нет интернета" закрывается само, когда сеть появится: загрузка в WorkManager ждёт сеть и начнётся сама
+                FirstScreenLoadingViewModel.CountryListProblem.NO_NETWORK -> {
+                    hideServerErrorDialog()
                     infoDialog.show(
                         R.string.serverError_noNetwork_title,
                         R.string.serverError_noNetwork_text
                     )
+                }
 
-                null -> infoDialog.hide()
+                null -> {
+                    infoDialog.hide()
+                    hideServerErrorDialog()
+                }
             }
         }
     }
 
+    // Сервер не дал список стран. Без него войти на карту нельзя, поэтому в окне есть кнопка "Повторить", и закрыть
+    // окно мимо неё нельзя (setCancelable(false)): иначе пользователь остался бы на экране, где ничего не происходит.
+    // Раньше было окно "попробуйте позже" без кнопки - помогал только перезапуск приложения.
+    // MaterialAlertDialogBuilder - как у окон разрешений (см. PermissionRationale): оформление берётся из темы приложения
+    private fun showServerErrorDialog() {
+        if (serverErrorDialog?.isShowing == true) return
+        serverErrorDialog = MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.serverError_notResponding_title)
+            .setMessage(R.string.serverError_notResponding_text)
+            .setCancelable(false)
+            .setPositiveButton(R.string.button_retry) { _, _ -> viewModel.retryCountryList() }
+            .show()
+    }
+
+    private fun hideServerErrorDialog() {
+        serverErrorDialog?.dismiss()
+        serverErrorDialog = null
+    }
+
     // VIEW BINDING -> 3. onDestroyView()
     override fun onDestroyView() {
-        // Открытый диалог нужно закрыть вместе с экраном, иначе WindowLeaked
+        // Открытые диалоги нужно закрыть вместе с экраном, иначе WindowLeaked
         infoDialog.dismiss()
+        hideServerErrorDialog()
         super.onDestroyView()
         binding = null
     }

@@ -29,7 +29,7 @@ import javax.inject.Inject
 class FirstScreenLoadingViewModel @Inject constructor(
     private val loginScreenInteractor: ILoginScreenUseCase,
     homeRadioInteractor: IHomeRadioUseCase,
-    countryCacheScheduler: CountryCacheScheduler
+    private val countryCacheScheduler: CountryCacheScheduler
 ) : ViewModel() {
     // Прогресс загрузки списка стран (WorkManager) для полосы на экране. Раньше - бродкаст из ProgressForegroundService
     val countryCacheProgress: Flow<Int> = countryCacheScheduler.progress
@@ -68,6 +68,11 @@ class FirstScreenLoadingViewModel @Inject constructor(
         // Сколько ждём, прежде чем сказать "нет интернета": задача в очереди бывает и на долю секунды перед запуском
         private const val NO_NETWORK_MESSAGE_DELAY = 3_000L
     }
+
+    // Кнопка "Повторить" в окне "сервер не отвечает": загрузка стран не удалась - запускаем её заново.
+    // Раньше помогал только перезапуск приложения. Прошлая задача уже завершилась (FAILED), поэтому start()
+    // ставит новую, и состояние на экране сменится на "идёт загрузка"
+    fun retryCountryList() = countryCacheScheduler.start()
 
     // Раньше здесь были LiveData ошибки и диалога "нет интернета" в catch (AccountsException / IOException),
     // но сохранение токена такие исключения не бросает - эти ветки не могли сработать
