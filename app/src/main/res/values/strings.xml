@@ -14,6 +14,7 @@
     <string name="homeRadio_goToFavourites">Favorites</string>
     <string name="homeRadio_mayNotWork">Also selected radio station may not work right now.</string>
     <string name="homeRadio_youAreHere">You are here</string>
+    <string name="homeRadio_stationCount">Radio stations (%1$d)</string>
     <string name="homeRadio_closeInfo">Close</string>
     <string name="homeRadio_loadingData">Loading data…</string>
     <string name="homeRadio_serverDown">Something went wrong: the server is unavailable. Please try again later</string>

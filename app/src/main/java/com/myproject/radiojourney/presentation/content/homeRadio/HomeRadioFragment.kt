@@ -588,13 +588,13 @@ class HomeRadioFragment : Fragment(), OnMapReadyCallback {
             val marker = mMap.addMarker(
                 MarkerOptions()
                     .title(countryPresentation.countryName)
+                    // Загружается не больше MAX_STATIONS_COUNT станций - столько и показываем.
+                    // Раньше текст был написан по-русски прямо здесь и не переводился на другие языки
                     .snippet(
-                        "Список радиостанций (${
-                            minOf(
-                                countryPresentation.stationCount,
-                                MAX_STATIONS_COUNT
-                            )
-                        })"
+                        getString(
+                            R.string.homeRadio_stationCount,
+                            minOf(countryPresentation.stationCount, MAX_STATIONS_COUNT)
+                        )
                     )
                     .position(countryPresentation.countryLocation)
                     .icon(BitmapDescriptorFactory.fromBitmap(customBitmapMarker))

@@ -7,6 +7,7 @@
     <string name="homeRadio_goToFavourites">Избранное</string>
     <string name="homeRadio_mayNotWork">Также выбранная радиостанция может не работать в данный момент.</string>
     <string name="homeRadio_youAreHere">Вы здесь</string>
+    <string name="homeRadio_stationCount">Список радиостанций (%1$d)</string>
     <string name="homeRadio_closeInfo">Закрыть</string>
     <string name="homeRadio_loadingData">Загрузка данных…</string>
     <string name="homeRadio_serverDown">Что-то пошло не так: сервер недоступен. Попробуйте позже</string>
