@@ -586,19 +586,23 @@ class HomeRadioFragment : Fragment(), OnMapReadyCallback {
         hideProgress()
     }
 
+    // Подпись маркера. Приложение загружает не больше MAX_STATIONS_COUNT самых популярных станций страны.
+    // Если в стране их больше (в США - тысячи), пишем "300+": видно, что станций больше, чем откроется в списке.
+    // Раньше было просто "300", и казалось, что в стране ровно 300 станций
+    private fun stationCountText(stationCount: Int): String =
+        if (stationCount > MAX_STATIONS_COUNT) {
+            getString(R.string.homeRadio_stationCountMore, MAX_STATIONS_COUNT)
+        } else {
+            getString(R.string.homeRadio_stationCount, stationCount)
+        }
+
     private fun addMarkersOnMap(countryPresentation: CountryPresentation) {
         customMarkerRadio?.let { customBitmapMarker ->
             val marker = mMap.addMarker(
                 MarkerOptions()
                     .title(countryPresentation.countryName)
-                    // Загружается не больше MAX_STATIONS_COUNT станций - столько и показываем.
                     // Раньше текст был написан по-русски прямо здесь и не переводился на другие языки
-                    .snippet(
-                        getString(
-                            R.string.homeRadio_stationCount,
-                            minOf(countryPresentation.stationCount, MAX_STATIONS_COUNT)
-                        )
-                    )
+                    .snippet(stationCountText(countryPresentation.stationCount))
                     .position(countryPresentation.countryLocation)
                     .icon(BitmapDescriptorFactory.fromBitmap(customBitmapMarker))
             )

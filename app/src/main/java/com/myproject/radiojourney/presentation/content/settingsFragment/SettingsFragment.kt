@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment
 import com.google.android.material.snackbar.Snackbar
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.databinding.LayoutSettingsBinding
+import com.myproject.radiojourney.other.Constants.MAX_STATIONS_COUNT
 import com.myproject.radiojourney.presentation.common.popBackStackSafely
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -46,7 +47,9 @@ class SettingsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
+        // Число станций подставляется из кода, а не написано в тексте: если поменять MAX_STATIONS_COUNT,
+        // текст "О программе" поменяется сам, и переводчику не придётся следить за цифрой
+        binding?.textAbout3?.text = getString(R.string.settings_text3, MAX_STATIONS_COUNT)
         initListeners()
     }
 

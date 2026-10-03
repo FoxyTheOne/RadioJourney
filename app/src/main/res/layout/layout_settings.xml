@@ -79,14 +79,14 @@
                 android:paddingBottom="@dimen/space_beforeOrAfterElement"
                 android:text="@string/settings_text2" />
 
+            <!-- Текст (settings_text3) ставит SettingsFragment: в него подставляется число станций из кода -->
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/text_about3"
                 style="@style/login_bottom"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:paddingBottom="@dimen/space_beforeOrAfterElement"
-                android:text="@string/settings_text3" />
+                android:paddingBottom="@dimen/space_beforeOrAfterElement" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/text_about4"

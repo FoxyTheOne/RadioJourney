@@ -21,7 +21,7 @@ Android-приложение для прослушивания интернет-
 ## Что умеет приложение
 
 - **Карта мира с маркерами стран.** На маркере видно, сколько в стране радиостанций; по клику
-  открывается их список.
+  открывается список — до 300 самых популярных станций страны.
 - **Плеер внизу экрана.** Виден на всех экранах, станции листаются свайпом, играет в фоне и
   управляется из уведомления.
 - **Избранное.** Звезда на станции — и она попадает в отдельный список, который можно включить как
@@ -114,7 +114,7 @@ improving.
 ## Features
 
 - **World map with country markers.** A marker shows how many stations the country has; tapping it
-  opens the list.
+  opens the list of up to 300 of the country's most popular stations.
 - **Player at the bottom of the screen.** Visible on every screen, stations are switched by swiping,
   plays in the background and is controlled from the notification.
 - **Favourites.** Tap the star and the station goes to a separate list that can be played as a

@@ -37,8 +37,9 @@ android {
         // Android 7.0 и выше: свежие Navigation и WorkManager не поддерживают Android 6, а это 0,3% устройств
         minSdk 24
         targetSdk 37
-        versionCode 3 // внутренний номер для Play, обновлять обязательно
-        versionName "1.0" // то, что пользователи видят как «Версия». Обычно так: 1.0.1 — исправления, 1.1 — новые функции.
+        versionCode 4 // внутренний номер для Play, обновлять обязательно
+        versionName "1.0.1"
+        // то, что пользователи видят как «Версия». Обычно так: 1.0.1 — исправления, 1.1 — новые функции.
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
