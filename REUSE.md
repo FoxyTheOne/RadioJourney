@@ -12,12 +12,13 @@
 
 ## Настройка проекта
 
-| Задача                                                                  | Где смотреть                                                        |
-|-------------------------------------------------------------------------|---------------------------------------------------------------------|
-| Hilt: точка входа приложения, WorkManager с `@Inject` в Worker          | `App.kt`, `AndroidManifest.xml` (удаление `InitializationProvider`) |
-| Hilt-модули: что в SingletonComponent, что в ViewModelComponent         | `di/Module.kt`                                                      |
-| Hilt для сервиса (свой компонент и scope)                               | `di/ServiceModule.kt`                                               |
-| Gradle: KSP вместо kapt, secrets-plugin для ключа карт, имя APK с датой | `app/build.gradle`                                                  |
+| Задача                                                                          | Где смотреть                                                        |
+|---------------------------------------------------------------------------------|---------------------------------------------------------------------|
+| Hilt: точка входа приложения, WorkManager с `@Inject` в Worker                  | `App.kt`, `AndroidManifest.xml` (удаление `InitializationProvider`) |
+| Hilt-модули по слоям: `@Provides` и `@Binds`, привязка интерфейса к реализации  | `di/DataModule.kt`, `di/DomainModule.kt`                            |
+| Hilt: один объект на всё приложение (`@Singleton`) для связи экранов с сервисом | `di/PlayerConnectionModule.kt`                                      |
+| Hilt для сервиса (свой компонент и scope)                                       | `di/ServiceModule.kt`                                               |
+| Gradle: KSP вместо kapt, secrets-plugin для ключа карт, имя APK с датой         | `app/build.gradle`                                                  |
 
 ## Данные
 
@@ -27,14 +28,14 @@
 | Room: база, DAO, entity, конвертер типов                                                        | `data/localDatabaseRoom/`                                                                                                     |
 | Room: подписка на таблицу через Flow                                                            | `data/localDatabaseRoom/ICountryDAO.kt`                                                                                       |
 | Room: несколько запросов как одна операция (`@Transaction`)                                     | `ICountryDAO.replaceCountryList`, `IRadioStationDAO.setStationFavourite`                                                      |
-| Retrofit + OkHttp: один клиент на приложение, таймауты, свой User-Agent                         | `di/Module.kt`, `data/dataSource/network/service/`                                                                            |
+| Retrofit + OkHttp: один клиент на приложение, таймауты, свой User-Agent                         | `di/DataModule.kt`, `data/dataSource/network/service/`                                                                        |
 | Запрос к нескольким серверам по очереди, пока один не ответит                                   | `data/dataSource/network/NetworkRadioDataSource.kt` (`requestFromAnyServer`)                                                  |
 | Получение списка серверов через DNS                                                             | там же, `updateDNSList`                                                                                                       |
 | Ответ сети с состоянием (успех / ошибка / загрузка)                                             | `other/Resource.kt`                                                                                                           |
 | Разделение моделей: remote, local, domain, presentation и мапперы между ними                    | `data/mapper/DataMappers.kt`, `domain/model/`, `presentation/model/`                                                          |
 | Чтение данных из файла в assets (CSV)                                                           | `data/dataSource/local/country/CountryCoordinatesDataSource.kt`                                                               |
 | Координаты страны по её коду, с запасным вариантом через Geocoder                               | там же                                                                                                                        |
-| Room: миграция базы при добавлении таблицы                                                      | `data/localDatabaseRoom/DatabaseMigrations.kt`, `di/Module.kt` (`addMigrations`)                                              |
+| Room: миграция базы при добавлении таблицы                                                      | `data/localDatabaseRoom/DatabaseMigrations.kt`, `di/DataModule.kt` (`addMigrations`)                                          |
 | Данные из сети с запасным вариантом из базы, если сервер недоступен                             | `data/repository/MainRadioStationRepository.kt` (`getRadioStationList`), `data/localDatabaseRoom/entity/SavedStationLocal.kt` |
 | Понять по ошибке, что именно случилось с запросом (нет сети / сервер молчит / ответ обрывается) | `data/dataSource/network/NetworkRadioDataSource.kt` (`failureReason`), `other/ServerError.kt`                                 |
 | Запрос по новому соединению, без переиспользования открытых                                     | `data/dataSource/network/service/RadioServiceWrapper.kt`                                                                      |

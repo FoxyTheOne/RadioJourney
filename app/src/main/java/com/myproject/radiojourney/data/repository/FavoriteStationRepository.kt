@@ -13,6 +13,7 @@ import javax.inject.Inject
 class FavoriteStationRepository @Inject constructor(
     private val localFavoriteDataSource: ILocalFavoriteDataSource
 ) : IFavoriteStationRepository {
+    // Порядок станций здесь не задаётся: это правило приложения, оно в FavouriteListUseCase (domain)
     override suspend fun getFavoriteRadioStationList(): List<RadioStation> =
         localFavoriteDataSource.getFavoriteRadioStationList(isStationInFavorite = true)
             .map { it.toDomain() }

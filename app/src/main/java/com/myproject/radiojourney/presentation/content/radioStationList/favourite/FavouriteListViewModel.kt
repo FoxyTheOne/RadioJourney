@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myproject.radiojourney.domain.changeFavouriteUseCase.IChangeFavouriteUseCase
 import com.myproject.radiojourney.domain.favouriteListUseCase.IFavouriteListUseCase
+import com.myproject.radiojourney.domain.favouriteListUseCase.favouriteOrder
 import com.myproject.radiojourney.presentation.model.RadioStationPresentation
 import com.myproject.radiojourney.presentation.model.toDomain
 import com.myproject.radiojourney.presentation.model.toPresentation
@@ -42,6 +43,11 @@ class FavouriteListViewModel @Inject constructor(
     val stationFavouriteChanged: SharedFlow<RadioStationPresentation> =
         _stationFavouriteChanged.asSharedFlow()
 
+    // Тот же порядок, в каком список приходит из базы (по стране, потом по названию) - см. favouriteOrder
+    private val stationOrder = favouriteOrder<RadioStationPresentation>(
+        countryCode = { it.countryCode },
+        stationName = { it.stationName })
+
     init {
         // Room сам выполняет suspend-запросы в фоновом потоке, отдельный Dispatchers.IO не нужен
         viewModelScope.launch {
@@ -71,8 +77,11 @@ class FavouriteListViewModel @Inject constructor(
                     radioStation.stationuuid,
                     isFavourite
                 )
+                // Новая станция встаёт в группу своей страны, а не в конец списка
+                isFavourite -> (radioStationList + radioStation.copy(isStationInFavourite = true)).sortedWith(
+                    stationOrder
+                )
 
-                isFavourite -> radioStationList + radioStation.copy(isStationInFavourite = true)
                 else -> radioStationList
             }
         }

@@ -6,7 +6,7 @@ import android.util.Log
 import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import com.myproject.radiojourney.R
-import com.myproject.radiojourney.domain.iRepository.IFavoriteStationRepository
+import com.myproject.radiojourney.domain.favouriteListUseCase.IFavouriteListUseCase
 import com.myproject.radiojourney.domain.iRepository.IMainRadioStationRepository
 import com.myproject.radiojourney.domain.iRepository.IMyStationRepository
 import com.myproject.radiojourney.domain.model.RadioStation
@@ -38,7 +38,8 @@ import javax.inject.Inject
 class RadioPlaylistSource @Inject constructor(
     @ApplicationContext private val context: Context,
     private val mainRadioStationRepository: IMainRadioStationRepository,
-    private val favoriteStationRepository: IFavoriteStationRepository,
+    // Избранное - через use case, а не репозиторий: там задан порядок станций, такой же, как в списке избранного
+    private val favouriteListUseCase: IFavouriteListUseCase,
     private val myStationRepository: IMyStationRepository,
     // Прогресс загрузки и "сервер недоступен" для экрана
     private val playlistDownloadStatus: PlaylistDownloadStatus
@@ -118,7 +119,7 @@ class RadioPlaylistSource @Inject constructor(
     suspend fun fetchFavouriteMediaData() = withContext(Dispatchers.IO) {
         fetchGeneration.incrementAndGet()
         readiness.state = STATE_INITIALIZING
-        val favouriteRadioStations = favoriteStationRepository.getFavoriteRadioStationList()
+        val favouriteRadioStations = favouriteListUseCase.getRadioStationFavouriteList()
         Log.d(
             TAG,
             "Загружаем метаданные fetchMediaData - FAV, listSize = ${favouriteRadioStations.size}"

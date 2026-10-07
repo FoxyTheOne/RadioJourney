@@ -7,14 +7,16 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.appcompat.widget.AppCompatTextView
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.myproject.radiojourney.R
+import com.myproject.radiojourney.domain.favouriteListUseCase.countryName
 import com.myproject.radiojourney.presentation.model.RadioStationPresentation
-import java.util.Locale
 
 // 1.1. ОБРАБОТКА КЛИКА -> передадим в конструктор анонимную функцию (как класса Adapter, так и вложенного класса). Затем отдаём эту лямбду каждому ViewHolder
 /**
- * Адаптер списка избранного: станция, страна, количество прослушиваний и звезда.
+ * Адаптер списка избранного: станции сгруппированы по странам (название страны - заголовком над группой),
+ * у каждой станции - количество прослушиваний и звезда.
  *
  * Два обработчика клика (по элементу и по звезде) передаются в конструктор лямбдами - адаптер не знает,
  * что происходит дальше, и его можно использовать на любом экране
@@ -47,7 +49,13 @@ class FavoriteListAdapter(
     // Сюда залетает элемент списка, к-рый был создан в onCreateViewHolder() и здесь мы его наполняем
     // Однако, лучше просто вызвать метод из вложенного класса, где и осуществить непосредственно наполнение, описание clickListener и проч.
     override fun onBindViewHolder(holder: FavoriteListViewHolder, position: Int) {
-        holder.setFavouriteRadioStation(favouriteStationList[position])
+        val station = favouriteStationList[position]
+        // Список отсортирован по странам (см. favouriteOrder), станции одной страны идут подряд.
+        // Название страны показываем один раз - над первой станцией страны, как заголовок группы.
+        // Раньше оно повторялось над каждой станцией, и при 50 станциях список превращался в пёструю ленту
+        val isFirstInCountry =
+            position == 0 || favouriteStationList[position - 1].countryCode != station.countryCode
+        holder.setFavouriteRadioStation(station, isFirstInCountry)
     }
 
     // Возвращает количество элементов списка
@@ -100,14 +108,18 @@ class FavoriteListAdapter(
             }
         }
 
-        fun setFavouriteRadioStation(radioStationFavourite: RadioStationPresentation) {
+        fun setFavouriteRadioStation(
+            radioStationFavourite: RadioStationPresentation,
+            isFirstInCountry: Boolean
+        ) {
             // 1.3. ОБРАБОТКА КЛИКА -> В методе обработки элемента списка, инициализируем нашу переменную
             this.radioStationFavourite = radioStationFavourite
 
-            // Узнаем название страны
-            val loc = Locale("", radioStationFavourite.countryCode)
-            val countryName = loc.displayName
-            textRadioStationCity.text = countryName
+            // Заголовок группы - название страны на языке телефона. isVisible ставим в обе стороны:
+            // элементы списка переиспользуются, и без "= false" заголовок остался бы от прошлой станции
+            textRadioStationCity.isVisible = isFirstInCountry
+            if (isFirstInCountry) textRadioStationCity.text =
+                countryName(radioStationFavourite.countryCode)
 
             textRadioStationName.text = radioStationFavourite.stationName
             textRadioStationClickCount.text = radioStationFavourite.clickCount.toString()
