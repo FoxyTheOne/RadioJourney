@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?><!-- Картинка на первом экране: магнитола с иконки приложения на фоне глобуса с метками стран - как на баннере в Google Play,
+     чтобы первый экран и страница в магазине выглядели одинаково. Раньше здесь было фото радиоприёмника с pixabay
+     с надписью поверх (лицензия pixabay не разрешает делать из их картинок логотип, а на фото был знак Philips).
+
+     Исходник со слоями для редактирования: store-assets\first-screen-logo.svg (вектор, слои - группы)
+     и first-screen-logo.psd (Photoshop). Если меняем картинку там - переносим изменения и сюда.
+
+     Фона нет: картинка лежит на фоне экрана (@color/background, #1A222F). Корпус магнитолы залит тем же цветом,
+     чтобы сквозь него не просвечивала сетка глобуса. Слои идут снизу вверх: свечение, глобус, метки, магнитола.
+
+     Координаты - квадрат 500 x 500, центр глобуса (250, 250). Вектор чёткий на экране любой плотности -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="300dp"
+    android:height="300dp"
+    android:viewportWidth="500"
+    android:viewportHeight="500">
+
+    <!-- Слой 1. Тёплое свечение за магнитолой: круг с радиальным градиентом от оранжевого к прозрачному -->
+    <path android:pathData="M5,250 a245,245 0 1,0 490,0 a245,245 0 1,0 -490,0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:centerX="250"
+                android:centerY="250"
+                android:gradientRadius="245"
+                android:type="radial">
+                <item
+                    android:color="#33FF7A22"
+                    android:offset="0" />
+                <item
+                    android:color="#12FF7A22"
+                    android:offset="0.6" />
+                <item
+                    android:color="#00FF7A22"
+                    android:offset="1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Слой 2. Сетка глобуса: контур, меридианы и параллели. Полупрозрачные белые линии -->
+    <path
+        android:pathData="M35,250 a215,215 0 1,0 430,0 a215,215 0 1,0 -430,0 Z"
+        android:strokeWidth="2"
+        android:strokeAlpha="0.12"
+        android:strokeColor="#FFFFFF" />
+    <group>
+        <!-- Меридианы и параллели обрезаются по контуру глобуса -->
+        <clip-path android:pathData="M35,250 a215,215 0 1,0 430,0 a215,215 0 1,0 -430,0 Z" />
+        <path
+            android:pathData="M250,35 V465 M35,250 H465
+                M178,250 a72,215 0 1,0 144,0 a72,215 0 1,0 -144,0 Z
+                M110,250 a140,215 0 1,0 280,0 a140,215 0 1,0 -280,0 Z
+                M60,250 a190,215 0 1,0 380,0 a190,215 0 1,0 -380,0 Z
+                M47,178 a203,16 0 1,0 406,0 a203,16 0 1,0 -406,0 Z
+                M47,322 a203,16 0 1,0 406,0 a203,16 0 1,0 -406,0 Z
+                M90,108 a160,12 0 1,0 320,0 a160,12 0 1,0 -320,0 Z
+                M90,392 a160,12 0 1,0 320,0 a160,12 0 1,0 -320,0 Z"
+            android:strokeWidth="2"
+            android:strokeAlpha="0.12"
+            android:strokeColor="#FFFFFF" />
+    </group>
+
+    <!-- Слой 3. Метки стран, как маркеры на карте. Метка нарисована в квадрате 24 x 32 и поставлена группой:
+         сначала масштаб, потом сдвиг. Дальние метки меньше и прозрачнее - так глобус кажется объёмным -->
+    <group
+        android:scaleX="1.25"
+        android:scaleY="1.25"
+        android:translateX="112"
+        android:translateY="118">
+        <path
+            android:fillAlpha="0.95"
+            android:fillColor="#FF7A22"
+            android:pathData="M12,1C6,1 1.5,5.6 1.5,11.4 1.5,19 12,31 12,31s10.5,-12 10.5,-19.6C22.5,5.6 18,1 12,1z" />
+        <path
+            android:fillAlpha="0.8"
+            android:fillColor="#FFFFFF"
+            android:pathData="M7.8,11.5 a4.2,4.2 0 1,0 8.4,0 a4.2,4.2 0 1,0 -8.4,0 Z" />
+    </group>
+    <group
+        android:scaleX="1"
+        android:scaleY="1"
+        android:translateX="360"
+        android:translateY="96">
+        <path
+            android:fillAlpha="0.7"
+            android:fillColor="#FF7A22"
+            android:pathData="M12,1C6,1 1.5,5.6 1.5,11.4 1.5,19 12,31 12,31s10.5,-12 10.5,-19.6C22.5,5.6 18,1 12,1z" />
+        <path
+            android:fillAlpha="0.6"
+            android:fillColor="#FFFFFF"
+            android:pathData="M7.8,11.5 a4.2,4.2 0 1,0 8.4,0 a4.2,4.2 0 1,0 -8.4,0 Z" />
+    </group>
+    <group
+        android:scaleX="1.333"
+        android:scaleY="1.333"
+        android:translateX="390"
+        android:translateY="300">
+        <path
+            android:fillAlpha="0.95"
+            android:fillColor="#FF7A22"
+            android:pathData="M12,1C6,1 1.5,5.6 1.5,11.4 1.5,19 12,31 12,31s10.5,-12 10.5,-19.6C22.5,5.6 18,1 12,1z" />
+        <path
+            android:fillAlpha="0.8"
+            android:fillColor="#FFFFFF"
+            android:pathData="M7.8,11.5 a4.2,4.2 0 1,0 8.4,0 a4.2,4.2 0 1,0 -8.4,0 Z" />
+    </group>
+    <group
+        android:scaleX="0.917"
+        android:scaleY="0.917"
+        android:translateX="132"
+        android:translateY="338">
+        <path
+            android:fillAlpha="0.6"
+            android:fillColor="#FF7A22"
+            android:pathData="M12,1C6,1 1.5,5.6 1.5,11.4 1.5,19 12,31 12,31s10.5,-12 10.5,-19.6C22.5,5.6 18,1 12,1z" />
+        <path
+            android:fillAlpha="0.5"
+            android:fillColor="#FFFFFF"
+            android:pathData="M7.8,11.5 a4.2,4.2 0 1,0 8.4,0 a4.2,4.2 0 1,0 -8.4,0 Z" />
+    </group>
+    <group
+        android:scaleX="1.083"
+        android:scaleY="1.083"
+        android:translateX="260"
+        android:translateY="380">
+        <path
+            android:fillAlpha="0.8"
+            android:fillColor="#FF7A22"
+            android:pathData="M12,1C6,1 1.5,5.6 1.5,11.4 1.5,19 12,31 12,31s10.5,-12 10.5,-19.6C22.5,5.6 18,1 12,1z" />
+        <path
+            android:fillAlpha="0.68"
+            android:fillColor="#FFFFFF"
+            android:pathData="M7.8,11.5 a4.2,4.2 0 1,0 8.4,0 a4.2,4.2 0 1,0 -8.4,0 Z" />
+    </group>
+    <group
+        android:scaleX="0.75"
+        android:scaleY="0.75"
+        android:translateX="70"
+        android:translateY="232">
+        <path
+            android:fillAlpha="0.45"
+            android:fillColor="#FF7A22"
+            android:pathData="M12,1C6,1 1.5,5.6 1.5,11.4 1.5,19 12,31 12,31s10.5,-12 10.5,-19.6C22.5,5.6 18,1 12,1z" />
+        <path
+            android:fillAlpha="0.38"
+            android:fillColor="#FFFFFF"
+            android:pathData="M7.8,11.5 a4.2,4.2 0 1,0 8.4,0 a4.2,4.2 0 1,0 -8.4,0 Z" />
+    </group>
+
+    <!-- Слой 4. Магнитола (координаты 140 x 90, как store-assets/boombox.svg), увеличена в 2,25 раза и поставлена в центр -->
+    <group
+        android:scaleX="2.25"
+        android:scaleY="2.25"
+        android:translateX="92.5"
+        android:translateY="146.75">
+        <!-- Шарик на антенне -->
+        <path
+            android:fillColor="#FF7A22"
+            android:pathData="M107.6,8 a2.4,2.4 0 1,0 4.8,0 a2.4,2.4 0 1,0 -4.8,0 Z" />
+        <!-- Антенна и ручка: рисуются до корпуса, чтобы корпус закрыл их нижние концы -->
+        <path
+            android:pathData="M110,10 L110,33 M41,33 V17 H99 V33 M44.5,33 V20.5 H95.5 V33"
+            android:strokeWidth="2"
+            android:strokeColor="#FF7A22"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <!-- Корпус: залит цветом фона экрана, чтобы сквозь него не просвечивала сетка глобуса -->
+        <path
+            android:fillColor="#1A222F"
+            android:pathData="M20,33 H120 V79 H20 Z"
+            android:strokeWidth="2"
+            android:strokeColor="#FF7A22"
+            android:strokeLineJoin="round" />
+        <!-- Динамики, шкала и кассета -->
+        <path
+            android:pathData="M25,56 a17,17 0 1,0 34,0 a17,17 0 1,0 -34,0 Z
+                M33.5,49.5 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0 Z
+                M81,56 a17,17 0 1,0 34,0 a17,17 0 1,0 -34,0 Z
+                M100.5,62.5 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0 Z
+                M61,39 H79 V45 H61 Z M65,42 H67
+                M61,50 H79 V73 H61 Z M61,56 H79"
+            android:strokeWidth="2"
+            android:strokeColor="#FF7A22"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+
+        <!-- Чёрточки "звука". Средние и крайние - отдельные контуры с именами (android:name):
+             по этим именам их находит анимация logo_radiojourney_animated.xml и заставляет мерцать -->
+        <path
+            android:name="soundMiddle"
+            android:pathData="M14,56 L5,57 M126,56 L135,55"
+            android:strokeWidth="2"
+            android:strokeColor="#FF7A22"
+            android:strokeLineCap="round" />
+        <path
+            android:name="soundOuter"
+            android:pathData="M14,47 L8.5,41.5 M14,64 L9,68.5 M126,47 L131.5,41.5 M126,64 L131,68.5"
+            android:strokeWidth="2"
+            android:strokeColor="#FF7A22"
+            android:strokeLineCap="round" />
+    </group>
+</vector>

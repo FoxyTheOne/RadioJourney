@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?><!-- Анимация картинки первого экрана: чёрточки "звука" по бокам магнитолы мерцают, будто радио играет.
+
+     animated-vector (AnimatedVectorDrawable) - это обычный вектор (здесь logo_radiojourney.xml) плюс список
+     анимаций для его частей. Часть находится по имени (android:name у <path>), а objectAnimator плавно меняет
+     одно её свойство - здесь strokeAlpha, прозрачность линии: 1 (видна) -> 0.15 (почти не видна) и обратно.
+
+     repeatCount="infinite" + repeatMode="reverse" - туда и обратно без конца.
+     Крайние чёрточки начинают на 250 мс позже средних (startOffset), поэтому кажется, что звук расходится волной.
+     Запускает и останавливает анимацию FirstScreenLoadingFragment (start() в onStart, stop() в onStop).
+     Если в настройках телефона отключены анимации, Android покажет картинку без мерцания -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:drawable="@drawable/logo_radiojourney">
+
+    <target android:name="soundMiddle">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="650"
+                android:interpolator="@android:interpolator/fast_out_slow_in"
+                android:propertyName="strokeAlpha"
+                android:repeatCount="infinite"
+                android:repeatMode="reverse"
+                android:valueFrom="1"
+                android:valueTo="0.15"
+                android:valueType="floatType" />
+        </aapt:attr>
+    </target>
+
+    <target android:name="soundOuter">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="650"
+                android:interpolator="@android:interpolator/fast_out_slow_in"
+                android:propertyName="strokeAlpha"
+                android:repeatCount="infinite"
+                android:repeatMode="reverse"
+                android:startOffset="250"
+                android:valueFrom="1"
+                android:valueTo="0.15"
+                android:valueType="floatType" />
+        </aapt:attr>
+    </target>
+</animated-vector>

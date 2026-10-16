@@ -37,8 +37,8 @@ android {
         // Android 7.0 и выше: свежие Navigation и WorkManager не поддерживают Android 6, а это 0,3% устройств
         minSdk 24
         targetSdk 37
-        versionCode 5 // внутренний номер для Play, обновлять обязательно
-        versionName "1.0.2"
+        versionCode 6 // внутренний номер для Play, обновлять обязательно
+        versionName "1.0.3"
         // то, что пользователи видят как «Версия». Обычно так: 1.0.1 — исправления, 1.1 — новые функции.
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -157,6 +157,9 @@ dependencies {
     // DataStore - хранилище пар ключ-значение вместо SharedPreferences (см. AppPreferenceStorage)
     implementation 'androidx.datastore:datastore-preferences:1.2.1'
 
-    // Interceptor
-    implementation 'com.squareup.okhttp3:logging-interceptor:5.5.0'
+    // OkHttp - сетевой клиент: его настраивает DataModule (таймауты, User-Agent), через него ходит Retrofit.
+    // Раньше здесь был logging-interceptor (вывод запросов в Logcat), но в коде он не использовался.
+    // Указываем OkHttp явно: без этой строки осталась бы старая версия 4.x, которую подтягивает Retrofit,
+    // а logging-interceptor подтягивал 5.5.0 - с ней приложение и проверено
+    implementation 'com.squareup.okhttp3:okhttp:5.5.0'
 }

@@ -30,6 +30,10 @@ class SettingsFragment : Fragment() {
         // и публикуется через GitHub Pages - так она всегда совпадает с тем, что делает приложение
         private const val PRIVACY_POLICY_URL =
             "https://foxytheone.github.io/RadioJourney/privacy-policy.html"
+
+        // Лицензии библиотек, шрифта и материалов (docs/licenses.html). Страница на сайте, а не экран в приложении:
+        // её можно дополнить, не выпуская новую версию приложения
+        private const val LICENSES_URL = "https://foxytheone.github.io/RadioJourney/licenses.html"
     }
 
     // VIEW BINDING -> 1. Объявляем переменную. This property is only valid between onCreateView and onDestroyView
@@ -58,6 +62,7 @@ class SettingsFragment : Fragment() {
         binding?.imageArrowBack?.setOnClickListener { popBackStackSafely() }
         binding?.linearSite?.setOnClickListener { openLink(SITE_URL) }
         binding?.linearPrivacy?.setOnClickListener { openLink(PRIVACY_POLICY_URL) }
+        binding?.linearLicenses?.setOnClickListener { openLink(LICENSES_URL) }
         binding?.mail?.setOnClickListener {
             val subject = "RadioJourney app"
             val message = getString(R.string.settings_mailMessage)

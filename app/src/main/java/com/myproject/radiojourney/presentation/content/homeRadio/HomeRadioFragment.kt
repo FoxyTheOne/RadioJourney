@@ -364,11 +364,8 @@ class HomeRadioFragment : Fragment(), OnMapReadyCallback {
 
         // Иконки маркеров: векторная иконка, переведённая в Bitmap нужного размера.
         // Раньше было два одинаковых блока и ветки для SDK_INT < LOLLIPOP, которые никогда не выполнялись: minSdk приложения 23
-        customMarkerYouAreHere =
-            markerBitmap(R.drawable.ic_baseline_location_on_24_orange, R.drawable.marker, 100)
-        customMarkerRadio =
-            markerBitmap(R.drawable.ic_baseline_radio_24_orange, R.drawable.radio_icon4, 80)
-
+        customMarkerYouAreHere = markerBitmap(R.drawable.ic_baseline_location_on_24_orange, 100)
+        customMarkerRadio = markerBitmap(R.drawable.ic_baseline_radio_24_orange, 80)
         // LOCATION -> 1.5. Местоположение запрашивается в onMapReady (разово, при открытии фрагмента): маркер можно поставить только на готовую карту
 
         binding?.buttonYouAreHere?.setOnClickListener {
@@ -473,16 +470,15 @@ class HomeRadioFragment : Fragment(), OnMapReadyCallback {
         else -> @Suppress("DEPRECATION") getParcelable(key) as? T
     }
 
-    // Векторная иконка в Bitmap заданного размера (маркеру карты нужен Bitmap). Если иконку получить не удалось - запасная картинка
-    private fun markerBitmap(
-        @DrawableRes vectorId: Int,
-        @DrawableRes fallbackId: Int,
-        sizePx: Int
-    ): Bitmap {
-        val drawable = AppCompatResources.getDrawable(requireContext(), vectorId)
-            ?: requireNotNull(AppCompatResources.getDrawable(requireContext(), fallbackId))
-        return drawable.toBitmap(sizePx, sizePx)
-    }
+    // Векторная иконка в Bitmap заданного размера (маркеру карты нужен Bitmap).
+    // Раньше была ещё запасная картинка на случай, если иконку не получится загрузить. Но иконка лежит в самом приложении
+    // и загружается всегда, так что запасные картинки (radio_icon4.png, marker.jpg) не использовались - они удалены
+    private fun markerBitmap(@DrawableRes vectorId: Int, sizePx: Int): Bitmap =
+        requireNotNull(AppCompatResources.getDrawable(requireContext(), vectorId)).toBitmap(
+            sizePx,
+            sizePx
+        )
+
 
     private fun showProgress() {
         binding?.frameLayout?.isVisible = true

@@ -37,7 +37,7 @@
             app:layout_constraintRight_toRightOf="@+id/guideline_right"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_chainStyle="packed"
-            app:srcCompat="@drawable/radio_icon3" />
+            app:srcCompat="@drawable/logo_radiojourney_animated" />
 
         <TextView
             android:id="@+id/text_tittle"

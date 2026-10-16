@@ -2,6 +2,7 @@ package com.myproject.radiojourney.presentation.firstScreen
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.drawable.Animatable
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -139,6 +140,20 @@ class FirstScreenLoadingFragment : Fragment() {
         // Подписываемся на локальную БД с помощью CountryListFlow (либо CountryListLiveData), аналогично подписке в HomeRadioFragment
         // Для того, чтобы знать, пустая ли база данных. По окончанию первого кеширования или же при последующих запусках покажем кнопку для входа, чтобы не ждать
         subscribeOnFlow()
+    }
+
+    // Мерцание "звука" у магнитолы (drawable/logo_radiojourney_animated.xml). Сама картинка анимацию не запускает -
+    // её нужно включить. Animatable - общий интерфейс анимированных картинок: start() и stop().
+    // Включаем, когда экран становится видимым, и выключаем, когда он скрыт: незачем крутить анимацию,
+    // которую никто не видит (например, приложение свернули)
+    override fun onStart() {
+        super.onStart()
+        (binding?.iconAppRadioImage?.drawable as? Animatable)?.start()
+    }
+
+    override fun onStop() {
+        (binding?.iconAppRadioImage?.drawable as? Animatable)?.stop()
+        super.onStop()
     }
 
     private fun isLocationPermissionGranted(): Boolean =

@@ -67,6 +67,7 @@
     <string name="settings_mailChooser">Выберите почтовое приложение</string>
     <string name="settings_site">Сайт проекта</string>
     <string name="settings_privacy">Политика конфиденциальности</string>
+    <string name="settings_licenses">Лицензии</string>
     <string name="settings_noBrowser">Не нашлось приложения, которое откроет ссылку</string>
 
     <!-- мои радиостанции: список, который пользователь собирает сам, по ссылкам на потоки -->

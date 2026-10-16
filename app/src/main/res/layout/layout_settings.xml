@@ -171,6 +171,38 @@
                 android:text="@string/settings_privacy" />
         </LinearLayout>
 
+        <!-- Лицензии библиотек, шрифта и материалов, которые использует приложение (страница docs/licenses.html на сайте).
+             Лицензия Apache 2.0, по которой распространяются библиотеки, просит, чтобы её текст был доступен пользователям -->
+        <LinearLayout
+            android:id="@+id/linear_licenses"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/space_32"
+            android:paddingEnd="@dimen/space_32"
+            android:paddingBottom="@dimen/space_beforeOrAfterElement"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/linear_privacy">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/image_licenses"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="@dimen/space_beforeOrAfterElement"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_baseline_description_24_orange" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/text_licenses"
+                style="@style/login_bottom"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="@string/settings_licenses" />
+        </LinearLayout>
+
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/image_block"
             android:layout_width="16dp"
@@ -179,7 +211,7 @@
             app:layout_constraintBottom_toTopOf="@+id/text_mail"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linear_privacy" />
+            app:layout_constraintTop_toBottomOf="@+id/linear_licenses" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/text_mail"

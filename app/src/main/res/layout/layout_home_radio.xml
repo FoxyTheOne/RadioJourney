@@ -207,7 +207,7 @@
             android:layout_marginBottom="@dimen/space_beforeOrAfterElement"
             android:contentDescription="@string/homeRadio_youAreHere"
             app:backgroundTint="@color/orange_transparent"
-            app:icon="@drawable/marker"
+            app:icon="@drawable/ic_baseline_location_on_24_orange"
             app:iconGravity="textStart"
             app:iconSize="20dp"
             app:iconTint="@color/white_transparent_80"

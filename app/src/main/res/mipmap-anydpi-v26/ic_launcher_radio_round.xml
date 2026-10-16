@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Адаптивная иконка (Android 8+): чёрный фон и магнитола (drawable/ic_launcher_radio_foreground - вектор).
+     monochrome - тот же рисунок для "тематических иконок" Android 13+: система перекрашивает его в цвета обоев.
+     Для Android 7 (minSdk 24) лежат готовые картинки ic_launcher_radio.png в папках mipmap-*dpi -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@color/ic_launcher_radio_background"/>
-    <foreground android:drawable="@mipmap/ic_launcher_radio_foreground"/>
-    <monochrome android:drawable="@mipmap/ic_launcher_radio_foreground"/>
+    <foreground android:drawable="@drawable/ic_launcher_radio_foreground"/>
+    <monochrome android:drawable="@drawable/ic_launcher_radio_foreground"/>
 </adaptive-icon>

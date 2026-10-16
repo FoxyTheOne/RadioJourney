@@ -75,6 +75,7 @@
     <string name="settings_mailChooser">Choose an email app</string>
     <string name="settings_site">Project website</string>
     <string name="settings_privacy">Privacy policy</string>
+    <string name="settings_licenses">Licenses</string>
     <string name="settings_noBrowser">No app found to open the link</string>
 
     <!-- my stations: the list the user fills in by hand, with links to streams -->

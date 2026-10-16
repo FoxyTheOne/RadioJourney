@@ -87,10 +87,11 @@ MAPS_API_KEY=ваш_ключ
 знать, где и как.
 
 Сторонние материалы, которые в приложении используются на условиях их авторов: каталог
-станций [radio-browser.info](https://www.radio-browser.info/), изображения
+станций [radio-browser.info](https://www.radio-browser.info/), обложка станции в уведомлении
 с [pixabay.com](https://pixabay.com/), координаты стран
-из [Google public data](https://developers.google.com/public-data/), а также библиотеки с открытыми
-лицензиями (см. `app/build.gradle`).
+из [Google public data](https://developers.google.com/public-data/), шрифт Comfortaa, а также
+библиотеки с открытыми лицензиями. Полный список с лицензиями — на
+странице [лицензий](https://foxytheone.github.io/RadioJourney/licenses.html).
 
 ---
 
@@ -167,7 +168,8 @@ If you would like to use any of it, please write to me — I am very likely fine
 to know where and how.
 
 Third-party material used under its own terms:
-the [radio-browser.info](https://www.radio-browser.info/) catalogue, images
-from [pixabay.com](https://pixabay.com/), country coordinates
-from [Google public data](https://developers.google.com/public-data/), and open-source libraries (
-see `app/build.gradle`).
+the [radio-browser.info](https://www.radio-browser.info/) catalogue, the station artwork in the
+notification from [pixabay.com](https://pixabay.com/), country coordinates
+from [Google public data](https://developers.google.com/public-data/), the Comfortaa font and
+open-source libraries. The full list with licenses is on
+the [licenses page](https://foxytheone.github.io/RadioJourney/licenses.html).
