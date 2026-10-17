@@ -348,8 +348,14 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Иногда сбивается и в уведомлении показывает правильную станцию, а в плейере - нет. Добавляю страховку
-        collectWhenStarted(mainViewModel.switchViewPagerOnceAgain) { radioStation ->
+        // Название песни, которое присылает станция в плеере: вторая строка на странице станции (см. SwipeRadioStationAdapter.setNowPlaying)
+        collectWhenStarted(mainViewModel.nowPlaying) { nowPlaying ->
+            swipeRadioStationAdapter.setNowPlaying(nowPlaying?.stationKey, nowPlaying?.title)
+        }
+
+        // Выбрали станцию, которая уже в плеере: curPlayingSong об этом не сообщит (станция та же), а нижний плеер
+        // мог показывать другую - возвращаем его на играющую (подробнее - MainViewModel.showPlayingStationInPager)
+        collectWhenStarted(mainViewModel.showPlayingStationInPager) { radioStation ->
             whenPlaylistReady {
                 switchViewPagerToCurrentSong(radioStation.stationuuid, radioStation.countryCode)
             }

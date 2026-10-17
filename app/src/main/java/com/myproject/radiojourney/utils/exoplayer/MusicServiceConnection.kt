@@ -42,6 +42,18 @@ class MusicServiceConnection(private val context: Context) {
         private const val TAG = "MusicServiceConnection"
     }
 
+    /**
+     * Название песни у станции, которая сейчас в плеере (присылает сама станция, см. NowPlaying.kt).
+     * stationKey - та же запись, что у станции в нижнем плеере ("uuid|PL" или "uuid|PL_FAV"),
+     * title - название или null, если станция его сейчас не сообщает.
+     * Отдельно от curPlayingSong: название меняется с каждой песней, а экран на смену станции реагирует по-крупному
+     * (прячет полосу загрузки, листает плеер) - это не должно происходить при каждой песне
+     */
+    data class NowPlaying(val stationKey: String, val title: String?)
+
+    private val _nowPlaying = MutableStateFlow<NowPlaying?>(null)
+    val nowPlaying: StateFlow<NowPlaying?> = _nowPlaying.asStateFlow()
+
     // Ошибки подключения к сервису и сети - сообщение для экрана. Channel: каждое сообщение получит один подписчик (MainActivity),
     // и оно не потеряется, если экран в этот момент не виден. Раньше - две LiveData<Event<Resource<Boolean>>>.
     // В канал кладём не готовый текст, а id строки (R.string...): текст на языке телефона достанет из ресурсов экран.
@@ -112,6 +124,7 @@ class MusicServiceConnection(private val context: Context) {
                 )
             ) {
                 postCurrentSong(player)
+                postNowPlaying(player)
             }
         }
     }
@@ -136,6 +149,7 @@ class MusicServiceConnection(private val context: Context) {
                 browser.addListener(playerListener)
                 postPlaybackState(browser)
                 postCurrentSong(browser)
+                postNowPlaying(browser)
 
                 // После переподключения подписываемся на списки станций заново
                 childrenSubscribers.keys.forEach { browser.subscribe(it, null) }
@@ -248,5 +262,15 @@ class MusicServiceConnection(private val context: Context) {
 
     private fun postNetworkError() {
         _errorMessages.trySend(R.string.error_noServerConnection)
+    }
+
+    private fun postNowPlaying(player: Player) {
+        val currentItem = player.currentMediaItem
+        _nowPlaying.value = currentItem?.let {
+            NowPlaying(
+                stationKey = "${it.mediaId}|${it.mediaMetadata.subtitle}",
+                title = player.mediaMetadata.nowPlayingTitle
+            )
+        }
     }
 }

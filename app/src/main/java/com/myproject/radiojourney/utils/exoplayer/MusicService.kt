@@ -27,6 +27,7 @@ import com.myproject.radiojourney.other.Constants.NOTIFICATION_ID
 import com.myproject.radiojourney.other.Constants.PAUSED_NOTIFICATION_TIMEOUT
 import com.myproject.radiojourney.utils.exoplayer.callback.MusicLibrarySessionCallback
 import com.myproject.radiojourney.utils.exoplayer.callback.MusicPlayerEventListener
+import com.myproject.radiojourney.utils.exoplayer.callback.NowPlayingListener
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
@@ -77,6 +78,8 @@ class MusicService : MediaLibraryService() {
     private lateinit var mediaLibrarySession: MediaLibrarySession
 
     private lateinit var musicPlayerEventListener: MusicPlayerEventListener
+
+    private lateinit var nowPlayingListener: NowPlayingListener
 
     // Ожидание интернета, чтобы повторить загрузку плейлиста по умолчанию (см. retryDefaultPlaylistWhenOnline)
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
@@ -212,6 +215,10 @@ class MusicService : MediaLibraryService() {
         exoPlayer.addListener(musicPlayerEventListener)
         exoPlayer.addListener(pauseTimeoutListener)
 
+        // Название песни, которое присылает станция, - в уведомление и на экран (см. NowPlayingListener)
+        nowPlayingListener = NowPlayingListener(exoPlayer)
+        exoPlayer.addListener(nowPlayingListener)
+
     }
 
     // Запущенный сервис будет работать пока у него не вызван stopSelf().
@@ -288,6 +295,7 @@ class MusicService : MediaLibraryService() {
 
         exoPlayer.removeListener(musicPlayerEventListener)
         exoPlayer.removeListener(pauseTimeoutListener)
+        exoPlayer.removeListener(nowPlayingListener)
         mediaLibrarySession.release()
         exoPlayer.release()
 

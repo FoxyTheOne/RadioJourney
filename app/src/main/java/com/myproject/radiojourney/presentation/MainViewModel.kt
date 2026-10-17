@@ -77,6 +77,10 @@ class MainViewModel @Inject constructor(
     // Станция добавлена в избранное или убрана из него - где бы ни нажали звезду (плейер, список избранного)
     data class FavouriteChange(val station: RadioStationPresentation, val isFavourite: Boolean)
 
+    // Название песни у станции в плеере, если станция его присылает (вторая строка нижнего плеера)
+    val nowPlaying: StateFlow<MusicServiceConnection.NowPlaying?> =
+        musicServiceConnection.nowPlaying
+
     // Прогресс загрузки плейлиста (0..100) и ошибка "сервер недоступен" - из сервиса плеера
     val playlistDownloadProgress: StateFlow<Int> = playlistDownloadStatus.progressPercent
     val serverIsDown: SharedFlow<ServerError> = playlistDownloadStatus.serverIsDown
@@ -100,10 +104,19 @@ class MainViewModel @Inject constructor(
     private val _favouriteChanges = MutableSharedFlow<FavouriteChange>(extraBufferCapacity = 8)
     val favouriteChanges: SharedFlow<FavouriteChange> = _favouriteChanges.asSharedFlow()
 
-    // Иногда сбивается и в уведомлении показывает правильную станцию, а в плейере - нет. Страховка: MainActivity ещё раз переключает ViewPager
-    private val _switchViewPagerOnceAgain = Channel<RadioStationPresentation>(Channel.CONFLATED)
-    val switchViewPagerOnceAgain: Flow<RadioStationPresentation> =
-        _switchViewPagerOnceAgain.receiveAsFlow()
+    /**
+     * Просьба к экрану показать в нижнем плеере станцию, которая играет, когда выбрали ту же станцию, что уже в плеере.
+     *
+     * Обычно нижний плеер перелистывается сам: плеер сообщает о новой станции (curPlayingSong), и MainActivity
+     * листает на неё. Но если выбрали станцию, которая уже в плеере, сообщать не о чем - станция та же.
+     * А нижний плеер в это время мог показывать другую: сразу после запуска свайп только выбирает станцию,
+     * не включая её. Пример: пролистали внизу на станцию Б (в плеере всё ещё А), открыли избранное и нажали А -
+     * А заиграла, а внизу так и висела бы Б. Раньше это называлось switchViewPagerOnceAgain ("страховка, иногда сбивается").
+     * Отправляется в обеих ветках playOrToggleSong: та же станция бывает и в плеере на паузе, и в ещё не подготовленном
+     */
+    private val _showPlayingStationInPager = Channel<RadioStationPresentation>(Channel.CONFLATED)
+    val showPlayingStationInPager: Flow<RadioStationPresentation> =
+        _showPlayingStationInPager.receiveAsFlow()
 
     // Состояние плеера и станция в плеере
     val playbackState: StateFlow<PlaybackStateInfo?> = musicServiceConnection.playbackState
@@ -219,10 +232,17 @@ class MainViewModel @Inject constructor(
             }
 
             saveLastUsedRadioStationUrlAndCode(mediaItem.urlResolved, mediaItem.countryCode)
-            _switchViewPagerOnceAgain.trySend(mediaItem)
+            // Станция в плеере не сменилась, поэтому curPlayingSong молчит - а нижний плеер мог показывать другую станцию
+            // (см. showPlayingStationInPager). Просим экран вернуть его на ту, что играет
+            _showPlayingStationInPager.trySend(mediaItem)
             hideProgressAndSetClickable()
         } else {
-            // if we want to play another song
+            // if we want to play another song.
+            // Сюда попадает и та станция, что уже в плеере, если плеер ещё не подготовлен (isPrepared = false,
+            // например сразу после запуска приложения). Тогда curPlayingSong тоже промолчит - станция та же,
+            // и вернуть нижний плеер на неё может только showPlayingStationInPager. Для действительно другой станции
+            // просьба ничего не сделает (MainActivity.switchViewPagerToCurrentSong пропускает станцию, которой ещё нет
+            // в плеере), а нижний плеер перелистнётся, когда плеер сообщит о ней (curPlayingSong)
             Log.d(TAG, "Включаем другую станцию ${mediaItem.stationName}")
             requestedStation = mediaItem
             musicServiceConnection.playFromMediaId(
@@ -231,7 +251,7 @@ class MainViewModel @Inject constructor(
                 mediaItem.countryCode
             )
             saveLastUsedRadioStationUrlAndCode(mediaItem.urlResolved, mediaItem.countryCode)
-            _switchViewPagerOnceAgain.trySend(mediaItem)
+            _showPlayingStationInPager.trySend(mediaItem)
         }
     }
 

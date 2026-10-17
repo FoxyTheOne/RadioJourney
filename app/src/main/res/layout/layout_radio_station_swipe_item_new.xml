@@ -1,4 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?><!-- Страница нижнего плеера: название станции и под ним - название песни (если станция его присылает).
+     Обе строки - вертикальная цепочка (chain) посередине. Пока строки песни нет (gone), название станции стоит
+     ровно по центру, как раньше. Как строка появляется и пропадает - см. SwipeRadioStationAdapter -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -13,11 +15,30 @@
         android:ellipsize="end"
         android:gravity="center"
         android:maxLines="2"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/tvNowPlaying"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
         tools:background="@color/background_transparent"
         tools:text="Title" />
+
+    <!-- Название песни: мельче и приглушённее названия станции, в одну строку -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tvNowPlaying"
+        style="@style/login_bottom_small"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:maxLines="1"
+        android:textSize="13sp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvPrimary"
+        tools:text="Metallica - Nothing Else Matters"
+        tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
