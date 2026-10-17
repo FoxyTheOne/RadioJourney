@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Ключ для View.setTag: запланированный запуск бегущей строки (OneLineText.showInOneLine),
+         чтобы отменить его, если текст сменился раньше. Ключ тега должен быть id ресурса - отсюда эта запись -->
+    <item name="tag_marquee_start" type="id" />
+</resources>

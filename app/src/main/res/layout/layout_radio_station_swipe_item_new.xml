@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?><!-- Страница нижнего плеера: название станции и под ним - название песни (если станция его присылает).
      Обе строки - вертикальная цепочка (chain) посередине. Пока строки песни нет (gone), название станции стоит
-     ровно по центру, как раньше. Как строка появляется и пропадает - см. SwipeRadioStationAdapter -->
+     ровно по центру, как раньше. Как строка появляется и пропадает - см. SwipeRadioStationAdapter.
+     Обе строки - в одну строку: не поместилось - бегущая строка или многоточие (presentation/common/OneLineText.kt) -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -14,7 +15,7 @@
         android:layout_height="wrap_content"
         android:ellipsize="end"
         android:gravity="center"
-        android:maxLines="2"
+        android:maxLines="1"
         app:layout_constraintBottom_toTopOf="@+id/tvNowPlaying"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

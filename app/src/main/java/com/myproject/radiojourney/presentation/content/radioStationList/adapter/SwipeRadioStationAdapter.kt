@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.content.ContextCompat
+import androidx.core.view.doOnLayout
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.transition.ChangeBounds
@@ -16,6 +17,9 @@ import androidx.transition.TransitionManager
 import com.myproject.radiojourney.R
 import com.myproject.radiojourney.other.Constants.FAVOURITES_COUNTRY_CODE_SUFFIX
 import com.myproject.radiojourney.other.Constants.MY_STATIONS_COUNTRY_CODE
+import com.myproject.radiojourney.presentation.common.marqueeDurationMs
+import com.myproject.radiojourney.presentation.common.shortStationName
+import com.myproject.radiojourney.presentation.common.showInOneLine
 import com.myproject.radiojourney.presentation.model.RadioStationPresentation
 
 /**
@@ -86,7 +90,6 @@ class SwipeRadioStationAdapter :
     // Описываем метод, который индивидуален для каждого списка - как выглядит элемент списка
     override fun onBindViewHolder(holder: RadioStationViewHolder, position: Int) {
         val radioStation = radioStationList[position]
-        bindNowPlaying(holder.itemView, radioStation, animate = false)
         holder.itemView.apply {
             val title: AppCompatTextView = this.findViewById(R.id.tvPrimary)
 
@@ -94,15 +97,13 @@ class SwipeRadioStationAdapter :
             // Показываем вместо суффикса сердечко перед названием: "♥ RMF FM - PL"
             val isFavouritePlaylist =
                 radioStation.countryCode.endsWith(FAVOURITES_COUNTRY_CODE_SUFFIX)
+            // Короткое имя: у длинных названий отрезаем слоган и список жанров (см. shortStationName).
             // У своих станций страны нет, поэтому показываем одно название: код "MY" пользователю ничего не скажет
+            val name = shortStationName(radioStation.stationName)
             val text = if (radioStation.countryCode == MY_STATIONS_COUNTRY_CODE) {
-                radioStation.stationName
+                name
             } else {
-                "${radioStation.stationName} - ${
-                    radioStation.countryCode.removeSuffix(
-                        FAVOURITES_COUNTRY_CODE_SUFFIX
-                    )
-                }"
+                "$name - ${radioStation.countryCode.removeSuffix(FAVOURITES_COUNTRY_CODE_SUFFIX)}"
             }
 
             if (isFavouritePlaylist) {
@@ -118,10 +119,13 @@ class SwipeRadioStationAdapter :
                             0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
                         )
                     }
-                title.text = spannableText
+                title.showInOneLine(spannableText)
             } else {
-                title.text = text
+                title.showInOneLine(text)
             }
+
+            // Строка песни - после названия станции: ей нужно знать, поедет ли станция (см. bindNowPlaying)
+            bindNowPlaying(this, radioStation, animate = false)
 
             setOnClickListener {
 
@@ -152,11 +156,16 @@ class SwipeRadioStationAdapter :
 
         songText.animate().cancel()
         if (!animate) {
-            stationText.maxLines =
-                if (hasSlot) 1 else 2 // две строки станции и строка песни не поместятся в 56 dp
+            // Страница рисуется вместе с названием станции: если оно тоже не помещается и поедет, строка песни
+            // подождёт, пока станция доедет (marqueeDurationMs). Ширину станции узнаём, когда она измерена (doOnLayout)
             songText.isVisible = hasSlot
-            songText.text = title
             songText.alpha = 1f
+            if (hasSlot) stationText.doOnLayout {
+                songText.showInOneLine(
+                    title,
+                    startDelayMs = stationText.marqueeDurationMs()
+                )
+            }
             return
         }
 
@@ -165,9 +174,8 @@ class SwipeRadioStationAdapter :
                 page as ViewGroup,
                 ChangeBounds().setDuration(SLOT_ANIMATION_MS)
             )
-            stationText.maxLines = if (hasSlot) 1 else 2
             songText.isVisible = hasSlot
-            songText.text = title
+            songText.showInOneLine(title)
             songText.alpha = 0f
             if (hasSlot) songText.animate().alpha(1f).setStartDelay(SLOT_ANIMATION_MS / 2)
                 .setDuration(SLOT_ANIMATION_MS).start()
@@ -176,7 +184,7 @@ class SwipeRadioStationAdapter :
 
         if (!hasSlot || songText.text.toString() == title) return
         songText.animate().alpha(0f).setStartDelay(0).setDuration(TEXT_FADE_MS).withEndAction {
-            songText.text = title
+            songText.showInOneLine(title) // новая песня - бегущая строка (если нужна) поедет заново
             // Пустое название (станция замолчала) - строка так и остаётся погасшей до следующей песни
             if (title.isNotEmpty()) songText.animate().alpha(1f).setDuration(TEXT_FADE_MS).start()
         }.start()
