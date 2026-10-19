@@ -9,6 +9,9 @@
     <string name="homeRadio_youAreHere">Вы здесь</string>
     <string name="homeRadio_stationCount">Список радиостанций (%1$d)</string>
     <string name="homeRadio_stationCountMore">Список радиостанций (%1$d+)</string>
+    <!-- Нижний плеер: долгое нажатие копирует название песни (SwipeRadioStationAdapter.copyNowPlaying) -->
+    <string name="player_songTitle">Название песни</string>
+    <string name="player_songCopied">Название песни скопировано</string>
     <string name="homeRadio_closeInfo">Закрыть</string>
     <string name="homeRadio_loadingData">Загрузка данных…</string>
     <string name="homeRadio_serverDown">Что-то пошло не так: сервер недоступен. Попробуйте позже</string>
@@ -59,8 +62,8 @@
     <string name="settings_tittle2">О программе</string>
     <string name="settings_text1">RadioJourney — приложение с интернет-радиостанциями со всего мира на одной карте.</string>
     <string name="settings_text2">Нажмите на страну, скачайте плейлист и выбирайте радиостанцию для прослушивания. Понравившиеся станции отмечайте звёздочкой, а станции, которых нет в каталоге, можно добавить в «Мои станции».</string>
-    <string name="settings_text3">Списки станций приходят из открытого каталога radio-browser.info: для каждой страны — до %1$d самых популярных станций. Если каталог недоступен, приложение покажет последний сохранённый список. Эфир ведут сами радиостанции, поэтому какая-то из них может временно молчать. Название песни, если оно есть, тоже присылает сама станция.</string>
-    <string name="settings_text4">Карту и границы стран показывает Google Maps, координаты стран взяты из Google Public Data, изображения — с pixabay.com. Названия стран получены из внешних источников и могут не совпадать с официальными.</string>
+    <string name="settings_text3">Списки станций приходят из открытого каталога radio-browser.info: для каждой страны — до %1$d самых популярных станций. Если каталог недоступен, приложение покажет последний сохранённый список. Эфир ведут сами радиостанции, поэтому какая-то из них может временно молчать. Название песни, если оно есть, тоже присылает сама станция; чтобы скопировать его, нажмите на плеер и подержите.</string>
+    <string name="settings_text4">Карту и границы стран показывает Google Maps, координаты стран взяты из Google Public Data. Названия стран получены из внешних источников и могут не совпадать с официальными.</string>
     <string name="settings_text5">Приложение бесплатное, без рекламы и без регистрации. Оно не собирает ваши данные: избранное, свои станции и настройки хранятся только на вашем телефоне.</string>
     <string name="settings_textMail">Вопросы и предложения</string>
     <string name="settings_mailMessage">Ваше сообщение</string>

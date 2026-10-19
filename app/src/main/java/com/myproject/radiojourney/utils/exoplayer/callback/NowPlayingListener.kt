@@ -2,6 +2,7 @@ package com.myproject.radiojourney.utils.exoplayer.callback
 
 import android.util.Log
 import androidx.annotation.OptIn
+import androidx.media3.common.MediaItem
 import androidx.media3.common.Metadata
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
@@ -49,5 +50,27 @@ class NowPlayingListener(private val player: Player) : Player.Listener {
 
         Log.d(TAG, "Станция $stationName, сейчас играет: $title")
         player.replaceMediaItem(index, item.withNowPlaying(title))
+    }
+
+    /**
+     * Переключились на другую станцию внутри плейлиста: кнопками "вперёд/назад" в уведомлении, на наушниках, на часах.
+     * Название песни хранится в самой станции плейлиста, поэтому у станции, которую оставили, оно бы так и осталось.
+     * Вернулись бы к ней - и сначала увидели бы песню, которая играла там когда-то. Стираем названия у всех станций,
+     * кроме текущей: у текущей название свежее, его только что прислала станция (или его пока нет).
+     *
+     * Только для переключений (SEEK) и автоперехода (AUTO). PLAYLIST_CHANGED сюда не относится: так ExoPlayer сообщает
+     * и о replaceMediaItem из onMetadata - стирали бы только что записанное название
+     */
+    override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+        if (reason != Player.MEDIA_ITEM_TRANSITION_REASON_SEEK && reason != Player.MEDIA_ITEM_TRANSITION_REASON_AUTO) return
+        lastRawTitle = null
+        for (index in 0 until player.mediaItemCount) {
+            if (index == player.currentMediaItemIndex) continue
+            val item = player.getMediaItemAt(index)
+            if (item.mediaMetadata.nowPlayingTitle != null) player.replaceMediaItem(
+                index,
+                item.withNowPlaying(null)
+            )
+        }
     }
 }
